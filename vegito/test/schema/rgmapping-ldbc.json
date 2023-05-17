@@ -1,0 +1,772 @@
+{
+    "vertexLabelNum":8,
+    "types":[
+        {
+            "id":0,
+            "label":"organisation",
+            "table_name":"organisation",
+            "id_column_name":"org_id",
+            "propertyDefList":[
+                {
+                    "data_type":"LONG",
+                    "id":0,
+                    "name":"org_id",
+                    "column_name": "org_id"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":1,
+                    "name":"org_type",
+                    "column_name": "org_type"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":2,
+                    "name":"org_name",
+                    "column_name": "org_name"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":3,
+                    "name":"org_url",
+                    "column_name": "org_url"
+                }
+            ],
+            "rawRelationShips":[
+                {
+
+                }
+            ],
+            "type":"VERTEX"
+        },
+        {
+            "id":1,
+            "label":"place",
+            "table_name":"place",
+            "id_column_name":"pla_id",
+            "propertyDefList":[
+                {
+                    "data_type":"LONG",
+                    "id":0,
+                    "name":"pla_id",
+                    "column_name": "pla_id"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":1,
+                    "name":"pla_name",
+                    "column_name": "pla_name"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":2,
+                    "name":"pla_url",
+                    "column_name": "pla_url"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":3,
+                    "name":"pla_type",
+                    "column_name": "pla_type"
+                }
+            ],
+            "rawRelationShips":[
+                {
+
+                }
+            ],
+            "type":"VERTEX"
+        },
+        {
+            "id":2,
+            "label":"tag",
+            "table_name":"tag",
+            "id_column_name":"tag_id",
+            "propertyDefList":[
+                {
+                    "data_type":"LONG",
+                    "id":0,
+                    "name":"tag_id",
+                    "column_name": "tag_id"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":1,
+                    "name":"tag_name",
+                    "column_name": "tag_name"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":2,
+                    "name":"tag_url",
+                    "column_name": "tag_url"
+                }
+            ],
+            "rawRelationShips":[
+                {
+
+                }
+            ],
+            "type":"VERTEX"
+        },
+        {
+            "id":3,
+            "label":"tagclass",
+            "table_name":"tagclass",
+            "id_column_name":"tagc_id",
+            "propertyDefList":[
+                {
+                    "data_type":"LONG",
+                    "id":0,
+                    "name":"tagc_id",
+                    "column_name": "tagc_id"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":1,
+                    "name":"tagc_name",
+                    "column_name": "tagc_name"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":2,
+                    "name":"tagc_url",
+                    "column_name": "tagc_url"
+                }
+            ],
+            "rawRelationShips":[
+                {
+
+                }
+            ],
+            "type":"VERTEX"
+        },
+        {
+            "id":4,
+            "label":"person",
+            "table_name":"person",
+            "id_column_name":"p_id",
+            "propertyDefList":[
+                {
+                    "data_type":"LONG",
+                    "id":0,
+                    "name":"p_id",
+                    "column_name": "p_id"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":1,
+                    "name":"p_first_name",
+                    "column_name": "p_first_name"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":2,
+                    "name":"p_last_name",
+                    "column_name": "p_last_name"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":3,
+                    "name":"p_gender",
+                    "column_name": "p_gender"
+                },
+                {
+                    "data_type":"DATE",
+                    "id":4,
+                    "name":"p_birthday",
+                    "column_name": "p_birthday"
+                },
+                {
+                    "data_type":"DATETIME",
+                    "id":5,
+                    "name":"p_creation_date",
+                    "column_name": "p_creation_date"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":6,
+                    "name":"p_location_ip",
+                    "column_name": "p_location_ip"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":7,
+                    "name":"p_browser_used",
+                    "column_name": "p_browser_used"
+                }
+            ],
+            "rawRelationShips":[
+                {
+
+                }
+            ],
+            "type":"VERTEX"
+        },
+        {
+            "id":5,
+            "label":"comment",
+            "table_name":"comment",
+            "id_column_name":"co_id",
+            "propertyDefList":[
+                {
+                    "data_type":"LONG",
+                    "id":0,
+                    "name":"co_id",
+                    "column_name": "co_id"
+                },
+                {
+                    "data_type":"DATETIME",
+                    "id":1,
+                    "name":"co_creation_date",
+                    "column_name": "co_creation_date"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":2,
+                    "name":"co_location_ip",
+                    "column_name": "co_location_ip"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":3,
+                    "name":"co_browser_used",
+                    "column_name": "co_browser_used"
+                },
+                {
+                    "data_type":"TEXT",
+                    "id":4,
+                    "name":"co_content",
+                    "column_name": "co_content"
+                },
+                {
+                    "data_type":"INT",
+                    "id":5,
+                    "name":"co_length",
+                    "column_name": "co_length"
+                }
+            ],
+            "rawRelationShips":[
+                {
+
+                }
+            ],
+            "type":"VERTEX"
+        },
+        {
+            "id":6,
+            "label":"post",
+            "table_name":"post",
+            "id_column_name":"po_id",
+            "propertyDefList":[
+                {
+                    "data_type":"LONG",
+                    "id":0,
+                    "name":"po_id",
+                    "column_name": "po_id"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":1,
+                    "name":"po_image_file",
+                    "column_name": "po_image_file"
+                },
+                {
+                    "data_type":"DATETIME",
+                    "id":2,
+                    "name":"po_creation_date",
+                    "column_name": "po_creation_date"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":3,
+                    "name":"po_location_ip",
+                    "column_name": "po_location_ip"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":4,
+                    "name":"po_browser_used",
+                    "column_name": "po_browser_used"
+                },
+                {
+                    "data_type":"STRING",
+                    "id":5,
+                    "name":"po_language",
+                    "column_name": "po_language"
+                },
+                {
+                    "data_type":"TEXT",
+                    "id":6,
+                    "name":"po_content",
+                    "column_name": "po_content"
+                },
+                {
+                    "data_type":"INT",
+                    "id":7,
+                    "name":"po_length",
+                    "column_name": "po_length"
+                }
+            ],
+            "rawRelationShips":[
+                {
+
+                }
+            ],
+            "type":"VERTEX"
+        },
+        {
+            "id":7,
+            "label":"forum",
+            "table_name":"forum",
+            "id_column_name":"fo_id",
+            "propertyDefList":[
+                {
+                    "data_type":"LONG",
+                    "id":0,
+                    "name":"fo_id",
+                    "column_name": "fo_id"
+                },
+                {
+                    "data_type":"LONGSTRING",
+                    "id":1,
+                    "name":"fo_title",
+                    "column_name": "fo_title"
+                },
+                {
+                    "data_type":"DATETIME",
+                    "id":2,
+                    "name":"fo_creation_date",
+                    "column_name": "fo_creation_date"
+                }
+            ],
+            "rawRelationShips":[
+                {
+
+                }
+            ],
+            "type":"VERTEX"
+        },
+        {
+            "id":8,
+            "label":"org_islocationin",
+            "table_name":"org_islocationin",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"place",
+                    "srcVertexLabel":"organisation",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":9,
+            "label":"ispartof",
+            "table_name":"ispartof",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"place",
+                    "srcVertexLabel":"place",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":10,
+            "label":"issubclassof",
+            "table_name":"issubclassof",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"tagclass",
+                    "srcVertexLabel":"tagclass",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":11,
+            "label":"hastype",
+            "table_name":"hastype",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"tagclass",
+                    "srcVertexLabel":"tag",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":12,
+            "label":"comment_hascreator",
+            "table_name":"comment_hascreator",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"person",
+                    "srcVertexLabel":"comment",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":13,
+            "label":"comment_hastag",
+            "table_name":"comment_hastag",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"tag",
+                    "srcVertexLabel":"comment",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":14,
+            "label":"comment_islocationin",
+            "table_name":"comment_islocationin",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"place",
+                    "srcVertexLabel":"comment",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":15,
+            "label":"replyof_comment",
+            "table_name":"replyof_comment",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"comment",
+                    "srcVertexLabel":"comment",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":16,
+            "label":"replyof_post",
+            "table_name":"replyof_post",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"post",
+                    "srcVertexLabel":"comment",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":17,
+            "label":"post_hascreator",
+            "table_name":"post_hascreator",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"person",
+                    "srcVertexLabel":"post",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":18,
+            "label":"post_hastag",
+            "table_name":"post_hastag",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"tag",
+                    "srcVertexLabel":"post",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":19,
+            "label":"post_islocationin",
+            "table_name":"post_islocationin",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"place",
+                    "srcVertexLabel":"post",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":20,
+            "label":"forum_containerof",
+            "table_name":"forum_containerof",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"post",
+                    "srcVertexLabel":"forum",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":21,
+            "label":"forum_hasmoderator",
+            "table_name":"forum_hasmoderator",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"person",
+                    "srcVertexLabel":"forum",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":22,
+            "label":"forum_hastag",
+            "table_name":"forum_hastag",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"tag",
+                    "srcVertexLabel":"forum",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":23,
+            "label":"person_hasinterest",
+            "table_name":"person_hasinterest",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"tag",
+                    "srcVertexLabel":"person",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":24,
+            "label":"person_islocationin",
+            "table_name":"person_islocationin",
+            "propertyDefList":[
+
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"place",
+                    "srcVertexLabel":"person",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":25,
+            "label":"forum_hasmember",
+            "table_name":"forum_hasmember",
+            "propertyDefList":[
+                {
+                    "data_type":"DATETIME",
+                    "id":0,
+                    "name":"fo_hm_join_data",
+                    "column_name": "fo_hm_join_data"
+                }
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"person",
+                    "srcVertexLabel":"forum",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":26,
+            "label":"knows",
+            "table_name":"knows",
+            "propertyDefList":[
+                {
+                    "data_type":"DATETIME",
+                    "id":0,
+                    "name":"kn_creation_data",
+                    "column_name": "kn_creation_data"
+                }
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"person",
+                    "srcVertexLabel":"person",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":27,
+            "label":"likes_comment",
+            "table_name":"likes_comment",
+            "propertyDefList":[
+                {
+                    "data_type":"DATETIME",
+                    "id":0,
+                    "name":"likes_co_creation_data",
+                    "column_name": "likes_co_creation_data"
+                }
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"comment",
+                    "srcVertexLabel":"person",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":28,
+            "label":"likes_post",
+            "table_name":"likes_post",
+            "propertyDefList":[
+                {
+                    "data_type":"DATETIME",
+                    "id":0,
+                    "name":"likes_po_creation_data",
+                    "column_name": "likes_po_creation_data"
+                }
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"post",
+                    "srcVertexLabel":"person",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":29,
+            "label":"studyat",
+            "table_name":"studyat",
+            "propertyDefList":[
+                {
+                    "data_type":"INT",
+                    "id":0,
+                    "name":"sa_class_year",
+                    "column_name": "sa_class_year"
+                }
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"organisation",
+                    "srcVertexLabel":"person",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        },
+        {
+            "id":30,
+            "label":"workat",
+            "table_name":"workat",
+            "propertyDefList":[
+                {
+                    "data_type":"INT",
+                    "id":0,
+                    "name":"wa_work_from",
+                    "column_name": "wa_work_from"
+                }
+            ],
+            "rawRelationShips":[
+                {
+                    "dstVertexLabel":"organisation",
+                    "srcVertexLabel":"person",
+                    "src_column_name": "src",
+                    "dst_column_name": "dst"
+                }
+            ],
+            "type":"EDGE"
+        }
+    ]
+}

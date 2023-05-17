@@ -1,0 +1,32 @@
+#!/bin/bash
+
+KAFKA_HOME=$KAFKA_HOME
+
+unset=false
+if [ -n "$KAFKA_HOME" ]; then
+    echo "KAFKA_HOME is $KAFKA_HOME"
+else
+    echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
+    exit 1
+fi
+
+echo "Stop writer"
+kill $(ps aux | grep '[v]egito' | awk '{print $2}')
+
+echo "Stop converter"
+kill $(ps aux | grep '[b]inlog_convert' | awk '{print $2}')
+
+echo "Stop Maxwell"
+kill $(ps aux | grep '[m]axwell' | awk '{print $2}')
+
+KAFKA_BIN=$KAFKA_HOME/bin
+
+echo "Clean topics"
+$KAFKA_BIN/kafka-topics.sh --delete --if-exists --topic binlog --zookeeper 127.0.0.1:2181
+$KAFKA_BIN/kafka-topics.sh --delete --if-exists --topic unified_log --zookeeper 127.0.0.1:2181
+
+echo "Stop Zookeeper and Kafka"
+$KAFKA_BIN/kafka-server-stop.sh
+$KAFKA_BIN/zookeeper-server-stop.sh
+
+sleep 3

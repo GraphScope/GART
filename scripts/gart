@@ -1,0 +1,155 @@
+#!/bin/bash
+
+KAFKA_HOME=$KAFKA_HOME
+MAXWELL_HOME=$MAXWELL_HOME
+
+unset=false
+if [ -n "$KAFKA_HOME" ]; then
+    echo "KAFKA_HOME is $KAFKA_HOME"
+else
+    echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
+    unset=true
+fi
+
+if [ -n "$MAXWELL_HOME" ]; then
+    echo "MAXWELL_HOME is $MAXWELL_HOME"
+else
+    echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
+    unset=true
+fi
+
+if [ "$unset" = true ]; then
+    exit 1
+fi
+
+####################### Parse Arguments #######################
+VALID_ARGS=$(getopt -o d:u:p:r:t:e:h? --long db-host:,user:,password:,rgmapping-file:table-schema-file:,v6d-sock:etcd-endpoint:,help -- "$@")
+if [[ $? -ne 0 ]]; then
+    exit 1;
+fi
+
+db_host=
+user=
+password=
+rgmapping_file=
+table_schema_file=
+v6d_sock=
+etcd_endpoint=
+
+eval set -- "$VALID_ARGS"
+while [ : ]; do
+  case "$1" in
+    -d | --db-host)
+        db_host=$2
+        shift 2
+        ;;
+    -u | --user)
+        user=$2
+        shift 2
+        ;;
+    -p | --password)
+        password=$2
+        shift 2
+        ;;
+    -r | --rgmapping-file)
+        rgmapping_file=$2
+        shift 2
+        ;;
+    -t | --table-schema-file)
+        table_schema_file=$2
+        shift 2
+        ;;
+    --v6d-sock)
+        v6d_sock=$2
+        shift 2
+        ;;
+    -e | --etcd-endpoint)
+        etcd_endpoint=$2
+        shift 2
+        ;;
+    -h | --help | ?)
+        echo "Usage: $0 [options]"
+        echo "  -d, --db-host:           database host"
+        echo "  -u, --user:              database user"
+        echo "  -p, --password:          database password"
+        echo "  -r, --rgmapping-file:    rgmapping file path"
+        echo "  -t, --table-schema-file: table schema file path"
+        echo "      --v6d-sock:          vineyard socket path"
+        echo "  -e, --etcd-endpoint:     etcd endpoint"
+        echo "  -h, --help:              help"
+        exit 0
+        ;;
+    --)
+        shift;
+        break
+        ;;
+  esac
+done
+
+echo "db-host: $db_host"
+echo "user: $user"
+echo "password: $password"
+echo "rgmapping-file: $rgmapping_file"
+echo "table-schema-file: $table_schema_file"
+echo "v6d-sock: $v6d_sock"
+echo "etcd-endpoint: $etcd_endpoint"
+
+KAFKA_BIN=$KAFKA_HOME/bin
+KAFKA_CONFIG=$KAFKA_HOME/config
+
+####################### Capturer: Zookeeper and Kafka #######################
+echo "Start Zookeeper and Kafka"
+$KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+$KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+
+echo "Clean topics"
+$KAFKA_BIN/kafka-topics.sh --delete --if-exists --topic binlog --zookeeper 127.0.0.1:2181
+$KAFKA_BIN/kafka-topics.sh --delete --if-exists --topic unified_log --zookeeper 127.0.0.1:2181
+
+echo "Create topic: binlog"
+$KAFKA_BIN/kafka-topics.sh --create --topic binlog --zookeeper 127.0.0.1:2181 --partitions 1 --replication-factor 1
+
+# "unified_log" can be created by Maxwell
+# echo "Create topics: unified_log"
+# $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --zookeeper 127.0.0.1:2181
+
+sleep 2
+
+$KAFKA_BIN/kafka-topics.sh --zookeeper localhost:2181 --list
+
+
+####################### Capturer: Maxwell #######################
+MAXWELL_BIN=$MAXWELL_HOME/bin
+
+echo "Start Maxwell"
+$MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog &
+
+sleep 3
+
+####################### Converter #######################
+CONVENTER_HOME=./converter
+
+echo "Start Converter"
+$CONVENTER_HOME/binlog_convert --rg_mapping_file_path $rgmapping_file &
+
+sleep 2
+
+conventer_pid=$!
+echo "conventer pid: $conventer_pid"
+
+####################### Writer (VEGITO) #######################
+
+WRITER_HOME=./vegito
+
+echo "Start Writer"
+
+#TODO: Fix hard code, simulate in a single machine
+$WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock --etcd_endpoint $etcd_endpoint \
+    --schema_file_path $rgmapping_file \
+    --table_schema_file_path $table_schema_file \
+    --server_num 2 --server_id 0 &
+
+$WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock --etcd_endpoint $etcd_endpoint \
+    --schema_file_path $rgmapping_file \
+    --table_schema_file_path $table_schema_file \
+    --server_num 2 --server_id 1 &
