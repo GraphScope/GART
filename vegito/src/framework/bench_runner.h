@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_FRAMEWORK_BENCH_RUNNER_H_
-#define RESEARCH_GART_VEGITO_SRC_FRAMEWORK_BENCH_RUNNER_H_
+#ifndef VEGITO_SRC_FRAMEWORK_BENCH_RUNNER_H_
+#define VEGITO_SRC_FRAMEWORK_BENCH_RUNNER_H_
 
 #include "graph/ddl.h"
 #include "graph/graph_store.h"
@@ -30,10 +30,9 @@ class Runner {
   void run();
 
  protected:
-
   // for graph
-  std::vector<graph::GraphStore *> graph_stores_;
-  std::vector<graph::RGMapping *> rg_maps_;
+  std::vector<graph::GraphStore*> graph_stores_;
+  std::vector<graph::RGMapping*> rg_maps_;
 
   uint64_t latest_epoch_ = 0;
 
@@ -48,4 +47,4 @@ class Runner {
 }  // namespace framework
 }  // namespace gart
 
-#endif  // RESEARCH_GART_VEGITO_SRC_FRAMEWORK_BENCH_RUNNER_H_
+#endif  // VEGITO_SRC_FRAMEWORK_BENCH_RUNNER_H_

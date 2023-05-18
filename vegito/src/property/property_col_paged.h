@@ -24,30 +24,30 @@
  *
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_
-#define RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_
+#ifndef VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_
+#define VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_
 
 #include "property/property.h"
 
 class PropertyColPaged : public Property {
  public:
   PropertyColPaged(Property::Schema schema, uint64_t max_items,
-                   const std::vector<uint32_t> *split = nullptr);
+                   const std::vector<uint32_t>* split = nullptr);
   ~PropertyColPaged();
 
   // for insert
-  virtual void insert(uint64_t off, uint64_t k, char *v, uint64_t seq,
+  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
                       uint64_t ver);
 
-  virtual void update(uint64_t off, const std::vector<int> &cids, char *v,
+  virtual void update(uint64_t off, const std::vector<int>& cids, char* v,
                       uint64_t seq, uint64_t ver);
 
-  virtual void update(uint64_t off, int cid, char *v, uint64_t ver);
+  virtual void update(uint64_t off, int cid, char* v, uint64_t ver);
 
   // get cursor
   virtual std::unique_ptr<ColCursor> getColCursor(int col_id,
                                                   uint64_t ver) const {
-    ColCursor *c = new Cursor(*this, col_id, ver);
+    ColCursor* c = new Cursor(*this, col_id, ver);
     return std::unique_ptr<ColCursor>(c);
   }
 
@@ -56,23 +56,24 @@ class PropertyColPaged : public Property {
     return 0;
   }
 
-  virtual char *getByOffset(uint64_t offset, int columnID, uint64_t version,
-                            uint64_t *walk_cnt = nullptr);
+  virtual char* getByOffset(uint64_t offset, int columnID, uint64_t version,
+                            uint64_t* walk_cnt = nullptr);
 
   virtual void gc(uint64_t version);
 
-  const std::vector<uint64_t> &getKeyCol() const;
+  const std::vector<uint64_t>& getKeyCol() const;
 
-  virtual char *col(int col_id, uint64_t *len = nullptr) const {
+  virtual char* col(int col_id, uint64_t* len = nullptr) const {
     assert(!cols_[col_id].updatable);
-    if (len) *len = header_;
+    if (len)
+      *len = header_;
     return fixCols_[col_id];
   }
   // return pagesize of the col
   size_t getCol(int col_id, uint64_t start_off, size_t size, uint64_t lver,
-                std::vector<char *> &pages);
+                std::vector<char*>& pages);
   size_t getPageSize(int col_id) const;
-  char *locateValue(int colid, char *col, size_t offset);
+  char* locateValue(int colid, char* col, size_t offset);
 
  private:
   // physical columns
@@ -88,35 +89,39 @@ class PropertyColPaged : public Property {
     uint64_t ver;
     uintptr_t prev_ptr;
     uint64_t min_ver;
-    Page *prev;
-    Page *next;
+    Page* prev;
+    Page* next;
     char content[0];
 
-    Page() { }
+    Page() {}
 
-    Page(uint64_t v, Page *n)
-        : ver(v), prev(n), next(nullptr), prev_ptr(0),
+    Page(uint64_t v, Page* n)
+        : ver(v),
+          prev(n),
+          next(nullptr),
+          prev_ptr(0),
           min_ver(n ? n->min_ver : v) {
-      if (n) n->next = this;
+      if (n)
+        n->next = this;
     }
   };
 
   struct FlexCol {
-    std::vector<Page *> pages;  // header (newest)
+    std::vector<Page*> pages;  // header (newest)
     std::vector<uint32_t> locks;
-    std::vector<Page *> old_pages;  // tailer (oldest)
+    std::vector<Page*> old_pages;  // tailer (oldest)
   };
 
-  Page *getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page *prev);
+  Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev);
 
-  Page *getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page *prev,
+  Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev,
                     uint64_t prop_id, uint64_t pg_num);
 
   // for the first page for a `pg_num`
-  Page *getInitPage_(uint64_t page_sz, uint64_t vlen,
-                     uint64_t prop_id, uint64_t pg_num);
+  Page* getInitPage_(uint64_t page_sz, uint64_t vlen, uint64_t prop_id,
+                     uint64_t pg_num);
 
-  Page *findWithInsertPage_(int col_id, uint64_t page_num, uint64_t version);
+  Page* findWithInsertPage_(int col_id, uint64_t page_num, uint64_t version);
 
   const int table_id_;
   uint64_t val_len_;
@@ -127,7 +132,7 @@ class PropertyColPaged : public Property {
   std::vector<uint64_t> split_;
   std::vector<uint64_t> split_vlen_;
 
-  std::vector<char *> fixCols_;
+  std::vector<char*> fixCols_;
   std::vector<FlexCol> flexCols_;
 
   // stored in Blob
@@ -141,34 +146,34 @@ class PropertyColPaged : public Property {
   };
 
   struct FlexBuf {
-    char *buf = nullptr;
+    char* buf = nullptr;
     size_t allocated_sz = 0;
     size_t total_sz;
-    FlexColHeader *header;
+    FlexColHeader* header;
   };
 
   std::vector<FlexBuf> flex_bufs_;
   std::vector<vineyard::ObjectID> col_ids_;
 
-  Page *findPage(int col_id, uint64_t page_num, uint64_t version,
-                 uint64_t *walk_cnt = nullptr);
+  Page* findPage(int col_id, uint64_t page_num, uint64_t version,
+                 uint64_t* walk_cnt = nullptr);
 
  public:
   class Cursor : public Property::ColCursor {
    public:
-    Cursor(const PropertyColPaged &store, int col_id, uint64_t ver);
+    Cursor(const PropertyColPaged& store, int col_id, uint64_t ver);
     virtual void seekOffset(uint64_t begin, uint64_t end);
-    virtual inline bool nextRow(uint64_t *walk_cnt = nullptr);
-    virtual char *value() const { return ptr_; }
+    virtual inline bool nextRow(uint64_t* walk_cnt = nullptr);
+    virtual char* value() const { return ptr_; }
 
     virtual uint64_t cur() const { return cur_; }
-    virtual char *base() const {
+    virtual char* base() const {
       assert(!update_);
       return base_;
     }
 
    private:
-    const PropertyColPaged &col_;
+    const PropertyColPaged& col_;
     const uint64_t ver_;
     const int col_id_;
 
@@ -179,15 +184,15 @@ class PropertyColPaged : public Property {
     uint64_t begin_;
     uint64_t end_;
     uint64_t cur_;
-    char *ptr_;
-    char *base_;
+    char* ptr_;
+    char* base_;
 
-    uint64_t pgn_;                      // for updatable columns
-    uint64_t pgi_;                      // for updatable columns
-    const std::vector<Page *> &pages_;  // for updatable columns
+    uint64_t pgn_;                     // for updatable columns
+    uint64_t pgi_;                     // for updatable columns
+    const std::vector<Page*>& pages_;  // for updatable columns
   };
 
   friend class Cursor;
 };
 
-#endif  // RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_
+#endif  // VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_

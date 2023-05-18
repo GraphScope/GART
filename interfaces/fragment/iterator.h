@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_INTERFACES_FRAGMENT_ITERATOR_H_
-#define RESEARCH_GART_INTERFACES_FRAGMENT_ITERATOR_H_
+#ifndef INTERFACES_FRAGMENT_ITERATOR_H_
+#define INTERFACES_FRAGMENT_ITERATOR_H_
 
 #include "interfaces/fragment/types.h"
 #include "vegito/src/seggraph/core/blocks.hpp"
@@ -33,8 +33,8 @@ class VertexIterator {
     loc_ = 0;
     high_to_low_flag_ = true;
   }
-  VertexIterator(std::vector<std::pair<vid_t *, vid_t *>> addrs,
-                 std::vector<bool> high_to_low_flags, vid_t *vertex_table_addr,
+  VertexIterator(std::vector<std::pair<vid_t*, vid_t*>> addrs,
+                 std::vector<bool> high_to_low_flags, vid_t* vertex_table_addr,
                  int vlabel) {
     vertex_table_addr_ = vertex_table_addr;
     vlabel_ = vlabel;
@@ -68,7 +68,7 @@ class VertexIterator {
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
         if (delete_flag == 1) {
           auto delete_offset_mask =
-              (((vid_t)1) << (sizeof(vid_t) * 8 - 1)) - (vid_t)1;
+              (((vid_t) 1) << (sizeof(vid_t) * 8 - 1)) - (vid_t) 1;
           auto delete_offset = v & delete_offset_mask;
           outer_delete_offset_.push(delete_offset);
         } else if (delete_flag == 0) {
@@ -90,7 +90,7 @@ class VertexIterator {
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
         if (delete_flag == 1) {
           auto delete_offset_mask =
-              (((vid_t)1) << (sizeof(vid_t) * 8 - 1)) - (vid_t)1;
+              (((vid_t) 1) << (sizeof(vid_t) * 8 - 1)) - (vid_t) 1;
           auto delete_offset = v & delete_offset_mask;
           inner_delete_offset_.push(delete_offset);
         } else if (delete_flag == 0) {
@@ -135,7 +135,7 @@ class VertexIterator {
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
         if (delete_flag == 1) {
           auto delete_offset_mask =
-              (((vid_t)1) << (sizeof(vid_t) * 8 - 1)) - (vid_t)1;
+              (((vid_t) 1) << (sizeof(vid_t) * 8 - 1)) - (vid_t) 1;
           auto delete_offset = v & delete_offset_mask;
           outer_delete_offset_.push(delete_offset);
         } else if (delete_flag == 0) {
@@ -156,7 +156,7 @@ class VertexIterator {
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
         if (delete_flag == 1) {
           auto delete_offset_mask =
-              (((vid_t)1) << (sizeof(vid_t) * 8 - 1)) - (vid_t)1;
+              (((vid_t) 1) << (sizeof(vid_t) * 8 - 1)) - (vid_t) 1;
           auto delete_offset = v & delete_offset_mask;
           inner_delete_offset_.push(delete_offset);
         }
@@ -191,12 +191,12 @@ class VertexIterator {
   }
 
  private:
-  vid_t *vertex_table_addr_;
-  std::vector<std::pair<vid_t *, vid_t *>> addrs_;
+  vid_t* vertex_table_addr_;
+  std::vector<std::pair<vid_t*, vid_t*>> addrs_;
   std::vector<bool> high_to_low_flags_;
-  vid_t *cur_;
-  vid_t *begin_;
-  vid_t *end_;
+  vid_t* cur_;
+  vid_t* begin_;
+  vid_t* end_;
   int loc_;
   bool high_to_low_flag_;
   std::priority_queue<int64_t> inner_delete_offset_;
@@ -215,11 +215,11 @@ class EdgeIterator {
   using EdgeLabelBlockHeader = seggraph::EdgeLabelBlockHeader;
   using VegitoEdgeEntry = seggraph::VegitoEdgeEntry;
 
-  EdgeIterator(VegitoSegmentHeader *seg_header,
-               VegitoEdgeBlockHeader *edge_block_header,
-               EpochBlockHeader *epoch_table_header, char *edge_blob_ptr,
+  EdgeIterator(VegitoSegmentHeader* seg_header,
+               VegitoEdgeBlockHeader* edge_block_header,
+               EpochBlockHeader* epoch_table_header, char* edge_blob_ptr,
                size_t num_entries, size_t edge_prop_size,
-               size_t read_epoch_number, int *prop_offsets) {
+               size_t read_epoch_number, int* prop_offsets) {
     prop_offsets_ = prop_offsets;
     seg_header_ = seg_header;
     edge_block_header_ = edge_block_header;
@@ -233,7 +233,7 @@ class EdgeIterator {
       find_next_valid_cursor();
       seg_block_size_ = seg_header->get_block_size();
       edge_prop_offset_ =
-          seg_header->get_allocated_edge_num((uintptr_t)edge_block_header_);
+          seg_header->get_allocated_edge_num((uintptr_t) edge_block_header_);
     }
   }
 
@@ -268,15 +268,15 @@ class EdgeIterator {
       entries_cursor_ = nullptr;
     } else {
       while (edge_block_header_->get_prev_num_entries() >=
-             (uint64_t)read_end_offset) {
+             (uint64_t) read_end_offset) {
         edge_block_header_ =
-            (VegitoEdgeBlockHeader *)(edge_block_header_->get_prev_pointer() +
+            (VegitoEdgeBlockHeader*) (edge_block_header_->get_prev_pointer() +
                                       edge_blob_ptr_);
       }
 
       auto offset =
           read_end_offset - edge_block_header_->get_prev_num_entries();
-      entries_ = (VegitoEdgeEntry *)(edge_block_header_->get_entries());
+      entries_ = (VegitoEdgeEntry*) (edge_block_header_->get_entries());
       entries_cursor_ = entries_ - offset;
     }
   }
@@ -300,8 +300,8 @@ class EdgeIterator {
     return v;
   }
 
-  char *get_data() {
-    char *data = (char *)((uintptr_t)seg_header_ + seg_block_size_ -
+  char* get_data() {
+    char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
     return data;
@@ -309,18 +309,18 @@ class EdgeIterator {
 
   template <typename EDATA_T>
   EDATA_T get_data(int prop_id) {
-    char *data = (char *)((uintptr_t)seg_header_ + seg_block_size_ -
+    char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
     if (prop_id == 0) {
-      return *(EDATA_T *)(data);
+      return *(EDATA_T*) (data);
     }
 
-    return *(EDATA_T *)(data + prop_offsets_[prop_id - 1]);
+    return *(EDATA_T*) (data + prop_offsets_[prop_id - 1]);
   }
 
   uintptr_t get_edge_property_offset() {
-    return (uintptr_t)seg_header_ + seg_block_size_ -
+    return (uintptr_t) seg_header_ + seg_block_size_ -
            (edge_prop_offset_ + entries_ - entries_cursor_) * edge_prop_size_;
   }
 
@@ -335,7 +335,7 @@ class EdgeIterator {
         auto delete_flag = vid >> (sizeof(vid_t) * 8 - 1);
         if (delete_flag == 1) {
           auto delete_offset_mask =
-              (((vid_t)1) << (sizeof(vid_t) * 8 - 1)) - (vid_t)1;
+              (((vid_t) 1) << (sizeof(vid_t) * 8 - 1)) - (vid_t) 1;
           auto delete_offset = vid & delete_offset_mask;
           delete_offsets_.push(delete_offset);
         } else if (delete_flag == 0) {
@@ -360,7 +360,7 @@ class EdgeIterator {
         break;
       }
       edge_block_header_ =
-          (VegitoEdgeBlockHeader *)(edge_block_header_->get_prev_pointer() +
+          (VegitoEdgeBlockHeader*) (edge_block_header_->get_prev_pointer() +
                                     edge_blob_ptr_);
       if (!edge_block_header_) {
         break;
@@ -369,7 +369,7 @@ class EdgeIterator {
         entries_ = edge_block_header_->get_entries();
         entries_cursor_ = entries_ - num_entries;  // at the begining
         edge_prop_offset_ =
-            seg_header_->get_allocated_edge_num((uintptr_t)edge_block_header_);
+            seg_header_->get_allocated_edge_num((uintptr_t) edge_block_header_);
       }
     }
   }
@@ -385,13 +385,13 @@ class EdgeIterator {
   }
 
  private:
-  VegitoSegmentHeader *seg_header_;
-  VegitoEdgeBlockHeader *edge_block_header_;
-  EpochBlockHeader *epoch_table_header_;
-  char *edge_blob_ptr_;  // for switch block
+  VegitoSegmentHeader* seg_header_;
+  VegitoEdgeBlockHeader* edge_block_header_;
+  EpochBlockHeader* epoch_table_header_;
+  char* edge_blob_ptr_;  // for switch block
 
-  VegitoEdgeEntry *entries_cursor_ = nullptr;
-  VegitoEdgeEntry *entries_ = nullptr;
+  VegitoEdgeEntry* entries_cursor_ = nullptr;
+  VegitoEdgeEntry* entries_ = nullptr;
 
   size_t num_entries_;
   size_t edge_prop_size_;
@@ -402,8 +402,8 @@ class EdgeIterator {
   // for edge property
   size_t seg_block_size_;
   size_t edge_prop_offset_;
-  int *prop_offsets_;
+  int* prop_offsets_;
 };
 }  // namespace gart
 
-#endif  // RESEARCH_GART_INTERFACES_FRAGMENT_ITERATOR_H_
+#endif  // INTERFACES_FRAGMENT_ITERATOR_H_

@@ -43,13 +43,13 @@ class SegTransaction {
  public:
   class RollbackExcept : public std::runtime_error {
    public:
-    explicit RollbackExcept(const std::string &what_arg)
+    explicit RollbackExcept(const std::string& what_arg)
         : std::runtime_error(what_arg) {}
-    explicit RollbackExcept(const char *what_arg)
+    explicit RollbackExcept(const char* what_arg)
         : std::runtime_error(what_arg) {}
   };
 
-  SegTransaction(SegGraph &_graph, timestamp_t _local_txn_id,
+  SegTransaction(SegGraph& _graph, timestamp_t _local_txn_id,
                  timestamp_t _read_epoch_id, bool _batch_update,
                  bool _trace_cache)
       : graph(_graph),
@@ -73,14 +73,14 @@ class SegTransaction {
         acquired_seg_read_locks(),
         acquired_seg_write_locks(),
         timestamps_to_update() {
-    wal_append((uint64_t)0);  // number of operations
+    wal_append((uint64_t) 0);  // number of operations
     wal_append(read_epoch_id);
     wal_append(local_txn_id);
   }
 
-  SegTransaction(const SegTransaction &) = delete;
+  SegTransaction(const SegTransaction&) = delete;
 
-  SegTransaction(SegTransaction &&txn)
+  SegTransaction(SegTransaction&& txn)
       : graph(txn.graph),
         local_txn_id(std::move(txn.local_txn_id)),
         read_epoch_id(std::move(txn.read_epoch_id)),
@@ -133,19 +133,20 @@ class SegTransaction {
                             vertex_t dst);
 
   // segment compact
-  bool merge_segment(SegmentHeader *old_seg, SegmentHeader *new_seg,
-                     vertex_t seg_idx, EdgeEntry &entry, uintptr_t *pointer,
-                     EdgeBlockHeader **edge_block);
+  bool merge_segment(SegmentHeader* old_seg, SegmentHeader* new_seg,
+                     vertex_t seg_idx, EdgeEntry& entry, uintptr_t* pointer,
+                     EdgeBlockHeader** edge_block);
   void merge_segments(label_t label, dir_t dir = EOUT);
 
   void abort();
 
   ~SegTransaction() {
-    if (valid) abort();
+    if (valid)
+      abort();
   }
 
  private:
-  SegGraph &graph;
+  SegGraph& graph;
   const timestamp_t local_txn_id;
   const timestamp_t read_epoch_id;
   const bool batch_update;
@@ -160,9 +161,9 @@ class SegTransaction {
 
   std::vector<std::pair<uintptr_t, order_t>> segment_cache;
   std::vector<std::pair<uintptr_t, order_t>> segment_to_be_freed_cache;
-  std::unordered_map<uintptr_t *, uintptr_t> region_ptr_cache;
+  std::unordered_map<uintptr_t*, uintptr_t> region_ptr_cache;
 
-  std::unordered_map<EdgeBlockHeader *, std::pair<size_t, size_t>>
+  std::unordered_map<EdgeBlockHeader*, std::pair<size_t, size_t>>
       edge_block_num_entries_data_length_cache;
   std::vector<vertex_t> new_vertex_cache;
   std::deque<vertex_t> recycled_vertex_cache;
@@ -170,11 +171,11 @@ class SegTransaction {
   std::unordered_set<vertex_t> acquired_locks;
   std::unordered_set<segid_t> acquired_seg_read_locks;
   std::unordered_set<segid_t> acquired_seg_write_locks;
-  std::vector<std::pair<timestamp_t *, timestamp_t>> timestamps_to_update;
+  std::vector<std::pair<timestamp_t*, timestamp_t>> timestamps_to_update;
 
   template <typename T, typename = std::enable_if_t<std::is_trivial_v<T>>>
   inline void wal_append(T data) {
-    wal.append(reinterpret_cast<char *>(&data), sizeof(T));
+    wal.append(reinterpret_cast<char*>(&data), sizeof(T));
   }
 
   inline void wal_append(std::string_view data) {
@@ -182,8 +183,8 @@ class SegTransaction {
     wal.append(data);
   }
 
-  inline uint64_t &wal_num_ops() {
-    return *reinterpret_cast<uint64_t *>(wal.data());
+  inline uint64_t& wal_num_ops() {
+    return *reinterpret_cast<uint64_t*>(wal.data());
   }
 
   void check_writable() {
@@ -203,9 +204,11 @@ class SegTransaction {
   }
 
   bool ensure_segment_read_lock(segid_t seg_id, bool write) {
-    if (write) return false;
+    if (write)
+      return false;
     auto iter = acquired_seg_read_locks.find(seg_id);
-    if (iter != acquired_seg_read_locks.end()) return true;
+    if (iter != acquired_seg_read_locks.end())
+      return true;
     if (!graph.seg_mutexes[seg_id]->try_lock_shared_for(SegGraph::TIMEOUT))
       throw RollbackExcept("Deadlock on Segment: " + std::to_string(seg_id) +
                            ".");
@@ -220,7 +223,8 @@ class SegTransaction {
     }
 
     auto iter = acquired_seg_write_locks.find(seg_id);
-    if (iter != acquired_seg_write_locks.end()) return;
+    if (iter != acquired_seg_write_locks.end())
+      return;
     if (!graph.seg_mutexes[seg_id]->try_lock_for(SegGraph::TIMEOUT))
       throw RollbackExcept("Deadlock on Segment: " + std::to_string(seg_id) +
                            ".");
@@ -234,7 +238,8 @@ class SegTransaction {
 
   bool ensure_vertex_lock(vertex_t vertex_id) {
     auto iter = acquired_locks.find(vertex_id);
-    if (iter != acquired_locks.end()) return true;
+    if (iter != acquired_locks.end())
+      return true;
     if (!graph.vertex_futexes[vertex_id].try_lock_for(SegGraph::TIMEOUT))
       throw RollbackExcept("Deadlock on Vertex: " + std::to_string(vertex_id) +
                            ".");
@@ -272,15 +277,15 @@ class SegTransaction {
   }
 
   void clean() {
-    for (const auto &vertex_id : acquired_locks) {
+    for (const auto& vertex_id : acquired_locks) {
       graph.vertex_futexes[vertex_id].unlock();
     }
 
-    for (const auto &segid : acquired_seg_read_locks) {
+    for (const auto& segid : acquired_seg_read_locks) {
       graph.seg_mutexes[segid]->unlock_shared();
     }
 
-    for (const auto &segid : acquired_seg_write_locks) {
+    for (const auto& segid : acquired_seg_write_locks) {
       graph.seg_mutexes[segid]->unlock();
     }
     valid = false;
@@ -288,7 +293,7 @@ class SegTransaction {
   }
 
   std::pair<size_t, size_t> get_num_entries_data_length_cache(
-      EdgeBlockHeader *edge_block) const {
+      EdgeBlockHeader* edge_block) const {
     if (batch_update || !trace_cache)
       return edge_block->get_num_entries_data_length_atomic();
     auto iter = edge_block_num_entries_data_length_cache.find(edge_block);
@@ -298,7 +303,7 @@ class SegTransaction {
       return iter->second;
   }
 
-  void set_num_entries_data_length_cache(EdgeBlockHeader *edge_block,
+  void set_num_entries_data_length_cache(EdgeBlockHeader* edge_block,
                                          size_t num_entries,
                                          size_t data_length) {
     if (batch_update)
@@ -308,9 +313,10 @@ class SegTransaction {
                                                               data_length};
   }
 
-  std::pair<EdgeEntry *, char *> locate_edge_in_block(
-      vertex_t dst, EdgeBlockHeader *edge_block, size_t num_entries,
-      size_t data_length);
+  std::pair<EdgeEntry*, char*> locate_edge_in_block(vertex_t dst,
+                                                    EdgeBlockHeader* edge_block,
+                                                    size_t num_entries,
+                                                    size_t data_length);
   uintptr_t locate_block_in_segment(uintptr_t ptr, vertex_t idx);
 
   void ensure_no_confict(vertex_t src, label_t label, dir_t dir);

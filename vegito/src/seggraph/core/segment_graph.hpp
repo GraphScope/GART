@@ -42,7 +42,7 @@ class EpochGraphReader;
 
 class SegGraph {
  public:
-  SegGraph(gart::graph::RGMapping *rg_map,
+  SegGraph(gart::graph::RGMapping* rg_map,
            size_t _max_block_size = 10 * (1ul << 30),
            vertex_t _max_vertex_id = 10 * (1ul << 20))
       : epoch_id(0),
@@ -60,7 +60,6 @@ class SegGraph {
         block_manager(_max_block_size),
 
         rg_map(rg_map) {
-
     array_allocator.set_client(block_manager.get_client());
 
     auto futex_allocater =
@@ -70,7 +69,7 @@ class SegGraph {
 
     auto shared_mutex_allocater =
         std::allocator_traits<decltype(array_allocator)>::rebind_alloc<
-            std::shared_timed_mutex *>(array_allocator);
+            std::shared_timed_mutex*>(array_allocator);
     seg_mutexes = shared_mutex_allocater.allocate(max_seg_id);
 
     auto pointer_allocater = std::allocator_traits<decltype(
@@ -90,9 +89,9 @@ class SegGraph {
     srand(time(0));
   }
 
-  SegGraph(const SegGraph &) = delete;
+  SegGraph(const SegGraph&) = delete;
 
-  SegGraph(SegGraph &&) = delete;
+  SegGraph(SegGraph&&) = delete;
 
   ~SegGraph() noexcept {
     auto futex_allocater =
@@ -102,7 +101,7 @@ class SegGraph {
 
     auto shared_mutex_allocater =
         std::allocator_traits<decltype(array_allocator)>::rebind_alloc<
-            std::shared_timed_mutex *>(array_allocator);
+            std::shared_timed_mutex*>(array_allocator);
     shared_mutex_allocater.deallocate(seg_mutexes, max_seg_id);
 
     auto pointer_allocater = std::allocator_traits<decltype(
@@ -143,7 +142,7 @@ class SegGraph {
     return _vertex_id % VERTEX_PER_SEG;
   }
 
-  BlockManager &get_block_manager() { return block_manager; }
+  BlockManager& get_block_manager() { return block_manager; }
 
   void recycle_segments(timestamp_t epoch_id);
 
@@ -155,7 +154,6 @@ class SegGraph {
   EpochGraphReader create_graph_reader(timestamp_t read_epoch);
   EpochGraphWriter create_graph_writer(timestamp_t write_epoch);
 
-
   size_t get_edge_prop_size(label_t label) {
     assert(rg_map);
     return rg_map->get_edge_meta(static_cast<int>(label)).edge_prop_size;
@@ -165,12 +163,13 @@ class SegGraph {
    * Analytics interface
    */
   template <class T>
-  T *alloc_vertex_array(T init, vertex_t sz = -1) {
-    if (sz == -1) sz = get_max_vertex_id();
+  T* alloc_vertex_array(T init, vertex_t sz = -1) {
+    if (sz == -1)
+      sz = get_max_vertex_id();
     auto vertex_data_allocater =
         std::allocator_traits<decltype(array_allocator)>::rebind_alloc<T>(
             array_allocator);
-    T *vertex_data = vertex_data_allocater.allocate(sz);
+    T* vertex_data = vertex_data_allocater.allocate(sz);
     assert(vertex_data);
     for (vertex_t v_i = 0; v_i < sz; v_i++) {
       vertex_data[v_i] = init;
@@ -179,14 +178,14 @@ class SegGraph {
   }
 
   template <typename T>
-  T *dealloc_vertex_array(T *vertex_data) {
+  T* dealloc_vertex_array(T* vertex_data) {
     auto vertex_data_allocater =
         std::allocator_traits<decltype(array_allocator)>::rebind_alloc<T>(
             array_allocator);
     vertex_data_allocater.deallocate(vertex_data, get_max_vertex_id());
   }
 
-  gart::BlobSchema &get_blob_schema() { return blob_schema; }
+  gart::BlobSchema& get_blob_schema() { return blob_schema; }
 
  private:
   using cacheline_padding_t = char[64];
@@ -206,16 +205,16 @@ class SegGraph {
   const segid_t max_seg_id;
 
   // memory allocator
-  SparseArrayAllocator<void> array_allocator;   // meta data
-  BlockManager block_manager;   // topology data
+  SparseArrayAllocator<void> array_allocator;  // meta data
+  BlockManager block_manager;                  // topology data
 
-  Futex *vertex_futexes;
-  std::shared_timed_mutex **seg_mutexes;
-  uintptr_t *vertex_ptrs;
-  uintptr_t *edge_label_ptrs;
+  Futex* vertex_futexes;
+  std::shared_timed_mutex** seg_mutexes;
+  uintptr_t* vertex_ptrs;
+  uintptr_t* edge_label_ptrs;
 
-  vertex_t *vertex_table;
-  vertex_t *ovl2g;
+  vertex_t* vertex_table;
+  vertex_t* ovl2g;
   // TODO: vineyard::Hashmap<vid_t, vid_t> ovg2l_map;
 
   vineyard::ObjectID edge_label_ptrs_oid;
@@ -226,7 +225,7 @@ class SegGraph {
   uint64_t deleted_inner = 0;
   uint64_t deleted_outer = 0;
 
-  gart::graph::RGMapping *rg_map;
+  gart::graph::RGMapping* rg_map;
 
   constexpr static size_t COMPACTION_CYCLE = 1ul << 20;
   constexpr static size_t RECYCLE_FREQ = 1ul << 16;

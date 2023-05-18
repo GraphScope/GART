@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_UTIL_MACROS_H_
-#define RESEARCH_GART_VEGITO_SRC_UTIL_MACROS_H_
+#ifndef VEGITO_SRC_UTIL_MACROS_H_
+#define VEGITO_SRC_UTIL_MACROS_H_
 
 #include <cassert>
 #include <stdexcept>
@@ -73,13 +73,13 @@
 
 #define DISABLE_COPY_AND_ASSIGN(classname) \
  private:                                  \
-  classname(const classname &) = delete;   \
-  classname &operator=(const classname &) = delete
+  classname(const classname&) = delete;    \
+  classname& operator=(const classname&) = delete
 
 #define COMPILER_MEMORY_FENCE asm volatile("" ::: "memory")
 
 #ifdef NDEBUG
-#define ALWAYS_ASSERT(expr) (likely((expr)) ? (void)0 : abort())
+#define ALWAYS_ASSERT(expr) (likely((expr)) ? (void) 0 : abort())
 // #define ALWAYS_ASSERT(expr) (likely(expr))? (void)0: __builtin_unreachable();
 #else
 #define ALWAYS_ASSERT(expr) assert((expr))
@@ -87,17 +87,17 @@
 
 #define ARRAY_NELEMS(a) (sizeof(a) / sizeof((a)[0]))
 
-#define VERBOSE(expr) ((void)0)
+#define VERBOSE(expr) ((void) 0)
 // #define VERBOSE(expr) (expr)
 
 #ifdef CHECK_INVARIANTS
 #define INVARIANT(expr) ALWAYS_ASSERT(expr)
 #else
-#define INVARIANT(expr) ((void)0)
+#define INVARIANT(expr) ((void) 0)
 #endif /* CHECK_INVARIANTS */
 
 // XXX: would be nice if we checked these during single threaded execution
-#define SINGLE_THREADED_INVARIANT(expr) ((void)0)
+#define SINGLE_THREADED_INVARIANT(expr) ((void) 0)
 
 // tune away
 #define SMALL_SIZE_VEC 128
@@ -138,4 +138,4 @@
 // number of nanoseconds in 1 second (1e9)
 #define ONE_SECOND_NS 1000000000
 
-#endif // RESEARCH_GART_VEGITO_SRC_UTIL_MACROS_H_
+#endif  // VEGITO_SRC_UTIL_MACROS_H_

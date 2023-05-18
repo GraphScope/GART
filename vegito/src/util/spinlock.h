@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_UTIL_SPINLOCK_H_
-#define RESEARCH_GART_VEGITO_SRC_UTIL_SPINLOCK_H_
+#ifndef VEGITO_SRC_UTIL_SPINLOCK_H_
+#define VEGITO_SRC_UTIL_SPINLOCK_H_
 
 #include "atomic.h"
 
@@ -43,9 +43,11 @@ class SpinLock {
 
   inline void Lock() {
     while (1) {
-      if (!xchg16((uint16_t *)&lock, 1)) return;  // NOLINT(readability/casting)
+      if (!xchg16((uint16_t*) &lock, 1))
+        return;  // NOLINT(readability/casting)
 
-      while (lock) cpu_relax();
+      while (lock)
+        cpu_relax();
     }
   }
 
@@ -55,10 +57,10 @@ class SpinLock {
   }
 
   inline uint16_t Trylock() {
-    return xchg16((uint16_t *)&lock, 1);  // NOLINT(readability/casting)
+    return xchg16((uint16_t*) &lock, 1);  // NOLINT(readability/casting)
   }
 
   inline uint16_t IsLocked() { return lock; }
 };
 
-#endif  // RESEARCH_GART_VEGITO_SRC_UTIL_SPINLOCK_H_
+#endif  // VEGITO_SRC_UTIL_SPINLOCK_H_

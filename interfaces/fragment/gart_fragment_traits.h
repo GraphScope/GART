@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_INTERFACES_FRAGMENT_GART_FRAGMENT_TRAITS_H_
-#define RESEARCH_GART_INTERFACES_FRAGMENT_GART_FRAGMENT_TRAITS_H_
+#ifndef INTERFACES_FRAGMENT_GART_FRAGMENT_TRAITS_H_
+#define INTERFACES_FRAGMENT_GART_FRAGMENT_TRAITS_H_
 
 #include "interfaces/fragment/gart_fragment.h"
 
@@ -31,4 +31,4 @@ struct is_property_fragment<gart::GartFragment<OID_T, VID_T>> {
 };
 }  // namespace vineyard
 
-#endif  // RESEARCH_GART_INTERFACES_FRAGMENT_GART_FRAGMENT_TRAITS_H_
+#endif  // INTERFACES_FRAGMENT_GART_FRAGMENT_TRAITS_H_

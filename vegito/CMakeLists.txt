@@ -90,6 +90,19 @@ file(GLOB SOURCES
           "src/property/*.cc" "src/graph/*.cc" "src/seggraph/src/*.cpp"
           )
 
+file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc" "src/*.h" "src/*.hpp"
+         "src/framework/*.cc" "src/framework/utils/*.cc" "src/fragment/*.cc"
+         "src/property/*.cc" "src/graph/*.cc" "src/graph/graph_ops/*.cc" "src/seggraph/src/*.cpp"
+         "src/framework/*.h" "src/framework/utils/*.h" "src/fragment/*.h"
+         "src/property/*.h" "src/graph/*.h" "src/graph/graph_ops/*.h" "src/seggraph/core/*.hpp"
+         "../interfaces/fragment/*.h"
+)
+    
+add_custom_target(vegito_clformat
+          COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
+          COMMENT "Running clang-format."
+          VERBATIM)
+
 add_executable(vegito "src/main.cc"
                ${SOURCES}
                )

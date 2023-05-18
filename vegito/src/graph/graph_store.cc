@@ -19,7 +19,7 @@ namespace gart {
 namespace graph {
 
 GraphStore::~GraphStore() {
-  for (const auto &schema : blob_schemas_) {
+  for (const auto& schema : blob_schemas_) {
     vineyard::ObjectID vertex_table_oid = schema.second.get_vertex_table_oid(),
                        ovl2g_oid = schema.second.get_ovl2g_oid();
     array_allocator.deallocate_v6d(vertex_table_oid);
@@ -28,12 +28,12 @@ GraphStore::~GraphStore() {
 }
 
 template <>
-seggraph::SegGraph *GraphStore::get_graph<seggraph::SegGraph>(uint64_t vlabel) {
+seggraph::SegGraph* GraphStore::get_graph<seggraph::SegGraph>(uint64_t vlabel) {
   return seg_graphs_[vlabel];
 }
 
 template <class GraphType>
-GraphType *GraphStore::get_graph(uint64_t vlabel) {
+GraphType* GraphStore::get_graph(uint64_t vlabel) {
   return nullptr;
 }
 
@@ -60,13 +60,13 @@ void GraphStore::put_schema() {
   assert(response_task.is_ok());
 }
 
-void GraphStore::add_vgraph(uint64_t vlabel, RGMapping *rg_map) {
+void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
   seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
-  auto &blob_schema = seg_graphs_[vlabel]->get_blob_schema();
+  auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
 
   // add outer CSR and its schema
   ov_seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
-  auto &ov_schema = ov_seg_graphs_[vlabel]->get_blob_schema();
+  auto& ov_schema = ov_seg_graphs_[vlabel]->get_blob_schema();
   blob_schema.set_ov_block_oid(ov_schema.get_block_oid());
   blob_schema.set_ov_elabel2segs(ov_schema.get_elabel2segs());
 
@@ -81,7 +81,7 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping *rg_map) {
     vineyard::ObjectID oid;
     uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
                      ov_seg_graphs_[vlabel]->get_vertex_capacity();
-    auto &vtable = vertex_tables_[vlabel];
+    auto& vtable = vertex_tables_[vlabel];
     vtable.table = alloc.allocate_v6d(max_v, oid);
     vtable.max_inner = 0;
     vtable.min_outer = max_v;
@@ -115,30 +115,30 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
   uint64_t v_capacity = seg_graphs_[vlabel]->get_vertex_capacity();
 
   switch (schema.store_type) {
-    case PROP_COLUMN: {
-      property_stores_[vlabel] = new PropertyColPaged(schema, v_capacity);
-      assert(blob_schemas_.find(vlabel) != blob_schemas_.end());
-      auto &blob_schema = blob_schemas_[vlabel];
-      auto p = property_stores_[vlabel];
-      blob_schema.set_prop_meta(p->get_blob_metas());
-      break;
-    }
-    case PROP_COLUMN2: {
-      property_stores_[vlabel] = new PropertyColArray(schema, v_capacity);
-      break;
-    }
-    default:
-      printf("Not implement this property store type: %d\n", schema.store_type);
-      assert(false);
+  case PROP_COLUMN: {
+    property_stores_[vlabel] = new PropertyColPaged(schema, v_capacity);
+    assert(blob_schemas_.find(vlabel) != blob_schemas_.end());
+    auto& blob_schema = blob_schemas_[vlabel];
+    auto p = property_stores_[vlabel];
+    blob_schema.set_prop_meta(p->get_blob_metas());
+    break;
+  }
+  case PROP_COLUMN2: {
+    property_stores_[vlabel] = new PropertyColArray(schema, v_capacity);
+    break;
+  }
+  default:
+    printf("Not implement this property store type: %d\n", schema.store_type);
+    assert(false);
   }
 }
 
 void GraphStore::update_blob(uint64_t blob_epoch) {
-  for (auto &pair : blob_schemas_) {
+  for (auto& pair : blob_schemas_) {
     uint64_t vlabel = pair.first;
-    gart::BlobSchema &schema = pair.second;
-    seggraph::SegGraph *graph = seg_graphs_[vlabel];
-    seggraph::SegGraph *ov_graph = ov_seg_graphs_[vlabel];
+    gart::BlobSchema& schema = pair.second;
+    seggraph::SegGraph* graph = seg_graphs_[vlabel];
+    seggraph::SegGraph* ov_graph = ov_seg_graphs_[vlabel];
     schema.set_vtable_bound(graph->get_max_vertex_id(),
                             ov_graph->get_max_vertex_id());
     schema.set_vtable_location(
@@ -205,7 +205,7 @@ struct TypeDef {
 
     // propertyDefList
     json props_array = json::array();
-    for (const auto &prop : propertyDefList) {
+    for (const auto& prop : propertyDefList) {
       props_array.push_back(prop.json(gie));
     }
     res["propertyDefList"] = props_array;
@@ -237,7 +237,8 @@ struct TypeDef {
       char cstr[20];
       sprintf(cstr, "%d", v[i]);  // NOLINT(runtime/printf)
       mapping_str += std::string(cstr);
-      if (i != v.size() - 1) mapping_str += ", ";
+      if (i != v.size() - 1)
+        mapping_str += ", ";
     }
     mapping_str += "]";
     return mapping_str;
@@ -256,7 +257,8 @@ struct SchemaJson {
       sprintf(cstr, "\"%s\"",  // NOLINT(runtime/printf)
               uniquePropertyNames[i].c_str());
       str += std::string(cstr);
-      if (i != uniquePropertyNames.size() - 1) str += ", ";
+      if (i != uniquePropertyNames.size() - 1)
+        str += ", ";
     }
     str += "]";
     return str;
@@ -265,8 +267,8 @@ struct SchemaJson {
 
 }  // namespace
 
-void SchemaImpl::fill_json(void *ptr) const {
-  SchemaJson &sj = *reinterpret_cast<SchemaJson *>(ptr);
+void SchemaImpl::fill_json(void* ptr) const {
+  SchemaJson& sj = *reinterpret_cast<SchemaJson*>(ptr);
 
   sj.partitionNum = 0;  // XXX: hard code
   sj.types.resize(label_id_map.size());
@@ -274,10 +276,10 @@ void SchemaImpl::fill_json(void *ptr) const {
   // Prop
   std::vector<PropDef> props(property_id_map.size());
   sj.uniquePropertyNames.resize(props.size());
-  for (const auto &pair : property_id_map) {
+  for (const auto& pair : property_id_map) {
     std::string pname = pair.first;
     int pid = pair.second;
-    PropDef &prop = props[pid];
+    PropDef& prop = props[pid];
     prop.id = pid;
     prop.name = pname;
     sj.uniquePropertyNames[pid] = pname;
@@ -285,15 +287,15 @@ void SchemaImpl::fill_json(void *ptr) const {
 
   // need to sort map
   std::map<int, std::string> sort_id_label_map;
-  for (const auto &pair : label_id_map) {
+  for (const auto& pair : label_id_map) {
     sort_id_label_map[pair.second] = pair.first;
   }
   assert(sort_id_label_map.size() == label_id_map.size());
 
-  for (const auto &pair : sort_id_label_map) {
+  for (const auto& pair : sort_id_label_map) {
     std::string label = pair.second;
     int label_id = pair.first;
-    TypeDef &type = sj.types[label_id];
+    TypeDef& type = sj.types[label_id];
 
     bool is_v = label_id < elabel_offset;
 
@@ -321,7 +323,7 @@ void SchemaImpl::fill_json(void *ptr) const {
                                 props.begin() + pid_end);
     if (!is_v) {
       // TODO(sijie): src_vlabel, dst_vlabel
-      const auto &pair = edge_relation.at(label_id);
+      const auto& pair = edge_relation.at(label_id);
       type.src_vlabel = sj.types.at(pair.first).label;
       type.dst_vlabel = sj.types.at(pair.second).label;
       assert(type.src_vlabel.size() && type.dst_vlabel.size());
@@ -341,7 +343,7 @@ std::string SchemaImpl::get_json(bool gie, int pid) {
   json graph_schema;
   graph_schema["partitionNum"] = sj.partitionNum;
   json props_array = json::array();
-  for (const auto &type : sj.types) {
+  for (const auto& type : sj.types) {
     props_array.push_back(type.json(gie));
   }
   graph_schema["types"] = props_array;
@@ -362,7 +364,7 @@ void GraphStore::get_blob_json(uint64_t write_epoch) const {
   blob_schema["vertex_label_num"] = blob_schemas_.size();
   auto blob_schemas = fetch_blob_schema(write_epoch);
   json blob_array = json::array();
-  for (const auto &pair : blob_schemas) {
+  for (const auto& pair : blob_schemas) {
     uint64_t vlabel = pair.first;
     auto val = pair.second.json();
     blob_array.push_back(val);

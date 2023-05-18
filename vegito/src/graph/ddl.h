@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_SRC_GRAPH_DDL_H_
-#define RESEARCH_GART_SRC_GRAPH_DDL_H_
+#ifndef VEGITO_SRC_GRAPH_DDL_H_
+#define VEGITO_SRC_GRAPH_DDL_H_
 
 #include <cassert>
 #include <map>
@@ -73,21 +73,21 @@ class RGMapping {
 
   inline int get_table(int vlabel) const { return graph2table[vlabel]; }
 
-  inline const std::vector<EdgeMeta> &get_edge_metas() const { return edges_; }
+  inline const std::vector<EdgeMeta>& get_edge_metas() const { return edges_; }
 
   inline int get_elabel_from_vlabel(int src_vlabel, int dst_vlabel) {
     return vlabel2elabel_[{src_vlabel, dst_vlabel}];
   }
 
-  inline const EdgeMeta &get_edge_meta(int elabel) const {
+  inline const EdgeMeta& get_edge_meta(int elabel) const {
     assert(elabel < MAX_ELABELS);
     return edges_[elabel];
   }
 
   // return edge_label
-  inline int get_edge_meta(int dst_vlabel, EdgeMeta &meta) const {
+  inline int get_edge_meta(int dst_vlabel, EdgeMeta& meta) const {
     for (int i = 0; i < edges_.size(); ++i) {
-      const EdgeMeta &m = edges_[i];
+      const EdgeMeta& m = edges_[i];
       if (m.dst_vlabel == dst_vlabel) {
         meta = m;
         return i;
@@ -197,4 +197,4 @@ class RGMapping {
 }  // namespace graph
 }  // namespace gart
 
-#endif  // RESEARCH_GART_SRC_GRAPH_GRAPH_H_
+#endif  // VEGITO_SRC_GRAPH_DDL_H_

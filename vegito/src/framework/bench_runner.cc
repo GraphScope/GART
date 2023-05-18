@@ -28,8 +28,8 @@ namespace framework {
 
 void init_graph_schema(std::string graph_schema_path,
                        std::string table_schema_path,
-                       graph::GraphStore *graph_store,
-                       graph::RGMapping *rg_map) {
+                       graph::GraphStore* graph_store,
+                       graph::RGMapping* rg_map) {
   using json = vineyard::json;
 
   std::ifstream graph_schema_file(graph_schema_path);
@@ -50,7 +50,7 @@ void init_graph_schema(std::string graph_schema_path,
 
   try {
     config = json::parse(graph_schema_file);
-  } catch (json::parse_error &e) {
+  } catch (json::parse_error& e) {
     LOG(ERROR) << "Parse graph schema file (" << graph_schema_path
                << ") failed: " << e.what();
     exit(1);
@@ -58,7 +58,7 @@ void init_graph_schema(std::string graph_schema_path,
 
   try {
     table_schema = json::parse(table_schema_file);
-  } catch (json::parse_error &e) {
+  } catch (json::parse_error& e) {
     LOG(ERROR) << "Parse table schema file (" << table_schema_path
                << ") failed: " << e.what();
     exit(1);
@@ -127,7 +127,7 @@ void init_graph_schema(std::string graph_schema_path,
           } else if (prop_dtype_str == "float") {
             prop_dtype = "FLOAT";
           } else if (prop_dtype_str == "varchar(255)") {
-            prop_dtype = "LONGSTRING";    // TODO: unified string types
+            prop_dtype = "LONGSTRING";  // TODO: unified string types
           } else if (prop_dtype_str == "text") {
             prop_dtype = "TEXT";
           } else {
@@ -319,7 +319,7 @@ void Runner::apply_log_to_store_(std::string log, int p_id) {
 
 void Runner::start_kafka_to_process_(int p_id) {
   std::cout << "start_kafka_to_process_" << std::endl;
-  RdKafka::Conf *conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+  RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   std::string rdkafka_err;
   if (conf->set("metadata.broker.list", FLAGS_kafka_broker_list, rdkafka_err) !=
       RdKafka::Conf::CONF_OK) {
@@ -338,16 +338,16 @@ void Runner::start_kafka_to_process_(int p_id) {
     LOG(WARNING) << "Failed to set auto.offset.reset: " << rdkafka_err;
   }
 
-  RdKafka::Consumer *consumer = RdKafka::Consumer::create(conf, rdkafka_err);
+  RdKafka::Consumer* consumer = RdKafka::Consumer::create(conf, rdkafka_err);
 
   if (!consumer) {
     LOG(INFO) << "Failed to create consumer: " << rdkafka_err;
     exit(1);
   }
 
-  RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+  RdKafka::Conf* tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 
-  RdKafka::Topic *topic = RdKafka::Topic::create(
+  RdKafka::Topic* topic = RdKafka::Topic::create(
       consumer, FLAGS_kafka_unified_log_topic, tconf, rdkafka_err);
   int32_t partition = 0;
   int64_t start_offset = RdKafka::Topic::OFFSET_BEGINNING;
@@ -358,9 +358,9 @@ void Runner::start_kafka_to_process_(int p_id) {
     exit(1);
   }
   while (1) {
-    RdKafka::Message *msg = consumer->consume(topic, partition, 1000);
+    RdKafka::Message* msg = consumer->consume(topic, partition, 1000);
     std::string str;
-    const char *str_addr = static_cast<const char *>(msg->payload());
+    const char* str_addr = static_cast<const char*>(msg->payload());
     int str_len = static_cast<int>(msg->len());
     if (str_len == 0) {
       continue;

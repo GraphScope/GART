@@ -35,10 +35,10 @@ class EdgeIteratorBase {
 
 class EpochEdgeIterator : public EdgeIteratorBase {
  public:
-  EpochEdgeIterator(VegitoSegmentHeader *_seg_header,
-                    VegitoEdgeBlockHeader *_header,
-                    EpochBlockHeader *_epoch_header,
-                    const BlockManager &_block_manager, size_t _num_entries,
+  EpochEdgeIterator(VegitoSegmentHeader* _seg_header,
+                    VegitoEdgeBlockHeader* _header,
+                    EpochBlockHeader* _epoch_header,
+                    const BlockManager& _block_manager, size_t _num_entries,
                     size_t _edge_prop_size, timestamp_t _read_epoch_id)
       : seg_header(_seg_header),
         header(_header),
@@ -51,21 +51,21 @@ class EpochEdgeIterator : public EdgeIteratorBase {
       init(epoch_header);
       // init edge property access
       seg_block_size = seg_header->get_block_size();
-      edge_prop_offset = seg_header->get_allocated_edge_num((uintptr_t)header);
+      edge_prop_offset = seg_header->get_allocated_edge_num((uintptr_t) header);
     }
   }
 
   EpochEdgeIterator() = default;
 
-  EpochEdgeIterator(const EpochEdgeIterator &other) = default;
+  EpochEdgeIterator(const EpochEdgeIterator& other) = default;
 
-  EpochEdgeIterator &operator=(const EpochEdgeIterator &other) = default;
+  EpochEdgeIterator& operator=(const EpochEdgeIterator& other) = default;
 
-  EpochEdgeIterator(EpochEdgeIterator &&other) = default;
+  EpochEdgeIterator(EpochEdgeIterator&& other) = default;
 
-  EpochEdgeIterator &operator=(EpochEdgeIterator &&other) = default;
+  EpochEdgeIterator& operator=(EpochEdgeIterator&& other) = default;
 
-  void init(EpochBlockHeader *epoch_header) {
+  void init(EpochBlockHeader* epoch_header) {
     // search epoch table for the offset
     auto epoch_entries = epoch_header->get_entries();
     auto num_epoches = epoch_header->get_num_entries();
@@ -103,15 +103,17 @@ class EpochEdgeIterator : public EdgeIteratorBase {
 
   bool switch_block() {
     // handle empty edge iterator
-    if (!header) return false;
+    if (!header)
+      return false;
     header = block_manager.convert<VegitoEdgeBlockHeader>(
         header->get_prev_pointer());
-    if (!header) return false;
+    if (!header)
+      return false;
     entries = header->get_entries();
     auto num_entries = header->get_num_entries();
 
     entries_cursor = entries - num_entries;  // at the begining
-    edge_prop_offset = seg_header->get_allocated_edge_num((uintptr_t)header);
+    edge_prop_offset = seg_header->get_allocated_edge_num((uintptr_t) header);
     return true;
   }
 
@@ -125,7 +127,8 @@ class EpochEdgeIterator : public EdgeIteratorBase {
   void next() { entries_cursor++; }
 
   vertex_t dst_id() {
-    if (!valid()) return SegGraph::VERTEX_TOMBSTONE;
+    if (!valid())
+      return SegGraph::VERTEX_TOMBSTONE;
     return entries_cursor->get_dst();
   }
 
@@ -134,7 +137,8 @@ class EpochEdgeIterator : public EdgeIteratorBase {
   // NOTICE: Side effect!!!
   size_t size() {
     // empty iterator
-    if (!header || !epoch_header) return 0;
+    if (!header || !epoch_header)
+      return 0;
 
     // TODO(ssj): save state
     auto curr_entries_cursor = entries_cursor;
@@ -150,8 +154,8 @@ class EpochEdgeIterator : public EdgeIteratorBase {
   }
 
   std::string_view edge_data() {
-    char *data = reinterpret_cast<char *>(
-        (uintptr_t)seg_header + seg_block_size -
+    char* data = reinterpret_cast<char*>(
+        (uintptr_t) seg_header + seg_block_size -
         (edge_prop_offset + entries - entries_cursor) * edge_prop_size);
     return std::string_view(data, edge_prop_size);
   }
@@ -161,8 +165,8 @@ class EpochEdgeIterator : public EdgeIteratorBase {
   }
 
   std::string_view edge_data_from_index(size_t index) {
-    char *data = reinterpret_cast<char *>(
-        (uintptr_t)seg_header + seg_block_size - index * edge_prop_size);
+    char* data = reinterpret_cast<char*>(
+        (uintptr_t) seg_header + seg_block_size - index * edge_prop_size);
     return std::string_view(data, edge_prop_size);
   }
 
@@ -173,13 +177,13 @@ class EpochEdgeIterator : public EdgeIteratorBase {
   void set_iter_state(int64_t offset) {}
 
  private:
-  VegitoSegmentHeader *seg_header = nullptr;
-  VegitoEdgeEntry *entries = nullptr;
-  VegitoEdgeEntry *entries_cursor = nullptr;
-  VegitoEdgeBlockHeader *header = nullptr;
-  EpochBlockHeader *epoch_header = nullptr;
+  VegitoSegmentHeader* seg_header = nullptr;
+  VegitoEdgeEntry* entries = nullptr;
+  VegitoEdgeEntry* entries_cursor = nullptr;
+  VegitoEdgeBlockHeader* header = nullptr;
+  EpochBlockHeader* epoch_header = nullptr;
 
-  const BlockManager &block_manager;
+  const BlockManager& block_manager;
 
   size_t num_entries;
 

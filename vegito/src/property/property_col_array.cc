@@ -51,21 +51,21 @@ PropertyColArray::PropertyColArray(Property::Schema s, uint64_t max_items)
   }
 }
 
-void PropertyColArray::insert(uint64_t off, uint64_t k, char *v, uint64_t seq,
-                                uint64_t ver) {
+void PropertyColArray::insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
+                              uint64_t ver) {
   _put(off, k, v, seq, ver, true);
 }
 
-void PropertyColArray::update(uint64_t off, const std::vector<int> &cids,
-                                char *v, uint64_t seq, uint64_t ver) {
+void PropertyColArray::update(uint64_t off, const std::vector<int>& cids,
+                              char* v, uint64_t seq, uint64_t ver) {
   _put(off, uint64_t(-1), v, seq, ver, false);
 }
 
-void PropertyColArray::_put(uint64_t offset, uint64_t key, char *val,
-                              int64_t seq, uint64_t version, bool insert) {
+void PropertyColArray::_put(uint64_t offset, uint64_t key, char* val,
+                            int64_t seq, uint64_t version, bool insert) {
   assert(offset < max_items_);
 
-  int64_t &meta_seq = seq_[offset];
+  int64_t& meta_seq = seq_[offset];
 
   if (insert) {
     if (meta_seq == -1) {
@@ -76,17 +76,19 @@ void PropertyColArray::_put(uint64_t offset, uint64_t key, char *val,
     assert(key_col_[offset] == key);
   }
   assert(meta_seq != seq);
-  if (meta_seq >= seq) return;
+  if (meta_seq >= seq)
+    return;
 
   for (int i = 0; i < cols_.size(); ++i) {
-    const Property::Column &col = cols_[i];
-    if (meta_seq >= 0 && !col.updatable) break;
+    const Property::Column& col = cols_[i];
+    if (meta_seq >= 0 && !col.updatable)
+      break;
 
     size_t vlen = col.vlen;
-    char *dst = nullptr;
+    char* dst = nullptr;
     if (col.updatable) {
-      char *buf = flexCols_[i] + (sizeof(ValueNode) + vlen) * offset;
-      ValueNode *node = reinterpret_cast<ValueNode *>(buf);
+      char* buf = flexCols_[i] + (sizeof(ValueNode) + vlen) * offset;
+      ValueNode* node = reinterpret_cast<ValueNode*>(buf);
       if (meta_seq == -1) {
         node->ver = version;
         node->prev = nullptr;
@@ -97,8 +99,8 @@ void PropertyColArray::_put(uint64_t offset, uint64_t key, char *val,
       else if (node->ver <= version)  // NOLINT(readability/braces)
 #endif
       {
-        ValueNode *new_n =
-            reinterpret_cast<ValueNode *>(malloc(sizeof(ValueNode) + vlen));
+        ValueNode* new_n =
+            reinterpret_cast<ValueNode*>(malloc(sizeof(ValueNode) + vlen));
         memcpy(new_n, node, sizeof(ValueNode) + vlen);
 #if UPDATE_STAT
         stat_.num_copy += vlen;  // size
@@ -119,20 +121,20 @@ void PropertyColArray::_put(uint64_t offset, uint64_t key, char *val,
   meta_seq = seq;
 }
 
-char *PropertyColArray::getByOffset(uint64_t offset, uint64_t version) {
+char* PropertyColArray::getByOffset(uint64_t offset, uint64_t version) {
   printf("Function not implemented\n");
   assert(false);
   return nullptr;
 }
 
-char *PropertyColArray::getByOffset(uint64_t offset, int col_id,
-                                      uint64_t version, uint64_t *walk_cnt) {
-  char *val = nullptr;
-  const Property::Column &col = cols_[col_id];
+char* PropertyColArray::getByOffset(uint64_t offset, int col_id,
+                                    uint64_t version, uint64_t* walk_cnt) {
+  char* val = nullptr;
+  const Property::Column& col = cols_[col_id];
 
   if (col.updatable) {
-    char *buf = flexCols_[col_id] + (sizeof(ValueNode) + col.vlen) * offset;
-    ValueNode *node = reinterpret_cast<ValueNode *>(buf);
+    char* buf = flexCols_[col_id] + (sizeof(ValueNode) + col.vlen) * offset;
+    ValueNode* node = reinterpret_cast<ValueNode*>(buf);
     for (; node != nullptr; node = node->prev) {
       if (node->ver <= version) {
         val = node->val;
@@ -148,12 +150,12 @@ char *PropertyColArray::getByOffset(uint64_t offset, int col_id,
   return val;
 }
 
-const std::vector<uint64_t> &PropertyColArray::getKeyCol() const {
+const std::vector<uint64_t>& PropertyColArray::getKeyCol() const {
   return key_col_;
 }
 
-char *PropertyColArray::getFixCol(int col_id) const {
-  const Property::Column &col = cols_[col_id];
+char* PropertyColArray::getFixCol(int col_id) const {
+  const Property::Column& col = cols_[col_id];
   assert(!col.updatable);
   return fixCols_[col_id];
 }
@@ -163,8 +165,8 @@ size_t PropertyColArray::getItemNum(uint64_t lver) const {
   return 0;
 }
 
-PropertyColArray::Cursor::Cursor(const PropertyColArray &store, int col_id,
-                                   uint64_t ver)
+PropertyColArray::Cursor::Cursor(const PropertyColArray& store, int col_id,
+                                 uint64_t ver)
     : col_(store),
       col_id_(col_id),
       update_(store.cols_[col_id].updatable),
@@ -180,16 +182,19 @@ PropertyColArray::Cursor::Cursor(const PropertyColArray &store, int col_id,
 
 void PropertyColArray::Cursor::seekOffset(uint64_t begin, uint64_t end) {
   uint64_t header = col_.header_;
-  if (end > header) end = header;
-  if (begin > end) begin = end;
+  if (end > header)
+    end = header;
+  if (begin > end)
+    begin = end;
   begin_ = begin;
   end_ = end;
   cur_ = begin_ - 1;
 }
 
-bool PropertyColArray::Cursor::nextRow(uint64_t *walk_cnt) {
+bool PropertyColArray::Cursor::nextRow(uint64_t* walk_cnt) {
   ++cur_;
-  if (cur_ >= end_) return false;
+  if (cur_ >= end_)
+    return false;
   // if (col_.meta_[cur_].min_ver > ver_) return false;
 
   if (!update_) {
@@ -198,17 +203,20 @@ bool PropertyColArray::Cursor::nextRow(uint64_t *walk_cnt) {
   }
 
   // can update
-  ValueNode *node = reinterpret_cast<ValueNode *>(base_ + field_width_ * cur_);
+  ValueNode* node = reinterpret_cast<ValueNode*>(base_ + field_width_ * cur_);
   for (; node != nullptr; node = node->prev) {
-    if (walk_cnt) ++(*walk_cnt);
-    if (node->ver <= ver_) break;
+    if (walk_cnt)
+      ++(*walk_cnt);
+    if (node->ver <= ver_)
+      break;
     // if (node->prev == nullptr) break;
   }
-  if (!node) return false;  // XXX: real ture?
+  if (!node)
+    return false;  // XXX: real ture?
   assert(node);
   ptr_ = node->val;
 
   return true;
 }
 
-char *PropertyColArray::Cursor::value() const { return ptr_; }
+char* PropertyColArray::Cursor::value() const { return ptr_; }

@@ -35,7 +35,7 @@ RGMapping::RGMapping(int p_id) : edges_(MAX_ELABELS), p_id_(p_id) {
     }
   }
 
-  for (EdgeMeta &meta : edges_) {
+  for (EdgeMeta& meta : edges_) {
     meta.src_vlabel = meta.dst_vlabel = NO_EXIST;
   }
 }
@@ -67,7 +67,7 @@ void RGMapping::define_1n_edge(int edge_label, int src_vlabel, int dst_vlabel,
                                size_t edge_prop_size) {
   assert(edge_label < MAX_ELABELS);
 
-  EdgeMeta &meta = edges_[edge_label];
+  EdgeMeta& meta = edges_[edge_label];
   meta.src_vlabel = src_vlabel;
   meta.dst_vlabel = dst_vlabel;
   meta.src_fk_col = fk_col;
@@ -83,7 +83,7 @@ void RGMapping::define_nn_edge(int edge_label, int src_vlabel, int dst_vlabel,
                                size_t edge_prop_size) {
   assert(edge_label < MAX_ELABELS);
 
-  EdgeMeta &meta = edges_[edge_label];
+  EdgeMeta& meta = edges_[edge_label];
   meta.src_vlabel = src_vlabel;
   meta.dst_vlabel = dst_vlabel;
   meta.src_fk_col = src_fk_col;

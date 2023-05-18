@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_
-#define RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_
+#ifndef VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_
+#define VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_
 
 #include "property/property.h"
 
@@ -33,16 +33,16 @@ class PropertyColArray : public Property {
  public:
   explicit PropertyColArray(Property::Schema schema, uint64_t max_items);
 
-  virtual void insert(uint64_t off, uint64_t k, char *v, uint64_t seq,
+  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
                       uint64_t ver);
 
-  virtual void update(uint64_t off, const std::vector<int> &cids, char *v,
+  virtual void update(uint64_t off, const std::vector<int>& cids, char* v,
                       uint64_t seq, uint64_t ver);
 
   // get cursor
   virtual std::unique_ptr<ColCursor> getColCursor(int col_id,
                                                   uint64_t ver) const {
-    ColCursor *c = new Cursor(*this, col_id, ver);
+    ColCursor* c = new Cursor(*this, col_id, ver);
     return std::unique_ptr<ColCursor>(c);
   }
 
@@ -51,34 +51,36 @@ class PropertyColArray : public Property {
     return 0;
   }
 
-  char *getByOffset(uint64_t offset, uint64_t version) override;
-  char *getByOffset(uint64_t offset, int columnID, uint64_t version,
-                    uint64_t *walk_cnt = nullptr) override;
+  char* getByOffset(uint64_t offset, uint64_t version) override;
+  char* getByOffset(uint64_t offset, int columnID, uint64_t version,
+                    uint64_t* walk_cnt = nullptr) override;
 
   size_t getItemNum(uint64_t lver) const;
-  const std::vector<uint64_t> &getKeyCol() const;
-  char *getFixCol(int col_id) const;
+  const std::vector<uint64_t>& getKeyCol() const;
+  char* getFixCol(int col_id) const;
 
-  virtual char *col(int col_id, uint64_t *len = nullptr) const {
+  virtual char* col(int col_id, uint64_t* len = nullptr) const {
     assert(!cols_[col_id].updatable);
-    if (len) *len = header_;
+    if (len)
+      *len = header_;
     return fixCols_[col_id];
   }
 
  private:
   // for insert or update
-  void _put(uint64_t offset, uint64_t key, char *val, int64_t seq,
+  void _put(uint64_t offset, uint64_t key, char* val, int64_t seq,
             uint64_t version, bool insert);
 
   struct ValueNode {
     uint64_t ver;
-    ValueNode *prev;
+    ValueNode* prev;
     char val[0];
   };
 
   inline uint64_t get_field_width_(int col_id) const {
     uint64_t vlen = cols_[col_id].vlen;
-    if (cols_[col_id].updatable) vlen += sizeof(ValueNode);
+    if (cols_[col_id].updatable)
+      vlen += sizeof(ValueNode);
     return vlen;
   }
 
@@ -86,38 +88,38 @@ class PropertyColArray : public Property {
   std::vector<int64_t> seq_;
 
   std::vector<uint64_t> key_col_;
-  std::vector<char *> fixCols_;
-  std::vector<char *> flexCols_;
+  std::vector<char*> fixCols_;
+  std::vector<char*> flexCols_;
 
  public:
   class Cursor : public Property::ColCursor {
    public:
-    Cursor(const PropertyColArray &store, int col_id, uint64_t ver);
+    Cursor(const PropertyColArray& store, int col_id, uint64_t ver);
     virtual void seekOffset(uint64_t begin, uint64_t end);
-    virtual bool nextRow(uint64_t *walk_cnt = nullptr);
+    virtual bool nextRow(uint64_t* walk_cnt = nullptr);
     virtual uint64_t key() const { return col_.key_col_[cur_]; }
-    virtual char *value() const;
+    virtual char* value() const;
 
     virtual uint64_t cur() const { return cur_; }
-    virtual char *base() const { return base_; }
+    virtual char* base() const { return base_; }
     virtual uint64_t length() const { return col_.header_; }
 
    private:
-    const PropertyColArray &col_;
+    const PropertyColArray& col_;
     const uint64_t ver_;
 
     const bool update_;
     const int col_id_;
-    char *const base_;
+    char* const base_;
     const uint64_t field_width_;  // in bytes
 
     uint64_t begin_;
     uint64_t end_;
     uint64_t cur_;
-    char *ptr_;
+    char* ptr_;
   };
 
   friend class Cursor;
 };
 
-#endif  // RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_
+#endif  // VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_

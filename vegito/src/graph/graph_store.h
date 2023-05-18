@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_SRC_GRAPH_GRAPH_STORE_H_
-#define RESEARCH_GART_SRC_GRAPH_GRAPH_STORE_H_
+#ifndef VEGITO_SRC_GRAPH_GRAPH_STORE_H_
+#define VEGITO_SRC_GRAPH_GRAPH_STORE_H_
 
 #include "etcd/Client.hpp"
 #include "etcd/Response.hpp"
 #include "glog/logging.h"
 
 #include "fragment/id_parser.h"
-#include "property/property_col_paged.h"
 #include "property/property_col_array.h"
+#include "property/property_col_paged.h"
 #include "seggraph/core/seggraph.hpp"
 #include "system_flags.h"  // NOLINT(build/include_subdir)
 
@@ -47,13 +47,13 @@ struct SchemaImpl {
   std::string get_json(bool gie = false, int pid = 0);
 
  private:
-  void fill_json(void *ptr) const;
+  void fill_json(void* ptr) const;
 };
 
 class GraphStore {
  public:
   struct VTable {
-    seggraph::vertex_t *table;
+    seggraph::vertex_t* table;
     uint64_t size;
 
     uint64_t max_inner;
@@ -68,19 +68,18 @@ class GraphStore {
         mid_(mid),
         local_pnum_(total_partitions),
         total_partitions_(total_partitions),
-        etcd_client_(std::make_shared<etcd::Client>(FLAGS_etcd_endpoint))
-  {  }
+        etcd_client_(std::make_shared<etcd::Client>(FLAGS_etcd_endpoint)) {}
 
   ~GraphStore();
 
   template <class GraphType>
-  GraphType *get_graph(uint64_t vlabel);
+  GraphType* get_graph(uint64_t vlabel);
 
-  inline Property *get_property(uint64_t vlabel) {
+  inline Property* get_property(uint64_t vlabel) {
     return property_stores_[vlabel];
   }
 
-  inline Property *get_property_snapshot(uint64_t vlabel, uint64_t version) {
+  inline Property* get_property_snapshot(uint64_t vlabel, uint64_t version) {
     if (property_stores_snapshots_.count({vlabel, version}))
       return property_stores_snapshots_[{vlabel, version}];
     else
@@ -111,11 +110,12 @@ class GraphStore {
 
   void update_offset() {
     for (auto [vlabel, property] : property_stores_) {
-      if (property) property->updateHeader();
+      if (property)
+        property->updateHeader();
     }
   }
 
-  void add_vgraph(uint64_t vlabel, RGMapping *rg_map);
+  void add_vgraph(uint64_t vlabel, RGMapping* rg_map);
 
   void add_vprop(uint64_t vlabel, Property::Schema schema);
 
@@ -125,12 +125,12 @@ class GraphStore {
 
   void put_schema();
 
-  seggraph::SegGraph *get_ov_graph(uint64_t vlabel) {
+  seggraph::SegGraph* get_ov_graph(uint64_t vlabel) {
     return ov_seg_graphs_[vlabel];
   }
 
   inline void add_inner(uint64_t vlabel, seggraph::vertex_t lid) {
-    VTable &vtable = vertex_tables_[vlabel];
+    VTable& vtable = vertex_tables_[vlabel];
     assert(vtable.max_inner_location != vtable.min_outer_location);
     vtable.table[vtable.max_inner_location] = lid;
     ++vtable.max_inner_location;
@@ -138,7 +138,7 @@ class GraphStore {
   }
 
   inline void delete_inner(uint64_t vlabel, seggraph::vertex_t offset) {
-    VTable &vtable = vertex_tables_[vlabel];
+    VTable& vtable = vertex_tables_[vlabel];
     for (auto i = 0; i < vtable.max_inner_location; i++) {
       auto value = vtable.table[i];
       auto delete_flag = value >> (sizeof(seggraph::vertex_t) * 8 - 1);
@@ -148,7 +148,7 @@ class GraphStore {
       gart::IdParser<seggraph::vertex_t> parser;
       parser.Init(get_total_partitions(), get_total_vertex_label_num());
       if (parser.GetOffset(value) == offset) {
-        uint64_t delete_mask = ((uint64_t)1) << (sizeof(uint64_t) * 8 - 1);
+        uint64_t delete_mask = ((uint64_t) 1) << (sizeof(uint64_t) * 8 - 1);
         vtable.table[vtable.max_inner_location] = (i | delete_mask);
         ++vtable.max_inner_location;
         break;
@@ -157,7 +157,7 @@ class GraphStore {
   }
 
   inline void add_outer(uint64_t vlabel, seggraph::vertex_t lid) {
-    VTable &vtable = vertex_tables_[vlabel];
+    VTable& vtable = vertex_tables_[vlabel];
     assert(vtable.max_inner_location != vtable.min_outer_location);
     vtable.table[vtable.min_outer_location - 1] = lid;
     --vtable.min_outer;
@@ -165,7 +165,7 @@ class GraphStore {
   }
 
   inline void delete_outer(uint64_t vlabel, seggraph::vertex_t lid) {
-    VTable &vtable = vertex_tables_[vlabel];
+    VTable& vtable = vertex_tables_[vlabel];
     gart::IdParser<seggraph::vertex_t> parser;
     parser.Init(get_total_partitions(), get_total_vertex_label_num());
     for (auto i = vtable.size - 1; i >= vtable.min_outer_location; i--) {
@@ -175,7 +175,7 @@ class GraphStore {
         continue;
       }
       if (value == lid) {
-        uint64_t delete_mask = ((uint64_t)1) << (sizeof(uint64_t) * 8 - 1);
+        uint64_t delete_mask = ((uint64_t) 1) << (sizeof(uint64_t) * 8 - 1);
         vtable.table[vtable.min_outer_location - 1] = i | delete_mask;
         --vtable.min_outer_location;
         return;
@@ -214,7 +214,7 @@ class GraphStore {
   }
 
   // global offset
-  void get_pid_off(uint64_t vlabel, uint64_t key, int &pid, int &off) const {
+  void get_pid_off(uint64_t vlabel, uint64_t key, int& pid, int& off) const {
     pid = key_pid_map_[vlabel].at(key);
     off = key_off_map_[vlabel].at(key);
   }
@@ -318,10 +318,10 @@ class GraphStore {
   SchemaImpl schema_;
 
   // vlabel -> graph storage
-  std::unordered_map<uint64_t, seggraph::SegGraph *> seg_graphs_;
+  std::unordered_map<uint64_t, seggraph::SegGraph*> seg_graphs_;
 
   // vlabel -> vertex property storage
-  std::unordered_map<uint64_t, Property *> property_stores_;
+  std::unordered_map<uint64_t, Property*> property_stores_;
   std::unordered_map<uint64_t, Property::Schema> property_schemas_;
 
   std::map<uint64_t, uint64_t> property_bytes_;
@@ -334,10 +334,10 @@ class GraphStore {
   std::map<std::string, uint64_t> vertex_table_maps_;
   std::map<std::string, uint64_t> edge_table_maps_;
 
-  std::unordered_map<uint64_t, seggraph::SegGraph *> ov_seg_graphs_;  // outer v
+  std::unordered_map<uint64_t, seggraph::SegGraph*> ov_seg_graphs_;  // outer v
 
   std::unordered_map<uint64_t, VTable> vertex_tables_;
-  std::unordered_map<uint64_t, uint64_t *> ovl2gs_;
+  std::unordered_map<uint64_t, uint64_t*> ovl2gs_;
 
   // vlabel -> vertex blob schemas
   std::map<uint64_t, gart::BlobSchema> blob_schemas_;
@@ -359,11 +359,10 @@ class GraphStore {
   std::shared_ptr<etcd::Client> etcd_client_;
 
   // (vlabel, version) -> vertex property storage snapshot
-  std::map<std::pair<uint64_t, uint64_t>, Property *>
-      property_stores_snapshots_;
+  std::map<std::pair<uint64_t, uint64_t>, Property*> property_stores_snapshots_;
 };
 
 }  // namespace graph
 }  // namespace gart
 
-#endif  // RESEARCH_GRAPH_GART_GRAPH_STORE_H_
+#endif  // VEGITO_SRC_GRAPH_GRAPH_STORE_H_

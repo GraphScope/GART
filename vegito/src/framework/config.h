@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_FRAMEWORK_CONFIG_H_
-#define RESEARCH_GART_VEGITO_SRC_FRAMEWORK_CONFIG_H_
+#ifndef VEGITO_SRC_FRAMEWORK_CONFIG_H_
+#define VEGITO_SRC_FRAMEWORK_CONFIG_H_
 
 #include <string>
 
@@ -25,7 +25,7 @@ namespace framework {
 class Config {
  public:
   // 1. Environments
-  inline const std::string &getExeName() const { return exe_name_; }
+  inline const std::string& getExeName() const { return exe_name_; }
 
   // 2. server config
   inline int getNumServers() const { return num_servers_; }  // #machines
@@ -36,7 +36,7 @@ class Config {
 
   inline std::string getIPCScoket() const { return ipc_socket_; }
 
-  void parse_sys_args(int argc, char **argv);
+  void parse_sys_args(int argc, char** argv);
   void printConfig() const;
 
  private:
@@ -56,4 +56,4 @@ extern Config config;
 }  // namespace framework
 }  // namespace gart
 
-#endif  // RESEARCH_GART_VEGITO_SRC_FRAMEWORK_CONFIG_H_
+#endif  // VEGITO_SRC_FRAMEWORK_CONFIG_H_

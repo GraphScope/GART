@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_SRC_GRAPH_TYPE_DEF_H_
-#define RESEARCH_GART_SRC_GRAPH_TYPE_DEF_H_
+#ifndef VEGITO_SRC_GRAPH_TYPE_DEF_H_
+#define VEGITO_SRC_GRAPH_TYPE_DEF_H_
 
 #include "util/inline_str.h"
 
@@ -36,4 +36,4 @@ typedef inline_str_fixed<28>
 }  // namespace graph
 }  // namespace gart
 
-#endif  // RESEARCH_GART_SRC_GRAPH_TYPE_DEF_H_
+#endif  // VEGITO_SRC_GRAPH_TYPE_DEF_H_

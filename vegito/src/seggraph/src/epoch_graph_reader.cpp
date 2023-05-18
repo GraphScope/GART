@@ -24,11 +24,12 @@ using vertex_t = seggraph::vertex_t;
 using label_t = seggraph::label_t;
 using label_t = seggraph::label_t;
 
-VegitoSegmentHeader *EpochGraphReader::locate_segment(segid_t seg_id,
+VegitoSegmentHeader* EpochGraphReader::locate_segment(segid_t seg_id,
                                                       label_t label,
                                                       dir_t dir) {
   auto pointer = graph.edge_label_ptrs[seg_id];
-  if (pointer == graph.block_manager.NULLPOINTER) return nullptr;
+  if (pointer == graph.block_manager.NULLPOINTER)
+    return nullptr;
   // get edge_label_block
   auto edge_label_block =
       graph.block_manager.convert<EdgeLabelBlockHeader>(pointer);
@@ -53,7 +54,7 @@ VegitoSegmentHeader *EpochGraphReader::locate_segment(segid_t seg_id,
 }
 
 EpochEdgeIterator EpochGraphReader::get_edges_in_seg(
-    VegitoSegmentHeader *segment, vertex_t src, size_t edge_prop_size) {
+    VegitoSegmentHeader* segment, vertex_t src, size_t edge_prop_size) {
   if (src >= graph.vertex_id.load(std::memory_order_relaxed) || !segment)
     return EpochEdgeIterator(nullptr, nullptr, nullptr, graph.block_manager, 0,
                              0, read_epoch_id);
@@ -86,7 +87,7 @@ EpochEdgeIterator EpochGraphReader::get_edges(vertex_t src, label_t label,
 
   segid_t segid = graph.get_vertex_seg_id(src);
 
-  VegitoSegmentHeader *segment;
+  VegitoSegmentHeader* segment;
 
   // cache recently-visited segment (need valid)
   if (segid == segment_cache_meta.first && label == segment_cache_meta.second &&

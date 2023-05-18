@@ -29,21 +29,28 @@ inline order_t size_to_order(size_t size) {
   return order;
 }
 
-inline int cmp_timestamp(const timestamp_t *xp, timestamp_t y) {  // y > 0
+inline int cmp_timestamp(const timestamp_t* xp, timestamp_t y) {  // y > 0
   timestamp_t x = *xp;
-  if (x < 0) return 1;
-  if (x < y) return -1;
-  if (x == y) return 0;
+  if (x < 0)
+    return 1;
+  if (x < y)
+    return -1;
+  if (x == y)
+    return 0;
   return 1;
 }
 
-inline int cmp_timestamp(const timestamp_t *xp, timestamp_t y,
+inline int cmp_timestamp(const timestamp_t* xp, timestamp_t y,
                          timestamp_t local_txn_id) {  // y > 0
   timestamp_t x = *xp;
-  if (-x == local_txn_id) return 0;
-  if (x < 0) return 1;
-  if (x < y) return -1;
-  if (x == y) return 0;
+  if (-x == local_txn_id)
+    return 0;
+  if (x < 0)
+    return 1;
+  if (x < y)
+    return -1;
+  if (x == y)
+    return 0;
   return 1;
 }
 

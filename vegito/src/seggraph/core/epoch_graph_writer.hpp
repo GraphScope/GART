@@ -20,21 +20,21 @@
 namespace seggraph {
 class EpochGraphWriter {
  public:
-  EpochGraphWriter(SegGraph &_graph, timestamp_t _write_epoch_id)
+  EpochGraphWriter(SegGraph& _graph, timestamp_t _write_epoch_id)
       : graph(_graph),
         read_epoch_id(_write_epoch_id),
         write_epoch_id(_write_epoch_id) {}
 
-  EpochGraphWriter(const EpochGraphWriter &) = delete;
+  EpochGraphWriter(const EpochGraphWriter&) = delete;
 
-  EpochGraphWriter(EpochGraphWriter &&txn)
+  EpochGraphWriter(EpochGraphWriter&& txn)
       : graph(txn.graph),
         read_epoch_id(std::move(txn.read_epoch_id)),
         write_epoch_id(std::move(txn.write_epoch_id)) {}
 
   timestamp_t get_write_epoch_id() const { return write_epoch_id; }
 
-  VegitoSegmentHeader *locate_segment(segid_t segid, label_t label,
+  VegitoSegmentHeader* locate_segment(segid_t segid, label_t label,
                                       dir_t dir = EOUT);
   uintptr_t locate_segment_ptr(segid_t seg_id, label_t label, dir_t dir = EOUT);
   vertex_t new_vertex(bool use_recycled_vertex = false);
@@ -62,7 +62,7 @@ class EpochGraphWriter {
   const order_t DEFAULT_INIT_ORDER = 1;
 
  private:
-  SegGraph &graph;
+  SegGraph& graph;
   const timestamp_t read_epoch_id;
   const timestamp_t write_epoch_id;
 
@@ -74,8 +74,8 @@ class EpochGraphWriter {
   void update_edge_label_block(vertex_t src, label_t label, dir_t dir,
                                uintptr_t edge_block_pointer);
 
-  void merge_segment(VegitoSegmentHeader *old_seg, VegitoSegmentHeader *new_seg,
-                     vertex_t segidx, uintptr_t *pointer,
-                     VegitoEdgeBlockHeader **edge_block, size_t edge_prop_size);
+  void merge_segment(VegitoSegmentHeader* old_seg, VegitoSegmentHeader* new_seg,
+                     vertex_t segidx, uintptr_t* pointer,
+                     VegitoEdgeBlockHeader** edge_block, size_t edge_prop_size);
 };
 }  // namespace seggraph

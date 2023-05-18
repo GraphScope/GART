@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_INTERFACES_FRAGMENT_TYPES_H_
-#define RESEARCH_GART_INTERFACES_FRAGMENT_TYPES_H_
+#ifndef INTERFACES_FRAGMENT_TYPES_H_
+#define INTERFACES_FRAGMENT_TYPES_H_
 
 #include "vineyard/graph/fragment/property_graph_types.h"
 
@@ -53,4 +53,4 @@ enum PropertyType {
 #define VERTEX_PER_SEG 4096
 }  // namespace gart
 
-#endif  // RESEARCH_GART_INTERFACES_FRAGMENT_TYPES_H_
+#endif  // INTERFACES_FRAGMENT_TYPES_H_

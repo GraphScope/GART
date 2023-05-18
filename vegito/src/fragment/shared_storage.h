@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
-#define RESEARCH_GART_VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
+#ifndef VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
+#define VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
 
 #include "vineyard/common/util/json.h"
 #include "vineyard/common/util/uuid.h"
@@ -27,7 +27,7 @@ namespace gart {
 typedef vineyard::ObjectID oid_t;  // object id for Blob
 typedef uint64_t index_t;
 
-#define get_blob_ptr(oid) ((char *)nullptr)
+#define get_blob_ptr(oid) ((char*) nullptr)
 
 // ================== Layout ===================
 
@@ -58,9 +58,9 @@ struct EpochTable {
 struct ELabel2Seg {
   uintptr_t edge_label_ptrs[0];  // stored as seggraph::EdgeLabelBlockHeader
 
-  seggraph::EdgeLabelBlockHeader *get_edge_label_ptr(index_t i,
+  seggraph::EdgeLabelBlockHeader* get_edge_label_ptr(index_t i,
                                                      oid_t block_oid) const {
-    return reinterpret_cast<seggraph::EdgeLabelBlockHeader *>(
+    return reinterpret_cast<seggraph::EdgeLabelBlockHeader*>(
         get_blob_ptr(block_oid) + edge_label_ptrs[i]);
   }
 };
@@ -71,8 +71,8 @@ struct PageHeader {
 
   // useless for reader
   uint64_t min_ver;
-  void *prev;
-  void *next;
+  void* prev;
+  void* next;
 
   // payload
   char content[0];
@@ -145,8 +145,8 @@ struct ArrayMeta {
 
   ArrayMeta(oid_t id, uint64_t max) : object_id(id), len_ele(max) {}
 
-  ELabel2Seg *get_ptr() const {
-    return reinterpret_cast<ELabel2Seg *>(get_blob_ptr(object_id));
+  ELabel2Seg* get_ptr() const {
+    return reinterpret_cast<ELabel2Seg*>(get_blob_ptr(object_id));
   }
   // also can use EpochGraphWriter::locate_segment()
 
@@ -213,15 +213,15 @@ class BlobSchema {
 
   void set_block_oid(oid_t oid) { block_oid = oid; }
 
-  void set_elabel2segs(const ArrayMeta &meta) { elabel2seg = meta; }
+  void set_elabel2segs(const ArrayMeta& meta) { elabel2seg = meta; }
 
   void set_ov_block_oid(oid_t oid) { ov_block_oid = oid; }
 
-  void set_ov_elabel2segs(const ArrayMeta &meta) { ov_elabel2seg = meta; }
+  void set_ov_elabel2segs(const ArrayMeta& meta) { ov_elabel2seg = meta; }
 
-  void set_vtable_meta(const VTableMeta &meta) { vertex_table = meta; }
+  void set_vtable_meta(const VTableMeta& meta) { vertex_table = meta; }
 
-  void set_ovl2g_meta(const ArrayMeta &meta) { ovl2g = meta; }
+  void set_ovl2g_meta(const ArrayMeta& meta) { ovl2g = meta; }
 
   void set_vtable_bound(uint64_t num_inner, uint64_t num_outer) {
     vertex_table.set_boundary(num_inner, num_outer);
@@ -231,7 +231,7 @@ class BlobSchema {
     vertex_table.set_loc(loc_inner, loc_outer);
   }
 
-  void set_prop_meta(const std::vector<VPropMeta> &meta) { vprops = meta; }
+  void set_prop_meta(const std::vector<VPropMeta>& meta) { vprops = meta; }
 
   oid_t get_block_oid() const { return block_oid; }
 
@@ -239,7 +239,7 @@ class BlobSchema {
 
   oid_t get_ovl2g_oid() const { return ovl2g.get_object_id(); }
 
-  const ArrayMeta &get_elabel2segs() const { return elabel2seg; }
+  const ArrayMeta& get_elabel2segs() const { return elabel2seg; }
 
   vineyard::json json() const {
     using json = vineyard::json;
@@ -252,7 +252,7 @@ class BlobSchema {
 
     json vprop_schema = json::array();
 
-    for (const auto &vprop : vprops) {
+    for (const auto& vprop : vprops) {
       vprop_schema.push_back(vprop.json());
     }
 
@@ -286,4 +286,4 @@ class BlobSchema {
 
 }  // namespace gart
 
-#endif  // RESEARCH_GART_VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
+#endif  // VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_

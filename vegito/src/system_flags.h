@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_SYSTEM_FLAGS_H_
-#define RESEARCH_GART_VEGITO_SRC_SYSTEM_FLAGS_H_
+#ifndef VEGITO_SRC_SYSTEM_FLAGS_H_
+#define VEGITO_SRC_SYSTEM_FLAGS_H_
 
 #include <gflags/gflags_declare.h>
 
 DECLARE_string(kafka_broker_list);
 DECLARE_string(kafka_unified_log_topic);
-DECLARE_string(kafka_unified_log_file);     // for tests
+DECLARE_string(kafka_unified_log_file);  // for tests
 
 DECLARE_string(etcd_endpoint);
 DECLARE_string(meta_prefix);
@@ -32,4 +32,4 @@ DECLARE_string(table_schema_file_path);
 DECLARE_int32(server_num);
 DECLARE_int32(server_id);
 
-#endif  // RESEARCH_GART_VEGITO_SRC_SYSTEM_FLAGS_H_
+#endif  // VEGITO_SRC_SYSTEM_FLAGS_H_

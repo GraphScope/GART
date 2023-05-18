@@ -37,15 +37,15 @@ class BloomFilter {
  public:
   BloomFilter() : log_num_buckets(0), directory(nullptr), directory_mask(0) {}
 
-  BloomFilter(size_t log_size, void *buffer)
+  BloomFilter(size_t log_size, void* buffer)
       : log_num_buckets(std::max(1ul, log_size - LOG_BUCKET_BYTE_SIZE)),
-        directory(reinterpret_cast<bucket_t *>(buffer)),
+        directory(reinterpret_cast<bucket_t*>(buffer)),
         directory_mask((1ul << log_num_buckets) - 1) {}
 
-  BloomFilter(const BloomFilter &) = default;
-  BloomFilter(BloomFilter &&) = default;
-  BloomFilter &operator=(const BloomFilter &) = default;
-  BloomFilter &operator=(BloomFilter &&a) = default;
+  BloomFilter(const BloomFilter&) = default;
+  BloomFilter(BloomFilter&&) = default;
+  BloomFilter& operator=(const BloomFilter&) = default;
+  BloomFilter& operator=(BloomFilter&& a) = default;
   ~BloomFilter() = default;
 
   bool valid() const { return log_num_buckets != 0; }
@@ -65,9 +65,9 @@ class BloomFilter {
     const uint64_t SEED[4] = {0x818c3f78ull, 0x672f4a3aull, 0xabd04d69ull,
                               0x12b51f95ull};
     const unsigned __int128 m =
-        *reinterpret_cast<const unsigned __int128 *>(&SEED[0]);
+        *reinterpret_cast<const unsigned __int128*>(&SEED[0]);
     const unsigned __int128 a =
-        *reinterpret_cast<const unsigned __int128 *>(&SEED[2]);
+        *reinterpret_cast<const unsigned __int128*>(&SEED[2]);
     return (a + m * key) >> 64;
   }
 
@@ -93,8 +93,8 @@ class BloomFilter {
     const uint64_t hash = get_hash(id);
     const uint32_t bucket_id = hash & directory_mask;
     const __m256i mask = get_mask(hash >> log_num_buckets);
-    __m256i *const bucket =
-        &reinterpret_cast<__m256i *>(  // NOLINT(readability/casting)
+    __m256i* const bucket =
+        &reinterpret_cast<__m256i*>(  // NOLINT(readability/casting)
             directory)[bucket_id];
     _mm256_store_si256(bucket, _mm256_or_si256(*bucket, mask));
   }
@@ -103,7 +103,7 @@ class BloomFilter {
     const uint64_t hash = get_hash(id);
     const uint32_t bucket_idx = hash & directory_mask;
     const __m256i mask = get_mask(hash >> log_num_buckets);
-    const __m256i bucket = reinterpret_cast<__m256i *>(directory)[bucket_idx];
+    const __m256i bucket = reinterpret_cast<__m256i*>(directory)[bucket_idx];
     // We should return true if 'bucket' has a one wherever 'mask' does.
     // _mm256_testc_si256 takes the negation of its first argument and
     // ands that with its second argument. In our case, the result is
@@ -117,7 +117,7 @@ class BloomFilter {
   using bucket_t = uint32_t[8];
   static constexpr size_t LOG_BUCKET_BYTE_SIZE = 5;
   size_t log_num_buckets;
-  bucket_t *directory;
+  bucket_t* directory;
   uint32_t directory_mask;
 };
 }  // namespace seggraph

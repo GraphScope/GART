@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_DEL_VERTEX_H_
-#define RESEARCH_GART_VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_DEL_VERTEX_H_
+#ifndef VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_DEL_VERTEX_H_
+#define VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_DEL_VERTEX_H_
 
 #include <queue>
 
-#include "graph/type_def.h"
 #include "graph/graph_store.h"
+#include "graph/type_def.h"
 
 namespace gart {
 namespace graph {
@@ -31,7 +31,7 @@ using segid_t = seggraph::segid_t;
 using vertex_t = seggraph::vertex_t;
 using SegGraph = seggraph::SegGraph;
 void process_del_vertex(std::vector<std::string> cmd,
-                        graph::GraphStore *graph_store) {
+                        graph::GraphStore* graph_store) {
   int write_epoch = stoi(cmd[0]);
   uint64_t vid = static_cast<uint64_t>(stoll(cmd[1]));
   const int write_seq = 0;
@@ -43,7 +43,7 @@ void process_del_vertex(std::vector<std::string> cmd,
   if (fid == graph_store->get_local_pid()) {  // is a inner vertex
     auto v_offset = parser.GetOffset(vid);
     auto v_label = parser.GetLabelId(vid);
-    seggraph::SegGraph *src_graph =
+    seggraph::SegGraph* src_graph =
         graph_store->get_graph<seggraph::SegGraph>(v_label);
     graph_store->delete_inner(v_label,
                               v_offset);  // delete vertex from vertex table
@@ -54,7 +54,7 @@ void process_del_vertex(std::vector<std::string> cmd,
         src_graph->create_graph_writer(write_epoch);  // write epoch
     segid_t segid = src_graph->get_vertex_seg_id(v_offset);
     uint32_t segidx = src_graph->get_vertex_seg_idx(v_offset);
-    VegitoSegmentHeader *segment;
+    VegitoSegmentHeader* segment;
     // process outgoing edges
     for (auto elabel = 0;
          elabel < graph_store->get_schema().edge_relation.size(); elabel++) {
@@ -63,21 +63,21 @@ void process_del_vertex(std::vector<std::string> cmd,
         continue;
       }
       uintptr_t edge_block_pointer = segment->get_region_ptr(segidx);
-      VegitoEdgeBlockHeader *edge_block =
+      VegitoEdgeBlockHeader* edge_block =
           src_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
               edge_block_pointer);
       uintptr_t epoch_table_pointer = segment->get_epoch_table(segidx);
-      EpochBlockHeader *epoch_table =
+      EpochBlockHeader* epoch_table =
           src_graph->get_block_manager().convert<EpochBlockHeader>(
               epoch_table_pointer);
       if (!edge_block || !epoch_table) {
         continue;
       }
       size_t num_entries = edge_block->get_num_entries();
-      VegitoEdgeEntry *entries = edge_block->get_entries();
-      VegitoEdgeEntry *entries_cursor = entries - num_entries;
+      VegitoEdgeEntry* entries = edge_block->get_entries();
+      VegitoEdgeEntry* entries_cursor = entries - num_entries;
       std::vector<uint64_t> prefix_sum;
-      VegitoEdgeBlockHeader *cur_header = edge_block;
+      VegitoEdgeBlockHeader* cur_header = edge_block;
       while (cur_header) {
         prefix_sum.push_back(cur_header->get_num_entries());
         cur_header =
@@ -105,9 +105,9 @@ void process_del_vertex(std::vector<std::string> cmd,
           auto delete_flag = vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
           if (delete_flag == 1) {
             auto delete_offset_mask =
-                (((seggraph::vertex_t)1)
+                (((seggraph::vertex_t) 1)
                  << (sizeof(seggraph::vertex_t) * 8 - 1)) -
-                (seggraph::vertex_t)1;
+                (seggraph::vertex_t) 1;
             auto delete_offset = vid & delete_offset_mask;
             delete_offsets.push(delete_offset);
           } else {
@@ -142,7 +142,7 @@ void process_del_vertex(std::vector<std::string> cmd,
       // delete edges
       uint64_t edge_prop_bytes = graph_store->get_edge_prop_total_bytes(
           elabel + graph_store->get_total_vertex_label_num());
-      char *prop_buffer = reinterpret_cast<char *>(malloc(edge_prop_bytes));
+      char* prop_buffer = reinterpret_cast<char*>(malloc(edge_prop_bytes));
       memset(prop_buffer, 0, edge_prop_bytes);
       std::string buf(prop_buffer, edge_prop_bytes);
       std::string_view edge_data(buf);
@@ -150,7 +150,7 @@ void process_del_vertex(std::vector<std::string> cmd,
       for (auto idx = 0; idx < delete_loc.size(); idx++) {
         auto dst_offset = parser.GetOffset(delete_vertices[idx]);
         auto dst_label = parser.GetLabelId(delete_vertices[idx]);
-        auto mask = ((seggraph::vertex_t)1)
+        auto mask = ((seggraph::vertex_t) 1)
                     << (sizeof(seggraph::vertex_t) * 8 - 1);
         auto dst_loc = delete_loc[idx] | mask;
 
@@ -159,20 +159,20 @@ void process_del_vertex(std::vector<std::string> cmd,
 
         if (dst_offset < graph_store->get_vtable_max_inner(
                              dst_label)) {  // dst is an inner vertex
-          seggraph::SegGraph *dst_graph =
+          seggraph::SegGraph* dst_graph =
               graph_store->get_graph<seggraph::SegGraph>(dst_label);
           auto dst_writer = dst_graph->create_graph_writer(write_epoch);
           segid_t dst_segid = dst_graph->get_vertex_seg_id(dst_offset);
           uint32_t dst_segidx = dst_graph->get_vertex_seg_idx(dst_offset);
-          VegitoSegmentHeader *dst_segment =
+          VegitoSegmentHeader* dst_segment =
               dst_writer.locate_segment(dst_segid, elabel, seggraph::EIN);
           uintptr_t dst_edge_block_pointer =
               dst_segment->get_region_ptr(dst_segidx);
-          VegitoEdgeBlockHeader *dst_edge_block =
+          VegitoEdgeBlockHeader* dst_edge_block =
               dst_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
                   dst_edge_block_pointer);
           std::vector<uint64_t> dst_prefix_sum;
-          VegitoEdgeBlockHeader *dst_cur_header = dst_edge_block;
+          VegitoEdgeBlockHeader* dst_cur_header = dst_edge_block;
           while (dst_cur_header) {
             dst_prefix_sum.push_back(dst_cur_header->get_num_entries());
             dst_cur_header =
@@ -190,8 +190,8 @@ void process_del_vertex(std::vector<std::string> cmd,
           dst_prefix_sum[dst_prefix_sum.size() - 1] = 0;
           int dst_segment_idx = 0;
           size_t dst_num_entries = dst_edge_block->get_num_entries();
-          VegitoEdgeEntry *dst_entries = dst_edge_block->get_entries();
-          VegitoEdgeEntry *dst_entries_cursor = dst_entries - dst_num_entries;
+          VegitoEdgeEntry* dst_entries = dst_edge_block->get_entries();
+          VegitoEdgeEntry* dst_entries_cursor = dst_entries - dst_num_entries;
           bool is_founded = false;
           while (true) {
             while (dst_entries_cursor != dst_entries) {
@@ -203,7 +203,7 @@ void process_del_vertex(std::vector<std::string> cmd,
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
-                auto mask = ((seggraph::vertex_t)1)
+                auto mask = ((seggraph::vertex_t) 1)
                             << (sizeof(seggraph::vertex_t) * 8 - 1);
 
                 del_loc = del_loc | mask;
@@ -231,23 +231,23 @@ void process_del_vertex(std::vector<std::string> cmd,
           }
 
         } else {  // dst is a outer vertex
-          seggraph::SegGraph *dst_graph = graph_store->get_ov_graph(dst_label);
+          seggraph::SegGraph* dst_graph = graph_store->get_ov_graph(dst_label);
           auto dst_writer = dst_graph->create_graph_writer(write_epoch);
           auto max_outer_id_offset =
-              (((vertex_t)1) << parser.GetOffsetWidth()) - (vertex_t)1;
+              (((vertex_t) 1) << parser.GetOffsetWidth()) - (vertex_t) 1;
           segid_t dst_segid =
               dst_graph->get_vertex_seg_id(max_outer_id_offset - dst_offset);
           uint32_t dst_segidx =
               dst_graph->get_vertex_seg_idx(max_outer_id_offset - dst_offset);
-          VegitoSegmentHeader *dst_segment =
+          VegitoSegmentHeader* dst_segment =
               dst_writer.locate_segment(dst_segid, elabel, seggraph::EIN);
           uintptr_t dst_edge_block_pointer =
               dst_segment->get_region_ptr(dst_segidx);
-          VegitoEdgeBlockHeader *dst_edge_block =
+          VegitoEdgeBlockHeader* dst_edge_block =
               dst_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
                   dst_edge_block_pointer);
           std::vector<uint64_t> dst_prefix_sum;
-          VegitoEdgeBlockHeader *dst_cur_header = dst_edge_block;
+          VegitoEdgeBlockHeader* dst_cur_header = dst_edge_block;
           while (dst_cur_header) {
             dst_prefix_sum.push_back(dst_cur_header->get_num_entries());
             dst_cur_header =
@@ -266,8 +266,8 @@ void process_del_vertex(std::vector<std::string> cmd,
           int dst_segment_idx = 0;
 
           size_t dst_num_entries = dst_edge_block->get_num_entries();
-          VegitoEdgeEntry *dst_entries = dst_edge_block->get_entries();
-          VegitoEdgeEntry *dst_entries_cursor = dst_entries - dst_num_entries;
+          VegitoEdgeEntry* dst_entries = dst_edge_block->get_entries();
+          VegitoEdgeEntry* dst_entries_cursor = dst_entries - dst_num_entries;
           bool is_founded = false;
 
           while (true) {
@@ -280,7 +280,7 @@ void process_del_vertex(std::vector<std::string> cmd,
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
-                auto mask = ((seggraph::vertex_t)1)
+                auto mask = ((seggraph::vertex_t) 1)
                             << (sizeof(seggraph::vertex_t) * 8 - 1);
                 del_loc = del_loc | mask;
                 dst_writer.put_edge(max_outer_id_offset - dst_offset, elabel,
@@ -317,21 +317,21 @@ void process_del_vertex(std::vector<std::string> cmd,
         continue;
       }
       uintptr_t edge_block_pointer = segment->get_region_ptr(segidx);
-      VegitoEdgeBlockHeader *edge_block =
+      VegitoEdgeBlockHeader* edge_block =
           src_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
               edge_block_pointer);
       uintptr_t epoch_table_pointer = segment->get_epoch_table(segidx);
-      EpochBlockHeader *epoch_table =
+      EpochBlockHeader* epoch_table =
           src_graph->get_block_manager().convert<EpochBlockHeader>(
               epoch_table_pointer);
       if (!edge_block || !epoch_table) {
         continue;
       }
       size_t num_entries = edge_block->get_num_entries();
-      VegitoEdgeEntry *entries = edge_block->get_entries();
-      VegitoEdgeEntry *entries_cursor = entries - num_entries;
+      VegitoEdgeEntry* entries = edge_block->get_entries();
+      VegitoEdgeEntry* entries_cursor = entries - num_entries;
       std::vector<uint64_t> prefix_sum;
-      VegitoEdgeBlockHeader *cur_header = edge_block;
+      VegitoEdgeBlockHeader* cur_header = edge_block;
       while (cur_header) {
         prefix_sum.push_back(cur_header->get_num_entries());
         cur_header =
@@ -358,9 +358,9 @@ void process_del_vertex(std::vector<std::string> cmd,
           auto delete_flag = vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
           if (delete_flag == 1) {
             auto delete_offset_mask =
-                (((seggraph::vertex_t)1)
+                (((seggraph::vertex_t) 1)
                  << (sizeof(seggraph::vertex_t) * 8 - 1)) -
-                (seggraph::vertex_t)1;
+                (seggraph::vertex_t) 1;
             auto delete_offset = vid & delete_offset_mask;
             delete_offsets.push(delete_offset);
           } else {
@@ -394,7 +394,7 @@ void process_del_vertex(std::vector<std::string> cmd,
       // delete edges
       uint64_t edge_prop_bytes = graph_store->get_edge_prop_total_bytes(
           elabel + graph_store->get_total_vertex_label_num());
-      char *prop_buffer = reinterpret_cast<char *>(malloc(edge_prop_bytes));
+      char* prop_buffer = reinterpret_cast<char*>(malloc(edge_prop_bytes));
       memset(prop_buffer, 0, edge_prop_bytes);
       std::string buf(prop_buffer, edge_prop_bytes);
       std::string_view edge_data(buf);
@@ -402,7 +402,7 @@ void process_del_vertex(std::vector<std::string> cmd,
       for (auto idx = 0; idx < delete_loc.size(); idx++) {
         auto dst_offset = parser.GetOffset(delete_vertices[idx]);
         auto dst_label = parser.GetLabelId(delete_vertices[idx]);
-        auto mask = ((seggraph::vertex_t)1)
+        auto mask = ((seggraph::vertex_t) 1)
                     << (sizeof(seggraph::vertex_t) * 8 - 1);
 
         auto dst_loc = delete_loc[idx] | mask;
@@ -410,20 +410,20 @@ void process_del_vertex(std::vector<std::string> cmd,
                             edge_data);
 
         if (dst_offset < graph_store->get_vtable_max_inner(dst_label)) {
-          seggraph::SegGraph *dst_graph =
+          seggraph::SegGraph* dst_graph =
               graph_store->get_graph<seggraph::SegGraph>(dst_label);
           auto dst_writer = dst_graph->create_graph_writer(write_epoch);
           segid_t dst_segid = dst_graph->get_vertex_seg_id(dst_offset);
           uint32_t dst_segidx = dst_graph->get_vertex_seg_idx(dst_offset);
-          VegitoSegmentHeader *dst_segment =
+          VegitoSegmentHeader* dst_segment =
               dst_writer.locate_segment(dst_segid, elabel, seggraph::EOUT);
           uintptr_t dst_edge_block_pointer =
               dst_segment->get_region_ptr(dst_segidx);
-          VegitoEdgeBlockHeader *dst_edge_block =
+          VegitoEdgeBlockHeader* dst_edge_block =
               dst_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
                   dst_edge_block_pointer);
           std::vector<uint64_t> dst_prefix_sum;
-          VegitoEdgeBlockHeader *dst_cur_header = dst_edge_block;
+          VegitoEdgeBlockHeader* dst_cur_header = dst_edge_block;
           while (dst_cur_header) {
             dst_prefix_sum.push_back(dst_cur_header->get_num_entries());
             dst_cur_header =
@@ -441,8 +441,8 @@ void process_del_vertex(std::vector<std::string> cmd,
           int dst_segment_idx = 0;
 
           size_t dst_num_entries = dst_edge_block->get_num_entries();
-          VegitoEdgeEntry *dst_entries = dst_edge_block->get_entries();
-          VegitoEdgeEntry *dst_entries_cursor = dst_entries - dst_num_entries;
+          VegitoEdgeEntry* dst_entries = dst_edge_block->get_entries();
+          VegitoEdgeEntry* dst_entries_cursor = dst_entries - dst_num_entries;
           bool is_founded = false;
           while (true) {
             while (dst_entries_cursor != dst_entries) {
@@ -453,7 +453,7 @@ void process_del_vertex(std::vector<std::string> cmd,
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
-                auto mask = ((seggraph::vertex_t)1)
+                auto mask = ((seggraph::vertex_t) 1)
                             << (sizeof(seggraph::vertex_t) * 8 - 1);
                 del_loc = del_loc | mask;
                 dst_writer.put_edge(dst_offset, elabel, seggraph::EOUT, del_loc,
@@ -481,24 +481,24 @@ void process_del_vertex(std::vector<std::string> cmd,
 
         } else {
           // dst is a outer vertex
-          seggraph::SegGraph *dst_graph = graph_store->get_ov_graph(dst_label);
+          seggraph::SegGraph* dst_graph = graph_store->get_ov_graph(dst_label);
           auto dst_writer = dst_graph->create_graph_writer(write_epoch);
           auto max_outer_id_offset =
-              (((vertex_t)1) << parser.GetOffsetWidth()) - (vertex_t)1;
+              (((vertex_t) 1) << parser.GetOffsetWidth()) - (vertex_t) 1;
           segid_t dst_segid =
               dst_graph->get_vertex_seg_id(max_outer_id_offset - dst_offset);
           uint32_t dst_segidx =
               dst_graph->get_vertex_seg_idx(max_outer_id_offset - dst_offset);
-          VegitoSegmentHeader *dst_segment =
+          VegitoSegmentHeader* dst_segment =
               dst_writer.locate_segment(dst_segid, elabel, seggraph::EOUT);
           assert(dst_segment != nullptr);
           uintptr_t dst_edge_block_pointer =
               dst_segment->get_region_ptr(dst_segidx);
-          VegitoEdgeBlockHeader *dst_edge_block =
+          VegitoEdgeBlockHeader* dst_edge_block =
               dst_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
                   dst_edge_block_pointer);
           std::vector<uint64_t> dst_prefix_sum;
-          VegitoEdgeBlockHeader *dst_cur_header = dst_edge_block;
+          VegitoEdgeBlockHeader* dst_cur_header = dst_edge_block;
           while (dst_cur_header) {
             dst_prefix_sum.push_back(dst_cur_header->get_num_entries());
             dst_cur_header =
@@ -516,8 +516,8 @@ void process_del_vertex(std::vector<std::string> cmd,
           int dst_segment_idx = 0;
 
           size_t dst_num_entries = dst_edge_block->get_num_entries();
-          VegitoEdgeEntry *dst_entries = dst_edge_block->get_entries();
-          VegitoEdgeEntry *dst_entries_cursor = dst_entries - dst_num_entries;
+          VegitoEdgeEntry* dst_entries = dst_edge_block->get_entries();
+          VegitoEdgeEntry* dst_entries_cursor = dst_entries - dst_num_entries;
           bool is_founded = false;
           while (true) {
             while (dst_entries_cursor != dst_entries) {
@@ -528,7 +528,7 @@ void process_del_vertex(std::vector<std::string> cmd,
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
-                auto mask = ((seggraph::vertex_t)1)
+                auto mask = ((seggraph::vertex_t) 1)
                             << (sizeof(seggraph::vertex_t) * 8 - 1);
                 del_loc = del_loc | mask;
                 dst_writer.put_edge(max_outer_id_offset - dst_offset, elabel,
@@ -568,8 +568,8 @@ void process_del_vertex(std::vector<std::string> cmd,
 
     auto v_offset = parser.GetOffset(vid);
     auto max_outer_id_offset =
-        (((vertex_t)1) << parser.GetOffsetWidth()) - (vertex_t)1;
-    seggraph::SegGraph *src_graph = graph_store->get_ov_graph(v_label);
+        (((vertex_t) 1) << parser.GetOffsetWidth()) - (vertex_t) 1;
+    seggraph::SegGraph* src_graph = graph_store->get_ov_graph(v_label);
     auto real_lid = parser.GenerateId(0, v_label, max_outer_id_offset - ov);
     graph_store->delete_outer(v_label,
                               real_lid);  // delete vertex from vertex table
@@ -582,7 +582,7 @@ void process_del_vertex(std::vector<std::string> cmd,
     segid_t segid = src_graph->get_vertex_seg_id(ov);
     uint32_t segidx = src_graph->get_vertex_seg_idx(ov);
 
-    VegitoSegmentHeader *segment;
+    VegitoSegmentHeader* segment;
 
     // process outgoing edges
     for (auto elabel = 0;
@@ -594,21 +594,21 @@ void process_del_vertex(std::vector<std::string> cmd,
       }
 
       uintptr_t edge_block_pointer = segment->get_region_ptr(segidx);
-      VegitoEdgeBlockHeader *edge_block =
+      VegitoEdgeBlockHeader* edge_block =
           src_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
               edge_block_pointer);
       uintptr_t epoch_table_pointer = segment->get_epoch_table(segidx);
-      EpochBlockHeader *epoch_table =
+      EpochBlockHeader* epoch_table =
           src_graph->get_block_manager().convert<EpochBlockHeader>(
               epoch_table_pointer);
       if (!edge_block || !epoch_table) {
         continue;
       }
       size_t num_entries = edge_block->get_num_entries();
-      VegitoEdgeEntry *entries = edge_block->get_entries();
-      VegitoEdgeEntry *entries_cursor = entries - num_entries;
+      VegitoEdgeEntry* entries = edge_block->get_entries();
+      VegitoEdgeEntry* entries_cursor = entries - num_entries;
       std::vector<uint64_t> prefix_sum;
-      VegitoEdgeBlockHeader *cur_header = edge_block;
+      VegitoEdgeBlockHeader* cur_header = edge_block;
       while (cur_header) {
         prefix_sum.push_back(cur_header->get_num_entries());
         cur_header =
@@ -636,9 +636,9 @@ void process_del_vertex(std::vector<std::string> cmd,
           auto delete_flag = vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
           if (delete_flag == 1) {
             auto delete_offset_mask =
-                (((seggraph::vertex_t)1)
+                (((seggraph::vertex_t) 1)
                  << (sizeof(seggraph::vertex_t) * 8 - 1)) -
-                (seggraph::vertex_t)1;
+                (seggraph::vertex_t) 1;
             auto delete_offset = vid & delete_offset_mask;
             delete_offsets.push(delete_offset);
           } else {
@@ -673,7 +673,7 @@ void process_del_vertex(std::vector<std::string> cmd,
       // delete edges
       uint64_t edge_prop_bytes = graph_store->get_edge_prop_total_bytes(
           elabel + graph_store->get_total_vertex_label_num());
-      char *prop_buffer = reinterpret_cast<char *>(malloc(edge_prop_bytes));
+      char* prop_buffer = reinterpret_cast<char*>(malloc(edge_prop_bytes));
       memset(prop_buffer, 0, edge_prop_bytes);
       std::string buf(prop_buffer, edge_prop_bytes);
       std::string_view edge_data(buf);
@@ -681,27 +681,27 @@ void process_del_vertex(std::vector<std::string> cmd,
       for (auto idx = 0; idx < delete_loc.size(); idx++) {
         auto dst_offset = parser.GetOffset(delete_vertices[idx]);
         auto dst_label = parser.GetLabelId(delete_vertices[idx]);
-        auto mask = ((seggraph::vertex_t)1)
+        auto mask = ((seggraph::vertex_t) 1)
                     << (sizeof(seggraph::vertex_t) * 8 - 1);
         auto dst_loc = delete_loc[idx] | mask;
         src_writer.put_edge(v_offset, elabel, seggraph::EOUT, dst_loc,
                             edge_data);
         // we does not need process edges between outer vertices
         if (dst_offset < graph_store->get_vtable_max_inner(dst_label)) {
-          seggraph::SegGraph *dst_graph =
+          seggraph::SegGraph* dst_graph =
               graph_store->get_graph<seggraph::SegGraph>(dst_label);
           auto dst_writer = dst_graph->create_graph_writer(write_epoch);
           segid_t dst_segid = dst_graph->get_vertex_seg_id(dst_offset);
           uint32_t dst_segidx = dst_graph->get_vertex_seg_idx(dst_offset);
-          VegitoSegmentHeader *dst_segment =
+          VegitoSegmentHeader* dst_segment =
               dst_writer.locate_segment(dst_segid, elabel, seggraph::EIN);
           uintptr_t dst_edge_block_pointer =
               dst_segment->get_region_ptr(dst_segidx);
-          VegitoEdgeBlockHeader *dst_edge_block =
+          VegitoEdgeBlockHeader* dst_edge_block =
               dst_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
                   dst_edge_block_pointer);
           std::vector<uint64_t> dst_prefix_sum;
-          VegitoEdgeBlockHeader *dst_cur_header = dst_edge_block;
+          VegitoEdgeBlockHeader* dst_cur_header = dst_edge_block;
           while (dst_cur_header) {
             dst_prefix_sum.push_back(dst_cur_header->get_num_entries());
             dst_cur_header =
@@ -721,8 +721,8 @@ void process_del_vertex(std::vector<std::string> cmd,
           int dst_segment_idx = 0;
 
           size_t dst_num_entries = dst_edge_block->get_num_entries();
-          VegitoEdgeEntry *dst_entries = dst_edge_block->get_entries();
-          VegitoEdgeEntry *dst_entries_cursor = dst_entries - dst_num_entries;
+          VegitoEdgeEntry* dst_entries = dst_edge_block->get_entries();
+          VegitoEdgeEntry* dst_entries_cursor = dst_entries - dst_num_entries;
           bool is_founded = false;
 
           while (true) {
@@ -736,7 +736,7 @@ void process_del_vertex(std::vector<std::string> cmd,
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
-                auto mask = ((seggraph::vertex_t)1)
+                auto mask = ((seggraph::vertex_t) 1)
                             << (sizeof(seggraph::vertex_t) * 8 - 1);
                 del_loc = del_loc | mask;
                 dst_writer.put_edge(dst_offset, elabel, seggraph::EIN, del_loc,
@@ -776,21 +776,21 @@ void process_del_vertex(std::vector<std::string> cmd,
         continue;
       }
       uintptr_t edge_block_pointer = segment->get_region_ptr(segidx);
-      VegitoEdgeBlockHeader *edge_block =
+      VegitoEdgeBlockHeader* edge_block =
           src_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
               edge_block_pointer);
       uintptr_t epoch_table_pointer = segment->get_epoch_table(segidx);
-      EpochBlockHeader *epoch_table =
+      EpochBlockHeader* epoch_table =
           src_graph->get_block_manager().convert<EpochBlockHeader>(
               epoch_table_pointer);
       if (!edge_block || !epoch_table) {
         continue;
       }
       size_t num_entries = edge_block->get_num_entries();
-      VegitoEdgeEntry *entries = edge_block->get_entries();
-      VegitoEdgeEntry *entries_cursor = entries - num_entries;
+      VegitoEdgeEntry* entries = edge_block->get_entries();
+      VegitoEdgeEntry* entries_cursor = entries - num_entries;
       std::vector<uint64_t> prefix_sum;
-      VegitoEdgeBlockHeader *cur_header = edge_block;
+      VegitoEdgeBlockHeader* cur_header = edge_block;
 
       while (cur_header) {
         prefix_sum.push_back(cur_header->get_num_entries());
@@ -820,9 +820,9 @@ void process_del_vertex(std::vector<std::string> cmd,
           auto delete_flag = vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
           if (delete_flag == 1) {
             auto delete_offset_mask =
-                (((seggraph::vertex_t)1)
+                (((seggraph::vertex_t) 1)
                  << (sizeof(seggraph::vertex_t) * 8 - 1)) -
-                (seggraph::vertex_t)1;
+                (seggraph::vertex_t) 1;
             auto delete_offset = vid & delete_offset_mask;
             delete_offsets.push(delete_offset);
           } else {
@@ -857,7 +857,7 @@ void process_del_vertex(std::vector<std::string> cmd,
       // delete edges
       uint64_t edge_prop_bytes = graph_store->get_edge_prop_total_bytes(
           elabel + graph_store->get_total_vertex_label_num());
-      char *prop_buffer = reinterpret_cast<char *>(malloc(edge_prop_bytes));
+      char* prop_buffer = reinterpret_cast<char*>(malloc(edge_prop_bytes));
       memset(prop_buffer, 0, edge_prop_bytes);
       std::string buf(prop_buffer, edge_prop_bytes);
       std::string_view edge_data(buf);
@@ -865,7 +865,7 @@ void process_del_vertex(std::vector<std::string> cmd,
       for (auto idx = 0; idx < delete_loc.size(); idx++) {
         auto dst_offset = parser.GetOffset(delete_vertices[idx]);
         auto dst_label = parser.GetLabelId(delete_vertices[idx]);
-        auto mask = ((seggraph::vertex_t)1)
+        auto mask = ((seggraph::vertex_t) 1)
                     << (sizeof(seggraph::vertex_t) * 8 - 1);
         auto dst_loc = delete_loc[idx] | mask;
         src_writer.put_edge(v_offset, elabel, seggraph::EIN, dst_loc,
@@ -873,21 +873,21 @@ void process_del_vertex(std::vector<std::string> cmd,
         assert(dst_offset < graph_store->get_vtable_max_inner(dst_label));
 
         if (dst_offset < graph_store->get_vtable_max_inner(dst_label)) {
-          seggraph::SegGraph *dst_graph =
+          seggraph::SegGraph* dst_graph =
               graph_store->get_graph<seggraph::SegGraph>(dst_label);
           auto dst_writer = dst_graph->create_graph_writer(write_epoch);
           segid_t dst_segid = dst_graph->get_vertex_seg_id(dst_offset);
           uint32_t dst_segidx = dst_graph->get_vertex_seg_idx(dst_offset);
-          VegitoSegmentHeader *dst_segment =
+          VegitoSegmentHeader* dst_segment =
               dst_writer.locate_segment(dst_segid, elabel, seggraph::EOUT);
           assert(dst_segment != nullptr);
           uintptr_t dst_edge_block_pointer =
               dst_segment->get_region_ptr(dst_segidx);
-          VegitoEdgeBlockHeader *dst_edge_block =
+          VegitoEdgeBlockHeader* dst_edge_block =
               dst_graph->get_block_manager().convert<VegitoEdgeBlockHeader>(
                   dst_edge_block_pointer);
           std::vector<uint64_t> dst_prefix_sum;
-          VegitoEdgeBlockHeader *dst_cur_header = dst_edge_block;
+          VegitoEdgeBlockHeader* dst_cur_header = dst_edge_block;
           while (dst_cur_header) {
             dst_prefix_sum.push_back(dst_cur_header->get_num_entries());
             dst_cur_header =
@@ -907,8 +907,8 @@ void process_del_vertex(std::vector<std::string> cmd,
           int dst_segment_idx = 0;
 
           size_t dst_num_entries = dst_edge_block->get_num_entries();
-          VegitoEdgeEntry *dst_entries = dst_edge_block->get_entries();
-          VegitoEdgeEntry *dst_entries_cursor = dst_entries - dst_num_entries;
+          VegitoEdgeEntry* dst_entries = dst_edge_block->get_entries();
+          VegitoEdgeEntry* dst_entries_cursor = dst_entries - dst_num_entries;
           bool is_founded = false;
 
           while (true) {
@@ -922,7 +922,7 @@ void process_del_vertex(std::vector<std::string> cmd,
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
 
-                auto mask = ((seggraph::vertex_t)1)
+                auto mask = ((seggraph::vertex_t) 1)
                             << (sizeof(seggraph::vertex_t) * 8 - 1);
                 del_loc = del_loc | mask;
                 dst_writer.put_edge(dst_offset, elabel, seggraph::EOUT, del_loc,
@@ -959,4 +959,4 @@ void process_del_vertex(std::vector<std::string> cmd,
 }  // namespace graph
 }  // namespace gart
 
-#endif  // RESEARCH_GART_VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_DEL_VERTEX_H_
+#endif  // VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_DEL_VERTEX_H_

@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_
-#define RESEARCH_GART_VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_
+#ifndef VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_
+#define VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_
 
 #include <string>
 #include <vector>
 
-#include "graph/type_def.h"
 #include "graph/graph_store.h"
+#include "graph/type_def.h"
 
 namespace gart {
 namespace graph {
 using SegGraph = seggraph::SegGraph;
 using vertex_t = seggraph::vertex_t;
 void process_add_edge(std::vector<std::string> cmd,
-                      graph::GraphStore *graph_store) {
+                      graph::GraphStore* graph_store) {
   int write_epoch = 0, write_seq = 0;
   write_epoch = stoi(cmd[0]);
   int elabel = stoi(cmd[1]);
@@ -37,7 +37,7 @@ void process_add_edge(std::vector<std::string> cmd,
   parser.Init(graph_store->get_total_partitions(),
               graph_store->get_total_vertex_label_num());
   auto max_outer_id_offset =
-      (((vertex_t)1) << parser.GetOffsetWidth()) - (seggraph::vertex_t)1;
+      (((vertex_t) 1) << parser.GetOffsetWidth()) - (seggraph::vertex_t) 1;
   auto src_fid = parser.GetFid(src_vid);
   auto dst_fid = parser.GetFid(dst_vid);
   if (src_fid != graph_store->get_local_pid() &&
@@ -47,9 +47,9 @@ void process_add_edge(std::vector<std::string> cmd,
   auto src_label = parser.GetLabelId(src_vid);
   auto dst_label = parser.GetLabelId(dst_vid);
 
-  seggraph::SegGraph *src_graph =
+  seggraph::SegGraph* src_graph =
       graph_store->get_graph<seggraph::SegGraph>(src_label);
-  seggraph::SegGraph *dst_graph =
+  seggraph::SegGraph* dst_graph =
       graph_store->get_graph<seggraph::SegGraph>(dst_label);
   // this `auto` is necessary, the p_write may Transaction or EpochGraphWriter
   auto src_writer = src_graph->create_graph_writer(write_epoch);  // write epoch
@@ -58,42 +58,41 @@ void process_add_edge(std::vector<std::string> cmd,
   // process edge prop
   uint64_t edge_prop_bytes = graph_store->get_edge_prop_total_bytes(
       elabel + graph_store->get_total_vertex_label_num());
-  char *prop_buffer = reinterpret_cast<char *>(malloc(edge_prop_bytes));
+  char* prop_buffer = reinterpret_cast<char*>(malloc(edge_prop_bytes));
   for (auto idx = 4; idx < cmd.size(); idx++) {
     auto dtype = graph_store->get_edge_property_dtypes(
         elabel + graph_store->get_total_vertex_label_num(), idx - 4);
     uint64_t property_offset = graph_store->get_edge_prop_prefix_bytes(
         elabel + graph_store->get_total_vertex_label_num(), idx - 4);
     if (dtype == INT) {
-      *reinterpret_cast<int *>(prop_buffer + property_offset) =
+      *reinterpret_cast<int*>(prop_buffer + property_offset) =
           std::stoi(cmd[idx]);
     } else if (dtype == FLOAT) {
-      *reinterpret_cast<float *>(prop_buffer + property_offset) =
+      *reinterpret_cast<float*>(prop_buffer + property_offset) =
           std::stof(cmd[idx]);
     } else if (dtype == DOUBLE) {
-      *reinterpret_cast<double *>(prop_buffer + property_offset) =
+      *reinterpret_cast<double*>(prop_buffer + property_offset) =
           std::stod(cmd[idx]);
     } else if (dtype == LONG) {
-      *reinterpret_cast<uint64_t *>(prop_buffer + property_offset) =
+      *reinterpret_cast<uint64_t*>(prop_buffer + property_offset) =
           std::stoll(cmd[idx]);
     } else if (dtype == CHAR) {
       *(prop_buffer + property_offset) = cmd[idx].at(0);
     } else if (dtype == STRING) {
       ldbc::String tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::String *>(prop_buffer + property_offset) = tmp;
+      *reinterpret_cast<ldbc::String*>(prop_buffer + property_offset) = tmp;
     } else if (dtype == TEXT) {
       ldbc::Text tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::Text *>(prop_buffer + property_offset) = tmp;
+      *reinterpret_cast<ldbc::Text*>(prop_buffer + property_offset) = tmp;
     } else if (dtype == DATE) {
       ldbc::Date tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::Date *>(prop_buffer + property_offset) = tmp;
+      *reinterpret_cast<ldbc::Date*>(prop_buffer + property_offset) = tmp;
     } else if (dtype == DATETIME) {
       ldbc::DateTime tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::DateTime *>(prop_buffer + property_offset) = tmp;
+      *reinterpret_cast<ldbc::DateTime*>(prop_buffer + property_offset) = tmp;
     } else if (dtype == LONGSTRING) {
       ldbc::LongString tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::LongString *>(prop_buffer + property_offset) =
-          tmp;
+      *reinterpret_cast<ldbc::LongString*>(prop_buffer + property_offset) = tmp;
     } else {
       assert(false);
     }
@@ -104,7 +103,7 @@ void process_add_edge(std::vector<std::string> cmd,
 
   if (src_fid == graph_store->get_local_pid() &&
       dst_fid != graph_store->get_local_pid()) {
-    seggraph::SegGraph *ov_graph = graph_store->get_ov_graph(dst_label);
+    seggraph::SegGraph* ov_graph = graph_store->get_ov_graph(dst_label);
     auto ov_writer = ov_graph->create_graph_writer(write_epoch);
     uint64_t ov = graph_store->get_lid(dst_label, dst_vid);
     if (ov == uint64_t(-1)) {
@@ -122,7 +121,7 @@ void process_add_edge(std::vector<std::string> cmd,
     ov_writer.put_edge(ov, elabel, seggraph::EIN, src_lid, edge_data);
   } else if (src_fid != graph_store->get_local_pid() &&
              dst_fid == graph_store->get_local_pid()) {
-    SegGraph *ov_graph = graph_store->get_ov_graph(src_label);
+    SegGraph* ov_graph = graph_store->get_ov_graph(src_label);
     auto ov_writer = ov_graph->create_graph_writer(write_epoch);
     uint64_t ov = graph_store->get_lid(src_label, src_vid);
     if (ov == uint64_t(-1)) {
@@ -152,4 +151,4 @@ void process_add_edge(std::vector<std::string> cmd,
 }  // namespace graph
 }  // namespace gart
 
-#endif  // RESEARCH_GART_VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_
+#endif  // VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_

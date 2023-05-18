@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_INTERFACES_FRAGMENT_PROPERTY_UTIL_H_
-#define RESEARCH_GART_INTERFACES_FRAGMENT_PROPERTY_UTIL_H_
+#ifndef INTERFACES_FRAGMENT_PROPERTY_UTIL_H_
+#define INTERFACES_FRAGMENT_PROPERTY_UTIL_H_
 
-#include "vineyard/client/ds/blob.h"
 #include "vegito/src/util/inline_str.h"
+#include "vineyard/client/ds/blob.h"
 
 namespace gart {
 
@@ -44,10 +44,10 @@ struct VertexPropMeta {
 class PageHeader {
  public:
   int get_epoch() { return ver_; }
-  PageHeader *get_prev(uintptr_t base_addr) {
-    return (PageHeader *)(base_addr + prev_ptr_);
+  PageHeader* get_prev(uintptr_t base_addr) {
+    return (PageHeader*) (base_addr + prev_ptr_);
   }
-  char *get_data() {
+  char* get_data() {
     // return ((char*)this) + sizeof(*this);
     return content;
   }
@@ -57,15 +57,15 @@ class PageHeader {
   uintptr_t prev_ptr_;
   // unuse for reader
   uint64_t min_ver;
-  PageHeader *prev_;
-  PageHeader *next;
+  PageHeader* prev_;
+  PageHeader* next;
   char content[0];
 };
 
 class FlexColBlobHeader {
  public:
-  PageHeader *get_page_header_ptr(uintptr_t base_ptr, int loc) {
-    return (PageHeader *)(base_ptr + page_ptr[loc]);
+  PageHeader* get_page_header_ptr(uintptr_t base_ptr, int loc) {
+    return (PageHeader*) (base_ptr + page_ptr[loc]);
   }
 
   int get_num_row_per_page() { return num_row_per_page_; }
@@ -77,4 +77,4 @@ class FlexColBlobHeader {
 
 }  // namespace gart
 
-#endif  // RESEARCH_GART_INTERFACES_FRAGMENT_PROPERTY_UTIL_H_
+#endif  // INTERFACES_FRAGMENT_PROPERTY_UTIL_H_

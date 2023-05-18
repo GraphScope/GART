@@ -69,11 +69,11 @@ class BlockHeader {
 class SegmentHeader : public BlockHeader {
  public:
   vertex_t get_segment_id() const {
-    return ((segid_t)segid_high << 32) + (vertex_t)segid_low;
+    return ((segid_t) segid_high << 32) + (vertex_t) segid_low;
   }
 
   void set_segment_id(segid_t segid) {
-    assert(segid <= ((vertex_t)UINT16_MAX << 32) + UINT32_MAX);
+    assert(segid <= ((vertex_t) UINT16_MAX << 32) + UINT32_MAX);
     segid_high = (segid >> 32) & UINT16_MAX;
     segid_low = segid & UINT32_MAX;
   }
@@ -82,7 +82,7 @@ class SegmentHeader : public BlockHeader {
 
   uintptr_t get_region_ptr(uint32_t idx) const { return region_ptrs[idx]; }
 
-  uintptr_t *get_region_ptr_pointer(uint32_t idx) {
+  uintptr_t* get_region_ptr_pointer(uint32_t idx) {
     return &(region_ptrs[idx]);
   }
 
@@ -109,7 +109,7 @@ class SegmentHeader : public BlockHeader {
       return head + sizeof(*this) + ret;
   }
 
-  size_t *get_used_size_pointer() { return &used_size; }
+  size_t* get_used_size_pointer() { return &used_size; }
 
  private:
   uint16_t segid_high;
@@ -122,18 +122,18 @@ class SegmentHeader : public BlockHeader {
 class N2OBlockHeader : public BlockHeader {
  public:
   vertex_t get_vertex_id() const {
-    return ((vertex_t)vid_high << 32) + (vertex_t)vid_low;
+    return ((vertex_t) vid_high << 32) + (vertex_t) vid_low;
   }
 
   void set_vertex_id(vertex_t vid) {
-    assert(vid <= ((vertex_t)UINT16_MAX << 32) + UINT32_MAX);
+    assert(vid <= ((vertex_t) UINT16_MAX << 32) + UINT32_MAX);
     vid_high = (vid >> 32) & UINT16_MAX;
     vid_low = vid & UINT32_MAX;
   }
 
   timestamp_t get_creation_time() const { return creation_time; }
 
-  timestamp_t *get_creation_time_pointer() { return &creation_time; }
+  timestamp_t* get_creation_time_pointer() { return &creation_time; }
 
   void set_creation_time(timestamp_t creation_time) {
     this->creation_time = creation_time;
@@ -166,15 +166,17 @@ class VertexBlockHeader : public N2OBlockHeader {
 
   void set_length(size_t length) { this->length = length; }
 
-  const char *get_data() const { return data; }
+  const char* get_data() const { return data; }
 
-  char *get_data() { return data; }
+  char* get_data() { return data; }
 
   void clear() { set_length(0); }
 
-  bool set_data(const char *data, size_t length) {
-    if (sizeof(*this) + length > get_block_size()) return false;
-    for (size_t i = 0; i < length; i++) get_data()[i] = data[i];
+  bool set_data(const char* data, size_t length) {
+    if (sizeof(*this) + length > get_block_size())
+      return false;
+    for (size_t i = 0; i < length; i++)
+      get_data()[i] = data[i];
     set_length(length);
     return true;
   }
@@ -182,7 +184,7 @@ class VertexBlockHeader : public N2OBlockHeader {
   constexpr static size_t TOMBSTONE = UINT64_MAX;
 
   void fill(order_t order, vertex_t vid, timestamp_t creation_time,
-            uintptr_t prev_pointer, const char *data, size_t length) {
+            uintptr_t prev_pointer, const char* data, size_t length) {
     N2OBlockHeader::fill(order, Type::VERTEX, vid, creation_time, prev_pointer);
     if (length == TOMBSTONE)
       set_length(TOMBSTONE);
@@ -223,9 +225,9 @@ class EdgeLabelBlockHeader : public N2OBlockHeader {
 
   void set_num_entries(size_t num_entries) { this->num_entries = num_entries; }
 
-  const EdgeLabelEntry *get_entries() const { return entries; }
+  const EdgeLabelEntry* get_entries() const { return entries; }
 
-  EdgeLabelEntry *get_entries() { return entries; }
+  EdgeLabelEntry* get_entries() { return entries; }
 
   void clear() { set_num_entries(0); }
   bool append(EdgeLabelEntry entry) {
@@ -253,18 +255,18 @@ class EdgeLabelBlockHeader : public N2OBlockHeader {
 class EdgeEntry {
  public:
   vertex_t get_dst() const {
-    return ((vertex_t)dst_high << 32) + (vertex_t)dst_low;
+    return ((vertex_t) dst_high << 32) + (vertex_t) dst_low;
   }
 
   void set_dst(vertex_t dst) {
-    assert(dst <= ((vertex_t)UINT16_MAX << 32) + UINT32_MAX);
+    assert(dst <= ((vertex_t) UINT16_MAX << 32) + UINT32_MAX);
     dst_high = (dst >> 32) & UINT16_MAX;
     dst_low = dst & UINT32_MAX;
   }
 
   timestamp_t get_creation_time() const { return creation_time; }
 
-  timestamp_t *get_creation_time_pointer() { return &creation_time; }
+  timestamp_t* get_creation_time_pointer() { return &creation_time; }
 
   void set_creation_time(timestamp_t creation_time) {
     this->creation_time = creation_time;
@@ -272,7 +274,7 @@ class EdgeEntry {
 
   timestamp_t get_deletion_time() const { return deletion_time; }
 
-  timestamp_t *get_deletion_time_pointer() { return &deletion_time; }
+  timestamp_t* get_deletion_time_pointer() { return &deletion_time; }
 
   void set_deletion_time(timestamp_t deletion_time) {
     this->deletion_time = deletion_time;
@@ -319,7 +321,7 @@ class EdgeBlockHeader : public N2OBlockHeader {
  public:
   timestamp_t get_committed_time() const { return committed_time; }
 
-  timestamp_t *get_committed_time_pointer() { return &committed_time; }
+  timestamp_t* get_committed_time_pointer() { return &committed_time; }
 
   void set_committed_time(timestamp_t committed_time) {
     this->committed_time = committed_time;
@@ -331,9 +333,9 @@ class EdgeBlockHeader : public N2OBlockHeader {
     this->tail.data.data_length = data_length;
   }
 
-  const char *get_data() const { return data; }
+  const char* get_data() const { return data; }
 
-  char *get_data() { return data; }
+  char* get_data() { return data; }
 
   size_t get_num_entries() const { return tail.data.num_entries; }
 
@@ -341,41 +343,44 @@ class EdgeBlockHeader : public N2OBlockHeader {
     this->tail.data.num_entries = num_entries;
   }
 
-  const EdgeEntry *get_entries() const {
+  const EdgeEntry* get_entries() const {
     size_t block_size = get_block_size();
     if (get_order() >= BLOOM_FILTER_THRESHOLD)
       block_size -= block_size >> BLOOM_FILTER_PORTION;
-    return (EdgeEntry *)((uint8_t *)this + block_size);
+    return (EdgeEntry*) ((uint8_t*) this + block_size);
   }
 
-  EdgeEntry *get_entries() {
+  EdgeEntry* get_entries() {
     size_t block_size = get_block_size();
     if (get_order() >= BLOOM_FILTER_THRESHOLD)
       block_size -= block_size >> BLOOM_FILTER_PORTION;
-    return (EdgeEntry *)((uint8_t *)this + block_size);
+    return (EdgeEntry*) ((uint8_t*) this + block_size);
   }
 
   const BloomFilter get_bloom_filter() const {
-    if (get_order() < BLOOM_FILTER_THRESHOLD) return BloomFilter();
+    if (get_order() < BLOOM_FILTER_THRESHOLD)
+      return BloomFilter();
     size_t block_size = get_block_size();
     size_t bloom_filter_size = block_size >> BLOOM_FILTER_PORTION;
     return BloomFilter(bloom_filter_size,
-                       ((uint8_t *)this) + block_size - bloom_filter_size);
+                       ((uint8_t*) this) + block_size - bloom_filter_size);
   }
 
   BloomFilter get_bloom_filter() {
-    if (get_order() < BLOOM_FILTER_THRESHOLD) return BloomFilter();
+    if (get_order() < BLOOM_FILTER_THRESHOLD)
+      return BloomFilter();
     size_t block_size = get_block_size();
     size_t bloom_filter_size = block_size >> BLOOM_FILTER_PORTION;
     return BloomFilter(get_order() - BLOOM_FILTER_PORTION,
-                       ((uint8_t *)this) + block_size - bloom_filter_size);
+                       ((uint8_t*) this) + block_size - bloom_filter_size);
   }
 
   void clear() {
     set_num_entries(0);
     set_data_length(0);
     auto filter = get_bloom_filter();
-    if (filter.valid()) filter.clear();
+    if (filter.valid())
+      filter.clear();
   }
 
   bool has_space(EdgeEntry entry, size_t num_entries,
@@ -394,33 +399,37 @@ class EdgeBlockHeader : public N2OBlockHeader {
       return true;
   }
 
-  EdgeEntry *append(EdgeEntry entry, const char *data, BloomFilter &filter) {
+  EdgeEntry* append(EdgeEntry entry, const char* data, BloomFilter& filter) {
     auto num = get_num_entries();
     auto length = get_data_length();
-    if (!has_space(entry, num, length)) return nullptr;
+    if (!has_space(entry, num, length))
+      return nullptr;
     *(get_entries() - num - 1) = entry;
     for (size_t i = 0; i < entry.get_length(); i++)
       (get_data() + length)[i] = data[i];
     compiler_fence();
     set_num_entries(num + 1);
     set_data_length(length + entry.get_length());
-    if (filter.valid()) filter.insert(entry.get_dst());
+    if (filter.valid())
+      filter.insert(entry.get_dst());
     return get_entries() - num - 1;
   }
 
-  EdgeEntry *append(EdgeEntry entry, const char *data) {
+  EdgeEntry* append(EdgeEntry entry, const char* data) {
     auto filter = get_bloom_filter();
     return append(entry, data, filter);
   }
 
-  EdgeEntry *append_without_update_size(EdgeEntry entry, const char *data,
+  EdgeEntry* append_without_update_size(EdgeEntry entry, const char* data,
                                         size_t num, size_t length) {
     auto filter = get_bloom_filter();
-    if (!has_space(entry, num, length)) return nullptr;
+    if (!has_space(entry, num, length))
+      return nullptr;
     *(get_entries() - num - 1) = entry;
     for (size_t i = 0; i < entry.get_length(); i++)
       (get_data() + length)[i] = data[i];
-    if (filter.valid()) filter.insert(entry.get_dst());
+    if (filter.valid())
+      filter.insert(entry.get_dst());
     return get_entries() - num - 1;
   }
 
@@ -491,14 +500,14 @@ class VegitoEdgeBlockHeader : public BlockHeader {
     return sizeof(*this) + get_block_size() * sizeof(VegitoEdgeEntry);
   }
 
-  const VegitoEdgeEntry *get_entries() const {
+  const VegitoEdgeEntry* get_entries() const {
     size_t block_size = get_vegito_block_size();
-    return (VegitoEdgeEntry *)((uint8_t *)this + block_size);
+    return (VegitoEdgeEntry*) ((uint8_t*) this + block_size);
   }
 
-  VegitoEdgeEntry *get_entries() {
+  VegitoEdgeEntry* get_entries() {
     size_t block_size = get_vegito_block_size();
-    return (VegitoEdgeEntry *)((uint8_t *)this + block_size);
+    return (VegitoEdgeEntry*) ((uint8_t*) this + block_size);
   }
 
   bool has_space() const {
@@ -509,9 +518,10 @@ class VegitoEdgeBlockHeader : public BlockHeader {
       return true;
   }
 
-  VegitoEdgeEntry *append(VegitoEdgeEntry entry) {
+  VegitoEdgeEntry* append(VegitoEdgeEntry entry) {
     auto num = get_num_entries();
-    if (!has_space()) return nullptr;
+    if (!has_space())
+      return nullptr;
     *(get_entries() - num - 1) = entry;
 
     compiler_fence();
@@ -520,9 +530,10 @@ class VegitoEdgeBlockHeader : public BlockHeader {
     return get_entries() - num - 1;
   }
 
-  VegitoEdgeEntry *append_without_update_size(VegitoEdgeEntry entry) {
+  VegitoEdgeEntry* append_without_update_size(VegitoEdgeEntry entry) {
     auto num = get_num_entries();
-    if (!has_space()) return nullptr;
+    if (!has_space())
+      return nullptr;
     *(get_entries() - num - 1) = entry;
 
     return get_entries() - num - 1;
@@ -559,14 +570,14 @@ class EpochBlockHeader : public BlockHeader {
     this->prev_pointer = prev_pointer;
   }
 
-  const VegitoEpochEntry *get_entries() const {
+  const VegitoEpochEntry* get_entries() const {
     size_t block_size = get_block_size();
-    return (VegitoEpochEntry *)((uint8_t *)this + block_size);
+    return (VegitoEpochEntry*) ((uint8_t*) this + block_size);
   }
 
-  VegitoEpochEntry *get_entries() {
+  VegitoEpochEntry* get_entries() {
     size_t block_size = get_block_size();
-    return (VegitoEpochEntry *)((uint8_t *)this + block_size);
+    return (VegitoEpochEntry*) ((uint8_t*) this + block_size);
   }
 
   bool has_space() const {
@@ -577,9 +588,10 @@ class EpochBlockHeader : public BlockHeader {
       return true;
   }
 
-  VegitoEpochEntry *append(VegitoEpochEntry entry) {
+  VegitoEpochEntry* append(VegitoEpochEntry entry) {
     auto num = get_num_entries();
-    if (!has_space()) return nullptr;
+    if (!has_space())
+      return nullptr;
     *(get_entries() - num - 1) = entry;
 
     compiler_fence();
@@ -610,18 +622,18 @@ class EpochBlockHeader : public BlockHeader {
 class VegitoSegmentHeader : public BlockHeader {
  public:
   vertex_t get_segment_id() const {
-    return ((segid_t)segid_high << 32) + (vertex_t)segid_low;
+    return ((segid_t) segid_high << 32) + (vertex_t) segid_low;
   }
 
   void set_segment_id(segid_t segid) {
-    assert(segid <= ((vertex_t)UINT16_MAX << 32) + UINT32_MAX);
+    assert(segid <= ((vertex_t) UINT16_MAX << 32) + UINT32_MAX);
     segid_high = (segid >> 32) & UINT16_MAX;
     segid_low = segid & UINT32_MAX;
   }
 
   uintptr_t get_region_ptr(uint32_t idx) const { return region_ptrs[idx]; }
 
-  uintptr_t *get_region_ptr_pointer(uint32_t idx) {
+  uintptr_t* get_region_ptr_pointer(uint32_t idx) {
     return &(region_ptrs[idx]);
   }
 
@@ -657,22 +669,22 @@ class VegitoSegmentHeader : public BlockHeader {
   }
 
   size_t get_allocated_edge_num(uintptr_t edge_block) {
-    return (edge_block - ((uintptr_t)this + sizeof(*this))) /
+    return (edge_block - ((uintptr_t) this + sizeof(*this))) /
            sizeof(VegitoEdgeEntry);
   }
 
-  const void *get_property(size_t offset, size_t edge_prop_size) {
+  const void* get_property(size_t offset, size_t edge_prop_size) {
     auto block_size = get_block_size();
-    void *data =
-        (void *)((uintptr_t)this + block_size - (offset + 1) * edge_prop_size);
+    void* data =
+        (void*) ((uintptr_t) this + block_size - (offset + 1) * edge_prop_size);
     return data;
   }
 
-  void append_property(size_t offset, const void *edge_prop_value,
+  void append_property(size_t offset, const void* edge_prop_value,
                        size_t edge_prop_size) {
     auto block_size = get_block_size();
-    void *data =
-        (void *)((uintptr_t)this + block_size - (offset + 1) * edge_prop_size);
+    void* data =
+        (void*) ((uintptr_t) this + block_size - (offset + 1) * edge_prop_size);
     memcpy(data, edge_prop_value, edge_prop_size);
   }
 

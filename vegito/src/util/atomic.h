@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_PORT_ATOMIC_H_
-#define RESEARCH_GART_VEGITO_SRC_PORT_ATOMIC_H_
+#ifndef VEGITO_SRC_UTIL_ATOMIC_H_
+#define VEGITO_SRC_UTIL_ATOMIC_H_
 
 #include <cstdint>
 
@@ -49,11 +49,11 @@
 #define cpu_relax() asm volatile("pause\n" : : : "memory")
 
 #define CACHE_LINE_SIZE 64
-inline void prefetch(const void *ptr) {
+inline void prefetch(const void* ptr) {
   typedef struct {
     char x[CACHE_LINE_SIZE];
   } cacheline_t;
-  asm volatile("prefetcht0 %0" : : "m"(*(const cacheline_t *)ptr));
+  asm volatile("prefetcht0 %0" : : "m"(*(const cacheline_t*) ptr));
 }
 
 #define LOCK_PREFIX "lock; "
@@ -63,7 +63,7 @@ inline void prefetch(const void *ptr) {
 /* Compares the value in rdx:rax to value in memp, if equal load rcx:rbx into
  * memp, else load value into rdx:rax.
  * Return 1 on success, 0 otherwise. */
-static __inline__ uint8_t atomic_cmpxchg16b(uint64_t *memp, uint64_t old0,
+static __inline__ uint8_t atomic_cmpxchg16b(uint64_t* memp, uint64_t old0,
                                             uint64_t old1, uint64_t new0,
                                             uint64_t new1) {
   uint8_t z;
@@ -77,7 +77,7 @@ static __inline__ uint8_t atomic_cmpxchg16b(uint64_t *memp, uint64_t old0,
 }
 #endif
 
-static __inline__ uint8_t atomic_cmpxchg8b(uint32_t *memp, uint32_t old0,
+static __inline__ uint8_t atomic_cmpxchg8b(uint32_t* memp, uint32_t old0,
                                            uint32_t old1, uint32_t new0,
                                            uint32_t new1) {
   uint8_t z;
@@ -102,4 +102,4 @@ static __inline__ uint8_t atomic_cmpxchg8b(uint32_t *memp, uint32_t old0,
 #define DATA_BITS 64
 #include "atomic-template.h"  // NOLINT(build/include)
 
-#endif  // RESEARCH_GART_VEGITO_SRC_PORT_ATOMIC_H_
+#endif  // VEGITO_SRC_UTIL_ATOMIC_H_

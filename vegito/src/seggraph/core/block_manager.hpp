@@ -60,7 +60,7 @@ class BlockManager {
       std::shared_ptr<Blob> blob;
       VINEYARD_CHECK_OK(client.CreateBlob(capacity, blob_writer));
       VINEYARD_CHECK_OK(client.GetBlob(blob_writer->id(), true, blob));
-      data = reinterpret_cast<void *>(blob_writer->data());
+      data = reinterpret_cast<void*>(blob_writer->data());
 
       oid = blob_writer->id();
     }
@@ -75,7 +75,8 @@ class BlockManager {
     free(null_holder, LARGE_BLOCK_THRESHOLD);
     msync(data, capacity, MS_SYNC);
     munmap(data, capacity);
-    if (fd != EMPTY_FD) close(fd);
+    if (fd != EMPTY_FD)
+      close(fd);
     client.Disconnect();
   }
 
@@ -142,27 +143,28 @@ class BlockManager {
   }
 
   template <typename T>
-  inline T *convert(uintptr_t block) const {
-    if (__builtin_expect((block == NULLPOINTER), 0)) return nullptr;
-    return reinterpret_cast<T *>(reinterpret_cast<char *>(data) + block);
+  inline T* convert(uintptr_t block) const {
+    if (__builtin_expect((block == NULLPOINTER), 0))
+      return nullptr;
+    return reinterpret_cast<T*>(reinterpret_cast<char*>(data) + block);
   }
 
   inline uintptr_t revert(uintptr_t block) const {
-    return block - (uintptr_t)data;
+    return block - (uintptr_t) data;
   }
 
-  inline uintptr_t revert(void *ptr) const {
-    return reinterpret_cast<char *>(ptr) - reinterpret_cast<char *>(data);
+  inline uintptr_t revert(void* ptr) const {
+    return reinterpret_cast<char*>(ptr) - reinterpret_cast<char*>(data);
   }
 
   inline vineyard::ObjectID get_block_oid() const { return oid; }
 
-  inline vineyard::Client *get_client() { return &client; }
+  inline vineyard::Client* get_client() { return &client; }
 
  private:
   const size_t capacity;
   int fd;
-  void *data;
+  void* data;
   vineyard::Client client;
   vineyard::ObjectID oid;
   std::mutex mutex;
@@ -172,7 +174,7 @@ class BlockManager {
   std::atomic<size_t> used_size, file_size;
   uintptr_t null_holder;
 
-  uintptr_t pop(std::vector<std::vector<uintptr_t>> &free_block,
+  uintptr_t pop(std::vector<std::vector<uintptr_t>>& free_block,
                 order_t order) {
     uintptr_t pointer = NULLPOINTER;
     if (free_block[order].size()) {
@@ -182,7 +184,7 @@ class BlockManager {
     return pointer;
   }
 
-  void push(std::vector<std::vector<uintptr_t>> &free_block, order_t order,
+  void push(std::vector<std::vector<uintptr_t>>& free_block, order_t order,
             uintptr_t pointer) {
     free_block[order].push_back(pointer);
   }
@@ -199,18 +201,20 @@ class BlockManagerLibc {
 
   uintptr_t alloc(order_t order) {
     auto p = aligned_alloc(1ul << order, 1ul << order);
-    if (!p) throw std::runtime_error("Failed to alloc block");
+    if (!p)
+      throw std::runtime_error("Failed to alloc block");
     return reinterpret_cast<std::uintptr_t>(p);
   }
 
   void free(uintptr_t block, order_t order) {
-    ::free(reinterpret_cast<void *>(block));
+    ::free(reinterpret_cast<void*>(block));
   }
 
   template <typename T>
-  T *convert(uintptr_t block) {
-    if (block == NULLPOINTER) return nullptr;
-    return reinterpret_cast<T *>(block);
+  T* convert(uintptr_t block) {
+    if (block == NULLPOINTER)
+      return nullptr;
+    return reinterpret_cast<T*>(block);
   }
 };
 }  // namespace seggraph

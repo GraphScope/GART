@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_FRAGMENT_ID_PARSER_H_
-#define RESEARCH_GART_VEGITO_SRC_FRAGMENT_ID_PARSER_H_
+#ifndef VEGITO_SRC_FRAGMENT_ID_PARSER_H_
+#define VEGITO_SRC_FRAGMENT_ID_PARSER_H_
 
 #include <cassert>
 #include <cstdlib>
@@ -55,13 +55,13 @@ class IdParser {
     int offset_width = (sizeof(ID_TYPE) * 8) - fid_width - label_width - 1;
     offset_width_ = offset_width;
     label_id_offset_ = (sizeof(ID_TYPE) * 8) - label_width - 1;
-    fid_mask_ = (((ID_TYPE)1) << offset_offset_) - (ID_TYPE)1;
-    lid_mask_ =
-        ((((ID_TYPE)1) << ((sizeof(ID_TYPE) * 8) - fid_width - 1)) - (ID_TYPE)1)
-        << offset_offset_;
-    label_id_mask_ = ((((ID_TYPE)1) << label_width) - (ID_TYPE)1)
+    fid_mask_ = (((ID_TYPE) 1) << offset_offset_) - (ID_TYPE) 1;
+    lid_mask_ = ((((ID_TYPE) 1) << ((sizeof(ID_TYPE) * 8) - fid_width - 1)) -
+                 (ID_TYPE) 1)
+                << offset_offset_;
+    label_id_mask_ = ((((ID_TYPE) 1) << label_width) - (ID_TYPE) 1)
                      << label_id_offset_;
-    offset_mask_ = ((((ID_TYPE)1) << offset_width) - (ID_TYPE)1)
+    offset_mask_ = ((((ID_TYPE) 1) << offset_width) - (ID_TYPE) 1)
                    << offset_offset_;
   }
 
@@ -78,23 +78,23 @@ class IdParser {
   ID_TYPE GetLid(ID_TYPE v) const { return (v & lid_mask_); }
 
   ID_TYPE GenerateId(fid_t fid, LabelIDT label, int64_t offset) const {
-    return (((ID_TYPE)fid) & fid_mask_) |
-           ((((ID_TYPE)offset) << offset_offset_) & offset_mask_) |
-           ((((ID_TYPE)label) << label_id_offset_) & label_id_mask_);
+    return (((ID_TYPE) fid) & fid_mask_) |
+           ((((ID_TYPE) offset) << offset_offset_) & offset_mask_) |
+           ((((ID_TYPE) label) << label_id_offset_) & label_id_mask_);
   }
 
   ID_TYPE GenerateDeletedId(int64_t offset) const {
     ID_TYPE vid = static_cast<ID_TYPE>(offset);
-    ID_TYPE mask = ((ID_TYPE)1) << (sizeof(ID_TYPE) * 8 - 1);
+    ID_TYPE mask = ((ID_TYPE) 1) << (sizeof(ID_TYPE) * 8 - 1);
     return vid | mask;
   }
 
   ID_TYPE GenerateOuterId(fid_t fid, LabelIDT label, int64_t offset) const {
-    ID_TYPE outer_max = (((ID_TYPE)1) << offset_width_) - (ID_TYPE)1;
-    ID_TYPE outer_offset = outer_max - (ID_TYPE)offset;
-    return (((ID_TYPE)fid) & fid_mask_) |
-           ((((ID_TYPE)outer_offset) << offset_offset_) & offset_mask_) |
-           ((((ID_TYPE)label) << label_id_offset_) & label_id_mask_);
+    ID_TYPE outer_max = (((ID_TYPE) 1) << offset_width_) - (ID_TYPE) 1;
+    ID_TYPE outer_offset = outer_max - (ID_TYPE) offset;
+    return (((ID_TYPE) fid) & fid_mask_) |
+           ((((ID_TYPE) outer_offset) << offset_offset_) & offset_mask_) |
+           ((((ID_TYPE) label) << label_id_offset_) & label_id_mask_);
   }
 
   int GetOffsetWidth() const { return offset_width_; }
@@ -111,4 +111,4 @@ class IdParser {
 
 }  // namespace gart
 
-#endif  // RESEARCH_GART_VEGITO_SRC_FRAGMENT_ID_PARSER_H_
+#endif  // VEGITO_SRC_FRAGMENT_ID_PARSER_H_

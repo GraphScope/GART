@@ -154,7 +154,8 @@ bool SegTransaction::del_vertex(vertex_t vertex_id, bool recycle) {
   }
 
   if (batch_update) {
-    if (recycle) graph.recycled_vertex_ids.push(vertex_id);
+    if (recycle)
+      graph.recycled_vertex_ids.push(vertex_id);
     graph.vertex_futexes[vertex_id].unlock();
   } else {
     ++wal_num_ops();
@@ -162,7 +163,8 @@ bool SegTransaction::del_vertex(vertex_t vertex_id, bool recycle) {
     wal_append(vertex_id);
     wal_append(recycle);
 
-    if (recycle) recycled_vertex_cache.emplace_back(vertex_id);
+    if (recycle)
+      recycled_vertex_cache.emplace_back(vertex_id);
   }
 
   return ret;
@@ -200,10 +202,11 @@ std::string_view SegTransaction::get_vertex(vertex_t vertex_id) {
   return std::string_view(vertex_block->get_data(), vertex_block->get_length());
 }
 
-std::pair<EdgeEntry *, char *> SegTransaction::locate_edge_in_block(
-    vertex_t dst, EdgeBlockHeader *edge_block, size_t num_entries,
+std::pair<EdgeEntry*, char*> SegTransaction::locate_edge_in_block(
+    vertex_t dst, EdgeBlockHeader* edge_block, size_t num_entries,
     size_t data_length) {
-  if (!edge_block) return {nullptr, nullptr};
+  if (!edge_block)
+    return {nullptr, nullptr};
 
   auto bloom_filter = edge_block->get_bloom_filter();
   if (bloom_filter.valid() && !bloom_filter.find(dst))
@@ -229,7 +232,8 @@ std::pair<EdgeEntry *, char *> SegTransaction::locate_edge_in_block(
 uintptr_t SegTransaction::locate_segment(segid_t seg_id, label_t label,
                                          dir_t dir) {
   auto pointer = graph.edge_label_ptrs[seg_id];
-  if (pointer == graph.block_manager.NULLPOINTER) return pointer;
+  if (pointer == graph.block_manager.NULLPOINTER)
+    return pointer;
   // get edge_label_block
   auto edge_label_block =
       graph.block_manager.convert<EdgeLabelBlockHeader>(pointer);
@@ -243,10 +247,12 @@ uintptr_t SegTransaction::locate_segment(segid_t seg_id, label_t label,
 }
 
 uintptr_t SegTransaction::locate_block_in_segment(uintptr_t ptr, vertex_t idx) {
-  if (ptr == graph.block_manager.NULLPOINTER) return ptr;
+  if (ptr == graph.block_manager.NULLPOINTER)
+    return ptr;
 
   auto segment_ptr = graph.block_manager.convert<SegmentHeader>(ptr);
-  if (!segment_ptr) return graph.block_manager.NULLPOINTER;
+  if (!segment_ptr)
+    return graph.block_manager.NULLPOINTER;
 
   uintptr_t region_ptr = segment_ptr->get_region_ptr(idx);
 
@@ -265,7 +271,7 @@ void SegTransaction::update_edge_label_block(segid_t segid, label_t label,
       graph.block_manager.convert<EdgeLabelBlockHeader>(pointer);
   if (edge_label_block) {
     for (size_t i = 0; i < edge_label_block->get_num_entries(); i++) {
-      auto &label_entry = edge_label_block->get_entries()[i];
+      auto& label_entry = edge_label_block->get_entries()[i];
       if (label_entry.get_label() == label) {
         label_entry.set_pointer(segment_pointer, dir);
         return;
@@ -358,7 +364,7 @@ start:
   entry.set_deletion_time(SegGraph::ROLLBACK_TOMBSTONE);
 
   auto segment = graph.block_manager.convert<SegmentHeader>(seg_pointer);
-  EdgeBlockHeader *edge_block =
+  EdgeBlockHeader* edge_block =
       graph.block_manager.convert<EdgeBlockHeader>(pointer);
 
   auto [num_entries, data_length] =
@@ -378,7 +384,8 @@ start:
 
     if (seg_pointer == test_seg_pointer) {
       auto order = SegGraph::INIT_SEGMENT_ORDER;
-      while ((1ul << order) < sizeof(SegmentHeader) * 10) order++;
+      while ((1ul << order) < sizeof(SegmentHeader) * 10)
+        order++;
       auto new_seg_pointer = graph.block_manager.alloc(order);
       auto new_segment =
           graph.block_manager.convert<SegmentHeader>(new_seg_pointer);
@@ -580,7 +587,8 @@ bool SegTransaction::del_edge(vertex_t src, label_t label, dir_t dir,
   auto segment = graph.block_manager.convert<SegmentHeader>(seg_pointer);
   auto edge_block = graph.block_manager.convert<EdgeBlockHeader>(pointer);
 
-  if (!segment || !edge_block) return false;
+  if (!segment || !edge_block)
+    return false;
 
   // delete edge
   while (edge_block) {
@@ -660,29 +668,29 @@ std::string_view SegTransaction::get_edge(vertex_t src, label_t label,
 void SegTransaction::abort() {
   check_valid();
 
-  for (const auto &p : timestamps_to_update) {
+  for (const auto& p : timestamps_to_update) {
     *p.first = p.second;
   }
 
-  for (const auto &vid : new_vertex_cache) {
+  for (const auto& vid : new_vertex_cache) {
     graph.recycled_vertex_ids.push(vid);
   }
 
-  for (const auto &p : block_cache) {
+  for (const auto& p : block_cache) {
     graph.block_manager.free(p.first, p.second);
   }
 
-  for (const auto &p : segment_cache) {
+  for (const auto& p : segment_cache) {
     graph.block_manager.free(p.first, p.second);
   }
 
   clean();
 }
 
-bool SegTransaction::merge_segment(SegmentHeader *old_seg,
-                                   SegmentHeader *new_seg, vertex_t segidx,
-                                   EdgeEntry &entry, uintptr_t *pointer,
-                                   EdgeBlockHeader **edge_block) {
+bool SegTransaction::merge_segment(SegmentHeader* old_seg,
+                                   SegmentHeader* new_seg, vertex_t segidx,
+                                   EdgeEntry& entry, uintptr_t* pointer,
+                                   EdgeBlockHeader** edge_block) {
   // merge old edge block + compact
   for (int i = 0; i < VERTEX_PER_SEG; i++) {
     size_t new_num_entries = 0;
@@ -712,7 +720,8 @@ bool SegTransaction::merge_segment(SegmentHeader *old_seg,
       region_ptr = merged_block->get_prev_pointer();
     }
 
-    if (new_num_entries == 0 && i != segidx) continue;
+    if (new_num_entries == 0 && i != segidx)
+      continue;
 
     auto merged_size = (pointer != nullptr && i == segidx)
                            ? sizeof(EdgeBlockHeader) +
@@ -733,7 +742,8 @@ bool SegTransaction::merge_segment(SegmentHeader *old_seg,
     merged_order = size_to_order(merged_size);
 
     auto new_edge_block_pointer = new_seg->alloc(merged_order);
-    if (!new_edge_block_pointer) return false;
+    if (!new_edge_block_pointer)
+      return false;
     new_seg->set_region_ptr(i, new_edge_block_pointer);
     auto new_edge_block =
         graph.block_manager.convert<EdgeBlockHeader>(new_edge_block_pointer);

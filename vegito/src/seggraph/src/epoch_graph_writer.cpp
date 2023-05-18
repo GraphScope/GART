@@ -57,16 +57,17 @@ void EpochGraphWriter::put_vertex(vertex_t vertex_id, std::string_view data) {
   unlock_vertex(vertex_id);
 }
 
-VegitoSegmentHeader *EpochGraphWriter::locate_segment(segid_t seg_id,
+VegitoSegmentHeader* EpochGraphWriter::locate_segment(segid_t seg_id,
                                                       label_t label,
                                                       dir_t dir) {
   auto pointer = graph.edge_label_ptrs[seg_id];
-  if (pointer == graph.block_manager.NULLPOINTER) return nullptr;
+  if (pointer == graph.block_manager.NULLPOINTER)
+    return nullptr;
   // get edge_label_block
   auto edge_label_block =
       graph.block_manager.convert<EdgeLabelBlockHeader>(pointer);
   for (size_t i = 0; i < edge_label_block->get_num_entries(); i++) {
-    auto &label_entry = edge_label_block->get_entries()[i];
+    auto& label_entry = edge_label_block->get_entries()[i];
     if (label_entry.get_label() == label) {
       return graph.block_manager.convert<VegitoSegmentHeader>(
           label_entry.get_pointer(dir));
@@ -83,7 +84,7 @@ void EpochGraphWriter::update_edge_label_block(segid_t segid, label_t label,
       graph.block_manager.convert<EdgeLabelBlockHeader>(pointer);
   if (edge_label_block) {
     for (size_t i = 0; i < edge_label_block->get_num_entries(); i++) {
-      auto &label_entry = edge_label_block->get_entries()[i];
+      auto& label_entry = edge_label_block->get_entries()[i];
       if (label_entry.get_label() == label) {
         label_entry.set_pointer(segment_pointer, dir);
         return;
@@ -154,7 +155,8 @@ start:
     if (segment == test_segment) {
       // allocate a new segment
       auto order = SegGraph::INIT_SEGMENT_ORDER;
-      while ((1 << order) < sizeof(VegitoSegmentHeader) * 10) order++;
+      while ((1 << order) < sizeof(VegitoSegmentHeader) * 10)
+        order++;
 
       auto new_seg_pointer = graph.block_manager.alloc(order);
       auto new_segment =
@@ -175,7 +177,7 @@ start:
   }
 
   uintptr_t edge_block_pointer = segment->get_region_ptr(segidx);
-  VegitoEdgeBlockHeader *edge_block =
+  VegitoEdgeBlockHeader* edge_block =
       graph.block_manager.convert<VegitoEdgeBlockHeader>(edge_block_pointer);
 
   VegitoEdgeEntry entry;
@@ -216,7 +218,7 @@ start:
                       &edge_block, edge_prop_size);
 
         graph.segments_to_recycle.local().push_back(
-            std::make_tuple(graph.block_manager.revert((uintptr_t)segment),
+            std::make_tuple(graph.block_manager.revert((uintptr_t) segment),
                             segment->get_order(), write_epoch_id));
         update_edge_label_block(segid, label, dir, new_seg_pointer);
         graph.seg_mutexes[segid]->unlock();
@@ -249,11 +251,11 @@ start:
 
             if (edge_prop_size > 0) {
               auto old_edge_prop_offset =
-                  segment->get_allocated_edge_num((uintptr_t)edge_block) + i;
+                  segment->get_allocated_edge_num((uintptr_t) edge_block) + i;
               auto new_edge_prop_offset =
-                  segment->get_allocated_edge_num((uintptr_t)new_edge_block) +
+                  segment->get_allocated_edge_num((uintptr_t) new_edge_block) +
                   new_edge_block->get_num_entries() - 1;
-              const void *edge_prop_value =
+              const void* edge_prop_value =
                   segment->get_property(old_edge_prop_offset, edge_prop_size);
               segment->append_property(new_edge_prop_offset, edge_prop_value,
                                        edge_prop_size);
@@ -271,7 +273,7 @@ start:
   }
 
   uintptr_t epoch_table_pointer = segment->get_epoch_table(segidx);
-  EpochBlockHeader *epoch_table =
+  EpochBlockHeader* epoch_table =
       graph.block_manager.convert<EpochBlockHeader>(epoch_table_pointer);
 
   if (!epoch_table) {
@@ -332,7 +334,7 @@ start:
   }
 
   auto allocated_edge_num =
-      segment->get_allocated_edge_num((uintptr_t)edge_block) +
+      segment->get_allocated_edge_num((uintptr_t) edge_block) +
       edge_block->get_num_entries();
 
   // insert edge
@@ -347,10 +349,10 @@ start:
   graph.vertex_futexes[src].unlock();
 }
 
-void EpochGraphWriter::merge_segment(VegitoSegmentHeader *old_seg,
-                                     VegitoSegmentHeader *new_seg,
-                                     vertex_t segidx, uintptr_t *pointer,
-                                     VegitoEdgeBlockHeader **edge_block,
+void EpochGraphWriter::merge_segment(VegitoSegmentHeader* old_seg,
+                                     VegitoSegmentHeader* new_seg,
+                                     vertex_t segidx, uintptr_t* pointer,
+                                     VegitoEdgeBlockHeader** edge_block,
                                      size_t edge_prop_size) {
   // merge old edge block + compact
   for (int i = 0; i < VERTEX_PER_SEG; i++) {
@@ -358,7 +360,7 @@ void EpochGraphWriter::merge_segment(VegitoSegmentHeader *old_seg,
     uintptr_t region_ptr = old_seg->get_region_ptr(i);
     auto merged_block =
         graph.block_manager.convert<VegitoEdgeBlockHeader>(region_ptr);
-    std::vector<VegitoEdgeBlockHeader *> merged_edge_blocks;
+    std::vector<VegitoEdgeBlockHeader*> merged_edge_blocks;
 
     // 1. calculate the required order
     while (merged_block) {
@@ -370,7 +372,8 @@ void EpochGraphWriter::merge_segment(VegitoSegmentHeader *old_seg,
           merged_block->get_prev_pointer());
     }
 
-    if (new_num_entries == 0 && i != segidx) continue;
+    if (new_num_entries == 0 && i != segidx)
+      continue;
 
     auto merged_size = (pointer != nullptr && i == segidx)
                            ? (new_num_entries + 1)
@@ -397,11 +400,11 @@ void EpochGraphWriter::merge_segment(VegitoSegmentHeader *old_seg,
         // insert edge property
         if (edge_prop_size > 0) {
           auto old_edge_prop_offset =
-              old_seg->get_allocated_edge_num((uintptr_t)merged_block) + k;
+              old_seg->get_allocated_edge_num((uintptr_t) merged_block) + k;
           auto new_edge_prop_offset =
-              new_seg->get_allocated_edge_num((uintptr_t)new_edge_block) +
+              new_seg->get_allocated_edge_num((uintptr_t) new_edge_block) +
               new_edge_block->get_num_entries() - 1;
-          const void *edge_prop_value =
+          const void* edge_prop_value =
               old_seg->get_property(old_edge_prop_offset, edge_prop_size);
           new_seg->append_property(new_edge_prop_offset, edge_prop_value,
                                    edge_prop_size);

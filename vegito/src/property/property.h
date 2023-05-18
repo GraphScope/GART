@@ -24,15 +24,17 @@
  *
  */
 
-#ifndef RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_H_
-#define RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_H_
+#ifndef VEGITO_SRC_PROPERTY_PROPERTY_H_
+#define VEGITO_SRC_PROPERTY_PROPERTY_H_
 
 #include "fragment/shared_storage.h"
 #include "seggraph/core/allocator.hpp"
 #include "util/util.h"
 
 enum PropertyStoreType { /* PROP_KV, PROP_ROW, */
-                         PROP_COLUMN = 2, PROP_COLUMN2 };
+                         PROP_COLUMN = 2,
+                         PROP_COLUMN2
+};
 
 enum PropertyStoreDataType {
   INVALID = 0,
@@ -75,12 +77,12 @@ class Property {  // NOLINT(build/class)
   };
 
   // ATTENTION: add lock in the index level!
-  virtual void insert(uint64_t off, uint64_t k, char *v, uint64_t seq,
+  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
                       uint64_t ver) {
     assert(false);
   }
 
-  uint64_t copy(const Property *store) {
+  uint64_t copy(const Property* store) {
     uint64_t max_ver = uint64_t(-1);
     auto row_cursor = store->getRowCursor(max_ver);
     assert(row_cursor.get());
@@ -93,11 +95,11 @@ class Property {  // NOLINT(build/class)
     return off;
   }
 
-  char *mem_alloc(size_t bytes, uint64_t *obj_id = nullptr) {
+  char* mem_alloc(size_t bytes, uint64_t* obj_id = nullptr) {
     return array_allocator.allocate_v6d(bytes, *obj_id);
   }
 
-  virtual void putByOffset(uint64_t offset, uint64_t key, char *val,
+  virtual void putByOffset(uint64_t offset, uint64_t key, char* val,
                            int64_t seq, uint64_t version) {
     assert(false);
   }
@@ -114,22 +116,22 @@ class Property {  // NOLINT(build/class)
   // return offset in a row and check width
   virtual uint64_t locateCol(int col_id, uint64_t width) const { return 0; }
 
-  virtual char *getByOffset(uint64_t offset, uint64_t version) {
+  virtual char* getByOffset(uint64_t offset, uint64_t version) {
     assert(false);
     return nullptr;
   }
 
-  std::vector<size_t> &get_val_lens() { return val_lens_; }
-  std::vector<size_t> &get_val_offs() { return val_off_; }
-  std::vector<PropertyStoreDataType> &get_val_types() { return val_type_; }
+  std::vector<size_t>& get_val_lens() { return val_lens_; }
+  std::vector<size_t>& get_val_offs() { return val_off_; }
+  std::vector<PropertyStoreDataType>& get_val_types() { return val_type_; }
 
-  virtual char *getByOffset(uint64_t offset, int columnID, uint64_t version,
-                            uint64_t *walk_cnt = nullptr) = 0;
+  virtual char* getByOffset(uint64_t offset, int columnID, uint64_t version,
+                            uint64_t* walk_cnt = nullptr) = 0;
 
   // clean the pages whose version < `version`
   virtual void gc(uint64_t version) {}
 
-  const std::vector<gart::VPropMeta> &get_blob_metas() const {
+  const std::vector<gart::VPropMeta>& get_blob_metas() const {
     return blob_metas_;
   }
 
@@ -143,21 +145,21 @@ class Property {  // NOLINT(build/class)
     virtual void seekOffset(uint64_t begin, uint64_t end) = 0;
     virtual bool nextRow() = 0;
     virtual uint64_t key() const = 0;
-    virtual char *value() const = 0;
+    virtual char* value() const = 0;
   };
 
   class ColCursor {
    public:
     virtual void seekOffset(uint64_t begin, uint64_t end) = 0;
-    virtual bool nextRow(uint64_t *walk_cnt = nullptr) = 0;
-    virtual char *value() const = 0;
+    virtual bool nextRow(uint64_t* walk_cnt = nullptr) = 0;
+    virtual char* value() const = 0;
 
     virtual uint64_t cur() const = 0;  // current offset
-    virtual char *base() const = 0;    // base ptr of static columns
+    virtual char* base() const = 0;    // base ptr of static columns
   };
 
   // col_ids: movable columns
-  virtual char *col(int col_id, uint64_t *len = nullptr) const {
+  virtual char* col(int col_id, uint64_t* len = nullptr) const {
     assert(false);
     return nullptr;
   }
@@ -178,31 +180,29 @@ class Property {  // NOLINT(build/class)
 
  protected:
   explicit Property(uint64_t max_items)
-      : max_items_(max_items),
-        header_(0),
-        stable_header_(0) { }
+      : max_items_(max_items), header_(0), stable_header_(0) {}
 
-  static inline void copy_val_(char *dst, const char *src, uint64_t sz) {
+  static inline void copy_val_(char* dst, const char* src, uint64_t sz) {
     switch (sz) {
-      case 1:
-        *reinterpret_cast<uint8_t *>(dst) =
-            *reinterpret_cast<uint8_t *>(const_cast<char *>(src));
-        break;
-      case 2:
-        *reinterpret_cast<uint16_t *>(dst) =
-            *reinterpret_cast<uint16_t *>(const_cast<char *>(src));
-        break;
-      case 4:
-        *reinterpret_cast<uint32_t *>(dst) =
-            *reinterpret_cast<uint32_t *>(const_cast<char *>(src));
-        break;
-      case 8:
-        *reinterpret_cast<uint64_t *>(dst) =
-            *reinterpret_cast<uint64_t *>(const_cast<char *>(src));
-        break;
-      default:
-        memcpy(dst, src, sz);
-        break;
+    case 1:
+      *reinterpret_cast<uint8_t*>(dst) =
+          *reinterpret_cast<uint8_t*>(const_cast<char*>(src));
+      break;
+    case 2:
+      *reinterpret_cast<uint16_t*>(dst) =
+          *reinterpret_cast<uint16_t*>(const_cast<char*>(src));
+      break;
+    case 4:
+      *reinterpret_cast<uint32_t*>(dst) =
+          *reinterpret_cast<uint32_t*>(const_cast<char*>(src));
+      break;
+    case 8:
+      *reinterpret_cast<uint64_t*>(dst) =
+          *reinterpret_cast<uint64_t*>(const_cast<char*>(src));
+      break;
+    default:
+      memcpy(dst, src, sz);
+      break;
     }
   }
 
@@ -220,4 +220,4 @@ class Property {  // NOLINT(build/class)
   uint64_t padding3_[8];
 #endif
 };      // NOLINT(readability/braces)
-#endif  // RESEARCH_GART_VEGITO_SRC_PROPERTY_PROPERTY_H_
+#endif  // VEGITO_SRC_PROPERTY_PROPERTY_H_

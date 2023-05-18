@@ -31,21 +31,23 @@
 namespace {
 const uint32_t MAX_POOL = 1;
 thread_local uint32_t pool_off = MAX_POOL - 1;
-thread_local char *pool = nullptr;
+thread_local char* pool = nullptr;
 
 thread_local uint64_t cached_ver[20];           // table id
 thread_local uint32_t cached_page_num[20][30];  // table id, column id
-thread_local void *cached_page[20][30] = {{nullptr}};
+thread_local void* cached_page[20][30] = {{nullptr}};
 }  // namespace
 
 // NOTE: page_sz is number of objects, instead of bytes
-inline PropertyColPaged::Page *PropertyColPaged::getNewPage_(
-    uint64_t page_sz, uint64_t vlen, uint64_t ver, Page *prev) {
-  char *buf = nullptr;
+inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(uint64_t page_sz,
+                                                             uint64_t vlen,
+                                                             uint64_t ver,
+                                                             Page* prev) {
+  char* buf = nullptr;
   uint32_t pg_sz = sizeof(Page) + vlen * page_sz;
 
-  buf = reinterpret_cast<char *>(malloc(pg_sz));
-  Page *ret = new (buf) Page(ver, prev);
+  buf = reinterpret_cast<char*>(malloc(pg_sz));
+  Page* ret = new (buf) Page(ver, prev);
 
   if (page_sz != 1 && prev != nullptr) {
     memcpy(ret->content, prev->content, page_sz * vlen);
@@ -58,22 +60,22 @@ inline PropertyColPaged::Page *PropertyColPaged::getNewPage_(
   return ret;
 }
 
-inline PropertyColPaged::Page *PropertyColPaged::getNewPage_(
-    uint64_t page_sz, uint64_t vlen, uint64_t ver, Page *prev,
-    uint64_t prop_id, uint64_t pg_num) {
-  FlexBuf &flex_buf = flex_bufs_[prop_id];
-  char *buf = nullptr;
+inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
+    uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev, uint64_t prop_id,
+    uint64_t pg_num) {
+  FlexBuf& flex_buf = flex_bufs_[prop_id];
+  char* buf = nullptr;
   uint32_t pg_sz = sizeof(Page) + vlen * page_sz;
 
-  buf = reinterpret_cast<char *>(&flex_buf.buf[flex_buf.allocated_sz]);
+  buf = reinterpret_cast<char*>(&flex_buf.buf[flex_buf.allocated_sz]);
   uintptr_t cur_ptr = flex_buf.allocated_sz;
   flex_buf.allocated_sz += pg_sz;
   assert(flex_buf.allocated_sz < flex_buf.total_sz);
-  Page *ret = new (buf) Page(ver, prev);
+  Page* ret = new (buf) Page(ver, prev);
 
   if (prev != nullptr) {
     ret->prev_ptr =
-        reinterpret_cast<char *>(prev) - reinterpret_cast<char *>(flex_buf.buf);
+        reinterpret_cast<char*>(prev) - reinterpret_cast<char*>(flex_buf.buf);
   }
 
   if (page_sz != 1 && prev != nullptr) {
@@ -87,24 +89,25 @@ inline PropertyColPaged::Page *PropertyColPaged::getNewPage_(
   return ret;
 }
 
-inline PropertyColPaged::Page *PropertyColPaged::getInitPage_(
-    uint64_t page_sz, uint64_t vlen,
-    uint64_t prop_id, uint64_t pg_num) {
-  FlexBuf &flex_buf = flex_bufs_[prop_id];
-  char *buf = nullptr;
+inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(uint64_t page_sz,
+                                                              uint64_t vlen,
+                                                              uint64_t prop_id,
+                                                              uint64_t pg_num) {
+  FlexBuf& flex_buf = flex_bufs_[prop_id];
+  char* buf = nullptr;
   uint32_t pg_sz = sizeof(Page) + vlen * page_sz;
 
-  buf = reinterpret_cast<char *>(&flex_buf.buf[flex_buf.allocated_sz]);
+  buf = reinterpret_cast<char*>(&flex_buf.buf[flex_buf.allocated_sz]);
   uintptr_t cur_ptr = flex_buf.allocated_sz;
   flex_buf.allocated_sz += pg_sz;
   assert(flex_buf.allocated_sz < flex_buf.total_sz);
 
   flex_buf.header->page_ptr[pg_num] = cur_ptr;
-  return reinterpret_cast<Page *>(buf);
+  return reinterpret_cast<Page*>(buf);
 }
 
 PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
-                                   const std::vector<uint32_t> *split)
+                                   const std::vector<uint32_t>* split)
     : Property(max_items),
       table_id_(s.table_id),
       cols_(s.cols),
@@ -121,8 +124,10 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
     val_type_.push_back(cols_[i].vtype);
 
     val_len_ += vlen;
-    if (cols_[i].page_size > max_items_) cols_[i].page_size = max_items_;
-    if (cols_[i].page_size == 0) cols_[i].page_size = 4 * 1024;
+    if (cols_[i].page_size > max_items_)
+      cols_[i].page_size = max_items_;
+    if (cols_[i].page_size == 0)
+      cols_[i].page_size = 4 * 1024;
   }
 
   pcols_.reserve(cols_.size());
@@ -161,14 +166,14 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       flexCols_[i].old_pages.assign(page_num, nullptr);
       size_t total_sz = FlexColHeader::size(page_num) +
                         page_num * (sizeof(Page) + page_sz * vlen);
-      printf("Vlabel %d column %d (flex), "
-              "page size %lu, vlen %lu, page num %d, size of header %lu, "
-              "malloc %lf GB\n",
-              table_id_, i,
-              page_sz, vlen, page_num, FlexColHeader::size(page_num),
-              total_sz / 1024.0 / 1024 / 1024);
-      char *buf = mem_alloc(total_sz, &col_ids_[i]);
-      FlexColHeader *header = reinterpret_cast<FlexColHeader *>(buf);
+      printf(
+          "Vlabel %d column %d (flex), "
+          "page size %lu, vlen %lu, page num %d, size of header %lu, "
+          "malloc %lf GB\n",
+          table_id_, i, page_sz, vlen, page_num, FlexColHeader::size(page_num),
+          total_sz / 1024.0 / 1024 / 1024);
+      char* buf = mem_alloc(total_sz, &col_ids_[i]);
+      FlexColHeader* header = reinterpret_cast<FlexColHeader*>(buf);
       flex_bufs_[i].total_sz = total_sz;
       flex_bufs_[i].buf = buf;
       flex_bufs_[i].header = header;
@@ -178,23 +183,23 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
 
       for (int p = 0; p < page_num; ++p) {
 #if LAZY_PAGE_ALLOC == 0
-        Page *page = getNewPage_(page_sz, vlen, -1, nullptr, i, p);
+        Page* page = getNewPage_(page_sz, vlen, -1, nullptr, i, p);
         flexCols_[i].old_pages[p] = page;
 #else
-        Page *page = getInitPage_(page_sz, vlen, i, p);
+        Page* page = getInitPage_(page_sz, vlen, i, p);
 #endif
         flexCols_[i].pages[p] = page;
       }
     } else {
       fixCols_[i] = mem_alloc(vlen * max_items_, &col_ids_[i]);
-      printf("Vlabel %d column %d (fixed), malloc %lf GB\n",
-              table_id_, i, vlen * max_items_ / 1024.0 / 1024 / 1024);
+      printf("Vlabel %d column %d (fixed), malloc %lf GB\n", table_id_, i,
+             vlen * max_items_ / 1024.0 / 1024 / 1024);
     }
   }
 
   blob_metas_.resize(cols_.size());
   for (int i = 0; i < cols_.size(); ++i) {
-    gart::VPropMeta &meta = blob_metas_[i];
+    gart::VPropMeta& meta = blob_metas_[i];
     meta.init(i, val_lens_[i], cols_[i].updatable, cols_[i].vtype);
     meta.init_obj(col_ids_[i], 0);  // TODO(wanglei): hard code of header
   }
@@ -205,20 +210,21 @@ PropertyColPaged::~PropertyColPaged() {
     size_t page_sz = cols_[i].page_size;
     if (cols_[i].updatable) {
       int page_num = (max_items_ + page_sz - 1) / page_sz;
-      for (int p = 0; p < page_num; ++p) free(flexCols_[i].pages[p]);
+      for (int p = 0; p < page_num; ++p)
+        free(flexCols_[i].pages[p]);
     } else {
       delete[] fixCols_[i];
     }
   }
 }
 
-inline PropertyColPaged::Page *PropertyColPaged::findWithInsertPage_(
+inline PropertyColPaged::Page* PropertyColPaged::findWithInsertPage_(
     int colID, uint64_t pg_num, uint64_t version) {
-  const Property::Column &col = cols_[colID];
+  const Property::Column& col = cols_[colID];
 
-  FlexCol &flex = flexCols_[colID];
+  FlexCol& flex = flexCols_[colID];
   assert(pg_num < flex.pages.size());
-  Page *page = flex.pages[pg_num];
+  Page* page = flex.pages[pg_num];
 #if LAZY_PAGE_ALLOC == 1
   // lazy page allocation, fill the page with default value
   if (flexCols_[colID].old_pages[pg_num] == nullptr) {
@@ -239,7 +245,7 @@ inline PropertyColPaged::Page *PropertyColPaged::findWithInsertPage_(
 
     if (version > page->ver) {
       // TODO(wanglei): update pages on vineyard
-      Page *newPage =
+      Page* newPage =
           getNewPage_(col.page_size, col.vlen, version, page, colID, pg_num);
       flex.pages[pg_num] = newPage;
       page = newPage;
@@ -252,13 +258,15 @@ inline PropertyColPaged::Page *PropertyColPaged::findWithInsertPage_(
   return page;
 }
 
-inline PropertyColPaged::Page *PropertyColPaged::findPage(
-    int colID, uint64_t pg_num, uint64_t version, uint64_t *walk_cnt) {
-  const Property::Column &col = cols_[colID];
+inline PropertyColPaged::Page* PropertyColPaged::findPage(int colID,
+                                                          uint64_t pg_num,
+                                                          uint64_t version,
+                                                          uint64_t* walk_cnt) {
+  const Property::Column& col = cols_[colID];
 
-  FlexCol &flex = flexCols_[colID];
+  FlexCol& flex = flexCols_[colID];
   assert(pg_num < flex.pages.size());
-  Page *page = flex.pages[pg_num];
+  Page* page = flex.pages[pg_num];
   if (page == nullptr || page->min_ver > version) {
     // assert(false);
     return nullptr;
@@ -268,31 +276,33 @@ inline PropertyColPaged::Page *PropertyColPaged::findPage(
     if (page->ver <= version) {
       assert(page);
       // if (walk_cnt) ++(*walk_cnt);
-      if (version == 0) assert(page == flexCols_[colID].pages[pg_num]);
+      if (version == 0)
+        assert(page == flexCols_[colID].pages[pg_num]);
       return page;
     }
-    if (walk_cnt) ++(*walk_cnt);
+    if (walk_cnt)
+      ++(*walk_cnt);
   }
 
   assert(false);
   return nullptr;
 }
 
-void PropertyColPaged::insert(uint64_t off, uint64_t k, char *v,
-                                 uint64_t seq, uint64_t ver) {
+void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
+                              uint64_t ver) {
   assert(off < max_items_);
 
   // assert(k != 0);  // for LDBC
 
   for (int i = 0; i < cols_.size(); ++i) {
-    const Property::Column &col = cols_[i];
+    const Property::Column& col = cols_[i];
 
     size_t vlen = col.vlen;
-    char *dst = nullptr;
+    char* dst = nullptr;
     if (col.updatable) {
       int pg_num = off / col.page_size;
 
-      Page *page = findWithInsertPage_(i, pg_num, ver);
+      Page* page = findWithInsertPage_(i, pg_num, ver);
       assert(page && page->ver == ver);
       dst = page->content + (off % col.page_size) * vlen;
     } else {
@@ -307,9 +317,10 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char *v,
   }
 }
 
-void PropertyColPaged::update(uint64_t off, const std::vector<int> &cids,
-                                 char *v, uint64_t seq, uint64_t ver) {
-  if (val_len_ == 0) return;
+void PropertyColPaged::update(uint64_t off, const std::vector<int>& cids,
+                              char* v, uint64_t seq, uint64_t ver) {
+  if (val_len_ == 0)
+    return;
   assert(off < max_items_);
 
   // int64_t &meta_seq = seq_[off];
@@ -318,17 +329,17 @@ void PropertyColPaged::update(uint64_t off, const std::vector<int> &cids,
   // if (meta_seq >= seq) return;  // XXX: fix it, set seq on each columns
 
   for (int i : cids) {
-    const Property::Column &col = cols_[i];
+    const Property::Column& col = cols_[i];
 
     uint64_t vlen = col.vlen;
     uint64_t voff = val_off_[i];
 
-    char *dst = nullptr;
+    char* dst = nullptr;
     assert(col.updatable);
 
     int pg_num = off / col.page_size;
 
-    Page *page = findWithInsertPage_(i, pg_num, ver);
+    Page* page = findWithInsertPage_(i, pg_num, ver);
     assert(page && page->ver == ver);
     dst = page->content + (off % col.page_size) * vlen;
     memcpy(dst, &v[voff], vlen);
@@ -341,20 +352,21 @@ void PropertyColPaged::update(uint64_t off, const std::vector<int> &cids,
   // meta_seq = seq;
 }
 
-void PropertyColPaged::update(uint64_t off, int cid, char *v, uint64_t ver) {
-  if (val_len_ == 0) return;
+void PropertyColPaged::update(uint64_t off, int cid, char* v, uint64_t ver) {
+  if (val_len_ == 0)
+    return;
   assert(off < max_items_);
 
-  const Property::Column &col = cols_[cid];
+  const Property::Column& col = cols_[cid];
 
   uint64_t vlen = col.vlen;
 
-  char *dst = nullptr;
+  char* dst = nullptr;
   assert(col.updatable);
 
   int pg_num = off / col.page_size;
 
-  Page *page = findWithInsertPage_(cid, pg_num, ver);
+  Page* page = findWithInsertPage_(cid, pg_num, ver);
   assert(page && page->ver == ver);
   dst = page->content + (off % col.page_size) * vlen;
   memcpy(dst, v, vlen);
@@ -365,7 +377,8 @@ void PropertyColPaged::update(uint64_t off, int cid, char *v, uint64_t ver) {
 }
 
 void PropertyColPaged::gc(uint64_t ver) {
-  if (ver == 0) return;
+  if (ver == 0)
+    return;
 
   uint64_t clean_sz = 0;
   uint64_t clean_pg = 0;
@@ -373,18 +386,20 @@ void PropertyColPaged::gc(uint64_t ver) {
   // uint64_t header = header_;
   uint64_t header = stable_header_;
   for (int i = 0; i < cols_.size(); i++) {
-    if (!cols_[i].updatable) continue;
-    std::vector<Page *> &old_pages = flexCols_[i].old_pages;
+    if (!cols_[i].updatable)
+      continue;
+    std::vector<Page*>& old_pages = flexCols_[i].old_pages;
     int pgsz = cols_[i].page_size;
     size_t vlen = cols_[i].vlen;
     int used_page = (header + pgsz - 1) / pgsz;
     assert(used_page <= old_pages.size());
     for (int pi = 0; pi < used_page; ++pi) {
-      Page *p = old_pages[pi];
-      if (p->ver >= ver) continue;
+      Page* p = old_pages[pi];
+      if (p->ver >= ver)
+        continue;
 
       while (p->ver < ver && p->next && p->next->ver <= ver) {
-        Page *next = p->next;
+        Page* next = p->next;
         next->prev = nullptr;
         free(p);
         p = next;
@@ -402,21 +417,21 @@ void PropertyColPaged::gc(uint64_t ver) {
 #endif
 }
 
-char *PropertyColPaged::getByOffset(uint64_t offset, int col_id,
-                                       uint64_t version, uint64_t *walk_cnt) {
-  char *val = nullptr;
-  const Property::Column &col = cols_[col_id];
+char* PropertyColPaged::getByOffset(uint64_t offset, int col_id,
+                                    uint64_t version, uint64_t* walk_cnt) {
+  char* val = nullptr;
+  const Property::Column& col = cols_[col_id];
   assert(offset < max_items_);
   // if (offset >= max_items_) return nullptr;
 
-  Page *page = nullptr;
+  Page* page = nullptr;
   if (col.updatable) {
     uint64_t pg_num = offset / col.page_size;
 #if 1
     if (cached_page[table_id_][col_id] != nullptr &&
         cached_ver[table_id_] == version &&
         cached_page_num[table_id_][col_id] == pg_num) {
-      page = reinterpret_cast<Page *>(cached_page[table_id_][col_id]);
+      page = reinterpret_cast<Page*>(cached_page[table_id_][col_id]);
     } else {
       cached_ver[table_id_] = version;
       page = findPage(col_id, pg_num, version, walk_cnt);
@@ -427,7 +442,8 @@ char *PropertyColPaged::getByOffset(uint64_t offset, int col_id,
     page = findPage(col_id, pg_num, version, walk_cnt);
 #endif
 
-    if (!page) return nullptr;
+    if (!page)
+      return nullptr;
     assert(page == flexCols_[col_id].pages[0]);
     val = page->content + (offset % col.page_size) * col.vlen;
   } else {
@@ -438,14 +454,14 @@ char *PropertyColPaged::getByOffset(uint64_t offset, int col_id,
 }
 
 size_t PropertyColPaged::getCol(int col_id, uint64_t start_off, size_t size,
-                                   uint64_t lver, std::vector<char *> &pages) {
-  const Property::Column &col = cols_[col_id];
+                                uint64_t lver, std::vector<char*>& pages) {
+  const Property::Column& col = cols_[col_id];
   pages.clear();
   assert(col.updatable);
   int start_pg = start_off / col.page_size;
   int end_pg = (start_off + size + col.page_size - 1) / col.page_size;
   for (int i = start_pg; i < end_pg; i++) {
-    Page *p = findPage(col_id, i, lver);
+    Page* p = findPage(col_id, i, lver);
     assert(p != nullptr);
     pages.push_back(p->content);
   }
@@ -456,14 +472,14 @@ size_t PropertyColPaged::getPageSize(int col_id) const {
   return cols_[col_id].page_size;
 }
 
-char *PropertyColPaged::locateValue(int cid, char *col, size_t offset) {
+char* PropertyColPaged::locateValue(int cid, char* col, size_t offset) {
   size_t vlen = cols_[cid].vlen;
   size_t voff = offset % cols_[cid].page_size;
   return (col + vlen * voff);
 }
 
-PropertyColPaged::Cursor::Cursor(const PropertyColPaged &store,
-                                    int col_id, uint64_t ver)
+PropertyColPaged::Cursor::Cursor(const PropertyColPaged& store, int col_id,
+                                 uint64_t ver)
     : col_(store),
       col_id_(col_id),
       ver_(ver),
@@ -481,8 +497,10 @@ PropertyColPaged::Cursor::Cursor(const PropertyColPaged &store,
 
 void PropertyColPaged::Cursor::seekOffset(uint64_t begin, uint64_t end) {
   uint64_t header = col_.stable_header_;
-  if (end > header) end = header;
-  if (begin > end) begin = end;
+  if (end > header)
+    end = header;
+  if (begin > end)
+    begin = end;
   begin_ = begin;
   end_ = end;
   cur_ = begin_ - 1;
@@ -499,9 +517,10 @@ void PropertyColPaged::Cursor::seekOffset(uint64_t begin, uint64_t end) {
 }
 
 #if 1  // 1 for MVCS, 0 for pure col
-bool PropertyColPaged::Cursor::nextRow(uint64_t *walk_cnt) {
+bool PropertyColPaged::Cursor::nextRow(uint64_t* walk_cnt) {
   ++cur_;
-  if (cur_ >= end_) return false;
+  if (cur_ >= end_)
+    return false;
     // if (col_.min_ver_[cur_] > ver_) return false;  // for cache corherence
 
 #if 1
@@ -518,12 +537,15 @@ bool PropertyColPaged::Cursor::nextRow(uint64_t *walk_cnt) {
 
   if (pgi_ == 0 || base_ == nullptr) {
     // relocate page
-    Page *p = pages_[pgn_];
-    if (p->min_ver > ver_) return false;
+    Page* p = pages_[pgn_];
+    if (p->min_ver > ver_)
+      return false;
 
     for (; p != nullptr; p = p->prev) {
-      if (walk_cnt) ++(*walk_cnt);
-      if (p->ver <= ver_) break;
+      if (walk_cnt)
+        ++(*walk_cnt);
+      if (p->ver <= ver_)
+        break;
     }
     assert(p);
     base_ = p->content;
@@ -536,9 +558,10 @@ bool PropertyColPaged::Cursor::nextRow(uint64_t *walk_cnt) {
   return true;
 }
 #else
-bool PropertyColPaged::Cursor::nextRow(uint64_t *walk_cnt) {
+bool PropertyColPaged::Cursor::nextRow(uint64_t* walk_cnt) {
   ++cur_;
-  if (unlikely(cur_ >= end_)) return false;
+  if (unlikely(cur_ >= end_))
+    return false;
 
   if (unlikely(!update_)) {
     ptr_ = base_ + vlen_ * cur_;
@@ -552,7 +575,7 @@ bool PropertyColPaged::Cursor::nextRow(uint64_t *walk_cnt) {
   }
 
   if (base_ == nullptr) {
-    Page *p = pages_[0];
+    Page* p = pages_[0];
     base_ = p->content;
   }
 
