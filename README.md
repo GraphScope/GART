@@ -43,8 +43,51 @@ make -j
 
 ## Getting Started
 
+### Configure Data Source
+
+Before running GART, we need to configure the data source to capture its logs.
+Take MySQL as an example.
+
+- Kafka configuration file `$KAFKA_HOME/config/server.properties`
+    ```
+    delete.topic.enable=true
+    ```
+
+- MySQL configuration file `/etc/mysql/my.cnf`:
+    ```
+    # Prefix of the binlogs
+    log-bin=mysql-bin
+
+    # Binlog Format: row-based logging, maxwell needs binlog_format=row
+    binlog_format=row
+
+    # The databases captured. GART will capture all databases if not specified.
+    binlog-do-db=my_maxwell_01  # change the name to your database
+    binlog-do-db=my_maxwell_02  # change the name to your database
+    ```
+
+- Create a MySQL user for the log capturer (Maxwell)
+    ```
+    # Create a user call "maxwell" with password "123456"
+    # The host name part of the account name, if omitted, defaults to '%'.
+    CREATE USER 'maxwell'@'localhost' IDENTIFIED BY '123456';
+
+    # Grant replication and read-only priviledes
+    GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE ON *.* TO 'maxwell'@'localhost';
+
+    # Grant priviledes on the database "maxwell"
+    GRANT ALL ON maxwell.* TO 'maxwell'@'localhost';
+
+    # flush priviledes
+    FLUSH PRIVILEGES;
+    ```
+
+### Run GART
+
 You can launch GART by the `gart` script under the `build` directory, like:
 ```
+export KAFKA_HOME=xxx
+export MAXWELL_HOME=xxx
 ./gart --user [username-in-DB] --password [password]
 ```
 

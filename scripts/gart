@@ -103,15 +103,15 @@ $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
 $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
 
 echo "Clean topics"
-$KAFKA_BIN/kafka-topics.sh --delete --if-exists --topic binlog --zookeeper 127.0.0.1:2181
-$KAFKA_BIN/kafka-topics.sh --delete --if-exists --topic unified_log --zookeeper 127.0.0.1:2181
+$KAFKA_BIN/kafka-topics.sh --delete --topic binlog --bootstrap-server 127.0.0.1:9092
+$KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092
 
 echo "Create topic: binlog"
-$KAFKA_BIN/kafka-topics.sh --create --topic binlog --zookeeper 127.0.0.1:2181 --partitions 1 --replication-factor 1
+$KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1
 
 # "unified_log" can be created by Maxwell
 # echo "Create topics: unified_log"
-# $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --zookeeper 127.0.0.1:2181
+# $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092
 
 sleep 2
 

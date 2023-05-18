@@ -22,8 +22,8 @@ kill $(ps aux | grep '[m]axwell' | awk '{print $2}')
 KAFKA_BIN=$KAFKA_HOME/bin
 
 echo "Clean topics"
-$KAFKA_BIN/kafka-topics.sh --delete --if-exists --topic binlog --zookeeper 127.0.0.1:2181
-$KAFKA_BIN/kafka-topics.sh --delete --if-exists --topic unified_log --zookeeper 127.0.0.1:2181
+$KAFKA_BIN/kafka-topics.sh --delete --topic binlog --bootstrap-server 127.0.0.1:9092
+$KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092
 
 echo "Stop Zookeeper and Kafka"
 $KAFKA_BIN/kafka-server-stop.sh
