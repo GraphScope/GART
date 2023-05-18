@@ -15,18 +15,20 @@
 
 #include <fstream>
 
+#include "vineyard/common/util/json.h"
+
 #include "flags.h"           // NOLINT(build/include_subdir)
 #include "kafka_producer.h"  // NOLINT(build/include_subdir)
-#include "vineyard/common/util/json.h"
+#include "vegito/src/fragment/id_parser.h"
 
 using json = vineyard::json;
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   // init kafka consumer and producer
-  RdKafka::Conf *conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+  RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   std::string rdkafka_err;
   if (conf->set("metadata.broker.list", FLAGS_read_kafka_broker_list,
                 rdkafka_err) != RdKafka::Conf::CONF_OK) {
@@ -45,15 +47,15 @@ int main(int argc, char **argv) {
     LOG(ERROR) << "Failed to set auto.offset.reset: " << rdkafka_err;
   }
 
-  RdKafka::Consumer *consumer = RdKafka::Consumer::create(conf, rdkafka_err);
+  RdKafka::Consumer* consumer = RdKafka::Consumer::create(conf, rdkafka_err);
   if (!consumer) {
     LOG(ERROR) << "Failed to create consumer: " << rdkafka_err << std::endl;
     exit(1);
   }
 
-  RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+  RdKafka::Conf* tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 
-  RdKafka::Topic *topic = RdKafka::Topic::create(
+  RdKafka::Topic* topic = RdKafka::Topic::create(
       consumer, fLS::FLAGS_read_kafka_topic, tconf, rdkafka_err);
   int32_t partition = 0;
   int64_t start_offset = RdKafka::Topic::OFFSET_BEGINNING;
@@ -75,6 +77,13 @@ int main(int argc, char **argv) {
   std::map<std::string, std::vector<std::string>> required_properties;
   std::map<std::string, std::string> vertex_label_columns;
   std::map<std::string, std::pair<std::string, std::string>> edge_label_columns;
+  std::vector<std::pair<int, int>> edge_label2src_dst_labels;
+  std::map<std::string, int> vertex_label2ids;
+
+  std::vector<std::map<std::string, int64_t>> string_oid2gid_maps;
+  std::vector<std::map<int64_t, int64_t>> int64_oid2gid_maps;
+  std::vector<uint64_t> vertex_nums;
+  std::vector<std::vector<uint64_t>> vertex_nums_per_fragment;
 
   std::ifstream rg_mapping_file_stream(FLAGS_rg_mapping_file_path);
   if (!rg_mapping_file_stream.is_open()) {
@@ -87,7 +96,7 @@ int main(int argc, char **argv) {
   json rg_mapping;
   try {
     rg_mapping = json::parse(rg_mapping_file_stream);
-  } catch (json::parse_error &e) {
+  } catch (json::parse_error& e) {
     LOG(ERROR) << "RGMapping file (" << FLAGS_rg_mapping_file_path
                << ") parse failed."
                << "Error message: " << e.what();
@@ -96,6 +105,19 @@ int main(int argc, char **argv) {
 
   auto types = rg_mapping["types"];
   auto vertex_label_num = rg_mapping["vertexLabelNum"].get<int>();
+
+  gart::IdParser<int64_t> id_parser;
+  id_parser.Init(FLAGS_numbers_of_subgraphs, vertex_label_num);
+
+  string_oid2gid_maps.resize(vertex_label_num);
+  int64_oid2gid_maps.resize(vertex_label_num);
+  vertex_nums.resize(vertex_label_num, 0);
+  vertex_nums_per_fragment.resize(vertex_label_num);
+
+  for (auto idx = 0; idx < vertex_label_num; idx++) {
+    vertex_nums_per_fragment[idx].resize(FLAGS_numbers_of_subgraphs, 0);
+  }
+
   for (uint64_t idx = 0; idx < types.size(); idx++) {
     auto type = types[idx]["type"].get<std::string>();
     auto id = types[idx]["id"].get<int>();
@@ -105,6 +127,7 @@ int main(int argc, char **argv) {
       vertex_tables.emplace(table_name, id);
       vertex_label_columns.emplace(
           table_name, types[idx]["id_column_name"].get<std::string>());
+      vertex_label2ids.emplace(label, id);
     } else if (type == "EDGE") {
       edge_tables.emplace(table_name, id - vertex_label_num);
       auto src_label = types[idx]["rawRelationShips"]
@@ -120,6 +143,10 @@ int main(int argc, char **argv) {
                                                 types[idx]["rawRelationShips"]
                                                     .at(0)["dst_column_name"]
                                                     .get<std::string>()));
+      auto src_label_id = vertex_label2ids.find(src_label)->second;
+      auto dst_label_id = vertex_label2ids.find(dst_label)->second;
+      edge_label2src_dst_labels.push_back(
+          std::make_pair(src_label_id, dst_label_id));
     }
     auto properties = types[idx]["propertyDefList"];
     if (properties.size() == 0) {
@@ -136,7 +163,7 @@ int main(int argc, char **argv) {
   // start to process log
   int log_count = 0;
   while (1) {
-    RdKafka::Message *msg = consumer->consume(topic, partition, 1000);
+    RdKafka::Message* msg = consumer->consume(topic, partition, 1000);
     int str_len = static_cast<int>(msg->len());
 
     // skip empty message to avoid JSON parser error
@@ -144,7 +171,7 @@ int main(int argc, char **argv) {
       continue;
     }
 
-    const char *str_addr = static_cast<const char *>(msg->payload());
+    const char* str_addr = static_cast<const char*>(msg->payload());
     std::string line;
     line.assign(str_addr, str_addr + str_len);
     std::string content;
@@ -175,26 +202,45 @@ int main(int argc, char **argv) {
       }
       if (is_edge == false) {
         auto vid_col = vertex_label_columns.find(table_name)->second;
+        auto vertex_label_id = vertex_tables.find(table_name)->second;
+        int64_t fid = vertex_nums[vertex_label_id] % FLAGS_numbers_of_subgraphs;
+        int64_t offset = vertex_nums_per_fragment[vertex_label_id][fid];
+        vertex_nums[vertex_label_id]++;
+        vertex_nums_per_fragment[vertex_label_id][fid]++;
+        auto gid = id_parser.GenerateId(fid, vertex_label_id, offset);
+        content = content + "|" + std::to_string(gid);
         if (data[vid_col].is_number_integer()) {
-          content =
-              content + "|" + std::to_string(data[vid_col].get<int64_t>());
+          int64_oid2gid_maps[vertex_label_id].emplace(
+              data[vid_col].get<int64_t>(), gid);
         } else if (data[vid_col].is_string()) {
-          content = content + "|" + data[vid_col].get<std::string>();
+          string_oid2gid_maps[vertex_label_id].emplace(
+              data[vid_col].get<std::string>(), gid);
         }
       } else {
         auto edge_col = edge_label_columns.find(table_name)->second;
         std::string src_name = edge_col.first;
         std::string dst_name = edge_col.second;
+        auto edge_label_id = edge_tables.find(table_name)->second;
+        int src_label_id = edge_label2src_dst_labels[edge_label_id].first;
+        int dst_label_id = edge_label2src_dst_labels[edge_label_id].second;
         std::string src_vid, dst_vid;
         if (data[src_name].is_number_integer()) {
-          src_vid = std::to_string(data[src_name].get<int64_t>());
+          src_vid = std::to_string(int64_oid2gid_maps[src_label_id]
+                                       .find(data[src_name].get<int64_t>())
+                                       ->second);
         } else if (data[src_name].is_string()) {
-          src_vid = data[src_name].get<std::string>();
+          src_vid = std::to_string(string_oid2gid_maps[src_label_id]
+                                       .find(data[src_name].get<std::string>())
+                                       ->second);
         }
         if (data[dst_name].is_number_integer()) {
-          dst_vid = std::to_string(data[dst_name].get<int64_t>());
+          dst_vid = std::to_string(int64_oid2gid_maps[dst_label_id]
+                                       .find(data[dst_name].get<int64_t>())
+                                       ->second);
         } else if (data[dst_name].is_string()) {
-          dst_vid = data[dst_name].get<std::string>();
+          dst_vid = std::to_string(string_oid2gid_maps[dst_label_id]
+                                       .find(data[dst_name].get<std::string>())
+                                       ->second);
         }
         content = content + "|" + src_vid + "|" + dst_vid;
       }

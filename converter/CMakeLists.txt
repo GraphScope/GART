@@ -37,6 +37,15 @@ if (GLOG_FOUND)
     set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${GLOG_LIBRARIES}")
 endif ()
 
+file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h")
+
+add_custom_target(convert_clformat
+        COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
+        COMMENT "Running clang-format."
+        VERBATIM)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+
 add_executable(binlog_convert binlog_convert.cc flags.cc)
 
 target_include_directories(binlog_convert PRIVATE ${RDKAFKA_INCLUDE_DIR})

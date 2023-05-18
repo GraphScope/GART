@@ -31,10 +31,10 @@ class KafkaProducer {
  public:
   KafkaProducer() = default;
 
-  explicit KafkaProducer(const std::string &broker_list,
-                         const std::string &topic)
+  explicit KafkaProducer(const std::string& broker_list,
+                         const std::string& topic)
       : brokers_(broker_list), topic_(topic) {
-    RdKafka::Conf *conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+    RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
     std::string rdkafka_err;
     if (conf->set("metadata.broker.list", broker_list, rdkafka_err) !=
         RdKafka::Conf::CONF_OK) {
@@ -62,13 +62,13 @@ class KafkaProducer {
 
   ~KafkaProducer() = default;
 
-  void AddMessage(const std::string &message) {
+  void AddMessage(const std::string& message) {
     if (message.empty()) {
       return;
     }
     RdKafka::ErrorCode err = producer_->produce(
         topic_, RdKafka::Topic::PARTITION_UA, RdKafka::Producer::RK_MSG_COPY,
-        static_cast<void *>(const_cast<char *>(message.c_str())) /* value */,
+        static_cast<void*>(const_cast<char*>(message.c_str())) /* value */,
         message.size() /* size */, NULL, 0, 0 /* timestamp */,
         NULL /* delivery report */);
     if (err != RdKafka::ERR_NO_ERROR) {
@@ -107,7 +107,7 @@ class KafkaOutputStream : public std::ostream {
  private:
   class KafkaBuffer : public std::stringbuf {
    public:
-    explicit KafkaBuffer(std::shared_ptr<KafkaProducer> &prodcuer)
+    explicit KafkaBuffer(std::shared_ptr<KafkaProducer>& prodcuer)
         : producer_(prodcuer) {}
 
     int sync() override {

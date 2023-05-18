@@ -21,8 +21,7 @@ DEFINE_string(read_kafka_broker_list, "localhost:9092",
               "Kafka broker list for reading TxnLogs.");
 DEFINE_string(write_kafka_broker_list, "localhost:9092",
               "Kafka broker list for writing UnifiedLogs.");
-DEFINE_string(read_kafka_topic, "binlog",
-              "Kafka topic for reading TxnLogs.");
+DEFINE_string(read_kafka_topic, "binlog", "Kafka topic for reading TxnLogs.");
 DEFINE_string(write_kafka_topic, "unified_log",
               "Kafka topic for writing UnifiedLogs.");
 
@@ -30,3 +29,5 @@ DEFINE_int32(logs_per_epoch, 10000, "logs_per_epoch.");
 
 DEFINE_string(rg_mapping_file_path, "schema/rgmapping-ldbc.json",
               "RGMapping file path.");
+
+DEFINE_int32(numbers_of_subgraphs, 2, "Number of subgraphs for GAP workloads.");

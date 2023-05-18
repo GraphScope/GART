@@ -34,7 +34,7 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 ### Building from source
 ```shell
 git clone https://github.com/GraphScope/GART.git gart
-cd gart
+cd GART
 
 mkdir build; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
