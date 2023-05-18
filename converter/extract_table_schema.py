@@ -5,19 +5,25 @@ import os
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description="Launch GART server")
-    parser.add_argument("--mysql_host", default="127.0.0.1")
-    parser.add_argument("--mysql_port", default=3306)
-    parser.add_argument("--mysql_user", default="maxwell")
-    parser.add_argument("--mysql_password", default="123456")
-    parser.add_argument("--mysql_db", default="my_maxwell_01")
-    parser.add_argument(
-        "--config_file", default="../vegito/test/config/rgmapping-ldbc.json"
-    )
-    parser.add_argument("--output", default="db_schema.json")
-    parser.add_argument("--v6d_socket", default="/opt/wanglei/tmp.sock")
-    parser.add_argument("--etcd_endpoint", default="127.0.0.1:23799")
-    #parser.add_argument("--num_fragments", default=2)
+    parser = argparse.ArgumentParser(
+        description="Launch database schema extracter for MySQL")
+    parser.add_argument("--mysql_host", default="127.0.0.1", help="MySQL host")
+    parser.add_argument("--mysql_port", default=3306, help="MySQL port")
+    parser.add_argument("--mysql_user", help="MySQL user")
+    parser.add_argument("--mysql_password", help="MySQL password")
+    parser.add_argument("--mysql_db", help="MySQL database")
+
+    parser.add_argument("--v6d_socket", default="/var/run/vinyard.sock",
+                        help="Vinyard socket")
+    parser.add_argument("--etcd_endpoint", default="127.0.0.1:2379",
+                        help="Etcd endpoint")
+
+    parser.add_argument("--config_file",
+                        default="../schema/rgmapping-ldbc.json",
+                        help="Config file (RGMapping)")
+    parser.add_argument("--output", default="../schema/db_schema.json",
+                        help="Output file (database schema)")
+
     return parser
 
 
