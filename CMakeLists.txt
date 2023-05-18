@@ -15,4 +15,5 @@ add_subdirectory(apps/analytical_engine apps)
 
 file(COPY ${CMAKE_SOURCE_DIR}/scripts/gart DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/scripts/stop-gart DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py DESTINATION ${CMAKE_BINARY_DIR}/scripts)
 file(COPY ${CMAKE_SOURCE_DIR}/vegito/test/schema DESTINATION ${CMAKE_BINARY_DIR})

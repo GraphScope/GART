@@ -23,17 +23,20 @@ if [ "$unset" = true ]; then
 fi
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:u:p:r:t:e:h? --long db-host:,user:,password:,rgmapping-file:table-schema-file:,v6d-sock:etcd-endpoint:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
 
 db_host="127.0.0.1"
+db_port="3306"
+db_name=
 user=
 password=
 rgmapping_file="schema/rgmapping-ldbc.json"
 table_schema_file="schema/db_schema.json"
 v6d_sock="/var/run/vineyard.sock"
+v6d_size="500G"
 etcd_endpoint="http://127.0.0.1:2379"
 
 eval set -- "$VALID_ARGS"
@@ -41,6 +44,14 @@ while [ : ]; do
   case "$1" in
     -d | --db-host)
         db_host=$2
+        shift 2
+        ;;
+       | --db-port)
+        db_port=$2
+        shift 2
+        ;;
+    -b | --db-name)
+        db_name=$2
         shift 2
         ;;
     -u | --user)
@@ -63,6 +74,10 @@ while [ : ]; do
         v6d_sock=$2
         shift 2
         ;;
+    --v6d-size)
+        v6d_size=$2
+        shift 2
+        ;;
     -e | --etcd-endpoint)
         etcd_endpoint=$2
         shift 2
@@ -70,11 +85,14 @@ while [ : ]; do
     -h | --help | ?)
         echo "Usage: $0 [options]"
         echo "  -d, --db-host:           database host (default: 127.0.0.1)"
+        echo "      --db-port:           database port (default: 3306)"
+        echo "  -b, --db-name:           database name"
         echo "  -u, --user:              database user"
         echo "  -p, --password:          database password"
         echo "  -r, --rgmapping-file:    rgmapping file path (default: schema/rgmapping-ldbc.json)"
         echo "  -t, --table-schema-file: table schema file path (default: schema/db_schema.json)"
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
+        echo "      --v6d-size:          vineyard size (default: 500G)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
         echo "  -h, --help:              help"
         exit 0
@@ -87,15 +105,33 @@ while [ : ]; do
 done
 
 echo "db-host: $db_host"
+echo "db-port: $db_port"
+echo "db-name: $db_name"
 echo "user: $user"
 echo "password: $password"
 echo "rgmapping-file: $rgmapping_file"
 echo "table-schema-file: $table_schema_file"
 echo "v6d-sock: $v6d_sock"
+echo "v6d-size: $v6d_size"
 echo "etcd-endpoint: $etcd_endpoint"
 
 KAFKA_BIN=$KAFKA_HOME/bin
 KAFKA_CONFIG=$KAFKA_HOME/config
+
+####################### Extract Schema #######################
+echo "Start extracting schema"
+./schema/extract_table_schema.py \
+    --mysql_host $db_host --mysql_port $db_port --mysql_db $db_name \
+    --mysql_user $user --mysql_password $password \
+    --v6d_socket $v6d_sock --etcd_endpoint $etcd_endpoint \
+    --config_file $rgmapping_file --output $table_schema_file
+
+####################### Vineyard #######################
+if [ ! -f "$v6d_sock" ]; then
+    echo "$v6d_sock does not exist, start to launch vineyardd"
+    touch $v6d_sock
+    /usr/local/bin/vineyardd --socket $v6d_sock --size $v6d_size &
+fi
 
 ####################### Capturer: Zookeeper and Kafka #######################
 echo "Start Zookeeper and Kafka"
