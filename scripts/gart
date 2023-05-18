@@ -28,13 +28,13 @@ if [[ $? -ne 0 ]]; then
     exit 1;
 fi
 
-db_host=
+db_host="127.0.0.1"
 user=
 password=
-rgmapping_file=
-table_schema_file=
-v6d_sock=
-etcd_endpoint=
+rgmapping_file="schema/rgmapping-ldbc.json"
+table_schema_file="schema/db_schema.json"
+v6d_sock="/var/run/vineyard.sock"
+etcd_endpoint="http://127.0.0.1:2379"
 
 eval set -- "$VALID_ARGS"
 while [ : ]; do
@@ -69,13 +69,13 @@ while [ : ]; do
         ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
-        echo "  -d, --db-host:           database host"
+        echo "  -d, --db-host:           database host (default: 127.0.0.1)"
         echo "  -u, --user:              database user"
         echo "  -p, --password:          database password"
-        echo "  -r, --rgmapping-file:    rgmapping file path"
-        echo "  -t, --table-schema-file: table schema file path"
-        echo "      --v6d-sock:          vineyard socket path"
-        echo "  -e, --etcd-endpoint:     etcd endpoint"
+        echo "  -r, --rgmapping-file:    rgmapping file path (default: schema/rgmapping-ldbc.json)"
+        echo "  -t, --table-schema-file: table schema file path (default: schema/db_schema.json)"
+        echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
+        echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
         echo "  -h, --help:              help"
         exit 0
         ;;
