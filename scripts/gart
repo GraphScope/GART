@@ -29,8 +29,8 @@ if [[ $? -ne 0 ]]; then
 fi
 
 db_host="127.0.0.1"
-db_port="3306"
-db_name=“my_maxwell_01”
+db_port=3306
+db_name="my_maxwell_01"
 user=
 password=
 rgmapping_file="schema/rgmapping-ldbc.json"
@@ -46,7 +46,7 @@ while [ : ]; do
         db_host=$2
         shift 2
         ;;
-       | --db-port)
+         --db-port)
         db_port=$2
         shift 2
         ;;
@@ -70,11 +70,11 @@ while [ : ]; do
         table_schema_file=$2
         shift 2
         ;;
-    --v6d-sock)
+         --v6d-sock)
         v6d_sock=$2
         shift 2
         ;;
-    --v6d-size)
+         --v6d-size)
         v6d_size=$2
         shift 2
         ;;
@@ -120,7 +120,7 @@ KAFKA_CONFIG=$KAFKA_HOME/config
 
 ####################### Extract Schema #######################
 echo "Start extracting schema"
-./schema/extract_table_schema.py \
+./scripts/extract_table_schema.py \
     --host $db_host --port $db_port --db $db_name \
     --user $user --password $password \
     --rgmapping_file $rgmapping_file --output $table_schema_file
@@ -129,14 +129,18 @@ echo "Start extracting schema"
 echo "Start vineyard daemon by $v6d_sock"
 if [ ! -f "$v6d_sock" ]; then
     echo "$v6d_sock does not exist, start to launch vineyardd"
-    touch $v6d_sock
-    /usr/local/bin/vineyardd --socket $v6d_sock --size $v6d_size &
+    vineyardd --socket $v6d_sock --size $v6d_size --norpc &
 fi
 
 ####################### Capturer: Zookeeper and Kafka #######################
 echo "Start Zookeeper and Kafka"
 $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+
+sleep 3
+
 $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+
+sleep 3
 
 echo "Clean topics"
 $KAFKA_BIN/kafka-topics.sh --delete --topic binlog --bootstrap-server 127.0.0.1:9092
@@ -145,13 +149,12 @@ $KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0
 echo "Create topic: binlog"
 $KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1
 
-# "unified_log" can be created by Maxwell
-# echo "Create topics: unified_log"
-# $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092
+echo "Create topics: unified_log"
+$KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1
 
 sleep 2
 
-$KAFKA_BIN/kafka-topics.sh --zookeeper localhost:2181 --list
+$KAFKA_BIN/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
 
 
 ####################### Capturer: Maxwell #######################

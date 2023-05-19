@@ -72,10 +72,10 @@ Take MySQL as an example.
     # The host name part of the account name, if omitted, defaults to '%'.
     CREATE USER 'maxwell'@'localhost' IDENTIFIED BY '123456';
 
-    # Grant replication and read-only priviledes
+    # Grant replication and read-only privileges
     GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE ON *.* TO 'maxwell'@'localhost';
 
-    # Grant priviledes on the database "maxwell"
+    # Grant privileges on the database "maxwell"
     GRANT ALL ON maxwell.* TO 'maxwell'@'localhost';
     ```
 
@@ -97,14 +97,19 @@ The full usage of `gart` can be shown as:
 ```
 
 ### Mirco Demo
-- Initialize database schema in MySQL
+- Initialize database schema in MySQL (need a user with CREATE and DROP privileges)
 ```
-./init_scehma.py --user maxwell --password 123456 --db ldbc
+pip3 install pymysql cryptography
+
+cd gart
+./apps/mysql/init_scehma.py --user xxx --password xxx --db ldbc
 ```
 - Lanch GART
 ```
 export KAFKA_HOME=xxx
 export MAXWELL_HOME=xxx
+
+cd build
 ./gart --user maxwell --password 123456 --db-name ldbc
 ```
 - Start data insertion

@@ -44,7 +44,7 @@ print("Args: ", args)
 
 base_dir = args.data_dir
 db = pymysql.connect(host=args.host,
-                     port=args.port,
+                     port=int(args.port),
                      user=args.user,
                      password=args.password,
                      database=args.db)

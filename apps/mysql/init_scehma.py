@@ -38,7 +38,7 @@ if unset:
 print("Args: ", args)
 
 db = pymysql.connect(host=args.host,
-                     port=args.port,
+                     port=int(args.port),
                      user=args.user,
                      password=args.password)
 cursor = db.cursor()
