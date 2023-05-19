@@ -30,7 +30,7 @@ fi
 
 db_host="127.0.0.1"
 db_port="3306"
-db_name=
+db_name=“my_maxwell_01”
 user=
 password=
 rgmapping_file="schema/rgmapping-ldbc.json"
@@ -86,7 +86,7 @@ while [ : ]; do
         echo "Usage: $0 [options]"
         echo "  -d, --db-host:           database host (default: 127.0.0.1)"
         echo "      --db-port:           database port (default: 3306)"
-        echo "  -b, --db-name:           database name"
+        echo "  -b, --db-name:           database name (default: my_maxwell_01)"
         echo "  -u, --user:              database user"
         echo "  -p, --password:          database password"
         echo "  -r, --rgmapping-file:    rgmapping file path (default: schema/rgmapping-ldbc.json)"
@@ -121,12 +121,12 @@ KAFKA_CONFIG=$KAFKA_HOME/config
 ####################### Extract Schema #######################
 echo "Start extracting schema"
 ./schema/extract_table_schema.py \
-    --mysql_host $db_host --mysql_port $db_port --mysql_db $db_name \
-    --mysql_user $user --mysql_password $password \
-    --v6d_socket $v6d_sock --etcd_endpoint $etcd_endpoint \
-    --config_file $rgmapping_file --output $table_schema_file
+    --host $db_host --port $db_port --db $db_name \
+    --user $user --password $password \
+    --rgmapping_file $rgmapping_file --output $table_schema_file
 
 ####################### Vineyard #######################
+echo "Start vineyard daemon by $v6d_sock"
 if [ ! -f "$v6d_sock" ]; then
     echo "$v6d_sock does not exist, start to launch vineyardd"
     touch $v6d_sock

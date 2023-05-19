@@ -1,26 +1,23 @@
-#/usr/bin/env python3
+#!/usr/bin/env python3
 
 import argparse
-import pymysql
 import json
-import os
-
+import sys
+import pymysql
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Launch database schema extracter for MySQL")
-    parser.add_argument("--mysql_host", default="127.0.0.1", help="MySQL host")
-    parser.add_argument("--mysql_port", default=3306, help="MySQL port")
-    parser.add_argument("--mysql_user", help="MySQL user")
-    parser.add_argument("--mysql_password", help="MySQL password")
-    parser.add_argument("--mysql_db", help="MySQL database")
+        description="Launch database schema extracter for MySQL",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument("--v6d_socket", default="/var/run/vinyard.sock",
-                        help="Vinyard socket")
-    parser.add_argument("--etcd_endpoint", default="127.0.0.1:2379",
-                        help="Etcd endpoint")
+    parser.add_argument("--host", default="127.0.0.1", help="MySQL host")
+    parser.add_argument("--port", default=3306, help="MySQL port")
+    parser.add_argument("--user", help="MySQL user")
+    parser.add_argument("--password", help="MySQL password")
+    parser.add_argument("--db", default="my_maxwell_01",
+                        help="MySQL database")
 
-    parser.add_argument("--config_file",
+    parser.add_argument("--rgmapping_file",
                         default="../schema/rgmapping-ldbc.json",
                         help="Config file (RGMapping)")
     parser.add_argument("--output", default="../schema/db_schema.json",
@@ -28,9 +25,8 @@ def get_parser():
 
     return parser
 
-
-def exetract_schema(cursor, config_file, output):
-    with open(config_file, "r") as f:
+def exetract_schema(cursor, rgmapping_file, output):
+    with open(rgmapping_file, "r", encoding="UTF-8") as f:
         config = json.load(f)
     tables = config["types"]
     schema = {}
@@ -40,19 +36,35 @@ def exetract_schema(cursor, config_file, output):
         cursor.execute(sql)
         results = cursor.fetchall()
         schema[table_name] = results
-    with open(output, "w") as f:
+    with open(output, "w", encoding="UTF-8") as f:
         json.dump(schema, f, indent=4)
 
 
 if __name__ == "__main__":
-    parser = get_parser()
-    args = parser.parse_args()
+    arg_parser = get_parser()
+    args = arg_parser.parse_args()
+
+    unset = False
+    if not isinstance(args.user, str) or len(args.user) == 0:
+        print("Please specify the MySQL user with --user")
+        unset = True
+
+    if not isinstance(args.password, str) or len(args.password) == 0:
+        print("Please specify the MySQL password with --password")
+        unset = True
+
+    if unset:
+        sys.exit(1)
+
+    print("Args: ", args)
+
     db = pymysql.connect(
-        host=args.mysql_host,
-        user=args.mysql_user,
-        password=args.mysql_password,
-        port=args.mysql_port,
-        database=args.mysql_db,
+        host=args.host,
+        port=args.port,
+        user=args.user,
+        password=args.password,
+        database=args.db,
     )
-    cursor = db.cursor()
-    exetract_schema(cursor, args.config_file, args.output)
+    db_cursor = db.cursor()
+    exetract_schema(db_cursor, args.rgmapping_file, args.output)
+    print(f"Generate schema file: {args.output}")

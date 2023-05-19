@@ -34,7 +34,7 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 ### Building from source
 ```shell
 git clone https://github.com/GraphScope/GART.git gart
-cd GART
+cd gart
 
 mkdir build; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -66,7 +66,7 @@ Take MySQL as an example.
     binlog-do-db=my_maxwell_02  # change the name to your database
     ```
 
-- Create a MySQL user for the log capturer (Maxwell)
+- Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md))
     ```
     # Create a user call "maxwell" with password "123456"
     # The host name part of the account name, if omitted, defaults to '%'.
@@ -77,9 +77,6 @@ Take MySQL as an example.
 
     # Grant priviledes on the database "maxwell"
     GRANT ALL ON maxwell.* TO 'maxwell'@'localhost';
-
-    # flush priviledes
-    FLUSH PRIVILEGES;
     ```
 
 ### Run GART
@@ -88,7 +85,7 @@ You can launch GART by the `gart` script under the `build` directory, like:
 ```
 export KAFKA_HOME=xxx
 export MAXWELL_HOME=xxx
-./gart --user [username-in-DB] --password [password]
+./gart --user maxwell --password 123456
 ```
 
 The arguments of `--user` and `--password` is the user name and the password in the database for Maxwell.
@@ -97,6 +94,26 @@ The full usage of `gart` can be shown as:
 
 ```
 ./gart --help
+```
+
+### Mirco Demo
+- Initialize database schema in MySQL
+```
+./init_scehma.py --user maxwell --password 123456 --db ldbc
+```
+- Lanch GART
+```
+export KAFKA_HOME=xxx
+export MAXWELL_HOME=xxx
+./gart --user maxwell --password 123456 --db-name ldbc
+```
+- Start data insertion
+```
+./insert_db.py --user maxwell --password 123456 --db ldbc --data_dir [dir]
+```
+- Start Graph analysis
+```
+[TBD]
 ```
 
 ## License
