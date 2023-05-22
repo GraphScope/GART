@@ -29,3 +29,8 @@ add_custom_target(clformat
         COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
         COMMENT "Running clang-format."
         VERBATIM)
+
+add_custom_target(pyformat
+        COMMAND python3 -m black ${CMAKE_SOURCE_DIR}
+        COMMENT "Running black for python formats."
+        VERBATIM)

@@ -5,25 +5,32 @@ import json
 import sys
 import pymysql
 
+
 def get_parser():
     parser = argparse.ArgumentParser(
         description="Launch database schema extracter for MySQL",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
     parser.add_argument("--host", default="127.0.0.1", help="MySQL host")
     parser.add_argument("--port", default=3306, help="MySQL port")
     parser.add_argument("--user", help="MySQL user")
     parser.add_argument("--password", help="MySQL password")
-    parser.add_argument("--db", default="my_maxwell_01",
-                        help="MySQL database")
+    parser.add_argument("--db", default="my_maxwell_01", help="MySQL database")
 
-    parser.add_argument("--rgmapping_file",
-                        default="../schema/rgmapping-ldbc.json",
-                        help="Config file (RGMapping)")
-    parser.add_argument("--output", default="../schema/db_schema.json",
-                        help="Output file (database schema)")
+    parser.add_argument(
+        "--rgmapping_file",
+        default="../schema/rgmapping-ldbc.json",
+        help="Config file (RGMapping)",
+    )
+    parser.add_argument(
+        "--output",
+        default="../schema/db_schema.json",
+        help="Output file (database schema)",
+    )
 
     return parser
+
 
 def exetract_schema(cursor, rgmapping_file, output):
     with open(rgmapping_file, "r", encoding="UTF-8") as f:

@@ -4,21 +4,24 @@ import argparse
 import sys
 import pymysql
 
+
 def get_parser():
     parser = argparse.ArgumentParser(
         description="Initialize the LDBC dataset in MySQL",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
     parser.add_argument("--host", default="127.0.0.1", help="MySQL host")
     parser.add_argument("--port", default=3306, help="MySQL port")
     parser.add_argument("--user", help="MySQL user")
     parser.add_argument("--password", help="MySQL password")
-    parser.add_argument("--db", default="my_maxwell_01",
-                        help="MySQL database")
-    parser.add_argument("--drop", type=bool, default=False,
-                        help="Drop the database and table if exists")
+    parser.add_argument("--db", default="my_maxwell_01", help="MySQL database")
+    parser.add_argument(
+        "--drop", type=bool, default=False, help="Drop the database and table if exists"
+    )
 
     return parser
+
 
 arg_parser = get_parser()
 args = arg_parser.parse_args()
@@ -37,10 +40,9 @@ if unset:
 
 print("Args: ", args)
 
-db = pymysql.connect(host=args.host,
-                     port=int(args.port),
-                     user=args.user,
-                     password=args.password)
+db = pymysql.connect(
+    host=args.host, port=int(args.port), user=args.user, password=args.password
+)
 cursor = db.cursor()
 
 # create the database

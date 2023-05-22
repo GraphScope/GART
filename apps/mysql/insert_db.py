@@ -4,22 +4,23 @@ import argparse
 import sys
 import pymysql
 
+
 def get_parser():
     parser = argparse.ArgumentParser(
         description="Initialize the LDBC dataset in MySQL",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
     parser.add_argument("--host", default="127.0.0.1", help="MySQL host")
     parser.add_argument("--port", default=3306, help="MySQL port")
     parser.add_argument("--user", help="MySQL user")
     parser.add_argument("--password", help="MySQL password")
-    parser.add_argument("--db", default="my_maxwell_01",
-                        help="MySQL database")
+    parser.add_argument("--db", default="my_maxwell_01", help="MySQL database")
 
-    parser.add_argument("--data_dir",
-                        help="LDBC dataset directory (dynamic)")
+    parser.add_argument("--data_dir", help="LDBC dataset directory (dynamic)")
 
     return parser
+
 
 arg_parser = get_parser()
 args = arg_parser.parse_args()
@@ -43,11 +44,13 @@ if unset:
 print("Args: ", args)
 
 base_dir = args.data_dir
-db = pymysql.connect(host=args.host,
-                     port=int(args.port),
-                     user=args.user,
-                     password=args.password,
-                     database=args.db)
+db = pymysql.connect(
+    host=args.host,
+    port=int(args.port),
+    user=args.user,
+    password=args.password,
+    database=args.db,
+)
 cursor = db.cursor()
 
 print("01. Inserting organisation table...")
@@ -57,10 +60,12 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, org_id, org_type, org_name, org_url = line.strip().split("|")
-        org_name = org_name.replace("\'", "")
-        org_url = org_url.replace("\'", "")
-        cursor.execute(f"insert into organisation values('{epoch}', '{org_id}',"
-                       f"'{org_type}', '{org_name}', '{org_url}')")
+        org_name = org_name.replace("'", "")
+        org_url = org_url.replace("'", "")
+        cursor.execute(
+            f"insert into organisation values('{epoch}', '{org_id}',"
+            f"'{org_type}', '{org_name}', '{org_url}')"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -73,10 +78,12 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, pla_id, pla_name, pla_url, pla_type = line.strip().split("|")
-        pla_name = pla_name.replace("\'", "")
-        pla_url = pla_url.replace("\'", "")
-        cursor.execute(f"insert into place values('{epoch}', '{pla_id}',"
-                       f"'{pla_name}', '{pla_url}', '{pla_type}')")
+        pla_name = pla_name.replace("'", "")
+        pla_url = pla_url.replace("'", "")
+        cursor.execute(
+            f"insert into place values('{epoch}', '{pla_id}',"
+            f"'{pla_name}', '{pla_url}', '{pla_type}')"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -89,9 +96,11 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, tag_id, tag_name, tag_url = line.strip().split("|")
-        tag_url = tag_url.replace("\'", "")
-        cursor.execute(f"insert into tag values('{epoch}', '{tag_id}',"
-                       f"'{tag_name}', '{tag_url}')")
+        tag_url = tag_url.replace("'", "")
+        cursor.execute(
+            f"insert into tag values('{epoch}', '{tag_id}',"
+            f"'{tag_name}', '{tag_url}')"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -104,9 +113,11 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, tagc_id, tagc_name, tagc_url = line.strip().split("|")
-        tagc_url = tagc_url.replace("\'", "")
-        cursor.execute(f"insert into tagclass values('{epoch}', '{tagc_id}',"
-                       f"'{tagc_name}', '{tagc_url}')")
+        tagc_url = tagc_url.replace("'", "")
+        cursor.execute(
+            f"insert into tagclass values('{epoch}', '{tagc_id}',"
+            f"'{tagc_name}', '{tagc_url}')"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -118,11 +129,24 @@ with open(file_name, "r", encoding="UTF-8") as f:
     line = f.readline()
     num_lines = 0
     while line:
-        _, epoch, p_id, p_first_name, p_last_name, p_gender, p_birthday, p_creation_date, p_location_ip, p_browser_used = line.strip().split("|")
-        cursor.execute(f"insert into person values('{epoch}', '{p_id}', "
-                       f"'{p_first_name}', '{p_last_name}', '{p_gender}', "
-                       f"'{p_birthday}', '{p_creation_date}', "
-                       f"'{p_location_ip}', '{p_browser_used}')")
+        (
+            _,
+            epoch,
+            p_id,
+            p_first_name,
+            p_last_name,
+            p_gender,
+            p_birthday,
+            p_creation_date,
+            p_location_ip,
+            p_browser_used,
+        ) = line.strip().split("|")
+        cursor.execute(
+            f"insert into person values('{epoch}', '{p_id}', "
+            f"'{p_first_name}', '{p_last_name}', '{p_gender}', "
+            f"'{p_birthday}', '{p_creation_date}', "
+            f"'{p_location_ip}', '{p_browser_used}')"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -134,11 +158,22 @@ with open(file_name, "r", encoding="UTF-8") as f:
     line = f.readline()
     num_lines = 0
     while line:
-        _, epoch, co_id, co_creation_date, co_location_ip, co_browser_used, co_content, co_length = line.strip().split("|")
-        co_content = co_content.replace("\'", "")
-        cursor.execute(f"insert into comment values('{epoch}', '{co_id}', "
-                       f"'{co_creation_date}', '{co_location_ip}', "
-                       f"'{co_browser_used}', '{co_content}', {co_length})")
+        (
+            _,
+            epoch,
+            co_id,
+            co_creation_date,
+            co_location_ip,
+            co_browser_used,
+            co_content,
+            co_length,
+        ) = line.strip().split("|")
+        co_content = co_content.replace("'", "")
+        cursor.execute(
+            f"insert into comment values('{epoch}', '{co_id}', "
+            f"'{co_creation_date}', '{co_location_ip}', "
+            f"'{co_browser_used}', '{co_content}', {co_length})"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -150,12 +185,25 @@ with open(file_name, "r", encoding="UTF-8") as f:
     line = f.readline()
     num_lines = 0
     while line:
-        _, epoch, po_id, po_image_file, po_creation_date, po_location_ip, po_browser_used, po_language, po_content, po_length = line.strip().split("|")
-        po_content = po_content.replace("\'", "")
-        cursor.execute(f"insert into post values('{epoch}', '{po_id}', "
-                       f"'{po_image_file}', '{po_creation_date}', "
-                       f"'{po_location_ip}', '{po_browser_used}', "
-                       f"'{po_language}', '{po_content}', {po_length})")
+        (
+            _,
+            epoch,
+            po_id,
+            po_image_file,
+            po_creation_date,
+            po_location_ip,
+            po_browser_used,
+            po_language,
+            po_content,
+            po_length,
+        ) = line.strip().split("|")
+        po_content = po_content.replace("'", "")
+        cursor.execute(
+            f"insert into post values('{epoch}', '{po_id}', "
+            f"'{po_image_file}', '{po_creation_date}', "
+            f"'{po_location_ip}', '{po_browser_used}', "
+            f"'{po_language}', '{po_content}', {po_length})"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -168,9 +216,11 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, fo_id, fo_title, fo_creation_date = line.strip().split("|")
-        fo_title = fo_title.replace("\'", "")
-        cursor.execute(f"insert into forum values('{epoch}', '{fo_id}', "
-                       f"'{fo_title}', '{fo_creation_date}')")
+        fo_title = fo_title.replace("'", "")
+        cursor.execute(
+            f"insert into forum values('{epoch}', '{fo_id}', "
+            f"'{fo_title}', '{fo_creation_date}')"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -185,8 +235,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute(f"insert into org_islocationin values('{epoch}', "
-                       f"'{edge_label}', '{src}', '{dst}')")
+        cursor.execute(
+            f"insert into org_islocationin values('{epoch}', "
+            f"'{edge_label}', '{src}', '{dst}')"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -199,8 +251,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute(f"insert into ispartof values('{epoch}', "
-                       f"'{edge_label}', '{src}', '{dst}')")
+        cursor.execute(
+            f"insert into ispartof values('{epoch}', "
+            f"'{edge_label}', '{src}', '{dst}')"
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -213,8 +267,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into issubclassof values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into issubclassof values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -227,8 +283,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into hastype values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into hastype values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -241,8 +299,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into comment_hascreator values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into comment_hascreator values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -255,8 +315,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into comment_hastag values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into comment_hastag values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -269,8 +331,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into comment_islocationin values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into comment_islocationin values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -283,8 +347,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into replyof_comment values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into replyof_comment values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -297,8 +363,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into replyof_post values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into replyof_post values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -311,8 +379,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into post_hascreator values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into post_hascreator values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -325,8 +395,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into post_hastag values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into post_hastag values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -339,8 +411,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into post_islocationin values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into post_islocationin values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -353,8 +427,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into forum_containerof values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into forum_containerof values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -367,8 +443,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into forum_hasmoderator values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into forum_hasmoderator values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -381,8 +459,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into forum_hastag values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into forum_hastag values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -395,8 +475,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into person_hasinterest values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into person_hasinterest values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -409,8 +491,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst = line.strip().split("|")
-        cursor.execute("insert into person_islocationin values('%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst))
+        cursor.execute(
+            "insert into person_islocationin values('%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -423,8 +507,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst, fo_hm_join_data = line.strip().split("|")
-        cursor.execute("insert into forum_hasmember values('%s', '%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst, fo_hm_join_data))
+        cursor.execute(
+            "insert into forum_hasmember values('%s', '%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst, fo_hm_join_data)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -437,8 +523,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst, kn_creation_data = line.strip().split("|")
-        cursor.execute("insert into knows values('%s', '%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst, kn_creation_data))
+        cursor.execute(
+            "insert into knows values('%s', '%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst, kn_creation_data)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -451,8 +539,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst, likes_co_creation_data = line.strip().split("|")
-        cursor.execute("insert into likes_comment values('%s', '%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst, likes_co_creation_data))
+        cursor.execute(
+            "insert into likes_comment values('%s', '%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst, likes_co_creation_data)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -465,8 +555,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst, likes_po_creation_data = line.strip().split("|")
-        cursor.execute("insert into likes_post values('%s', '%s', '%s', '%s', '%s')" %
-                    (epoch, edge_label, src, dst, likes_po_creation_data))
+        cursor.execute(
+            "insert into likes_post values('%s', '%s', '%s', '%s', '%s')"
+            % (epoch, edge_label, src, dst, likes_po_creation_data)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -479,8 +571,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst, sa_class_year = line.strip().split("|")
-        cursor.execute("insert into studyat values('%s', '%s', '%s', '%s', %s)" %
-                    (epoch, edge_label, src, dst, sa_class_year))
+        cursor.execute(
+            "insert into studyat values('%s', '%s', '%s', '%s', %s)"
+            % (epoch, edge_label, src, dst, sa_class_year)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -493,8 +587,10 @@ with open(file_name, "r", encoding="UTF-8") as f:
     num_lines = 0
     while line:
         _, epoch, edge_label, src, dst, wa_work_from = line.strip().split("|")
-        cursor.execute("insert into workat values('%s', '%s', '%s', '%s', %s)" %
-                    (epoch, edge_label, src, dst, wa_work_from))
+        cursor.execute(
+            "insert into workat values('%s', '%s', '%s', '%s', %s)"
+            % (epoch, edge_label, src, dst, wa_work_from)
+        )
         line = f.readline()
         num_lines += 1
 db.commit()
