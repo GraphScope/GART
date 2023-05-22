@@ -7,17 +7,14 @@
             "max_items":100,
             "propertyDefList":[
                 {
-                    "data_type":"LONG",
                     "id":0,
                     "name":"person_id"
                 },
                 {
-                    "data_type":"STRING",
                     "id":1,
                     "name":"person_name"
                 },
                 {
-                    "data_type":"INT",
                     "id":2,
                     "name":"person_age"
                 }
@@ -35,12 +32,10 @@
             "max_items":100,
             "propertyDefList":[
                 {
-                    "data_type":"LONG",
                     "id":0,
                     "name":"post_id"
                 },
                 {
-                    "data_type":"STRING",
                     "id":1,
                     "name":"post_topic"
                 }

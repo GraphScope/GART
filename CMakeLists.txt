@@ -13,7 +13,19 @@ add_subdirectory(converter)
 add_subdirectory(vegito)
 add_subdirectory(apps/analytical_engine apps)
 
-file(COPY ${CMAKE_SOURCE_DIR}/scripts/gart DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/scripts/stop-gart DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py DESTINATION ${CMAKE_BINARY_DIR}/scripts)
+### Copy test schema ###
 file(COPY ${CMAKE_SOURCE_DIR}/vegito/test/schema DESTINATION ${CMAKE_BINARY_DIR})
+
+### Create symbolic links for scripts ###
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/scripts)
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/gart gart SYMBOLIC)
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/stop-gart stop-gart SYMBOLIC)
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py scripts/extract_table_schema.py SYMBOLIC)
+
+### check format ###
+file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h")
+
+add_custom_target(clformat
+        COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
+        COMMENT "Running clang-format."
+        VERBATIM)
