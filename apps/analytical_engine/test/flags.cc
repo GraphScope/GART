@@ -17,7 +17,7 @@
 
 #include <gflags/gflags.h>
 
-DEFINE_string(etcd_endpoint, "http://127.0.0.1:23799",
+DEFINE_string(etcd_endpoint, "http://127.0.0.1:2379",
               "etcd endpoint to get graph schema.");
 DEFINE_int32(read_epoch, 4, "read epoch for graph reader.");
 DEFINE_string(meta_prefix, "gart_meta_", "meta prefix for etcd.");

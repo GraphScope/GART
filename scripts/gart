@@ -129,7 +129,7 @@ echo "Start extracting schema"
 echo "Start vineyard daemon by $v6d_sock"
 if [ ! -f "$v6d_sock" ]; then
     echo "$v6d_sock does not exist, start to launch vineyardd"
-    vineyardd --socket $v6d_sock --size $v6d_size --norpc &
+    vineyardd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc &
 fi
 
 ####################### Capturer: Zookeeper and Kafka #######################

@@ -16,7 +16,7 @@ function start_vineyard() {
   echo "[INFO] vineyardd will using the socket_file on ${socket_file}"
   #start vineyardd
   touch ${socket_file}
-  /usr/local/bin/vineyardd  --etcd_endpoint=127.0.0.1:23799 --socket ${socket_file} --size 500G &
+  /usr/local/bin/vineyardd  --etcd_endpoint=127.0.0.1:2379 --socket ${socket_file} --size 500G &
   sleep 5
   info "vineyardd started."
 }

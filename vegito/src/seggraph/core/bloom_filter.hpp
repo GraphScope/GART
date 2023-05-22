@@ -62,12 +62,14 @@ class BloomFilter {
   }
 
   [[gnu::always_inline]] inline static uint64_t get_hash(uint64_t key) {
-    const uint64_t SEED[4] = {0x818c3f78ull, 0x672f4a3aull, 0xabd04d69ull,
-                              0x12b51f95ull};
-    const unsigned __int128 m =
-        *reinterpret_cast<const unsigned __int128*>(&SEED[0]);
-    const unsigned __int128 a =
-        *reinterpret_cast<const unsigned __int128*>(&SEED[2]);
+    unsigned __int128 SEED_128[2];
+    uint64_t* SEED = reinterpret_cast<uint64_t*>(SEED_128);
+    SEED[0] = 0x818c3f78ull;
+    SEED[1] = 0x672f4a3aull;
+    SEED[2] = 0xabd04d69ull;
+    SEED[3] = 0x12b51f95ull;
+    const unsigned __int128 m = SEED_128[0];
+    const unsigned __int128 a = SEED_128[1];
     return (a + m * key) >> 64;
   }
 

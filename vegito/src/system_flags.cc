@@ -24,7 +24,7 @@ DEFINE_string(kafka_unified_log_topic, "unified_log",
 DEFINE_string(kafka_unified_log_file, "test_graph.txt",
               "The file to record unified logs.");  // for tests
 
-DEFINE_string(etcd_endpoint, "http://127.0.0.1:23799",
+DEFINE_string(etcd_endpoint, "http://127.0.0.1:2379",
               "etcd endpoint for schema.");
 DEFINE_string(meta_prefix, "gart_meta_", "meta prefix for etcd.");
 DEFINE_string(v6d_ipc_socket, "/var/run/vineyard.sock", "Vineyard IPC socket.");
