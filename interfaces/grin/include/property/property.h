@@ -34,14 +34,17 @@ const char* grin_get_vertex_property_name(GRIN_GRAPH, GRIN_VERTEX_PROPERTY);
  * @param GRIN_VERTEX_TYPE the specific vertex type
  * @param name the name
  */
-GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_name(GRIN_GRAPH, GRIN_VERTEX_TYPE, const char* name);
+GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_name(GRIN_GRAPH,
+                                                      GRIN_VERTEX_TYPE,
+                                                      const char* name);
 
 /**
  * @brief get all the vertex properties with a given name
  * @param GRIN_GRAPH the graph
  * @param name the name
  */
-GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH, const char* name);
+GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH,
+                                                             const char* name);
 #endif
 
 #ifdef GRIN_WITH_EDGE_PROPERTY_NAME
@@ -58,19 +61,21 @@ const char* grin_get_edge_property_name(GRIN_GRAPH, GRIN_EDGE_PROPERTY);
  * @param GRIN_EDGE_TYPE the specific edge type
  * @param name the name
  */
-GRIN_EDGE_PROPERTY grin_get_edge_property_by_name(GRIN_GRAPH, GRIN_EDGE_TYPE, const char* name);
+GRIN_EDGE_PROPERTY grin_get_edge_property_by_name(GRIN_GRAPH, GRIN_EDGE_TYPE,
+                                                  const char* name);
 
 /**
  * @brief get all the edge properties with a given name
  * @param GRIN_GRAPH the graph
  * @param name the name
  */
-GRIN_EDGE_PROPERTY_LIST grin_get_edge_properties_by_name(GRIN_GRAPH, const char* name);
+GRIN_EDGE_PROPERTY_LIST grin_get_edge_properties_by_name(GRIN_GRAPH,
+                                                         const char* name);
 #endif
 
-
 #ifdef GRIN_WITH_VERTEX_PROPERTY
-bool grin_equal_vertex_property(GRIN_GRAPH, GRIN_VERTEX_PROPERTY, GRIN_VERTEX_PROPERTY);
+bool grin_equal_vertex_property(GRIN_GRAPH, GRIN_VERTEX_PROPERTY,
+                                GRIN_VERTEX_PROPERTY);
 
 /**
  * @brief destroy vertex property
@@ -82,18 +87,20 @@ void grin_destroy_vertex_property(GRIN_GRAPH, GRIN_VERTEX_PROPERTY);
  * @brief get property data type
  * @param GRIN_VERTEX_PROPERTY vertex property
  */
-GRIN_DATATYPE grin_get_vertex_property_data_type(GRIN_GRAPH, GRIN_VERTEX_PROPERTY);
+GRIN_DATATYPE grin_get_vertex_property_data_type(GRIN_GRAPH,
+                                                 GRIN_VERTEX_PROPERTY);
 
 /**
  * @brief get the vertex type that the property is bound to
  * @param GRIN_VERTEX_PROPERTY vertex property
  */
-GRIN_VERTEX_TYPE grin_get_vertex_property_vertex_type(GRIN_GRAPH, GRIN_VERTEX_PROPERTY);
+GRIN_VERTEX_TYPE grin_get_vertex_property_vertex_type(GRIN_GRAPH,
+                                                      GRIN_VERTEX_PROPERTY);
 #endif
 
-
 #ifdef GRIN_WITH_EDGE_PROPERTY
-bool grin_equal_edge_property(GRIN_GRAPH, GRIN_EDGE_PROPERTY, GRIN_EDGE_PROPERTY);
+bool grin_equal_edge_property(GRIN_GRAPH, GRIN_EDGE_PROPERTY,
+                              GRIN_EDGE_PROPERTY);
 
 /**
  * @brief destroy edge property

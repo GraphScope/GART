@@ -20,27 +20,30 @@ limitations under the License.
 
 #include "../predefine.h"
 
-
-#if defined(GRIN_WITH_VERTEX_PROPERTY) && \
-    !defined(GRIN_ASSUME_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE) && \
-    !defined(GRIN_ASSUME_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE) && \
+#if defined(GRIN_WITH_VERTEX_PROPERTY) &&                               \
+    !defined(GRIN_ASSUME_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE) &&         \
+    !defined(GRIN_ASSUME_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE) &&      \
     !defined(GRIN_ASSUME_BY_TYPE_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE) && \
     !defined(GRIN_ASSUME_BY_TYPE_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE)
 bool grin_is_vertex_property_local_complete(GRIN_GRAPH, GRIN_VERTEX);
 
-GRIN_PARTITION_LIST grin_vertex_property_complete_partitions(GRIN_GRAPH, GRIN_VERTEX);
+GRIN_PARTITION_LIST grin_vertex_property_complete_partitions(GRIN_GRAPH,
+                                                             GRIN_VERTEX);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE
-GRIN_VERTEX_TYPE_LIST grin_get_master_vertex_property_local_complete_types(GRIN_GRAPH);
+GRIN_VERTEX_TYPE_LIST grin_get_master_vertex_property_local_complete_types(
+    GRIN_GRAPH);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE
-GRIN_VERTEX_TYPE_LIST grin_get_all_vertex_property_local_complete_types(GRIN_GRAPH);
+GRIN_VERTEX_TYPE_LIST grin_get_all_vertex_property_local_complete_types(
+    GRIN_GRAPH);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_MASTER_VERTEX_DATA_LOCAL_COMPLETE
-GRIN_VERTEX_TYPE_LIST grin_get_master_vertex_data_local_complete_types(GRIN_GRAPH);
+GRIN_VERTEX_TYPE_LIST grin_get_master_vertex_data_local_complete_types(
+    GRIN_GRAPH);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_ALL_VERTEX_DATA_LOCAL_COMPLETE
@@ -48,25 +51,29 @@ GRIN_VERTEX_TYPE_LIST grin_get_all_vertex_data_local_complete_types(GRIN_GRAPH);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_MASTER_VERTEX_NEIGHBOR_LOCAL_COMPLETE
-GRIN_VERTEX_TYPE_LIST grin_get_master_vertex_neighbor_local_complete_types(GRIN_GRAPH);
+GRIN_VERTEX_TYPE_LIST grin_get_master_vertex_neighbor_local_complete_types(
+    GRIN_GRAPH);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_ALL_VERTEX_NEIGHBOR_LOCAL_COMPLETE
-GRIN_VERTEX_TYPE_LIST grin_get_all_vertex_neighbor_local_complete_types(GRIN_GRAPH);
+GRIN_VERTEX_TYPE_LIST grin_get_all_vertex_neighbor_local_complete_types(
+    GRIN_GRAPH);
 #endif
 
-#if defined(GRIN_WITH_EDGE_PROPERTY) && \
-    !defined(GRIN_ASSUME_ALL_EDGE_PROPERTY_LOCAL_COMPLETE) && \
-    !defined(GRIN_ASSUME_MASTER_EDGE_PROPERTY_LOCAL_COMPLETE) && \
+#if defined(GRIN_WITH_EDGE_PROPERTY) &&                               \
+    !defined(GRIN_ASSUME_ALL_EDGE_PROPERTY_LOCAL_COMPLETE) &&         \
+    !defined(GRIN_ASSUME_MASTER_EDGE_PROPERTY_LOCAL_COMPLETE) &&      \
     !defined(GRIN_ASSUME_BY_TYPE_ALL_EDGE_PROPERTY_LOCAL_COMPLETE) && \
     !defined(GRIN_ASSUME_BY_TYPE_MASTER_EDGE_PROPERTY_LOCAL_COMPLETE)
 bool grin_is_edge_property_local_complete(GRIN_GRAPH, GRIN_EDGE);
 
-GRIN_PARTITION_LIST grin_edge_property_complete_partitions(GRIN_GRAPH, GRIN_EDGE);
+GRIN_PARTITION_LIST grin_edge_property_complete_partitions(GRIN_GRAPH,
+                                                           GRIN_EDGE);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_MASTER_EDGE_PROPERTY_LOCAL_COMPLETE
-GRIN_EDGE_TYPE_LIST grin_get_master_edge_property_local_complete_types(GRIN_GRAPH);
+GRIN_EDGE_TYPE_LIST grin_get_master_edge_property_local_complete_types(
+    GRIN_GRAPH);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_ALL_EDGE_PROPERTY_LOCAL_COMPLETE
@@ -82,12 +89,12 @@ GRIN_EDGE_TYPE_LIST grin_get_all_edge_data_local_complete_types(GRIN_GRAPH);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_MASTER_EDGE_NEIGHBOR_LOCAL_COMPLETE
-GRIN_EDGE_TYPE_LIST grin_get_master_edge_neighbor_local_complete_types(GRIN_GRAPH);
+GRIN_EDGE_TYPE_LIST grin_get_master_edge_neighbor_local_complete_types(
+    GRIN_GRAPH);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_ALL_EDGE_NEIGHBOR_LOCAL_COMPLETE
 GRIN_EDGE_TYPE_LIST grin_get_all_edge_neighbor_local_complete_types(GRIN_GRAPH);
 #endif
 
-
-#endif // GRIN_INCLUDE_PROPERTY_PARTITION_H_
+#endif  // GRIN_INCLUDE_PROPERTY_PARTITION_H_

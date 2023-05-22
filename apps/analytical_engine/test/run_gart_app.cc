@@ -32,9 +32,9 @@
 #include "vineyard/common/util/json.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
+#include "apps/gart/property_pagerank.h"
 #include "apps/gart/property_sssp.h"
 #include "apps/gart/property_wcc.h"
-#include "apps/gart/property_pagerank.h"
 #include "core/context/i_context.h"
 #include "core/context/labeled_vertex_property_context.h"
 #include "core/loader/arrow_fragment_loader.h"
@@ -71,8 +71,8 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
 }
 
 void RunPropertyWCC(std::shared_ptr<GraphType> fragment,
-                     const grape::CommSpec& comm_spec,
-                     const std::string& out_prefix) {
+                    const grape::CommSpec& comm_spec,
+                    const std::string& out_prefix) {
   using AppType = gs::PropertyWCC<GraphType>;
   auto app = std::make_shared<AppType>();
 
@@ -96,8 +96,8 @@ void RunPropertyWCC(std::shared_ptr<GraphType> fragment,
 }
 
 void RunPropertyPageRank(std::shared_ptr<GraphType> fragment,
-                     const grape::CommSpec& comm_spec,
-                     const std::string& out_prefix) {
+                         const grape::CommSpec& comm_spec,
+                         const std::string& out_prefix) {
   using AppType = gs::PropertyPageRank<GraphType>;
   auto app = std::make_shared<AppType>();
 
@@ -126,8 +126,8 @@ uint64_t get_latest_epoch(const grape::CommSpec& comm_spec,
 
   if (comm_spec.fid() == 0) {
     for (uint idx = 0; idx < comm_spec.fnum(); idx++) {
-      std::string latest_epoch_str = FLAGS_meta_prefix +
-          "gart_latest_epoch_p" + std::to_string(idx);
+      std::string latest_epoch_str =
+          FLAGS_meta_prefix + "gart_latest_epoch_p" + std::to_string(idx);
       etcd::Response response = etcd_client->get(latest_epoch_str).get();
       assert(response.is_ok());
       uint64_t latest_epoch = std::stoull(response.value().as_string());
@@ -161,7 +161,8 @@ int main(int argc, char** argv) {
     grape::gflags::ParseCommandLineFlags(&argc, &argv, true);
     std::shared_ptr<etcd::Client> etcd_client =
         std::make_shared<etcd::Client>(FLAGS_etcd_endpoint);
-    std::string schema_key = FLAGS_meta_prefix + "gart_schema_p" + std::to_string(comm_spec.fid());
+    std::string schema_key =
+        FLAGS_meta_prefix + "gart_schema_p" + std::to_string(comm_spec.fid());
     etcd::Response response = etcd_client->get(schema_key).get();
     assert(response.is_ok());
     std::string edge_config_str = response.value().as_string();

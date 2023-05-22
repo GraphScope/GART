@@ -44,7 +44,8 @@ GRIN_VERTEX grin_get_vertex_from_vertex_ref(GRIN_GRAPH, GRIN_VERTEX_REF);
  * @param GRIN_GRAPH the graph
  * @param GRIN_VERTEX_REF the vertex ref
  */
-GRIN_PARTITION grin_get_master_partition_from_vertex_ref(GRIN_GRAPH, GRIN_VERTEX_REF);
+GRIN_PARTITION grin_get_master_partition_from_vertex_ref(GRIN_GRAPH,
+                                                         GRIN_VERTEX_REF);
 
 const char* grin_serialize_vertex_ref(GRIN_GRAPH, GRIN_VERTEX_REF);
 
@@ -56,11 +57,13 @@ bool grin_is_mirror_vertex(GRIN_GRAPH, GRIN_VERTEX);
 #endif
 
 #ifdef GRIN_TRAIT_MASTER_VERTEX_MIRROR_PARTITION_LIST
-GRIN_PARTITION_LIST grin_get_master_vertex_mirror_partition_list(GRIN_GRAPH, GRIN_VERTEX);
+GRIN_PARTITION_LIST grin_get_master_vertex_mirror_partition_list(GRIN_GRAPH,
+                                                                 GRIN_VERTEX);
 #endif
 
 #ifdef GRIN_TRAIT_MASTER_VERTEX_MIRROR_PARTITION_LIST
-GRIN_PARTITION_LIST grin_get_mirror_vertex_mirror_partition_list(GRIN_GRAPH, GRIN_VERTEX);
+GRIN_PARTITION_LIST grin_get_mirror_vertex_mirror_partition_list(GRIN_GRAPH,
+                                                                 GRIN_VERTEX);
 #endif
 
 #ifdef GRIN_ENABLE_EDGE_REF
@@ -68,7 +71,8 @@ GRIN_EDGE_REF grin_get_edge_ref_for_edge(GRIN_GRAPH, GRIN_EDGE);
 
 GRIN_EDGE grin_get_edge_from_edge_ref(GRIN_GRAPH, GRIN_EDGE_REF);
 
-GRIN_PARTITION grin_get_master_partition_from_edge_ref(GRIN_GRAPH, GRIN_EDGE_REF);
+GRIN_PARTITION grin_get_master_partition_from_edge_ref(GRIN_GRAPH,
+                                                       GRIN_EDGE_REF);
 
 const char* grin_serialize_edge_ref(GRIN_GRAPH, GRIN_EDGE_REF);
 
@@ -80,11 +84,13 @@ bool grin_is_mirror_edge(GRIN_GRAPH, GRIN_EDGE);
 #endif
 
 #ifdef GRIN_TRAIT_MASTER_EDGE_MIRROR_PARTITION_LIST
-GRIN_PARTITION_LIST grin_get_master_edge_mirror_partition_list(GRIN_GRAPH, GRIN_EDGE);
+GRIN_PARTITION_LIST grin_get_master_edge_mirror_partition_list(GRIN_GRAPH,
+                                                               GRIN_EDGE);
 #endif
 
 #ifdef GRIN_TRAIT_MASTER_EDGE_MIRROR_PARTITION_LIST
-GRIN_PARTITION_LIST grin_get_mirror_edge_mirror_partition_list(GRIN_GRAPH, GRIN_EDGE);
+GRIN_PARTITION_LIST grin_get_mirror_edge_mirror_partition_list(GRIN_GRAPH,
+                                                               GRIN_EDGE);
 #endif
 
 #endif  // GRIN_INCLUDE_PARTITION_REFERENCE_H_

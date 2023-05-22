@@ -29,24 +29,30 @@ size_t grin_get_edge_num_by_type(GRIN_GRAPH, GRIN_DIRECTION, GRIN_EDGE_TYPE);
 #endif
 
 #ifdef GRIN_ASSUME_BY_TYPE_VERTEX_ORIGINAL_ID
-GRIN_VERTEX grin_get_vertex_from_original_id_by_type(GRIN_GRAPH, GRIN_VERTEX_TYPE, GRIN_VERTEX_ORIGINAL_ID);
+GRIN_VERTEX grin_get_vertex_from_original_id_by_type(GRIN_GRAPH,
+                                                     GRIN_VERTEX_TYPE,
+                                                     GRIN_VERTEX_ORIGINAL_ID);
 #endif
 
 #ifdef GRIN_TRAIT_FILTER_TYPE_FOR_VERTEX_LIST
-GRIN_VERTEX_LIST grin_filter_type_for_vertex_list(GRIN_GRAPH, GRIN_VERTEX_TYPE, GRIN_VERTEX_LIST);
+GRIN_VERTEX_LIST grin_filter_type_for_vertex_list(GRIN_GRAPH, GRIN_VERTEX_TYPE,
+                                                  GRIN_VERTEX_LIST);
 #endif
 
 #ifdef GRIN_TRAIT_FILTER_TYPE_FOR_EDGE_LIST
-GRIN_EDGE_LIST grin_filter_type_for_edge_list(GRIN_GRAPH, GRIN_EDGE_TYPE, GRIN_EDGE_LIST);
+GRIN_EDGE_LIST grin_filter_type_for_edge_list(GRIN_GRAPH, GRIN_EDGE_TYPE,
+                                              GRIN_EDGE_LIST);
 #endif
 
 #ifdef GRIN_TRAIT_FILTER_NEIGHBOR_TYPE_FOR_ADJACENT_LIST
-GRIN_ADJACENT_LIST grin_filter_neighbor_type_for_adjacent_list(GRIN_GRAPH, GRIN_VERTEX_TYPE, GRIN_ADJACENT_LIST);
+GRIN_ADJACENT_LIST grin_filter_neighbor_type_for_adjacent_list(
+    GRIN_GRAPH, GRIN_VERTEX_TYPE, GRIN_ADJACENT_LIST);
 #endif
 
 #ifdef GRIN_TRAIT_FILTER_EDGE_TYPE_FOR_ADJACENT_LIST
-GRIN_ADJACENT_LIST grin_filter_edge_type_for_adjacent_list(GRIN_GRAPH, GRIN_EDGE_TYPE, GRIN_ADJACENT_LIST);
+GRIN_ADJACENT_LIST grin_filter_edge_type_for_adjacent_list(GRIN_GRAPH,
+                                                           GRIN_EDGE_TYPE,
+                                                           GRIN_ADJACENT_LIST);
 #endif
 
-
-#endif // GRIN_INCLUDE_PROPERTY_TOPOLOGY_H_
+#endif  // GRIN_INCLUDE_PROPERTY_TOPOLOGY_H_

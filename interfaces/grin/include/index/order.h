@@ -21,12 +21,12 @@ limitations under the License.
 #include "../predefine.h"
 
 #ifndef GRIN_ASSUME_ALL_VERTEX_LIST_SORTED
-/** 
+/**
  * @brief check whether a vertex list is sorted
  * @param GRIN_GRAPH the graph
  * @param GRIN_VERTEX_LIST the vertex list
  * @return whether sorted
-*/
+ */
 bool grin_is_vertex_list_sorted(GRIN_GRAPH, GRIN_VERTEX_LIST);
 #endif
 
@@ -34,17 +34,20 @@ bool grin_is_vertex_list_sorted(GRIN_GRAPH, GRIN_VERTEX_LIST);
 bool grin_smaller_vertex(GRIN_GRAPH, GRIN_VERTEX, GRIN_VERTEX);
 #endif
 
-#if defined(GRIN_ASSUME_ALL_VERTEX_LIST_SORTED) && defined(GRIN_ENABLE_VERTEX_LIST_ARRAY)
-/** 
+#if defined(GRIN_ASSUME_ALL_VERTEX_LIST_SORTED) && \
+    defined(GRIN_ENABLE_VERTEX_LIST_ARRAY)
+/**
  * @brief get the position of a vertex in a sorted list
- * caller must guarantee the input vertex list is sorted to get the correct result
+ * caller must guarantee the input vertex list is sorted to get the correct
+ * result
  * @param GRIN_GRAPH the graph
  * @param GRIN_VERTEX_LIST the sorted vertex list
  * @param VERTEX the vertex to find
  * @param pos the returned position of the vertex
  * @return false if the vertex is not found
-*/
-bool grin_get_position_of_vertex_from_sorted_list(GRIN_GRAPH, GRIN_VERTEX_LIST, GRIN_VERTEX, size_t& pos);
+ */
+bool grin_get_position_of_vertex_from_sorted_list(GRIN_GRAPH, GRIN_VERTEX_LIST,
+                                                  GRIN_VERTEX, size_t& pos);
 #endif
 
-#endif // GRIN_INCLUDE_INDEX_ORDER_H_
+#endif  // GRIN_INCLUDE_INDEX_ORDER_H_

@@ -21,11 +21,11 @@ limitations under the License.
 #include "../predefine.h"
 
 /** @name GRIN_ROW
- * GRIN_ROW works as the pure value array for the properties of a vertex or an edge.
- * In general, you can think of GRIN_ROW as an array of void*, where each void* points to
- * the value of a property. GRIN assumes the user already knows the corresponding
- * property list beforehead, so that she/he knows how to cast the void* into the
- * property's data type.
+ * GRIN_ROW works as the pure value array for the properties of a vertex or an
+ * edge. In general, you can think of GRIN_ROW as an array of void*, where each
+ * void* points to the value of a property. GRIN assumes the user already knows
+ * the corresponding property list beforehead, so that she/he knows how to cast
+ * the void* into the property's data type.
  */
 ///@{
 #ifdef GRIN_ENABLE_ROW
@@ -59,7 +59,8 @@ void grin_destroy_vertex_property_table(GRIN_GRAPH, GRIN_VERTEX_PROPERTY_TABLE);
  * @param GRIN_GRAPH the graph
  * @param GRIN_VERTEX_TYPE the vertex type
  */
-GRIN_VERTEX_PROPERTY_TABLE grin_get_vertex_property_table_by_type(GRIN_GRAPH, GRIN_VERTEX_TYPE);
+GRIN_VERTEX_PROPERTY_TABLE grin_get_vertex_property_table_by_type(
+    GRIN_GRAPH, GRIN_VERTEX_TYPE);
 
 /**
  * @brief get vertex property value from table
@@ -68,7 +69,8 @@ GRIN_VERTEX_PROPERTY_TABLE grin_get_vertex_property_table_by_type(GRIN_GRAPH, GR
  * @param GRIN_VERTEX_PROPERTY the vertex property which is the column index
  * @return can be casted to the property data type by the caller
  */
-const void* grin_get_value_from_vertex_property_table(GRIN_GRAPH, GRIN_VERTEX_PROPERTY_TABLE, GRIN_VERTEX, GRIN_VERTEX_PROPERTY);
+const void* grin_get_value_from_vertex_property_table(
+    GRIN_GRAPH, GRIN_VERTEX_PROPERTY_TABLE, GRIN_VERTEX, GRIN_VERTEX_PROPERTY);
 #endif
 
 #if defined(GRIN_ENABLE_VERTEX_PROPERTY_TABLE) && defined(GRIN_ENABLE_ROW)
@@ -78,17 +80,22 @@ const void* grin_get_value_from_vertex_property_table(GRIN_GRAPH, GRIN_VERTEX_PR
  * @param GRIN_VERTEX the vertex which is the row index
  * @param GRIN_VERTEX_PROPERTY_LIST the vertex property list as columns
  */
-GRIN_ROW grin_get_row_from_vertex_property_table(GRIN_GRAPH, GRIN_VERTEX_PROPERTY_TABLE, GRIN_VERTEX, GRIN_VERTEX_PROPERTY_LIST);
+GRIN_ROW grin_get_row_from_vertex_property_table(GRIN_GRAPH,
+                                                 GRIN_VERTEX_PROPERTY_TABLE,
+                                                 GRIN_VERTEX,
+                                                 GRIN_VERTEX_PROPERTY_LIST);
 #endif
 
 #if !defined(GRIN_ASSUME_COLUMN_STORE) && defined(GRIN_ENABLE_ROW)
 /**
- * @brief get vertex row directly from the graph, this API only works for row store system
+ * @brief get vertex row directly from the graph, this API only works for row
+ * store system
  * @param GRIN_GRAPH the graph
  * @param GRIN_VERTEX the vertex which is the row index
  * @param GRIN_VERTEX_PROPERTY_LIST the vertex property list as columns
  */
-GRIN_ROW grin_get_vertex_row(GRIN_GRAPH, GRIN_VERTEX, GRIN_VERTEX_PROPERTY_LIST);
+GRIN_ROW grin_get_vertex_row(GRIN_GRAPH, GRIN_VERTEX,
+                             GRIN_VERTEX_PROPERTY_LIST);
 #endif
 
 #ifdef GRIN_ENABLE_EDGE_PROPERTY_TABLE
@@ -108,7 +115,8 @@ void grin_destroy_edge_property_table(GRIN_GRAPH, GRIN_EDGE_PROPERTY_TABLE);
  * @param GRIN_GRAPH the graph
  * @param GRIN_EDGE_TYPE the edge type
  */
-GRIN_EDGE_PROPERTY_TABLE grin_get_edge_property_table_by_type(GRIN_GRAPH, GRIN_EDGE_TYPE);
+GRIN_EDGE_PROPERTY_TABLE grin_get_edge_property_table_by_type(GRIN_GRAPH,
+                                                              GRIN_EDGE_TYPE);
 
 /**
  * @brief get edge property value from table
@@ -117,7 +125,10 @@ GRIN_EDGE_PROPERTY_TABLE grin_get_edge_property_table_by_type(GRIN_GRAPH, GRIN_E
  * @param GRIN_EDGE_PROPERTY the edge property which is the column index
  * @return can be casted to the property data type by the caller
  */
-const void* grin_get_value_from_edge_property_table(GRIN_GRAPH, GRIN_EDGE_PROPERTY_TABLE, GRIN_EDGE, GRIN_EDGE_PROPERTY);
+const void* grin_get_value_from_edge_property_table(GRIN_GRAPH,
+                                                    GRIN_EDGE_PROPERTY_TABLE,
+                                                    GRIN_EDGE,
+                                                    GRIN_EDGE_PROPERTY);
 #endif
 
 #if defined(GRIN_ENABLE_EDGE_PROPERTY_TABLE) && defined(GRIN_ENABLE_ROW)
@@ -127,12 +138,16 @@ const void* grin_get_value_from_edge_property_table(GRIN_GRAPH, GRIN_EDGE_PROPER
  * @param GRIN_EDGE the edge which is the row index
  * @param GRIN_EDGE_PROPERTY_LIST the edge property list as columns
  */
-GRIN_ROW grin_get_row_from_edge_property_table(GRIN_GRAPH, GRIN_EDGE_PROPERTY_TABLE, GRIN_EDGE, GRIN_EDGE_PROPERTY_LIST);
+GRIN_ROW grin_get_row_from_edge_property_table(GRIN_GRAPH,
+                                               GRIN_EDGE_PROPERTY_TABLE,
+                                               GRIN_EDGE,
+                                               GRIN_EDGE_PROPERTY_LIST);
 #endif
 
 #if !defined(GRIN_ASSUME_COLUMN_STORE) && defined(GRIN_ENABLE_ROW)
 /**
- * @brief get edge row directly from the graph, this API only works for row store system
+ * @brief get edge row directly from the graph, this API only works for row
+ * store system
  * @param GRIN_GRAPH the graph
  * @param GRIN_EDGE the edge which is the row index
  * @param GRIN_EDGE_PROPERTY_LIST the edge property list as columns

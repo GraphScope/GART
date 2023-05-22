@@ -18,7 +18,7 @@ limitations under the License.
 
 #include "../predefine.h"
 
-// Graph 
+// Graph
 bool grin_is_directed(GRIN_GRAPH);
 
 bool grin_is_multigraph(GRIN_GRAPH);
@@ -26,7 +26,6 @@ bool grin_is_multigraph(GRIN_GRAPH);
 size_t grin_get_vertex_num(GRIN_GRAPH);
 
 size_t grin_get_edge_num(GRIN_GRAPH, GRIN_DIRECTION);
-
 
 // Vertex
 void grin_destroy_vertex(GRIN_GRAPH, GRIN_VERTEX);
@@ -41,8 +40,10 @@ GRIN_DATATYPE grin_get_vertex_original_id_type(GRIN_GRAPH);
 GRIN_VERTEX_ORIGINAL_ID grin_get_vertex_original_id(GRIN_GRAPH, GRIN_VERTEX);
 #endif
 
-#if defined(GRIN_WITH_VERTEX_ORIGINAL_ID) && !defined(GRIN_ASSUME_BY_TYPE_VERTEX_ORIGINAL_ID)
-GRIN_VERTEX grin_get_vertex_from_original_id(GRIN_GRAPH, GRIN_VERTEX_ORIGINAL_ID);
+#if defined(GRIN_WITH_VERTEX_ORIGINAL_ID) && \
+    !defined(GRIN_ASSUME_BY_TYPE_VERTEX_ORIGINAL_ID)
+GRIN_VERTEX grin_get_vertex_from_original_id(GRIN_GRAPH,
+                                             GRIN_VERTEX_ORIGINAL_ID);
 #endif
 
 #ifdef GRIN_WITH_VERTEX_DATA

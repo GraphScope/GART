@@ -81,7 +81,8 @@ int main(int argc, char** argv) {
     grape::gflags::ParseCommandLineFlags(&argc, &argv, true);
     std::shared_ptr<etcd::Client> etcd_client =
         std::make_shared<etcd::Client>(FLAGS_etcd_endpoint);
-    std::string schema_key = FLAGS_meta_prefix + "gart_schema_p" + std::to_string(comm_spec.fid());
+    std::string schema_key =
+        FLAGS_meta_prefix + "gart_schema_p" + std::to_string(comm_spec.fid());
     etcd::Response response = etcd_client->get(schema_key).get();
     assert(response.is_ok());
     std::string edge_config_str = response.value().as_string();
@@ -110,8 +111,7 @@ int main(int argc, char** argv) {
                   << " src label = " << fragment->vertex_label(src)
                   << " src offset = " << fragment->GetOffset(src)
                   << " src data = "
-                  << fragment->template GetData<int64_t>(src, 0)
-                  << std::endl;
+                  << fragment->template GetData<int64_t>(src, 0) << std::endl;
         for (auto elabel = 0; elabel < edge_label_num; elabel++) {
           auto edge_iter = fragment->GetOutgoingAdjList(src, elabel);
           while (edge_iter.valid()) {

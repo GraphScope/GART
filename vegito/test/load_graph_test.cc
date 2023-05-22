@@ -46,7 +46,7 @@ void sigabrt_handler(int sig) {
 
 }  // anonymous namespace
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   /* install the event handler if necessary */
   signal(SIGSEGV, sigsegv_handler);
   signal(SIGABRT, sigabrt_handler);
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 
   gart::framework::config.parse_sys_args(argc, argv);
 
-  gart::framework::Runner *runner = new gart::framework::Runner();
+  gart::framework::Runner* runner = new gart::framework::Runner();
   runner->run();
   return 0;
 }

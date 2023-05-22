@@ -19,13 +19,13 @@ limitations under the License.
 #include <algorithm>
 #include <utility>
 
-#include "interfaces/fragment/gart_fragment.h"
-#include "interfaces/fragment/iterator.h"
 #include "grape/config.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 #include "grape/utils/gcontainer.h"
 #include "grape/utils/vertex_array.h"
+#include "interfaces/fragment/gart_fragment.h"
+#include "interfaces/fragment/iterator.h"
 
 namespace gart {
 

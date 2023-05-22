@@ -26,9 +26,9 @@ limitations under the License.
 
 #include "grape/grape.h"
 
-#include "core/parallel/gart_parallel.h"
 #include "core/app/app_base.h"
 #include "core/context/gart_vertex_data_context.h"
+#include "core/parallel/gart_parallel.h"
 #include "core/utils/gart_vertex_array.h"
 
 namespace gs {
@@ -51,16 +51,17 @@ class PropertyWCCContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
     auto vertex_label_num = frag.vertex_label_num();
     result.resize(vertex_label_num);
 
-    for (auto v_label = 0; v_label < vertex_label_num; v_label++) { 
+    for (auto v_label = 0; v_label < vertex_label_num; v_label++) {
       auto vertices_iter = frag.Vertices(v_label);
-      result[v_label].Init(&frag, vertices_iter, std::numeric_limits<oid_t>::max());
+      result[v_label].Init(&frag, vertices_iter,
+                           std::numeric_limits<oid_t>::max());
     }
   }
 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     auto v_label_num = frag.vertex_label_num();
-    std::ofstream out("output_wcc_frag_"+std::to_string(frag.fid())+".txt");
+    std::ofstream out("output_wcc_frag_" + std::to_string(frag.fid()) + ".txt");
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto vertices_iter = frag.InnerVertices(v_label);
       while (vertices_iter.valid()) {
@@ -79,7 +80,7 @@ template <typename FRAG_T>
 class PropertyWCC : public AppBase<FRAG_T, PropertyWCCContext<FRAG_T>> {
  public:
   INSTALL_DEFAULT_WORKER(PropertyWCC<FRAG_T>, PropertyWCCContext<FRAG_T>,
-                              FRAG_T)
+                         FRAG_T)
 
   using vertex_t = typename fragment_t::vertex_t;
   using oid_t = typename fragment_t::oid_t;
@@ -93,7 +94,7 @@ class PropertyWCC : public AppBase<FRAG_T, PropertyWCCContext<FRAG_T>> {
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     auto v_label_num = frag.vertex_label_num();
-    auto e_label_num = frag.edge_label_num(); 
+    auto e_label_num = frag.edge_label_num();
 
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto vertices_iter = frag.Vertices(v_label);
@@ -145,21 +146,20 @@ class PropertyWCC : public AppBase<FRAG_T, PropertyWCCContext<FRAG_T>> {
         }
         if (new_data < old_data) {
           ctx.result[v_label][src] = new_data;
-          messages.SyncStateOnOuterVertex<fragment_t, oid_t>(frag, src, new_data);
+          messages.SyncStateOnOuterVertex<fragment_t, oid_t>(frag, src,
+                                                             new_data);
         }
         outer_vertices_iter.next();
       }
     }
-   
 
     messages.ForceContinue();
-    
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
-               message_manager_t& messages) { 
+               message_manager_t& messages) {
     auto v_label_num = frag.vertex_label_num();
-    auto e_label_num = frag.edge_label_num(); 
+    auto e_label_num = frag.edge_label_num();
 
     vertex_t v;
     oid_t val;
@@ -211,16 +211,14 @@ class PropertyWCC : public AppBase<FRAG_T, PropertyWCCContext<FRAG_T>> {
         }
         if (new_data < old_data) {
           ctx.result[v_label][src] = new_data;
-          messages.SyncStateOnOuterVertex<fragment_t, oid_t>(frag, src, new_data);
+          messages.SyncStateOnOuterVertex<fragment_t, oid_t>(frag, src,
+                                                             new_data);
         }
         outer_vertices_iter.next();
       }
     }
-
-
   }
 };
-    
 
 }  // namespace gs
 

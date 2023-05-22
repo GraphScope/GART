@@ -35,7 +35,8 @@ GRIN_EDGE_LIST_ITERATOR grin_get_edge_list_begin(GRIN_GRAPH, GRIN_EDGE_LIST);
 
 void grin_destroy_edge_list_iter(GRIN_GRAPH, GRIN_EDGE_LIST_ITERATOR);
 
-GRIN_EDGE_LIST_ITERATOR grin_get_next_edge_list_iter(GRIN_GRAPH, GRIN_EDGE_LIST_ITERATOR);
+GRIN_EDGE_LIST_ITERATOR grin_get_next_edge_list_iter(GRIN_GRAPH,
+                                                     GRIN_EDGE_LIST_ITERATOR);
 
 bool grin_is_edge_list_end(GRIN_GRAPH, GRIN_EDGE_LIST_ITERATOR);
 

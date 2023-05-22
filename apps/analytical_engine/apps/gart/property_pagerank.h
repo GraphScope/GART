@@ -37,7 +37,8 @@ namespace gs {
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
-class PropertyPageRankContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
+class PropertyPageRankContext
+    : public gs::GartLabeledVertexDataContext<FRAG_T> {
   using vid_t = typename FRAG_T::vid_t;
   using oid_t = typename FRAG_T::oid_t;
 
@@ -45,7 +46,8 @@ class PropertyPageRankContext : public gs::GartLabeledVertexDataContext<FRAG_T> 
   explicit PropertyPageRankContext(const FRAG_T& fragment)
       : gs::GartLabeledVertexDataContext<FRAG_T>(fragment) {}
 
-  void Init(grape::DefaultMessageManager& messages, double delta_input, int max_round_input) {
+  void Init(grape::DefaultMessageManager& messages, double delta_input,
+            int max_round_input) {
     auto& frag = this->fragment();
     auto vertex_label_num = frag.vertex_label_num();
     result.resize(vertex_label_num);
@@ -56,7 +58,7 @@ class PropertyPageRankContext : public gs::GartLabeledVertexDataContext<FRAG_T> 
     current_round = 0;
     total_vertex_num = 0;
 
-    for (auto v_label = 0; v_label < vertex_label_num; v_label++) { 
+    for (auto v_label = 0; v_label < vertex_label_num; v_label++) {
       auto vertices_iter = frag.Vertices(v_label);
       result[v_label].Init(&frag, vertices_iter, 0);
       result_next[v_label].Init(&frag, vertices_iter, 0);
@@ -68,7 +70,8 @@ class PropertyPageRankContext : public gs::GartLabeledVertexDataContext<FRAG_T> 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     auto v_label_num = frag.vertex_label_num();
-    std::ofstream out("output_pagerank_frag_"+std::to_string(frag.fid())+".txt");
+    std::ofstream out("output_pagerank_frag_" + std::to_string(frag.fid()) +
+                      ".txt");
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto vertices_iter = frag.InnerVertices(v_label);
       while (vertices_iter.valid()) {
@@ -92,11 +95,12 @@ class PropertyPageRankContext : public gs::GartLabeledVertexDataContext<FRAG_T> 
 };
 
 template <typename FRAG_T>
-class PropertyPageRank : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>, 
-                         public grape::Communicator {
+class PropertyPageRank
+    : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>,
+      public grape::Communicator {
  public:
-  INSTALL_DEFAULT_WORKER(PropertyPageRank<FRAG_T>, PropertyPageRankContext<FRAG_T>,
-                              FRAG_T)
+  INSTALL_DEFAULT_WORKER(PropertyPageRank<FRAG_T>,
+                         PropertyPageRankContext<FRAG_T>, FRAG_T)
 
   using vertex_t = typename fragment_t::vertex_t;
   using oid_t = typename fragment_t::oid_t;
@@ -110,7 +114,7 @@ class PropertyPageRank : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     auto v_label_num = frag.vertex_label_num();
-    auto e_label_num = frag.edge_label_num(); 
+    auto e_label_num = frag.edge_label_num();
 
     int local_vertex_num = 0;
 
@@ -124,7 +128,8 @@ class PropertyPageRank : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>
 
     Sum(local_vertex_num, ctx.total_vertex_num);
 
-    std::cout << "total_vertex_num: " << ctx.total_vertex_num << " local_vertex_num: " << local_vertex_num <<std::endl;
+    std::cout << "total_vertex_num: " << ctx.total_vertex_num
+              << " local_vertex_num: " << local_vertex_num << std::endl;
 
     double p = 1.0 / ctx.total_vertex_num;
 
@@ -177,19 +182,18 @@ class PropertyPageRank : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>
       auto outer_vertices_iter = frag.OuterVertices(v_label);
       while (outer_vertices_iter.valid()) {
         auto src = outer_vertices_iter.vertex();
-        messages.SyncStateOnOuterVertex(frag, src, ctx.result_next[v_label][src]);
+        messages.SyncStateOnOuterVertex(frag, src,
+                                        ctx.result_next[v_label][src]);
         ctx.result_next[v_label][src] = 0.0;
         outer_vertices_iter.next();
       }
     }
-   
 
     messages.ForceContinue();
-    
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
-               message_manager_t& messages) { 
+               message_manager_t& messages) {
     ctx.current_round++;
 
     double base = (1.0 - ctx.delta) / ctx.total_vertex_num +
@@ -197,7 +201,7 @@ class PropertyPageRank : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>
     ctx.dangling_sum = base * ctx.total_dangling_vnum;
 
     auto v_label_num = frag.vertex_label_num();
-    auto e_label_num = frag.edge_label_num(); 
+    auto e_label_num = frag.edge_label_num();
 
     double val;
     vertex_t v;
@@ -205,14 +209,15 @@ class PropertyPageRank : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>
     while (messages.GetMessage<fragment_t, double>(frag, v, val)) {
       auto v_label = frag.vertex_label(v);
       ctx.result_next[v_label][v] += val;
-    }  
+    }
 
     if (ctx.current_round == ctx.max_round) {
       for (auto v_label = 0; v_label < v_label_num; v_label++) {
         auto inner_vertices_iter = frag.InnerVertices(v_label);
         while (inner_vertices_iter.valid()) {
           auto src = inner_vertices_iter.vertex();
-          ctx.result[v_label][src] = base + ctx.delta * ctx.result_next[v_label][src];
+          ctx.result[v_label][src] =
+              base + ctx.delta * ctx.result_next[v_label][src];
           inner_vertices_iter.next();
         }
       }
@@ -221,7 +226,8 @@ class PropertyPageRank : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>
         auto inner_vertices_iter = frag.InnerVertices(v_label);
         while (inner_vertices_iter.valid()) {
           auto src = inner_vertices_iter.vertex();
-          ctx.result[v_label][src] = base + ctx.delta * ctx.result_next[v_label][src];
+          ctx.result[v_label][src] =
+              base + ctx.delta * ctx.result_next[v_label][src];
           ctx.result_next[v_label][src] = 0.0;
           inner_vertices_iter.next();
         }
@@ -251,18 +257,15 @@ class PropertyPageRank : public AppBase<FRAG_T, PropertyPageRankContext<FRAG_T>>
         auto outer_vertices_iter = frag.OuterVertices(v_label);
         while (outer_vertices_iter.valid()) {
           auto src = outer_vertices_iter.vertex();
-          messages.SyncStateOnOuterVertex(frag, src, ctx.result_next[v_label][src]);
+          messages.SyncStateOnOuterVertex(frag, src,
+                                          ctx.result_next[v_label][src]);
           ctx.result_next[v_label][src] = 0.0;
           outer_vertices_iter.next();
         }
       }
-
     }
-
-
   }
 };
-    
 
 }  // namespace gs
 

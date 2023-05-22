@@ -26,9 +26,9 @@ limitations under the License.
 
 #include "grape/grape.h"
 
-#include "core/parallel/gart_parallel.h"
 #include "core/app/app_base.h"
 #include "core/context/gart_vertex_data_context.h"
+#include "core/parallel/gart_parallel.h"
 #include "core/utils/gart_vertex_array.h"
 
 namespace gs {
@@ -54,18 +54,20 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
     updated.resize(vertex_label_num);
     updated_next.resize(vertex_label_num);
 
-    for (auto v_label = 0; v_label < vertex_label_num; v_label++) { 
+    for (auto v_label = 0; v_label < vertex_label_num; v_label++) {
       auto vertices_iter = frag.Vertices(v_label);
       updated[v_label].Init(&frag, vertices_iter, false);
       updated_next[v_label].Init(&frag, vertices_iter, false);
-      result[v_label].Init(&frag, vertices_iter, std::numeric_limits<int>::max());
+      result[v_label].Init(&frag, vertices_iter,
+                           std::numeric_limits<int>::max());
     }
   }
 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     auto v_label_num = frag.vertex_label_num();
-    std::ofstream out("output_frag_sssp_"+std::to_string(frag.fid())+".txt");
+    std::ofstream out("output_frag_sssp_" + std::to_string(frag.fid()) +
+                      ".txt");
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto vertices_iter = frag.InnerVertices(v_label);
       while (vertices_iter.valid()) {
@@ -87,7 +89,7 @@ template <typename FRAG_T>
 class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
  public:
   INSTALL_DEFAULT_WORKER(PropertySSSP<FRAG_T>, PropertySSSPContext<FRAG_T>,
-                              FRAG_T)
+                         FRAG_T)
 
   using vertex_t = typename fragment_t::vertex_t;
 
@@ -112,11 +114,13 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
           auto dst_vertex = edge_iter.neighbor();
           auto dst_label = frag.vertex_label(dst_vertex);
           int e_data = edge_iter.template get_data<int>(0);
-          ctx.result[dst_label][dst_vertex] = std::min(ctx.result[dst_label][dst_vertex], e_data);
+          ctx.result[dst_label][dst_vertex] =
+              std::min(ctx.result[dst_label][dst_vertex], e_data);
           if (frag.IsInnerVertex(dst_vertex)) {
             ctx.updated[dst_label][dst_vertex] = true;
           } else {
-            messages.SyncStateOnOuterVertex(frag, dst_vertex, ctx.result[dst_label][dst_vertex]);
+            messages.SyncStateOnOuterVertex(frag, dst_vertex,
+                                            ctx.result[dst_label][dst_vertex]);
           }
           edge_iter.next();
         }
@@ -124,13 +128,12 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
     }
 
     messages.ForceContinue();
-    
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
-               message_manager_t& messages) { 
+               message_manager_t& messages) {
     auto v_label_num = frag.vertex_label_num();
-    auto e_label_num = frag.edge_label_num(); 
+    auto e_label_num = frag.edge_label_num();
     int val;
     vertex_t v;
     while (messages.GetMessage<fragment_t, int>(frag, v, val)) {
@@ -139,13 +142,12 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
         ctx.result[v_label][v] = val;
         ctx.updated[v_label][v] = true;
       }
-    }   
+    }
 
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       ctx.updated[v_label].Swap(ctx.updated_next[v_label]);
       ctx.updated[v_label].SetValue(false);
     }
-    
 
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto inner_vertices_iter = frag.InnerVertices(v_label);
@@ -179,7 +181,6 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
     }
   }
 };
-    
 
 }  // namespace gs
 

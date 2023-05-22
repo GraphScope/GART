@@ -32,23 +32,29 @@ void grin_destroy_partition_list(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION_LIST);
 
 GRIN_PARTITION_LIST grin_create_partition_list(GRIN_PARTITIONED_GRAPH);
 
-bool grin_insert_partition_to_list(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION_LIST, GRIN_PARTITION);
+bool grin_insert_partition_to_list(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION_LIST,
+                                   GRIN_PARTITION);
 
-size_t grin_get_partition_list_size(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION_LIST);
+size_t grin_get_partition_list_size(GRIN_PARTITIONED_GRAPH,
+                                    GRIN_PARTITION_LIST);
 
-GRIN_PARTITION grin_get_partition_from_list(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION_LIST, size_t);
+GRIN_PARTITION grin_get_partition_from_list(GRIN_PARTITIONED_GRAPH,
+                                            GRIN_PARTITION_LIST, size_t);
 
-bool grin_equal_partition(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION, GRIN_PARTITION);
+bool grin_equal_partition(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION,
+                          GRIN_PARTITION);
 
 void grin_destroy_partition(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION);
 
 void* grin_get_partition_info(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION);
 
-GRIN_GRAPH grin_get_local_graph_from_partition(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION);
+GRIN_GRAPH grin_get_local_graph_from_partition(GRIN_PARTITIONED_GRAPH,
+                                               GRIN_PARTITION);
 #endif
 
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_PARTITION
-GRIN_PARTITION grin_get_partition_from_id(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION_ID);
+GRIN_PARTITION grin_get_partition_from_id(GRIN_PARTITIONED_GRAPH,
+                                          GRIN_PARTITION_ID);
 
 GRIN_PARTITION_ID grin_get_partition_id(GRIN_PARTITIONED_GRAPH, GRIN_PARTITION);
 #endif
