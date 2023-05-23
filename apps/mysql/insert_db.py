@@ -56,7 +56,7 @@ cursor = db.cursor()
 print("01. Inserting organisation table...")
 file_name = base_dir + "/organisation_0_0.csv"
 with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()   # skip the header
+    header = f.readline()  # skip the header
     line = f.readline()
     num_lines = 0
     while line:
@@ -75,7 +75,7 @@ print(f"01. Insert {num_lines} rows into organisation table")
 print("02. Inserting place table...")
 file_name = base_dir + "/place_0_0.csv"
 with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()   # skip the header
+    header = f.readline()  # skip the header
     line = f.readline()
     num_lines = 0
     while line:
@@ -94,15 +94,13 @@ print(f"02. Insert {num_lines} rows into place table")
 print("03. Inserting tag table...")
 file_name = base_dir + "/tag_0_0.csv"
 with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()   # skip the header
+    header = f.readline()  # skip the header
     line = f.readline()
     num_lines = 0
     while line:
         tag_id, tag_name, tag_url = line.strip().split("|")
         tag_url = tag_url.replace("'", "")
-        cursor.execute(
-            f"insert into tag values('{tag_id}', '{tag_name}', '{tag_url}')"
-        )
+        cursor.execute(f"insert into tag values('{tag_id}', '{tag_name}', '{tag_url}')")
         line = f.readline()
         num_lines += 1
 db.commit()
@@ -111,15 +109,14 @@ print(f"03. Insert {num_lines} rows into tag table")
 print("04. Inserting tagclass table...")
 file_name = base_dir + "/tagclass_0_0.csv"
 with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()   # skip the header
+    header = f.readline()  # skip the header
     line = f.readline()
     num_lines = 0
     while line:
         tagc_id, tagc_name, tagc_url = line.strip().split("|")
         tagc_url = tagc_url.replace("'", "")
         cursor.execute(
-            f"insert into tagclass values('{tagc_id}', "
-            f"'{tagc_name}', '{tagc_url}')"
+            f"insert into tagclass values('{tagc_id}', '{tagc_name}', '{tagc_url}')"
         )
         line = f.readline()
         num_lines += 1
@@ -129,7 +126,7 @@ print(f"04. Insert {num_lines} rows into tagclass table")
 print("05. Inserting person table...")
 file_name = base_dir + "/person_0_0.csv"
 with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()   # skip the header
+    header = f.readline()  # skip the header
     line = f.readline()
     num_lines = 0
     while line:
@@ -157,7 +154,7 @@ print(f"05. Insert {num_lines} rows into person table")
 print("06. Inserting comment table...")
 file_name = base_dir + "/comment_0_0.csv"
 with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()   # skip the header
+    header = f.readline()  # skip the header
     line = f.readline()
     num_lines = 0
     while line:
@@ -183,7 +180,7 @@ print(f"06. Insert {num_lines} rows into comment table")
 print("07. Inserting post table...")
 file_name = base_dir + "/post_0_0.csv"
 with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()   # skip the header
+    header = f.readline()  # skip the header
     line = f.readline()
     num_lines = 0
     while line:
@@ -212,7 +209,7 @@ print(f"07. Insert {num_lines} rows into post table")
 print("08. Inserting forum table...")
 file_name = base_dir + "/forum_0_0.csv"
 with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()   # skip the header
+    header = f.readline()  # skip the header
     line = f.readline()
     num_lines = 0
     while line:
@@ -229,11 +226,12 @@ print(f"08. Insert {num_lines} rows into forum table")
 
 # insert edge tables
 
+
 def insert_simple_edges(prefix, csv_file, table_name):
     print(f"{prefix}. Inserting {table_name} table...")
     file = base_dir + csv_file
     with open(file, "r", encoding="UTF-8") as f:
-        header = f.readline()   # skip the header
+        header = f.readline()  # skip the header
         line = f.readline()
         num_lines = 0
         while line:
@@ -244,23 +242,20 @@ def insert_simple_edges(prefix, csv_file, table_name):
     db.commit()
     print(f"{prefix}. Insert {num_lines} rows into {table_name} table")
 
-insert_simple_edges("09", "/organisation_isLocatedIn_place_0_0.csv",
-                    "org_islocationin")
+
+insert_simple_edges("09", "/organisation_isLocatedIn_place_0_0.csv", "org_islocationin")
 
 insert_simple_edges("10", "/place_isPartOf_place_0_0.csv", "ispartof")
 
-insert_simple_edges("11", "/tagclass_isSubclassOf_tagclass_0_0.csv",
-                    "issubclassof")
+insert_simple_edges("11", "/tagclass_isSubclassOf_tagclass_0_0.csv", "issubclassof")
 
 insert_simple_edges("12", "/tag_hasType_tagclass_0_0.csv", "hastype")
 
-insert_simple_edges("13", "/comment_hasCreator_person_0_0.csv",
-                    "comment_hascreator")
+insert_simple_edges("13", "/comment_hasCreator_person_0_0.csv", "comment_hascreator")
 
 insert_simple_edges("14", "/comment_hasTag_tag_0_0.csv", "comment_hastag")
 
-insert_simple_edges("15", "/comment_isLocatedIn_place_0_0.csv",
-                    "comment_islocationin")
+insert_simple_edges("15", "/comment_isLocatedIn_place_0_0.csv", "comment_islocationin")
 
 insert_simple_edges("16", "/comment_replyOf_comment_0_0.csv", "replyof_comment")
 
@@ -270,30 +265,26 @@ insert_simple_edges("18", "/post_hasCreator_person_0_0.csv", "post_hascreator")
 
 insert_simple_edges("19", "/post_hasTag_tag_0_0.csv", "post_hastag")
 
-insert_simple_edges("20", "/post_isLocatedIn_place_0_0.csv",
-                    "post_islocationin")
+insert_simple_edges("20", "/post_isLocatedIn_place_0_0.csv", "post_islocationin")
 
-insert_simple_edges("21", "/forum_containerOf_post_0_0.csv",
-                    "forum_containerof")
+insert_simple_edges("21", "/forum_containerOf_post_0_0.csv", "forum_containerof")
 
-insert_simple_edges("22", "/forum_hasModerator_person_0_0.csv",
-                    "forum_hasmoderator")
+insert_simple_edges("22", "/forum_hasModerator_person_0_0.csv", "forum_hasmoderator")
 
 insert_simple_edges("23", "/forum_hasTag_tag_0_0.csv", "forum_hastag")
 
-insert_simple_edges("24", "/person_hasInterest_tag_0_0.csv",
-                    "person_hasinterest")
+insert_simple_edges("24", "/person_hasInterest_tag_0_0.csv", "person_hasinterest")
 
-insert_simple_edges("25", "/person_isLocatedIn_place_0_0.csv",
-                    "person_islocationin")
+insert_simple_edges("25", "/person_isLocatedIn_place_0_0.csv", "person_islocationin")
 
 # insert edge tables with additional properties
+
 
 def insert_prop_edges(prefix, csv_file, table_name):
     print(f"{prefix}. Inserting {table_name} table...")
     file = base_dir + csv_file
     with open(file, "r", encoding="UTF-8") as f:
-        header = f.readline()   # skip the header
+        header = f.readline()  # skip the header
         line = f.readline()
         num_lines = 0
         while line:
@@ -305,6 +296,7 @@ def insert_prop_edges(prefix, csv_file, table_name):
             num_lines += 1
     db.commit()
     print(f"{prefix}. Insert {num_lines} rows into {table_name} table")
+
 
 insert_prop_edges("26", "/forum_hasMember_person_0_0.csv", "forum_hasmember")
 

@@ -32,14 +32,17 @@ def get_parser():
     return parser
 
 
-def exetract_schema(cursor, rgmapping_file, output):
+def exetract_schema(cursor, rgmapping_file, database, output):
     with open(rgmapping_file, "r", encoding="UTF-8") as f:
         config = json.load(f)
     tables = config["types"]
     schema = {}
     for table in tables:
         table_name = table["table_name"]
-        sql = "SHOW COLUMNS FROM " + table_name
+        # sql = "SHOW COLUMNS FROM " + table_name
+        sql = f'''SELECT COLUMN_NAME, COLUMN_TYPE
+                FROM information_schema.COLUMNS
+                WHERE TABLE_NAME="{table_name}" and TABLE_SCHEMA="{database}"'''
         cursor.execute(sql)
         results = cursor.fetchall()
         schema[table_name] = results
@@ -73,5 +76,5 @@ if __name__ == "__main__":
         database=args.db,
     )
     db_cursor = db.cursor()
-    exetract_schema(db_cursor, args.rgmapping_file, args.output)
+    exetract_schema(db_cursor, args.rgmapping_file, args.db, args.output)
     print(f"Generate schema file: {args.output}")

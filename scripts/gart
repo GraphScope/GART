@@ -3,25 +3,6 @@
 KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
-unset=false
-if [ -n "$KAFKA_HOME" ]; then
-    echo "KAFKA_HOME is $KAFKA_HOME"
-else
-    echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
-    unset=true
-fi
-
-if [ -n "$MAXWELL_HOME" ]; then
-    echo "MAXWELL_HOME is $MAXWELL_HOME"
-else
-    echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
-    unset=true
-fi
-
-if [ "$unset" = true ]; then
-    exit 1
-fi
-
 ####################### Parse Arguments #######################
 VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,help -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -115,6 +96,25 @@ echo "v6d-sock: $v6d_sock"
 echo "v6d-size: $v6d_size"
 echo "etcd-endpoint: $etcd_endpoint"
 
+unset=false
+if [ -n "$KAFKA_HOME" ]; then
+    echo "KAFKA_HOME is $KAFKA_HOME"
+else
+    echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
+    unset=true
+fi
+
+if [ -n "$MAXWELL_HOME" ]; then
+    echo "MAXWELL_HOME is $MAXWELL_HOME"
+else
+    echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
+    unset=true
+fi
+
+if [ "$unset" = true ]; then
+    exit 1
+fi
+
 KAFKA_BIN=$KAFKA_HOME/bin
 KAFKA_CONFIG=$KAFKA_HOME/config
 
@@ -186,9 +186,9 @@ echo "Start Writer"
 $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock --etcd_endpoint $etcd_endpoint \
     --schema_file_path $rgmapping_file \
     --table_schema_file_path $table_schema_file \
-    --server_num 2 --server_id 0 &
+    --server_num 1 --server_id 0 &
 
-$WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock --etcd_endpoint $etcd_endpoint \
-    --schema_file_path $rgmapping_file \
-    --table_schema_file_path $table_schema_file \
-    --server_num 2 --server_id 1 &
+# $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock --etcd_endpoint $etcd_endpoint \
+#     --schema_file_path $rgmapping_file \
+#     --table_schema_file_path $table_schema_file \
+#     --server_num 2 --server_id 1 &
