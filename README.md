@@ -62,8 +62,8 @@ Take MySQL as an example.
     binlog_format=row
 
     # The databases captured. GART will capture all databases if not specified.
-    binlog-do-db=my_maxwell_01  # change the name to your database
-    binlog-do-db=my_maxwell_02  # change the name to your database
+    binlog-do-db=ldbc  # change the name to your database
+    binlog-do-db=...   # change the name to your database
     ```
 
 - Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md))
@@ -97,29 +97,43 @@ The full usage of `gart` can be shown as:
 ```
 
 ### Mirco Demo
-- Initialize database schema in MySQL (need a user with CREATE and DROP privileges)
-```
-pip3 install pymysql cryptography
+- Download test datasets (use `ldbc_sample`)
+    ```
+    git clone https://github.com/GraphScope/gstest.git
+    ```
 
-cd gart
-./apps/mysql/init_scehma.py --user xxx --password xxx --db ldbc
-```
+- Initialize database schema in MySQL (need a user with necessary privileges)
+    ```
+    pip3 install pymysql cryptography
+
+    cd gart
+    ./apps/mysql/init_scehma.py --user xxx --password xxx --db ldbc
+    ```
+
+    If you have no such user, you can create the user before running `init_scehma.py` like:
+    ```
+    CREATE USER test IDENTIFIED BY '123456';
+    GRANT SELECT, CREATE, DROP, INSERT, DELETE ON ldbc.* TO test;
+    ```
+
 - Lanch GART
-```
-export KAFKA_HOME=xxx
-export MAXWELL_HOME=xxx
+    ```
+    export KAFKA_HOME=xxx
+    export MAXWELL_HOME=xxx
 
-cd build
-./gart --user maxwell --password 123456 --db-name ldbc
-```
-- Start data insertion
-```
-./insert_db.py --user maxwell --password 123456 --db ldbc --data_dir [dir]
-```
-- Start Graph analysis
-```
-[TBD]
-```
+    cd build
+    ./gart --user maxwell --password 123456 --db-name ldbc
+    ```
+
+- Start transactional data insertion
+    ```
+    ./insert_db.py --user maxwell --password 123456 --db ldbc --data_dir [path to gstest/ldbc_sample]
+    ```
+
+- Start graph analysis
+    ```
+    ./apps/run_gart_app
+    ```
 
 ## License
 

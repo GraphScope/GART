@@ -40,6 +40,9 @@ if unset:
 
 print("Args: ", args)
 
+print("\n========================================\n")
+
+
 db = pymysql.connect(
     host=args.host, port=int(args.port), user=args.user, password=args.password
 )
@@ -55,7 +58,6 @@ cursor.execute(f"USE {args.db}")
 # create vertex tables
 cursor.execute("DROP TABLE IF EXISTS organisation")
 sql = """CREATE TABLE organisation (
-         EPOCH VARCHAR(255) NOT NULL,
          org_id VARCHAR(255) NOT NULL,
          org_type VARCHAR(255),
          org_name TEXT,
@@ -66,7 +68,6 @@ print("Created vertex table: organisation")
 
 cursor.execute("DROP TABLE IF EXISTS place")
 sql = """CREATE TABLE place (
-         EPOCH VARCHAR(255) NOT NULL,
          pla_id VARCHAR(255) NOT NULL,
          pla_name TEXT,
          pla_url TEXT,
@@ -77,7 +78,6 @@ print("Created vertex table: place")
 
 cursor.execute("DROP TABLE IF EXISTS tag")
 sql = """CREATE TABLE tag (
-         EPOCH VARCHAR(255) NOT NULL,
          tag_id VARCHAR(255) NOT NULL,
          tag_name TEXT,
          tag_url TEXT)"""
@@ -87,7 +87,6 @@ print("Created vertex table: tag")
 
 cursor.execute("DROP TABLE IF EXISTS tagclass")
 sql = """CREATE TABLE tagclass (
-         EPOCH VARCHAR(255) NOT NULL,
          tagc_id VARCHAR(255) NOT NULL,
          tagc_name TEXT,
          tagc_url TEXT)"""
@@ -97,7 +96,6 @@ print("Created vertex table: tagclass")
 
 cursor.execute("DROP TABLE IF EXISTS person")
 sql = """CREATE TABLE person (
-         EPOCH VARCHAR(255) NOT NULL,
          p_id VARCHAR(255) NOT NULL,
          p_first_name VARCHAR(255),
          p_last_name VARCHAR(255),
@@ -113,7 +111,6 @@ print("Created vertex table: person")
 
 cursor.execute("DROP TABLE IF EXISTS comment")
 sql = """CREATE TABLE comment (
-         EPOCH VARCHAR(255) NOT NULL,
          co_id VARCHAR(255) NOT NULL,
          co_creation_date VARCHAR(255),
          co_location_ip VARCHAR(255),
@@ -127,7 +124,6 @@ print("Created vertex table: comment")
 
 cursor.execute("DROP TABLE IF EXISTS post")
 sql = """CREATE TABLE post (
-         EPOCH VARCHAR(255) NOT NULL,
          po_id VARCHAR(255) NOT NULL,
          po_image_file VARCHAR(255),
          po_creation_date VARCHAR(255),
@@ -143,7 +139,6 @@ print("Created vertex table: post")
 
 cursor.execute("DROP TABLE IF EXISTS forum")
 sql = """CREATE TABLE forum (
-         EPOCH VARCHAR(255) NOT NULL,
          fo_id VARCHAR(255) NOT NULL,
          fo_title TEXT,
          fo_creation_date VARCHAR(255)
@@ -156,8 +151,6 @@ print("Created vertex table: forum")
 
 cursor.execute("DROP TABLE IF EXISTS org_islocationin")
 sql = """CREATE TABLE org_islocationin (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -167,8 +160,6 @@ print("Created edge table: org_islocationin")
 
 cursor.execute("DROP TABLE IF EXISTS ispartof")
 sql = """CREATE TABLE ispartof (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -178,8 +169,6 @@ print("Created edge table: ispartof")
 
 cursor.execute("DROP TABLE IF EXISTS issubclassof")
 sql = """CREATE TABLE issubclassof (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -189,8 +178,6 @@ print("Created edge table: issubclassof")
 
 cursor.execute("DROP TABLE IF EXISTS hastype")
 sql = """CREATE TABLE hastype (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -200,8 +187,6 @@ print("Created edge table: hastype")
 
 cursor.execute("DROP TABLE IF EXISTS comment_hascreator")
 sql = """CREATE TABLE comment_hascreator (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -211,8 +196,6 @@ print("Created edge table: comment_hascreator")
 
 cursor.execute("DROP TABLE IF EXISTS comment_hastag")
 sql = """CREATE TABLE comment_hastag (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -222,8 +205,6 @@ print("Created edge table: comment_hastag")
 
 cursor.execute("DROP TABLE IF EXISTS comment_islocationin")
 sql = """CREATE TABLE comment_islocationin (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -233,8 +214,6 @@ print("Created edge table: comment_islocationin")
 
 cursor.execute("DROP TABLE IF EXISTS replyof_comment")
 sql = """CREATE TABLE replyof_comment (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -244,8 +223,6 @@ print("Created edge table: replyof_comment")
 
 cursor.execute("DROP TABLE IF EXISTS replyof_post")
 sql = """CREATE TABLE replyof_post (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -255,8 +232,6 @@ print("Created edge table: replyof_post")
 
 cursor.execute("DROP TABLE IF EXISTS post_hascreator")
 sql = """CREATE TABLE post_hascreator (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -266,8 +241,6 @@ print("Created edge table: post_hascreator")
 
 cursor.execute("DROP TABLE IF EXISTS post_hastag")
 sql = """CREATE TABLE post_hastag (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -277,8 +250,6 @@ print("Created edge table: post_hastag")
 
 cursor.execute("DROP TABLE IF EXISTS post_islocationin")
 sql = """CREATE TABLE post_islocationin (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -288,8 +259,6 @@ print("Created edge table: post_islocationin")
 
 cursor.execute("DROP TABLE IF EXISTS forum_containerof")
 sql = """CREATE TABLE forum_containerof (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -299,8 +268,6 @@ print("Created edge table: forum_containerof")
 
 cursor.execute("DROP TABLE IF EXISTS forum_hasmoderator")
 sql = """CREATE TABLE forum_hasmoderator (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -310,8 +277,6 @@ print("Created edge table: forum_hasmoderator")
 
 cursor.execute("DROP TABLE IF EXISTS forum_hastag")
 sql = """CREATE TABLE forum_hastag (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -321,8 +286,6 @@ print("Created edge table: forum_hastag")
 
 cursor.execute("DROP TABLE IF EXISTS person_hasinterest")
 sql = """CREATE TABLE person_hasinterest (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -332,8 +295,6 @@ print("Created edge table: person_hasinterest")
 
 cursor.execute("DROP TABLE IF EXISTS person_islocationin")
 sql = """CREATE TABLE person_islocationin (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255)
          )"""
@@ -343,8 +304,6 @@ print("Created edge table: person_islocationin")
 
 cursor.execute("DROP TABLE IF EXISTS forum_hasmember")
 sql = """CREATE TABLE forum_hasmember (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255),
          fo_hm_join_data VARCHAR(255)
@@ -355,8 +314,6 @@ print("Created edge table: forum_hasmember")
 
 cursor.execute("DROP TABLE IF EXISTS knows")
 sql = """CREATE TABLE knows (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255),
          kn_creation_data VARCHAR(255)
@@ -367,8 +324,6 @@ print("Created edge table: knows")
 
 cursor.execute("DROP TABLE IF EXISTS likes_comment")
 sql = """CREATE TABLE likes_comment (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255),
          likes_co_creation_data VARCHAR(255)
@@ -379,8 +334,6 @@ print("Created edge table: likes_comment")
 
 cursor.execute("DROP TABLE IF EXISTS likes_post")
 sql = """CREATE TABLE likes_post (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255),
          likes_po_creation_data VARCHAR(255)
@@ -391,8 +344,6 @@ print("Created edge table: likes_post")
 
 cursor.execute("DROP TABLE IF EXISTS studyat")
 sql = """CREATE TABLE studyat (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255),
          sa_class_year INT
@@ -403,8 +354,6 @@ print("Created edge table: studyat")
 
 cursor.execute("DROP TABLE IF EXISTS workat")
 sql = """CREATE TABLE workat (
-         EPOCH VARCHAR(255) NOT NULL,
-         edge_label VARCHAR(255) NOT NULL,
          src VARCHAR(255),
          dst VARCHAR(255),
          wa_work_from INT
@@ -413,9 +362,12 @@ cursor.execute(sql)
 
 print("Created edge table: workat")
 
+print("\n========================================\n")
+
 sql = f"SHOW TABLES FROM {args.db}"
 cursor.execute(sql)
 print("Execute SQL: " + sql)
+print("-----------------------------------------")
 results = cursor.fetchall()
 for row in results:
     print(row[0])
