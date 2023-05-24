@@ -34,7 +34,6 @@
 #include "seggraph/core/types.hpp"
 
 namespace seggraph {
-#define GB (1ul << 30)
 class BlockManager {
  public:
   constexpr static uintptr_t NULLPOINTER = 0;  // UINTPTR_MAX;

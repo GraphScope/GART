@@ -96,7 +96,12 @@ The full usage of `gart` can be shown as:
 ./gart --help
 ```
 
-### Mirco Demo
+You can stop GART by:
+```
+./stop-gart
+```
+
+### Mirco Demo: Graph Analysis on Data from MySQL
 - Download test datasets (use `ldbc_sample`)
     ```
     git clone https://github.com/GraphScope/gstest.git
@@ -118,11 +123,11 @@ The full usage of `gart` can be shown as:
 
 - Lanch GART
     ```
-    export KAFKA_HOME=xxx
-    export MAXWELL_HOME=xxx
+    export KAFKA_HOME=[path to the home of kafka]
+    export MAXWELL_HOME=[path to the home of maxwell]
 
     cd build
-    ./gart --user maxwell --password 123456 --db-name ldbc
+    ./gart --user maxwell --password 123456 --db-name ldbc --v6d-sock ldbc.sock --etcd_endpoint 127.0.0.1:23760
     ```
 
 - Start transactional data insertion
@@ -132,7 +137,7 @@ The full usage of `gart` can be shown as:
 
 - Start graph analysis
     ```
-    ./apps/run_gart_app
+    ./apps/run_gart_app --etcd_endpoint 127.0.0.1:23760
     ```
 
 ## License
