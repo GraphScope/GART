@@ -43,8 +43,8 @@ class EpochGraphReader;
 class SegGraph {
  public:
   SegGraph(gart::graph::RGMapping* rg_map,
-           size_t _max_block_size = 10 * (1ul << 30),
-           vertex_t _max_vertex_id = 10 * (1ul << 20))
+           size_t _max_block_size = 2 * (1ul << 30),
+           vertex_t _max_vertex_id = 1 * (1ul << 20))
       : epoch_id(0),
         transaction_id(0),
         vertex_id(0),

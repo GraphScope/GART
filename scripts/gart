@@ -17,7 +17,7 @@ password=
 rgmapping_file="schema/rgmapping-ldbc.json"
 table_schema_file="schema/db_schema.json"
 v6d_sock="/var/run/vineyard.sock"
-v6d_size="500G"
+v6d_size="100G"
 etcd_endpoint="http://127.0.0.1:2379"
 
 eval set -- "$VALID_ARGS"
@@ -73,7 +73,7 @@ while [ : ]; do
         echo "  -r, --rgmapping-file:    rgmapping file path (default: schema/rgmapping-ldbc.json)"
         echo "  -t, --table-schema-file: table schema file path (default: schema/db_schema.json)"
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
-        echo "      --v6d-size:          vineyard size (default: 500G)"
+        echo "      --v6d-size:          vineyard size (default: 100G)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
         echo "  -h, --help:              help"
         exit 0
