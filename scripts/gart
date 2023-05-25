@@ -117,6 +117,7 @@ fi
 
 KAFKA_BIN=$KAFKA_HOME/bin
 KAFKA_CONFIG=$KAFKA_HOME/config
+KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
 
 ####################### Extract Schema #######################
 echo "Start extracting schema"
@@ -126,8 +127,7 @@ echo "Start extracting schema"
     --rgmapping_file $rgmapping_file --output $table_schema_file
 
 ####################### Vineyard #######################
-echo "Start vineyard daemon by $v6d_sock"
-if [ ! -f "$v6d_sock" ]; then
+if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
     echo "$v6d_sock does not exist, start to launch vineyardd"
     vineyardd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc &
 fi
@@ -142,15 +142,37 @@ $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
 
 sleep 3
 
+# check Kafka failure
+for i in {1..5}
+do
+    if grep -q "ERROR" "$KAFKA_LOG"; then
+        echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
+        sleep 10
+
+        $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+        sleep 3
+        $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+        sleep 3
+    else
+        break
+    fi
+    if [ $i -eq 5 ]; then
+        echo "Kafka: Reached max attempts, ERROR found"
+        exit 1
+    fi
+done
+
 echo "Clean topics"
-$KAFKA_BIN/kafka-topics.sh --delete --topic binlog --bootstrap-server 127.0.0.1:9092
-$KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092
+$KAFKA_BIN/kafka-topics.sh --delete --topic binlog --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+$KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+
+#TODO: hard code: replication-factor
 
 echo "Create topic: binlog"
-$KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1
+$KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
 
 echo "Create topics: unified_log"
-$KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1
+$KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
 
 sleep 2
 
@@ -161,7 +183,7 @@ $KAFKA_BIN/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
 MAXWELL_BIN=$MAXWELL_HOME/bin
 
 echo "Start Maxwell"
-$MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog &
+$MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog  > /dev/null 2>&1 &
 
 sleep 3
 
