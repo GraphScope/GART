@@ -612,7 +612,6 @@ class GartFragment {
   inline gart::EdgeIterator GetIncomingAdjList(const vertex_t& v,
                                                label_id_t e_label) const {
     auto segment = locate_segment_(v, e_label, seggraph::EIN);
-
     auto prop_num = edge_prop_nums_[e_label];
     int* prop_offsets = nullptr;
     int prop_bytes = 0;
@@ -736,13 +735,15 @@ class GartFragment {
       header_offset = outer_edge_label_ptrs_[label_id][seg_id];
       edge_blob_ptr = outer_edge_blob_ptrs_[label_id];
     }
-
     auto edge_label_block =
         (EdgeLabelBlockHeader*) (edge_blob_ptr + header_offset);
     for (size_t i = 0; i < edge_label_block->get_num_entries(); i++) {
       auto label_entry = edge_label_block->get_entries()[i];
 
       if (label_entry.get_label() == e_label) {
+        if (label_entry.get_pointer(dir) == 0) {
+          return nullptr;
+        }
         return (VegitoSegmentHeader*) (edge_blob_ptr +
                                        label_entry.get_pointer(dir));
       }
@@ -777,13 +778,12 @@ class GartFragment {
     auto edge_block_offset = segment->get_region_ptr(seg_idx);
     VegitoEdgeBlockHeader* edge_block =
         (VegitoEdgeBlockHeader*) (edge_blob_ptr + edge_block_offset);
-    if (!epoch_table || !edge_block) {
+    if (!epoch_table || !edge_block || epoch_table_offset == 0 || edge_block_offset == 0) {
       return gart::EdgeIterator(nullptr, nullptr, nullptr, nullptr, 0, 0,
                                 read_epoch_number_, nullptr);
     }
 
     auto num_entries = edge_block->get_num_entries();
-
     if (num_entries == 0) {  // no edges to read
       return gart::EdgeIterator(nullptr, nullptr, nullptr, nullptr, 0, 0,
                                 read_epoch_number_, nullptr);

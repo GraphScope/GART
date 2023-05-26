@@ -149,9 +149,6 @@ int main(int argc, char** argv) {
           std::make_pair(src_label_id, dst_label_id));
     }
     auto properties = types[idx]["propertyDefList"];
-    if (properties.size() == 0) {
-      continue;
-    }
     std::vector<std::string> required_prop_names;
     for (uint64_t prop_id = 0; prop_id < properties.size(); prop_id++) {
       auto prop_name = properties[prop_id]["column_name"].get<std::string>();
@@ -196,10 +193,7 @@ int main(int argc, char** argv) {
         content = content + "|" +
                   std::to_string(edge_tables.find(table_name)->second);
       }
-      auto iter = required_properties.find(table_name);
-      if (iter == required_properties.end()) {
-        continue;
-      }
+ 
       if (is_edge == false) {
         auto vid_col = vertex_label_columns.find(table_name)->second;
         auto vertex_label_id = vertex_tables.find(table_name)->second;
@@ -244,6 +238,8 @@ int main(int argc, char** argv) {
         }
         content = content + "|" + src_vid + "|" + dst_vid;
       }
+      
+      auto iter = required_properties.find(table_name);
       auto required_prop_names = iter->second;
       for (size_t prop_id = 0; prop_id < required_prop_names.size();
            prop_id++) {
