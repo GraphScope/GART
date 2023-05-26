@@ -49,7 +49,7 @@ my_pid=$$
 if [ "$v6d_sock" != "" ]; then
     echo "Stop vineyard by socket $v6d_sock"
     kill $(pgrep -f "$v6d_sock" | grep -v "$my_pid") > /dev/null 2>&1
-    rm $v6d_sock
+    rm $v6d_sock > /dev/null 2>&1
 fi
 
 KAFKA_BIN=$KAFKA_HOME/bin

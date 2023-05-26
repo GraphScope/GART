@@ -38,7 +38,6 @@ class VertexIterator {
                  int vlabel) {
     vertex_table_addr_ = vertex_table_addr;
     vlabel_ = vlabel;
-    high_to_low_flags_.reserve(addrs.size());
     for (size_t i = 0; i < addrs.size(); i++) {
       addrs_.push_back(std::make_pair(addrs[i].first, addrs[i].second));
       high_to_low_flags_.push_back(high_to_low_flags[i]);

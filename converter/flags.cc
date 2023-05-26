@@ -30,4 +30,4 @@ DEFINE_int32(logs_per_epoch, 10000, "logs_per_epoch.");
 DEFINE_string(rg_mapping_file_path, "schema/rgmapping-ldbc.json",
               "RGMapping file path.");
 
-DEFINE_int32(numbers_of_subgraphs, 2, "Number of subgraphs for GAP workloads.");
+DEFINE_int32(numbers_of_subgraphs, 1, "Number of subgraphs for GAP workloads.");

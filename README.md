@@ -55,6 +55,7 @@ Take MySQL as an example.
 
 - MySQL configuration file `/etc/mysql/my.cnf`:
     ```
+    [mysqld]
     # Prefix of the binlogs
     log-bin=mysql-bin
 
@@ -83,8 +84,8 @@ Take MySQL as an example.
 
 You can launch GART by the `gart` script under the `build` directory, like:
 ```
-export KAFKA_HOME=xxx
-export MAXWELL_HOME=xxx
+export KAFKA_HOME=/path/to/kafka
+export MAXWELL_HOME=/path/to/maxwell
 ./gart --user maxwell --password 123456
 ```
 
@@ -112,10 +113,10 @@ You can stop GART by:
     pip3 install pymysql cryptography
 
     cd gart
-    ./apps/mysql/init_scehma.py --user xxx --password xxx --db ldbc
+    ./apps/mysql/init_scehma.py --user [username] --password [password] --db ldbc
     ```
 
-    If you have no such user, you can create the user before running `init_scehma.py` like:
+    If you have no such user, you can create the user (called `test`) before running `init_scehma.py` like:
     ```
     CREATE USER test IDENTIFIED BY '123456';
     GRANT SELECT, CREATE, DROP, INSERT, DELETE ON ldbc.* TO test;
@@ -123,8 +124,8 @@ You can stop GART by:
 
 - Lanch GART
     ```
-    export KAFKA_HOME=[path to the home of kafka]
-    export MAXWELL_HOME=[path to the home of maxwell]
+    export KAFKA_HOME=/path/to/kafka
+    export MAXWELL_HOME=/path/to/maxwell
 
     cd build
     ./gart --user maxwell --password 123456 --db-name ldbc --v6d-sock ldbc.sock --etcd_endpoint 127.0.0.1:23760
@@ -132,7 +133,7 @@ You can stop GART by:
 
 - Start transactional data insertion
     ```
-    ./insert_db.py --user maxwell --password 123456 --db ldbc --data_dir [path to gstest/ldbc_sample]
+    ./insert_db.py --user maxwell --password 123456 --db ldbc --data_dir /path/to/gstest/ldbc_sample]
     ```
 
 - Start graph analysis

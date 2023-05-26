@@ -193,6 +193,7 @@ include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 if (GLOG_FOUND)
     set(CMAKE_REQUIRED_INCLUDES "${GLOG_INCLUDE_DIRS}")
     set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${GLOG_LIBRARIES}")
+    link_libraries(${GLOG_LIBRARIES})
     check_cxx_source_runs("
     #include <iostream>
     #include <glog/logging.h>
