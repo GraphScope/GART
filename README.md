@@ -1,4 +1,4 @@
-# GART
+# GART: Graph Analysis on Relational Transactional Datasets
 
 GART is an in-memory system extended from HTAP systems for hybrid transactional and graph analytical processing (HTGAP).
 
@@ -20,7 +20,27 @@ GART is an in-memory system extended from HTAP systems for hybrid transactional 
 
 ## What is GART
 
-[TBD]
+Hybrid transactional/analytical processing (HTAP) is a new trend that processes OLTP and online analytical processing (OLAP) in the same system simultaneously.
+Analogously, we term dynamic graph analysis processing workloads on transactional datasets as hybrid transactional/graph-analytical processing (**HTGAP**).
+GART reuses transaction logs to replay graph data online for freshness instead of offline data migration for freshness and performance.
+
+GART captures the data changes in different (relational) data sources (e.g., database systems, streaming systems) and converts them to graph data according to user-defined rules.
+
+In detail, the workflow of GART can be broken into the following steps:
+
+![](docs/images/arch.png)
+
+- **1. Preprocess (Capturer & Parser)**:
+GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use [Maxwell](https://github.com/zendesk/maxwell) as the log capturer.
+
+- **2. Model Convert (RGMapping Converter)**:
+This step is an important step for GART. The conversion between different data models for HTGAP workloads requires more semantic information.
+For example, it needs the mapping between relational tables and vertex/edge types, and the mapping between relational attributes and vertex/edge properties.
+The GART administrator (such as DBA) can define the rules of relation-graph mapping (RGMapping) once by the interfaces provided by GART.
+GART will convert relational data changes into graph data changes in the *unified logs* (UnifiedLog) automatically.
+
+- **3. Graph Store (Dynamic GStore)**:
+GART applies the graph data changes on the graph store. The graph store is dynamic, which means the writes from GART and the reads from the graph analysis processing can be executed on the store concurrently.
 
 ## Features
 
@@ -28,6 +48,10 @@ GART should fulfill two unique goals not encountered by HTAP systems.
 
 ### Transparent Data Model Conversion
 To adapt to rich workloads flexibility, GART proposes transparent data model conversion by graph extraction interfaces, which define rules of relational-graph mapping.
+
+We provide a sample definition file called [rgmapping-ldbc.json](vegito/test/schema/rgmapping-ldbc.json).
+
+[TBD: format fo RGMapping]
 
 ### Efficient Dynamic Graph Storage
 To ensure the performance of graph analytical processing (GAP), GART proposes an efficient dynamic graph storage with good locality that stems from key insights into HTGAP workloads, including:
@@ -56,6 +80,8 @@ mkdir build; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j
 ```
+
+The dependencies can be installed by [scripts/install-deps.sh](scripts/install-deps.sh) in a proper directory.
 
 ## Getting Started
 
@@ -140,6 +166,8 @@ You can stop GART by:
     CREATE USER test IDENTIFIED BY '123456';
     GRANT SELECT, CREATE, DROP, INSERT, DELETE ON ldbc.* TO test;
     ```
+
+    MySQL and its dependencies can be installed by [scripts/install-mysql.sh](scripts/install-mysql.sh).
 
 - Lanch GART
     ```
