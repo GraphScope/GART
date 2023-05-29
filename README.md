@@ -2,6 +2,22 @@
 
 GART is an in-memory system extended from HTAP systems for hybrid transactional and graph analytical processing (HTGAP).
 
+## Table of Contents
+- [What is GART](#what-is-gart)
+- [Features](#features)
+    - [Transparent Data Model Conversion](#transparent-data-model-conversion)
+    - [Efficient Dynamic Graph Storage](#efficient-dynamic-graph-storage)
+- [Deployment](#deployment)
+    - [Requirements](#requirements)
+    - [Building from source](#building-from-source)
+- [Getting Started](#getting-started)
+    - [Configure Data Source](#building-from-source)
+    - [Run GART](#run-gart)
+    - [Mirco Demo: Graph Analysis on Data from MySQL](#mirco-demo-graph-analysis-on-data-from-mysql)
+- [License](#license)
+- [Publications](#publications)
+
+
 ## What is GART
 
 [TBD]
@@ -103,6 +119,9 @@ You can stop GART by:
 ```
 
 ### Mirco Demo: Graph Analysis on Data from MySQL
+- Topology of the demo
+![demo-topo](docs/images/demo-topo.png)
+
 - Download test datasets (use `ldbc_sample`)
     ```
     git clone https://github.com/GraphScope/gstest.git
@@ -133,7 +152,7 @@ You can stop GART by:
 
 - Start transactional data insertion
     ```
-    ./insert_db.py --user maxwell --password 123456 --db ldbc --data_dir /path/to/gstest/ldbc_sample]
+    ./insert_db.py --user maxwell --password 123456 --db ldbc --data_dir /path/to/gstest/ldbc_sample
     ```
 
 - Start graph analysis
