@@ -373,7 +373,7 @@ void GraphStore::get_blob_json(uint64_t write_epoch) const {
 
   std::string blob_schema_str = blob_schema.dump();
   std::string blob_json_key =
-      FLAGS_meta_prefix + "gart_blob_m" + std::to_string(mid_) + "_p" +
+      FLAGS_meta_prefix + "gart_blob_m" + std::to_string(0) + "_p" +
       std::to_string(local_pid_) + "_e" + std::to_string(write_epoch);
 
   auto response_task = etcd_client_->put(blob_json_key, blob_schema_str).get();

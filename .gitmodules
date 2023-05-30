@@ -1,0 +1,3 @@
+[submodule "interfaces/grin/include"]
+	path = interfaces/grin/include
+	url = git@github.com:GraphScope/GRIN.git
