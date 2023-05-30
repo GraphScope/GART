@@ -110,13 +110,16 @@ class GartFragment {
         vertex_label2name_.emplace(v_label_id, name);
         auto vertex_prop_info = edge_info[idx]["propertyDefList"];
         auto vertex_prop_num = vertex_prop_info.size();
-        for (auto prop_id = 0; prop_id < vertex_prop_num; prop_id++) {
+        for (size_t prop_id = 0; prop_id < vertex_prop_num; prop_id++) {
           auto prop_name = vertex_prop_info[prop_id]["name"].get<std::string>();
           vertex_prop2name_.emplace(std::make_pair(v_label_id, prop_id),
                                     prop_name);
-          vertex_name2prop_.emplace(std::make_pair(v_label_id, prop_name), prop_id);
-          auto dtype = vertex_prop_info[prop_id]["data_type"].get<std::string>();
-          vertex_prop2dtype_.emplace(std::make_pair(v_label_id, prop_id), dtype);
+          vertex_name2prop_.emplace(std::make_pair(v_label_id, prop_name),
+                                    prop_id);
+          auto dtype =
+              vertex_prop_info[prop_id]["data_type"].get<std::string>();
+          vertex_prop2dtype_.emplace(std::make_pair(v_label_id, prop_id),
+                                     dtype);
         }
         continue;
       }
@@ -131,10 +134,15 @@ class GartFragment {
       for (uint64_t prop_idx = 0; prop_idx < edge_prop_info.size();
            prop_idx++) {
         auto prop_name = edge_prop_info[prop_idx]["name"].get<std::string>();
-        edge_prop2name_.emplace(std::make_pair(e_label_id - vertex_label_num_, prop_idx), prop_name);
-        edge_name2prop_.emplace(std::make_pair(e_label_id - vertex_label_num_, prop_name), prop_idx);
+        edge_prop2name_.emplace(
+            std::make_pair(e_label_id - vertex_label_num_, prop_idx),
+            prop_name);
+        edge_name2prop_.emplace(
+            std::make_pair(e_label_id - vertex_label_num_, prop_name),
+            prop_idx);
         auto dtype = edge_prop_info[prop_idx]["data_type"].get<std::string>();
-        edge_prop2dtype_.emplace(std::make_pair(e_label_id - vertex_label_num_, prop_idx), dtype);
+        edge_prop2dtype_.emplace(
+            std::make_pair(e_label_id - vertex_label_num_, prop_idx), dtype);
         int accum_offset = 0;
         if (edge_prop_offset.size() != 0) {
           accum_offset = edge_prop_offset[edge_prop_offset.size() - 1];
@@ -449,7 +457,7 @@ class GartFragment {
     }
   }
 
-  fid_t GetFragIdFromGid(const vid_t &gid) const {
+  fid_t GetFragIdFromGid(const vid_t& gid) const {
     return vid_parser.GetFid(gid);
   }
 
@@ -460,7 +468,7 @@ class GartFragment {
     size_t total_num = 0;
     for (size_t idx = 0; idx < vertex_label_num_; ++idx) {
       total_num += ivnums_[idx];
-    } 
+    }
     return total_num;
   }
 
@@ -507,7 +515,7 @@ class GartFragment {
     return vertex_label2name_.find(label_id)->second;
   }
 
-  label_id_t GetVertexLabelId(const std::string &label_name) const {
+  label_id_t GetVertexLabelId(const std::string& label_name) const {
     auto iter = vertex_name2label_.find(label_name);
     if (iter == vertex_name2label_.end()) {
       return -1;
@@ -519,7 +527,7 @@ class GartFragment {
     return edge_label2name_.find(label_id)->second;
   }
 
-  label_id_t GetEdgeLabelId(const std::string &label_name) const {
+  label_id_t GetEdgeLabelId(const std::string& label_name) const {
     auto iter = edge_name2label_.find(label_name);
     if (iter == edge_name2label_.end()) {
       return -1;
@@ -532,7 +540,7 @@ class GartFragment {
   }
 
   prop_id_t GetVertexPropId(label_id_t label_id,
-                            const std::string &prop_name) const {
+                            const std::string& prop_name) const {
     auto iter = vertex_name2prop_.find(std::make_pair(label_id, prop_name));
     if (iter == vertex_name2prop_.end()) {
       return -1;
@@ -545,7 +553,7 @@ class GartFragment {
   }
 
   prop_id_t GetEdgePropId(label_id_t label_id,
-                          const std::string &prop_name) const {
+                          const std::string& prop_name) const {
     auto iter = edge_name2prop_.find(std::make_pair(label_id, prop_name));
     if (iter == edge_name2prop_.end()) {
       return -1;
@@ -997,8 +1005,7 @@ class GartFragment {
       auto inner_vertices_iter = InnerVertices(v_label_id);
       while (inner_vertices_iter.valid()) {
         auto v = inner_vertices_iter.vertex();
-        for (auto e_label_id = 0; e_label_id < edge_label_num_;
-             e_label_id++) {
+        for (auto e_label_id = 0; e_label_id < edge_label_num_; e_label_id++) {
           auto edge_iter = GetOutgoingAdjList(v, e_label_id);
           while (edge_iter.valid()) {
             tenums_[e_label_id]++;

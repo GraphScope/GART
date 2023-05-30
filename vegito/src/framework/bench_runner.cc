@@ -296,7 +296,8 @@ void Runner::apply_log_to_store_(std::string log, int p_id) {
           graph_stores_[p_id]->insert_blob_schema(latest_epoch_);
           graph_stores_[p_id]->get_blob_json(
               latest_epoch_);  // put schema to etcd
-          std::cout << "update epoch " << latest_epoch_ << std::endl;
+          std::cout << "update epoch " << latest_epoch_ << " frag = " << p_id
+                    << std::endl;
           latest_epoch_ = cur_epoch;
         }
       }
