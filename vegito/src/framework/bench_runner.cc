@@ -124,6 +124,8 @@ void init_graph_schema(std::string graph_schema_path,
           // TODO(wanglei): support more data types in MySQL
           if (prop_dtype_str == "int") {
             prop_dtype = "INT";
+          } else if (prop_dtype_str == "int64") {
+            prop_dtype = "LONG";
           } else if (prop_dtype_str == "float") {
             prop_dtype = "FLOAT";
           } else if (prop_dtype_str == "varchar(255)") {

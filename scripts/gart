@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,server-num:,server-id:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,server-num:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -17,10 +17,9 @@ password=
 rgmapping_file="schema/rgmapping-ldbc.json"
 table_schema_file="schema/db_schema.json"
 v6d_sock="/var/run/vineyard.sock"
-v6d_size="110G"
+v6d_size="250G"
 etcd_endpoint="http://127.0.0.1:2379"
 server_num=1
-server_id=0
 
 eval set -- "$VALID_ARGS"
 while [ : ]; do
@@ -69,10 +68,6 @@ while [ : ]; do
         server_num=$2
         shift 2
         ;;
-         --server-id)
-        server_id=$2
-        shift 2
-        ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
         echo "  -d, --db-host:           database host (default: 127.0.0.1)"
@@ -85,8 +80,7 @@ while [ : ]; do
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
         echo "      --v6d-size:          vineyard size (default: 110G)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
-        echo "      --server-num:        number of servers (default: 1)"
-        echo "      --server-id:         server id (default: 0)"
+        echo "      --server-num:        number of servers (i.e., number of sub graphs) (default: 1)"
         echo "  -h, --help:              help"
         exit 0
         ;;
@@ -108,7 +102,6 @@ echo "v6d-sock: $v6d_sock"
 echo "v6d-size: $v6d_size"
 echo "etcd-endpoint: $etcd_endpoint"
 echo "server-num: $server_num"
-echo "server-id: $server_id"
 
 unset=false
 if [ -n "$KAFKA_HOME" ]; then
@@ -172,6 +165,7 @@ do
     fi
     if [ $i -eq 5 ]; then
         echo "Kafka: Reached max attempts, ERROR found"
+        ./stop-gart --kill-v6d-sock $v6d_sock
         exit 1
     fi
 done
@@ -204,15 +198,9 @@ sleep 3
 ####################### Converter #######################
 CONVENTER_HOME=./converter
 
-num_of_subgraphs=1
-if [ "$server_num" -eq "2" ]; then
-    num_of_subgraphs=2
-fi
-
-
 echo "Start Converter"
 $CONVENTER_HOME/binlog_convert --rg_mapping_file_path $rgmapping_file \
-    --numbers_of_subgraphs $num_of_subgraphs &
+    --numbers_of_subgraphs $server_num &
 
 sleep 2
 
@@ -225,39 +213,12 @@ WRITER_HOME=./vegito
 
 echo "Start Writer"
 
-#TODO: Fix hard code, simulate in a single machine
-if [ "$server_num" -eq "1" ]; then
+#TODO: Fix hard code, simulate in a single machine. Use a host file to allocate
+
+for ((i=0; i<$server_num; i++)); do
     $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
-        --etcd_endpoint $etcd_endpoint \
-        --schema_file_path $rgmapping_file \
-        --table_schema_file_path $table_schema_file \
-        --server_num 1 --server_id 0 &
-elif [ "$server_num" -eq "2" ]; then
-    if [ "$server_id" -eq "0" ]; then
-        $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
-            --etcd_endpoint $etcd_endpoint \
-            --schema_file_path $rgmapping_file \
-            --table_schema_file_path $table_schema_file \
-            --server_num 4 --server_id 0 &
-
-        $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
-            --etcd_endpoint $etcd_endpoint \
-            --schema_file_path $rgmapping_file \
-            --table_schema_file_path $table_schema_file \
-            --server_num 4 --server_id 1 &
-    elif [ "$server_id" -eq "1" ]; then
-        $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
-            --etcd_endpoint $etcd_endpoint \
-            --schema_file_path $rgmapping_file \
-            --table_schema_file_path $table_schema_file \
-            --server_num 4 --server_id 2 &
-
-        $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
-            --etcd_endpoint $etcd_endpoint \
-            --schema_file_path $rgmapping_file \
-            --table_schema_file_path $table_schema_file \
-            --server_num 4 --server_id 3 &
-    fi
-else
-    echo "value is not 1 or 2, error!"
-fi
+       --etcd_endpoint $etcd_endpoint \
+       --schema_file_path $rgmapping_file \
+       --table_schema_file_path $table_schema_file \
+       --server_num $server_num --server_id $i &
+done

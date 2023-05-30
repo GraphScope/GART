@@ -70,7 +70,7 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
   buf = reinterpret_cast<char*>(&flex_buf.buf[flex_buf.allocated_sz]);
   uintptr_t cur_ptr = flex_buf.allocated_sz;
   flex_buf.allocated_sz += pg_sz;
-  assert(flex_buf.allocated_sz < flex_buf.total_sz);
+  assert(flex_buf.allocated_sz <= flex_buf.total_sz);
   Page* ret = new (buf) Page(ver, prev);
 
   if (prev != nullptr) {
@@ -100,6 +100,8 @@ inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(uint64_t page_sz,
   buf = reinterpret_cast<char*>(&flex_buf.buf[flex_buf.allocated_sz]);
   uintptr_t cur_ptr = flex_buf.allocated_sz;
   flex_buf.allocated_sz += pg_sz;
+
+  // must have empty space for multi-version pages (getNewPage_), so not <=
   assert(flex_buf.allocated_sz < flex_buf.total_sz);
 
   flex_buf.header->page_ptr[pg_num] = cur_ptr;
@@ -166,6 +168,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       flexCols_[i].old_pages.assign(page_num, nullptr);
       size_t total_sz = FlexColHeader::size(page_num) +
                         page_num * (sizeof(Page) + page_sz * vlen);
+      total_sz *= 1.5;    // TODO: (hardcode) 1.5 is 1x init pages + 0.5x MVCC pages
       printf(
           "Vlabel %d column %d (flex), "
           "page size %lu, vlen %lu, page num %d, size of header %lu, "

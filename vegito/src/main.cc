@@ -14,6 +14,7 @@
  */
 
 #include <csignal>
+#include <execinfo.h>
 
 #include "framework/bench_runner.h"
 #include "framework/config.h"
@@ -23,11 +24,27 @@ namespace {
 // some helper functions
 SpinLock exit_lock;  // race between two signals
 
-void printTraceExit(int sig) {}
+void print_trace(int sig) {
+  printf("print_trace: got signal %d\n", sig);
+
+  void           *array[32];    /* Array to store backtrace symbols */
+  size_t          size;     /* To store the exact no of values stored */
+  char          **strings;    /* To store functions from the backtrace list in ARRAY */
+  size_t          nCnt;
+
+  size = backtrace(array, 32);
+
+  strings = backtrace_symbols(array, size);
+
+  /* prints each string of function names of trace*/
+  for (nCnt = 0; nCnt < size; nCnt++)
+    fprintf(stderr, "%s\n", strings[nCnt]);
+}
 
 void sigsegv_handler(int sig) {
   exit_lock.Lock();
   fprintf(stderr, "Meet a segmentation fault!\n");
+  print_trace(sig);
   exit(-1);
 }
 
