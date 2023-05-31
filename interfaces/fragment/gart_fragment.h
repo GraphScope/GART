@@ -855,6 +855,9 @@ class GartFragment {
       header_offset = outer_edge_label_ptrs_[label_id][seg_id];
       edge_blob_ptr = outer_edge_blob_ptrs_[label_id];
     }
+    if (header_offset == 0) {
+      return nullptr;
+    }
     auto edge_label_block =
         (EdgeLabelBlockHeader*) (edge_blob_ptr + header_offset);
     for (size_t i = 0; i < edge_label_block->get_num_entries(); i++) {

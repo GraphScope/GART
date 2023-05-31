@@ -79,4 +79,4 @@ core.*
 .cache
 
 # GRIN header files
-interfaces/grin/include/
+# interfaces/grin/include/
