@@ -136,6 +136,7 @@ struct GRIN_PARTITIONED_GRAPH_T {
   size_t total_partition_num;
   size_t local_id;
   int read_epoch;
+  std::string meta_prefix;
 };
 
 typedef std::vector<size_t> GRIN_PARTITION_LIST_T;

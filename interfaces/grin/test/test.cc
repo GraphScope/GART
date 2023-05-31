@@ -1080,19 +1080,22 @@ int main(int argc, char** argv) {
   comm_spec.Init(MPI_COMM_WORLD);
   int read_epoch = 4;
   std::string etcd_endpoint = "http://127.0.0.1:23799";
-  char** argv_new = new char*[4];
+  std::string meta_prefix = "gart_meta_";
+  char** argv_new = new char*[5];
   argv_new[0] = new char[etcd_endpoint.length() + 1];
   argv_new[1] = new char[std::to_string(comm_spec.fnum()).length() + 1];
   argv_new[2] = new char[std::to_string(comm_spec.fid()).length() + 1];
   argv_new[3] = new char[std::to_string(read_epoch).length() + 1];
+  argv_new[4] = new char[meta_prefix.length() + 1];
 
   strcpy(argv_new[0], etcd_endpoint.c_str());
   strcpy(argv_new[1], std::to_string(comm_spec.fnum()).c_str());
   strcpy(argv_new[2], std::to_string(comm_spec.fid()).c_str());
   strcpy(argv_new[3], std::to_string(read_epoch).c_str());
+  strcpy(argv_new[4], meta_prefix.c_str());
 
-  test_property(5, argv_new);
-  test_partition(5, argv_new);
-  test_topology(5, argv_new);
+  test_property(6, argv_new);
+  test_partition(6, argv_new);
+  test_topology(6, argv_new);
   return 0;
 }

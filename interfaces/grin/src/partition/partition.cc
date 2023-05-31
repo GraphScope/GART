@@ -19,13 +19,14 @@ limitations under the License.
 #include "vineyard/client/ds/blob.h"
 #include "vineyard/common/util/json.h"
 
+#include "grin/include/partition/partition.h"
 #include "grin/src/predefine.h"
-#include "grin/include/partition/partition.h" 
 
 #ifdef GRIN_ENABLE_GRAPH_PARTITION
 
-GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(int argc, char** argv) {
-  if (argc < 4) {
+GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(int argc,
+                                                               char** argv) {
+  if (argc < 5) {
     return nullptr;
   }
   GRIN_PARTITIONED_GRAPH_T* pg = new GRIN_PARTITIONED_GRAPH_T();
@@ -33,6 +34,7 @@ GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(int argc, char** 
   pg->total_partition_num = std::stoul(argv[1]);
   pg->local_id = std::stoul(argv[2]);
   pg->read_epoch = std::stoi(argv[3]);
+  pg->meta_prefix = argv[4];
   return pg;
 }
 
@@ -53,7 +55,8 @@ GRIN_PARTITION_LIST grin_get_local_partition_list(GRIN_PARTITIONED_GRAPH pg) {
   return pl;
 }
 
-void grin_destroy_partition_list(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION_LIST pl) {
+void grin_destroy_partition_list(GRIN_PARTITIONED_GRAPH pg,
+                                 GRIN_PARTITION_LIST pl) {
   auto _pl = static_cast<GRIN_PARTITION_LIST_T*>(pl);
   delete _pl;
 }
@@ -63,44 +66,51 @@ GRIN_PARTITION_LIST grin_create_partition_list(GRIN_PARTITIONED_GRAPH pg) {
   return pl;
 }
 
-bool grin_insert_partition_to_list(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION_LIST pl, GRIN_PARTITION p) {
+bool grin_insert_partition_to_list(GRIN_PARTITIONED_GRAPH pg,
+                                   GRIN_PARTITION_LIST pl, GRIN_PARTITION p) {
   auto _pl = static_cast<GRIN_PARTITION_LIST_T*>(pl);
   _pl->push_back(p);
   return true;
 }
 
-size_t grin_get_partition_list_size(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION_LIST pl) {
+size_t grin_get_partition_list_size(GRIN_PARTITIONED_GRAPH pg,
+                                    GRIN_PARTITION_LIST pl) {
   auto _pl = static_cast<GRIN_PARTITION_LIST_T*>(pl);
   return _pl->size();
 }
 
-GRIN_PARTITION grin_get_partition_from_list(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION_LIST pl, size_t idx) {
+GRIN_PARTITION grin_get_partition_from_list(GRIN_PARTITIONED_GRAPH pg,
+                                            GRIN_PARTITION_LIST pl,
+                                            size_t idx) {
   auto _pl = static_cast<GRIN_PARTITION_LIST_T*>(pl);
   return (*_pl)[idx];
 }
 
-bool grin_equal_partition(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION p1, GRIN_PARTITION p2) {
+bool grin_equal_partition(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION p1,
+                          GRIN_PARTITION p2) {
   return (p1 == p2);
 }
 
 void grin_destroy_partition(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION p) {}
 
-const void* grin_get_partition_info(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION p) {
+const void* grin_get_partition_info(GRIN_PARTITIONED_GRAPH pg,
+                                    GRIN_PARTITION p) {
   return NULL;
 }
 
-GRIN_GRAPH grin_get_local_graph_by_partition(GRIN_PARTITIONED_GRAPH pg, GRIN_PARTITION p) {
+GRIN_GRAPH grin_get_local_graph_by_partition(GRIN_PARTITIONED_GRAPH pg,
+                                             GRIN_PARTITION p) {
   auto _pg = static_cast<GRIN_PARTITIONED_GRAPH_T*>(pg);
   GRIN_GRAPH_T* fragment = new GRIN_GRAPH_T();
   std::shared_ptr<etcd::Client> etcd_client =
       std::make_shared<etcd::Client>(_pg->etcd_endpoint);
-  //TODO(wanglei): add prefix for key
-  std::string schema_key = "gart_schema_p" + std::to_string(p);
+  std::string schema_key =
+      _pg->meta_prefix + "gart_schema_p" + std::to_string(p);
   etcd::Response response = etcd_client->get(schema_key).get();
   assert(response.is_ok());
   std::string graph_schema_config_str = response.value().as_string();
 
-  schema_key = "gart_blob_m" + std::to_string(0) + "_p" +
+  schema_key = _pg->meta_prefix + "gart_blob_m" + std::to_string(0) + "_p" +
                std::to_string(p) + "_e" + std::to_string(_pg->read_epoch);
   response = etcd_client->get(schema_key).get();
   assert(response.is_ok());
@@ -118,11 +128,13 @@ GRIN_GRAPH grin_get_local_graph_by_partition(GRIN_PARTITIONED_GRAPH pg, GRIN_PAR
 #endif
 
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_PARTITION
-GRIN_PARTITION grin_get_partition_by_id(GRIN_PARTITIONED_GRAPH g, GRIN_PARTITION_ID pid) {
+GRIN_PARTITION grin_get_partition_by_id(GRIN_PARTITIONED_GRAPH g,
+                                        GRIN_PARTITION_ID pid) {
   return pid;
 }
 
-GRIN_PARTITION_ID grin_get_partition_id(GRIN_PARTITIONED_GRAPH g, GRIN_PARTITION p) {
+GRIN_PARTITION_ID grin_get_partition_id(GRIN_PARTITIONED_GRAPH g,
+                                        GRIN_PARTITION p) {
   return p;
 }
 

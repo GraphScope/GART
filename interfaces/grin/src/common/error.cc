@@ -21,6 +21,4 @@ limitations under the License.
 
 __thread GRIN_ERROR_CODE grin_error_code = GRIN_ERROR_CODE::NO_ERROR;
 
-GRIN_ERROR_CODE grin_get_last_error_code() {
-    return grin_error_code;
-}
+GRIN_ERROR_CODE grin_get_last_error_code() { return grin_error_code; }

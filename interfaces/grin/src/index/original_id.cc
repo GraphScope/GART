@@ -15,22 +15,24 @@ limitations under the License.
 #include "grin/include/index/original_id.h"
 
 GRIN_DATATYPE grin_get_vertex_original_id_datatype(GRIN_GRAPH g) {
-    return GRIN_DATATYPE_ENUM<GRIN_OID_T>::value;
+  return GRIN_DATATYPE_ENUM<GRIN_OID_T>::value;
 }
 
 #ifdef GRIN_ENABLE_VERTEX_ORIGINAL_ID_OF_INT64
-long long int grin_get_vertex_original_id_of_int64(GRIN_GRAPH g, GRIN_VERTEX v) {
-    auto _g = static_cast<GRIN_GRAPH_T*>(g);
-    return _g->GetId(_GRIN_VERTEX_T(v));
+long long int grin_get_vertex_original_id_of_int64(GRIN_GRAPH g,
+                                                   GRIN_VERTEX v) {
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  return _g->GetId(_GRIN_VERTEX_T(v));
 }
 
-GRIN_VERTEX grin_get_vertex_by_original_id_of_int64(GRIN_GRAPH g, long long int oid) {
-    auto _g = static_cast<GRIN_GRAPH_T*>(g);
-    _GRIN_VERTEX_T v;
-    if (_g->Gid2Vertex(oid, v)) {
-        return v.GetValue();
-    }
-    return GRIN_NULL_VERTEX;
+GRIN_VERTEX grin_get_vertex_by_original_id_of_int64(GRIN_GRAPH g,
+                                                    long long int oid) {
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  _GRIN_VERTEX_T v;
+  if (_g->Gid2Vertex(oid, v)) {
+    return v.GetValue();
+  }
+  return GRIN_NULL_VERTEX;
 }
 #endif
 

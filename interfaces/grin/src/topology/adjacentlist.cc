@@ -13,12 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "grin/src/predefine.h"
 #include "grin/include/topology/adjacentlist.h"
+#include "grin/src/predefine.h"
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST
-GRIN_ADJACENT_LIST grin_get_adjacent_list(GRIN_GRAPH g, GRIN_DIRECTION dir, GRIN_VERTEX v) {
-  if (dir == GRIN_DIRECTION::BOTH) return GRIN_NULL_LIST;
+GRIN_ADJACENT_LIST grin_get_adjacent_list(GRIN_GRAPH g, GRIN_DIRECTION dir,
+                                          GRIN_VERTEX v) {
+  if (dir == GRIN_DIRECTION::BOTH)
+    return GRIN_NULL_LIST;
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto adj_list = new GRIN_ADJACENT_LIST_T();
   adj_list->v = v;
@@ -36,9 +38,11 @@ void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
 #endif
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
-GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
+GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
+    GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
   auto _adj_list = static_cast<GRIN_ADJACENT_LIST_T*>(adj_list);
-  if (_adj_list->dir == GRIN_DIRECTION::BOTH) return GRIN_NULL_LIST_ITERATOR;
+  if (_adj_list->dir == GRIN_DIRECTION::BOTH)
+    return GRIN_NULL_LIST_ITERATOR;
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _v = _adj_list->v;
   auto edge_iter = new GRIN_ADJACENT_LIST_ITERATOR_T();
@@ -51,9 +55,11 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(GRIN_GRAPH g, GRIN_ADJA
     edge_iter->current_index = idx;
     gart::EdgeIterator gart_edge_iter;
     if (_adj_list->dir == GRIN_DIRECTION::IN) {
-      gart_edge_iter = _g->GetIncomingAdjList(_GRIN_VERTEX_T(_v), _adj_list->edge_types[idx]);
+      gart_edge_iter = _g->GetIncomingAdjList(_GRIN_VERTEX_T(_v),
+                                              _adj_list->edge_types[idx]);
     } else {
-      gart_edge_iter = _g->GetOutgoingAdjList(_GRIN_VERTEX_T(_v), _adj_list->edge_types[idx]);
+      gart_edge_iter = _g->GetOutgoingAdjList(_GRIN_VERTEX_T(_v),
+                                              _adj_list->edge_types[idx]);
     }
     if (gart_edge_iter.valid()) {
       edge_iter->current_iterator = gart_edge_iter;
@@ -63,12 +69,14 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(GRIN_GRAPH g, GRIN_ADJA
   return edge_iter;
 }
 
-void grin_destroy_adjacent_list_iter(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
+void grin_destroy_adjacent_list_iter(GRIN_GRAPH g,
+                                     GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
   delete _iter;
 }
 
-void grin_get_next_adjacent_list_iter(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
+void grin_get_next_adjacent_list_iter(GRIN_GRAPH g,
+                                      GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
   auto gart_edge_iter = _iter->current_iterator;
@@ -95,9 +103,11 @@ void grin_get_next_adjacent_list_iter(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR 
       }
       etype = _iter->edge_types[_iter->current_index];
       if (_iter->dir == GRIN_DIRECTION::IN) {
-        gart_edge_iter = _g->GetIncomingAdjList(_GRIN_VERTEX_T(_iter->v), etype);
+        gart_edge_iter =
+            _g->GetIncomingAdjList(_GRIN_VERTEX_T(_iter->v), etype);
       } else {
-        gart_edge_iter = _g->GetOutgoingAdjList(_GRIN_VERTEX_T(_iter->v), etype);
+        gart_edge_iter =
+            _g->GetOutgoingAdjList(_GRIN_VERTEX_T(_iter->v), etype);
       }
       _iter->current_iterator = gart_edge_iter;
     }
@@ -115,7 +125,8 @@ bool grin_is_adjacent_list_end(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   return false;
 }
 
-GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
+GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
+    GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
   auto edge_iter = _iter->current_iterator;
   if (edge_iter.valid()) {
@@ -125,7 +136,8 @@ GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(GRIN_GRAPH g, GRIN_ADJACEN
   return GRIN_NULL_VERTEX;
 }
 
-GRIN_EDGE grin_get_edge_from_adjacent_list_iter(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
+GRIN_EDGE grin_get_edge_from_adjacent_list_iter(
+    GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
   auto edge_iter = _iter->current_iterator;
   if (edge_iter.valid()) {

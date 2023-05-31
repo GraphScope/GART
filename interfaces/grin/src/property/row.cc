@@ -34,7 +34,8 @@ long long int grin_get_int64_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
   return *static_cast<const int64_t*>((*_r)[idx]);
 }
 
-unsigned long long int grin_get_uint64_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
+unsigned long long int grin_get_uint64_from_row(GRIN_GRAPH g, GRIN_ROW r,
+                                                size_t idx) {
   auto _r = static_cast<GRIN_ROW_T*>(r);
   return *static_cast<const uint64_t*>((*_r)[idx]);
 }
@@ -64,13 +65,14 @@ int grin_get_date32_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
 }
 
 int grin_get_time32_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    return *static_cast<const int32_t*>((*_r)[idx]);
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  return *static_cast<const int32_t*>((*_r)[idx]);
 }
 
-long long int grin_get_timestamp64_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    return *static_cast<const int64_t*>((*_r)[idx]);
+long long int grin_get_timestamp64_from_row(GRIN_GRAPH g, GRIN_ROW r,
+                                            size_t idx) {
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  return *static_cast<const int64_t*>((*_r)[idx]);
 }
 
 GRIN_ROW grin_create_row(GRIN_GRAPH g) {
@@ -79,107 +81,105 @@ GRIN_ROW grin_create_row(GRIN_GRAPH g) {
 }
 
 bool grin_insert_int32_to_row(GRIN_GRAPH g, GRIN_ROW r, int value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new int32_t(value));
-    return true;
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new int32_t(value));
+  return true;
 }
 
 bool grin_insert_uint32_to_row(GRIN_GRAPH g, GRIN_ROW r, unsigned int value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new uint32_t(value));
-    return true;
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new uint32_t(value));
+  return true;
 }
 
 bool grin_insert_int64_to_row(GRIN_GRAPH g, GRIN_ROW r, long long int value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new int64_t(value));
-    return true;
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new int64_t(value));
+  return true;
 }
 
-bool grin_insert_uint64_to_row(GRIN_GRAPH g, GRIN_ROW r, unsigned long long int value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new uint64_t(value));
-    return true;
+bool grin_insert_uint64_to_row(GRIN_GRAPH g, GRIN_ROW r,
+                               unsigned long long int value) {
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new uint64_t(value));
+  return true;
 }
 
 bool grin_insert_float_to_row(GRIN_GRAPH g, GRIN_ROW r, float value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new float(value));
-    return true;
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new float(value));
+  return true;
 }
 
 bool grin_insert_double_to_row(GRIN_GRAPH g, GRIN_ROW r, double value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new double(value));
-    return true;
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new double(value));
+  return true;
 }
 
 bool grin_insert_string_to_row(GRIN_GRAPH g, GRIN_ROW r, const char* value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new std::string(value));
-    return true;
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new std::string(value));
+  return true;
 }
 
 bool grin_insert_date32_to_row(GRIN_GRAPH g, GRIN_ROW r, int value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new int32_t(value));
-    return true;
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new int32_t(value));
+  return true;
 }
 
 bool grin_insert_time32_to_row(GRIN_GRAPH g, GRIN_ROW r, int value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new int32_t(value));
-    return true;
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new int32_t(value));
+  return true;
 }
 
-bool grin_insert_timestamp64_to_row(GRIN_GRAPH g, GRIN_ROW r, long long int value) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    _r->push_back(new int64_t(value));
-    return true;
+bool grin_insert_timestamp64_to_row(GRIN_GRAPH g, GRIN_ROW r,
+                                    long long int value) {
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  _r->push_back(new int64_t(value));
+  return true;
 }
 #endif
 
 #if defined(GRIN_ENABLE_ROW) && defined(GRIN_TRAIT_CONST_VALUE_PTR)
 /** @brief the value of a property from row by its position in row */
-const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt, size_t idx) {
-    auto _r = static_cast<GRIN_ROW_T*>(r);
-    switch (dt) {
-    case GRIN_DATATYPE::Int32:
-        return static_cast<const int32_t*>((*_r)[idx]);
-    case GRIN_DATATYPE::UInt32:
-        return static_cast<const  uint32_t*>((*_r)[idx]);
-    case GRIN_DATATYPE::Int64:
-        return static_cast<const int64_t*>((*_r)[idx]);
-    case GRIN_DATATYPE::UInt64:
-        return static_cast<const uint64_t*>((*_r)[idx]);
-    case GRIN_DATATYPE::Float:
-        return static_cast<const float*>((*_r)[idx]);
-    case GRIN_DATATYPE::Double:
-        return static_cast<const double*>((*_r)[idx]);
-    case GRIN_DATATYPE::String: {
-        auto s = static_cast<const std::string*>((*_r)[idx]);
-        return s->c_str();
-    }
-    case GRIN_DATATYPE::Date32:
-        return static_cast<const int32_t*>((*_r)[idx]);
-    case GRIN_DATATYPE::Time32:
-        return static_cast<const int32_t*>((*_r)[idx]);
-    case GRIN_DATATYPE::Timestamp64:
-        return static_cast<const int64_t*>((*_r)[idx]);
-    default:
-        return NULL;
-    }
+const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt,
+                                    size_t idx) {
+  auto _r = static_cast<GRIN_ROW_T*>(r);
+  switch (dt) {
+  case GRIN_DATATYPE::Int32:
+    return static_cast<const int32_t*>((*_r)[idx]);
+  case GRIN_DATATYPE::UInt32:
+    return static_cast<const uint32_t*>((*_r)[idx]);
+  case GRIN_DATATYPE::Int64:
+    return static_cast<const int64_t*>((*_r)[idx]);
+  case GRIN_DATATYPE::UInt64:
+    return static_cast<const uint64_t*>((*_r)[idx]);
+  case GRIN_DATATYPE::Float:
+    return static_cast<const float*>((*_r)[idx]);
+  case GRIN_DATATYPE::Double:
+    return static_cast<const double*>((*_r)[idx]);
+  case GRIN_DATATYPE::String: {
+    auto s = static_cast<const std::string*>((*_r)[idx]);
+    return s->c_str();
+  }
+  case GRIN_DATATYPE::Date32:
+    return static_cast<const int32_t*>((*_r)[idx]);
+  case GRIN_DATATYPE::Time32:
+    return static_cast<const int32_t*>((*_r)[idx]);
+  case GRIN_DATATYPE::Timestamp64:
+    return static_cast<const int64_t*>((*_r)[idx]);
+  default:
     return NULL;
+  }
+  return NULL;
 }
 #endif
 ///@}
 
 #if defined(GRIN_WITH_VERTEX_PROPERTY) && defined(GRIN_ENABLE_ROW)
-/**
- * @brief get vertex row directly from the graph, this API only works for row store system
- * @param GRIN_GRAPH the graph
- * @param GRIN_VERTEX the vertex which is the row index
- */
 GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   _GRIN_VERTEX_T _v(v);
@@ -206,13 +206,7 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
 }
 #endif
 
-
 #if defined(GRIN_WITH_EDGE_PROPERTY) && defined(GRIN_ENABLE_ROW)
-/**
- * @brief get edge row directly from the graph, this API only works for row store system
- * @param GRIN_GRAPH the graph
- * @param GRIN_EDGE the edge which is the row index
- */
 GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
@@ -221,12 +215,12 @@ GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
   auto r = new GRIN_ROW_T();
   char* base_dir = _e->edata;
   for (size_t idx = 0; idx < prop_size; idx++) {
-   if (idx == 0) {
-     r->push_back(base_dir);
-   } else {
-    auto offset = _g->edge_prop_offsets[e_type][idx - 1];
-     r->push_back(base_dir + offset);
-   }
+    if (idx == 0) {
+      r->push_back(base_dir);
+    } else {
+      auto offset = _g->edge_prop_offsets[e_type][idx - 1];
+      r->push_back(base_dir + offset);
+    }
   }
   return r;
 }

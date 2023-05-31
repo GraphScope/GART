@@ -15,7 +15,8 @@ limitations under the License.
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 // Vertex type
-bool grin_equal_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1, GRIN_VERTEX_TYPE vt2) {
+bool grin_equal_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1,
+                            GRIN_VERTEX_TYPE vt2) {
   return (vt1 == vt2);
 }
 
@@ -47,7 +48,8 @@ GRIN_VERTEX_TYPE_LIST grin_create_vertex_type_list(GRIN_GRAPH g) {
   return vtl;
 }
 
-bool grin_insert_vertex_type_to_list(GRIN_GRAPH g, GRIN_VERTEX_TYPE_LIST vtl, GRIN_VERTEX_TYPE vt) {
+bool grin_insert_vertex_type_to_list(GRIN_GRAPH g, GRIN_VERTEX_TYPE_LIST vtl,
+                                     GRIN_VERTEX_TYPE vt) {
   auto _vtl = static_cast<GRIN_VERTEX_TYPE_LIST_T*>(vtl);
   _vtl->push_back(vt);
   return true;
@@ -58,7 +60,9 @@ size_t grin_get_vertex_type_list_size(GRIN_GRAPH g, GRIN_VERTEX_TYPE_LIST vtl) {
   return _vtl->size();
 }
 
-GRIN_VERTEX_TYPE grin_get_vertex_type_from_list(GRIN_GRAPH g, GRIN_VERTEX_TYPE_LIST vtl, size_t idx) {
+GRIN_VERTEX_TYPE grin_get_vertex_type_from_list(GRIN_GRAPH g,
+                                                GRIN_VERTEX_TYPE_LIST vtl,
+                                                size_t idx) {
   auto _vtl = static_cast<GRIN_VERTEX_TYPE_LIST_T*>(vtl);
   return (*_vtl)[idx];
 }
@@ -90,15 +94,16 @@ GRIN_VERTEX_TYPE_ID grin_get_vertex_type_id(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
   return vt;
 }
 
-GRIN_VERTEX_TYPE grin_get_vertex_type_by_id(GRIN_GRAPH g, GRIN_VERTEX_TYPE_ID tid) {
+GRIN_VERTEX_TYPE grin_get_vertex_type_by_id(GRIN_GRAPH g,
+                                            GRIN_VERTEX_TYPE_ID tid) {
   return tid;
 }
 #endif
 
-
 #ifdef GRIN_WITH_EDGE_PROPERTY
 // Edge type
-bool grin_equal_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et1, GRIN_EDGE_TYPE et2) {
+bool grin_equal_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et1,
+                          GRIN_EDGE_TYPE et2) {
   return (et1 == et2);
 }
 
@@ -132,7 +137,8 @@ GRIN_EDGE_TYPE_LIST grin_create_edge_type_list(GRIN_GRAPH g) {
   return etl;
 }
 
-bool grin_insert_edge_type_to_list(GRIN_GRAPH g, GRIN_EDGE_TYPE_LIST etl, GRIN_EDGE_TYPE et) {
+bool grin_insert_edge_type_to_list(GRIN_GRAPH g, GRIN_EDGE_TYPE_LIST etl,
+                                   GRIN_EDGE_TYPE et) {
   auto _etl = static_cast<GRIN_EDGE_TYPE_LIST_T*>(etl);
   _etl->push_back(et);
   return true;
@@ -143,7 +149,9 @@ size_t grin_get_edge_type_list_size(GRIN_GRAPH g, GRIN_EDGE_TYPE_LIST etl) {
   return _etl->size();
 }
 
-GRIN_EDGE_TYPE grin_get_edge_type_from_list(GRIN_GRAPH g, GRIN_EDGE_TYPE_LIST etl, size_t idx) {
+GRIN_EDGE_TYPE grin_get_edge_type_from_list(GRIN_GRAPH g,
+                                            GRIN_EDGE_TYPE_LIST etl,
+                                            size_t idx) {
   auto _etl = static_cast<GRIN_EDGE_TYPE_LIST_T*>(etl);
   return (*_etl)[idx];
 }
@@ -180,34 +188,34 @@ GRIN_EDGE_TYPE grin_get_edge_type_by_id(GRIN_GRAPH g, GRIN_EDGE_TYPE_ID etid) {
 }
 #endif
 
-/** @name VertexEdgeTypeRelation
- * GRIN assumes the relation between edge type and pairs of vertex types is many-to-many.
- * Thus GRIN returns the pairs of vertex types related to an edge type as a pair of vertex type
- * lists of the same size, and the src/dst vertex types are aligned with their positions in the lists.
- */
-///@{
 #if defined(GRIN_WITH_VERTEX_PROPERTY) && defined(GRIN_WITH_EDGE_PROPERTY)
 /** @brief  the src vertex type list */
-GRIN_VERTEX_TYPE_LIST grin_get_src_types_by_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
+GRIN_VERTEX_TYPE_LIST grin_get_src_types_by_edge_type(GRIN_GRAPH g,
+                                                      GRIN_EDGE_TYPE et) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
-  vtl->push_back(_g->edge2vertex_map.find((et) + _g->vertex_label_num())->second.first);
+  vtl->push_back(
+      _g->edge2vertex_map.find((et) + _g->vertex_label_num())->second.first);
   return vtl;
 }
 
 /** @brief get the dst vertex type list */
-GRIN_VERTEX_TYPE_LIST grin_get_dst_types_by_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
+GRIN_VERTEX_TYPE_LIST grin_get_dst_types_by_edge_type(GRIN_GRAPH g,
+                                                      GRIN_EDGE_TYPE et) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
-  vtl->push_back(_g->edge2vertex_map.find((et) + _g->vertex_label_num())->second.second);
+  vtl->push_back(
+      _g->edge2vertex_map.find((et) + _g->vertex_label_num())->second.second);
   return vtl;
 }
 
 /** @brief get the edge type list related to a given pair of vertex types */
-GRIN_EDGE_TYPE_LIST grin_get_edge_types_by_vertex_type_pair(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1, GRIN_VERTEX_TYPE vt2) {
+GRIN_EDGE_TYPE_LIST grin_get_edge_types_by_vertex_type_pair(
+    GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1, GRIN_VERTEX_TYPE vt2) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto etl = new GRIN_EDGE_TYPE_LIST_T();
-  auto etype = _g->vertex2edge_map.find(std::make_pair(vt1, vt2))->second - _g->vertex_label_num();
+  auto etype = _g->vertex2edge_map.find(std::make_pair(vt1, vt2))->second -
+               _g->vertex_label_num();
   etl->push_back(etype);
   return etl;
 }

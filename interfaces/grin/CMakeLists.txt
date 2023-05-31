@@ -51,6 +51,13 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../vegito/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc")
+
+add_custom_target(grin_clformat
+        COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
+        COMMENT "Running clang-format."
+        VERBATIM)
+
 file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/partition/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc")
 add_library(gart_grin SHARED ${SOURCES})
 target_link_libraries(gart_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${MPI_CXX_LIBRARIES})

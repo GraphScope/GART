@@ -14,31 +14,23 @@ limitations under the License.
 #include "grin/include/common/error.h"
 #include "grin/src/predefine.h"
 
-void grin_destroy_string_value(GRIN_GRAPH g, const char* value) { }
-
+void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {}
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY_NAME
-/**
- * @brief get the vertex property name
- * @param GRIN_GRAPH the graph
- * @param GRIN_VERTEX_PROPERTY the vertex property
- */
-const char* grin_get_vertex_property_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vtype, GRIN_VERTEX_PROPERTY vp) {
+const char* grin_get_vertex_property_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vtype,
+                                          GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto name = _g->GetVertexPropName(_grin_get_type_from_property(vp), _grin_get_prop_from_property(vp));
+  auto name = _g->GetVertexPropName(_grin_get_type_from_property(vp),
+                                    _grin_get_prop_from_property(vp));
   auto len = name.length() + 1;
   char* out = new char[len];
   snprintf(out, len, "%s", name.c_str());
   return out;
 }
 
-/**
- * @brief get the vertex property with a given name under a specific vertex type
- * @param GRIN_GRAPH the graph
- * @param GRIN_VERTEX_TYPE the specific vertex type
- * @param name the name
- */
-GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt, const char* name) {
+GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_name(GRIN_GRAPH g,
+                                                      GRIN_VERTEX_TYPE vt,
+                                                      const char* name) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   std::string prop_name(name);
   if (vt == GRIN_NULL_VERTEX_TYPE) {
@@ -48,22 +40,18 @@ GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_name(GRIN_GRAPH g, GRIN_VERTEX_
   if (prop_id == -1) {
     return GRIN_NULL_VERTEX_PROPERTY;
   }
-  return _grin_create_property(vt, (unsigned)prop_id);
+  return _grin_create_property(vt, (unsigned) prop_id);
 }
 
-/**
- * @brief get all the vertex properties with a given name
- * @param GRIN_GRAPH the graph
- * @param name the name
- */
-GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH g, const char* name) {
+GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH g,
+                                                             const char* name) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   std::string prop_name(name);
   auto vps = new GRIN_VERTEX_PROPERTY_LIST_T();
   for (auto idx = 0; idx < _g->vertex_label_num(); idx++) {
     int prop_id = _g->GetVertexPropId(idx, prop_name);
     if (prop_id != -1) {
-      vps->push_back(_grin_create_property((unsigned)idx, (unsigned)prop_id));
+      vps->push_back(_grin_create_property((unsigned) idx, (unsigned) prop_id));
     }
   }
   if (vps->size() == 0) {
@@ -75,49 +63,38 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH g, const
 #endif
 
 #ifdef GRIN_WITH_EDGE_PROPERTY_NAME
-/**
- * @brief get the edge property name
- * @param GRIN_GRAPH the graph
- * @param GRIN_EDGE_PROPERTY the edge property
- */
-const char* grin_get_edge_property_name(GRIN_GRAPH g, GRIN_EDGE_TYPE etype, GRIN_EDGE_PROPERTY ep) {
+const char* grin_get_edge_property_name(GRIN_GRAPH g, GRIN_EDGE_TYPE etype,
+                                        GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto name = _g->GetEdgePropName(_grin_get_type_from_property(ep), _grin_get_prop_from_property(ep));
+  auto name = _g->GetEdgePropName(_grin_get_type_from_property(ep),
+                                  _grin_get_prop_from_property(ep));
   auto len = name.length() + 1;
   char* out = new char[len];
   snprintf(out, len, "%s", name.c_str());
   return out;
 }
 
-/**
- * @brief get the edge property with a given name under a specific edge type
- * @param GRIN_GRAPH the graph
- * @param GRIN_EDGE_TYPE the specific edge type
- * @param name the name
- */
-GRIN_EDGE_PROPERTY grin_get_edge_property_by_name(GRIN_GRAPH g, GRIN_EDGE_TYPE et, const char* name) {
+GRIN_EDGE_PROPERTY grin_get_edge_property_by_name(GRIN_GRAPH g,
+                                                  GRIN_EDGE_TYPE et,
+                                                  const char* name) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   std::string prop_name(name);
   auto prop_id = _g->GetEdgePropId(et, prop_name);
   if (prop_id == -1) {
     return GRIN_NULL_EDGE_PROPERTY;
   }
-  return _grin_create_property(et, (unsigned)prop_id);
+  return _grin_create_property(et, (unsigned) prop_id);
 }
 
-/**
- * @brief get all the edge properties with a given name
- * @param GRIN_GRAPH the graph
- * @param name the name
- */
-GRIN_EDGE_PROPERTY_LIST grin_get_edge_properties_by_name(GRIN_GRAPH g, const char* name) {
+GRIN_EDGE_PROPERTY_LIST grin_get_edge_properties_by_name(GRIN_GRAPH g,
+                                                         const char* name) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   std::string prop_name(name);
   auto epl = new GRIN_EDGE_PROPERTY_LIST_T();
   for (auto idx = 0; idx < _g->edge_label_num(); idx++) {
     int prop_id = _g->GetEdgePropId(idx, prop_name);
     if (prop_id != -1) {
-      epl->push_back(_grin_create_property((unsigned)idx, (unsigned)prop_id));
+      epl->push_back(_grin_create_property((unsigned) idx, (unsigned) prop_id));
     }
   }
   if (epl->size() == 0) {
@@ -128,87 +105,105 @@ GRIN_EDGE_PROPERTY_LIST grin_get_edge_properties_by_name(GRIN_GRAPH g, const cha
 }
 #endif
 
-
 #ifdef GRIN_WITH_VERTEX_PROPERTY
-bool grin_equal_vertex_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp1, GRIN_VERTEX_PROPERTY vp2) {
+bool grin_equal_vertex_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp1,
+                                GRIN_VERTEX_PROPERTY vp2) {
   return (vp1 == vp2);
 }
 
-/**
- * @brief destroy vertex property
- * @param GRIN_VERTEX_PROPERTY vertex property
- */
 void grin_destroy_vertex_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp) {}
 
-/**
- * @brief get property data type
- * @param GRIN_VERTEX_PROPERTY vertex property
- */
-GRIN_DATATYPE grin_get_vertex_property_datatype(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp) {
+GRIN_DATATYPE grin_get_vertex_property_datatype(GRIN_GRAPH g,
+                                                GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  std::string dtype_str = _g->GetVertexPropDataType(_grin_get_type_from_property(vp), _grin_get_prop_from_property(vp));
+  std::string dtype_str = _g->GetVertexPropDataType(
+      _grin_get_type_from_property(vp), _grin_get_prop_from_property(vp));
   return StringToDataType(dtype_str);
 }
 
-int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,
+                                            GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<int32_t>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<int32_t>(_GRIN_VERTEX_T(v),
+                                       _grin_get_prop_from_property(vp));
 }
 
-unsigned int grin_get_vertex_property_value_of_uint32(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+unsigned int grin_get_vertex_property_value_of_uint32(GRIN_GRAPH g,
+                                                      GRIN_VERTEX v,
+                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<uint32_t>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<uint32_t>(_GRIN_VERTEX_T(v),
+                                        _grin_get_prop_from_property(vp));
 }
 
-long long int grin_get_vertex_property_value_of_int64(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+long long int grin_get_vertex_property_value_of_int64(GRIN_GRAPH g,
+                                                      GRIN_VERTEX v,
+                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<int64_t>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<int64_t>(_GRIN_VERTEX_T(v),
+                                       _grin_get_prop_from_property(vp));
 }
 
-unsigned long long int grin_get_vertex_property_value_of_uint64(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+unsigned long long int grin_get_vertex_property_value_of_uint64(
+    GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<uint64_t>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<uint64_t>(_GRIN_VERTEX_T(v),
+                                        _grin_get_prop_from_property(vp));
 }
 
-float grin_get_vertex_property_value_of_float(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+float grin_get_vertex_property_value_of_float(GRIN_GRAPH g, GRIN_VERTEX v,
+                                              GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<float>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<float>(_GRIN_VERTEX_T(v),
+                                     _grin_get_prop_from_property(vp));
 }
 
-double grin_get_vertex_property_value_of_double(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+double grin_get_vertex_property_value_of_double(GRIN_GRAPH g, GRIN_VERTEX v,
+                                                GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<double>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<double>(_GRIN_VERTEX_T(v),
+                                      _grin_get_prop_from_property(vp));
 }
 
-const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
+                                                     GRIN_VERTEX v,
+                                                     GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  std::string tmp_str = _g->template GetData<std::string>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  std::string tmp_str = _g->template GetData<std::string>(
+      _GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
   return tmp_str.c_str();
 }
 
-int grin_get_vertex_property_value_of_date32(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+int grin_get_vertex_property_value_of_date32(GRIN_GRAPH g, GRIN_VERTEX v,
+                                             GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<int>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<int>(_GRIN_VERTEX_T(v),
+                                   _grin_get_prop_from_property(vp));
 }
 
-int grin_get_vertex_property_value_of_time32(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+int grin_get_vertex_property_value_of_time32(GRIN_GRAPH g, GRIN_VERTEX v,
+                                             GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<int>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<int>(_GRIN_VERTEX_T(v),
+                                   _grin_get_prop_from_property(vp));
 }
 
-long long int grin_get_vertex_property_value_of_timestamp64(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+long long int grin_get_vertex_property_value_of_timestamp64(
+    GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<uint64_t>(_GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
+  return _g->template GetData<uint64_t>(_GRIN_VERTEX_T(v),
+                                        _grin_get_prop_from_property(vp));
 }
 
-
-GRIN_VERTEX_TYPE grin_get_vertex_type_from_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp) {
+GRIN_VERTEX_TYPE grin_get_vertex_type_from_property(GRIN_GRAPH g,
+                                                    GRIN_VERTEX_PROPERTY vp) {
   return _grin_get_type_from_property(vp);
 }
 #endif
 
 #if defined(GRIN_WITH_VERTEX_PROPERTY) && defined(GRIN_TRAIT_CONST_VALUE_PTR)
-const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
+                                           GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto prop_id = _grin_get_prop_from_property(vp);
   auto v_type = _grin_get_type_from_property(vp);
@@ -232,25 +227,24 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VER
 }
 #endif
 
-
 #ifdef GRIN_WITH_EDGE_PROPERTY
-bool grin_equal_edge_property(GRIN_GRAPH g, GRIN_EDGE_PROPERTY ep1, GRIN_EDGE_PROPERTY ep2) {
+bool grin_equal_edge_property(GRIN_GRAPH g, GRIN_EDGE_PROPERTY ep1,
+                              GRIN_EDGE_PROPERTY ep2) {
   return (ep1 == ep2);
 }
 
 void grin_destroy_edge_property(GRIN_GRAPH g, GRIN_EDGE_PROPERTY ep) {}
 
-/**
- * @brief get property data type
- * @param GRIN_EDGE_PROPERTY edge property
- */
-GRIN_DATATYPE grin_get_edge_property_datatype(GRIN_GRAPH g, GRIN_EDGE_PROPERTY ep) {
+GRIN_DATATYPE grin_get_edge_property_datatype(GRIN_GRAPH g,
+                                              GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  std::string dtype_str = _g->GetEdgePropDataType(_grin_get_type_from_property(ep), _grin_get_prop_from_property(ep));
+  std::string dtype_str = _g->GetEdgePropDataType(
+      _grin_get_type_from_property(ep), _grin_get_prop_from_property(ep));
   return StringToDataType(dtype_str);
 }
 
-int grin_get_edge_property_value_of_int32(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+int grin_get_edge_property_value_of_int32(GRIN_GRAPH g, GRIN_EDGE e,
+                                          GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -264,7 +258,8 @@ int grin_get_edge_property_value_of_int32(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_P
   }
 }
 
-unsigned int grin_get_edge_property_value_of_uint32(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+unsigned int grin_get_edge_property_value_of_uint32(GRIN_GRAPH g, GRIN_EDGE e,
+                                                    GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -278,7 +273,8 @@ unsigned int grin_get_edge_property_value_of_uint32(GRIN_GRAPH g, GRIN_EDGE e, G
   }
 }
 
-long long int grin_get_edge_property_value_of_int64(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+long long int grin_get_edge_property_value_of_int64(GRIN_GRAPH g, GRIN_EDGE e,
+                                                    GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -292,7 +288,8 @@ long long int grin_get_edge_property_value_of_int64(GRIN_GRAPH g, GRIN_EDGE e, G
   }
 }
 
-unsigned long long int grin_get_edge_property_value_of_uint64(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+unsigned long long int grin_get_edge_property_value_of_uint64(
+    GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -305,8 +302,9 @@ unsigned long long int grin_get_edge_property_value_of_uint64(GRIN_GRAPH g, GRIN
     return *reinterpret_cast<uint64_t*>(base_addr + offset);
   }
 }
- 
-float grin_get_edge_property_value_of_float(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+
+float grin_get_edge_property_value_of_float(GRIN_GRAPH g, GRIN_EDGE e,
+                                            GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -320,7 +318,8 @@ float grin_get_edge_property_value_of_float(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE
   }
 }
 
-double grin_get_edge_property_value_of_double(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+double grin_get_edge_property_value_of_double(GRIN_GRAPH g, GRIN_EDGE e,
+                                              GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -334,7 +333,8 @@ double grin_get_edge_property_value_of_double(GRIN_GRAPH g, GRIN_EDGE e, GRIN_ED
   }
 }
 
-const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e,
+                                                   GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -348,7 +348,8 @@ const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e, GR
   }
 }
 
-int grin_get_edge_property_value_of_date32(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+int grin_get_edge_property_value_of_date32(GRIN_GRAPH g, GRIN_EDGE e,
+                                           GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -362,7 +363,8 @@ int grin_get_edge_property_value_of_date32(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_
   }
 }
 
-int grin_get_edge_property_value_of_time32(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+int grin_get_edge_property_value_of_time32(GRIN_GRAPH g, GRIN_EDGE e,
+                                           GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -376,7 +378,8 @@ int grin_get_edge_property_value_of_time32(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_
   }
 }
 
-long long int grin_get_edge_property_value_of_timestamp64(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+long long int grin_get_edge_property_value_of_timestamp64(
+    GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;
@@ -390,14 +393,15 @@ long long int grin_get_edge_property_value_of_timestamp64(GRIN_GRAPH g, GRIN_EDG
   }
 }
 
-
-GRIN_EDGE_TYPE grin_get_edge_type_from_property(GRIN_GRAPH g, GRIN_EDGE_PROPERTY ep) {
+GRIN_EDGE_TYPE grin_get_edge_type_from_property(GRIN_GRAPH g,
+                                                GRIN_EDGE_PROPERTY ep) {
   return _grin_get_type_from_property(ep);
 }
 #endif
 
 #if defined(GRIN_WITH_EDGE_PROPERTY) && defined(GRIN_TRAIT_CONST_VALUE_PTR)
-const void* grin_get_edge_property_value(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+const void* grin_get_edge_property_value(GRIN_GRAPH g, GRIN_EDGE e,
+                                         GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   char* base_addr = _e->edata;

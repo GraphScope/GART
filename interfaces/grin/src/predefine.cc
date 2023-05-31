@@ -20,30 +20,30 @@ limitations under the License.
 
 std::string GetDataTypeName(GRIN_DATATYPE type) {
   switch (type) {
-    case GRIN_DATATYPE::Int32:
-      return "int32";
-    case GRIN_DATATYPE::UInt32:
-      return "uint32";
-    case GRIN_DATATYPE::Int64:
-      return "int64";
-    case GRIN_DATATYPE::UInt64:
-      return "uint64";
-    case GRIN_DATATYPE::Float:
-      return "float";
-    case GRIN_DATATYPE::Double:
-      return "double";
-    case GRIN_DATATYPE::String:
-      return "string";
-    // TODO(wanglei): support date types
-    default:
-      return "undefined";
+  case GRIN_DATATYPE::Int32:
+    return "int32";
+  case GRIN_DATATYPE::UInt32:
+    return "uint32";
+  case GRIN_DATATYPE::Int64:
+    return "int64";
+  case GRIN_DATATYPE::UInt64:
+    return "uint64";
+  case GRIN_DATATYPE::Float:
+    return "float";
+  case GRIN_DATATYPE::Double:
+    return "double";
+  case GRIN_DATATYPE::String:
+    return "string";
+  // TODO(wanglei): support date types
+  default:
+    return "undefined";
   }
 }
 
 GRIN_DATATYPE StringToDataType(std::string dtype_str) {
   if (dtype_str == "INT") {
     return GRIN_DATATYPE::Int32;
-  } else if (dtype_str == "DOUBLE") { 
+  } else if (dtype_str == "DOUBLE") {
     return GRIN_DATATYPE::Double;
   } else if (dtype_str == "FLOAT") {
     return GRIN_DATATYPE::Float;
@@ -65,13 +65,13 @@ GRIN_DATATYPE StringToDataType(std::string dtype_str) {
 }
 
 unsigned _grin_get_type_from_property(unsigned long long int prop) {
-    return (unsigned)(prop >> 32);
+  return (unsigned) (prop >> 32);
 }
 
 unsigned _grin_get_prop_from_property(unsigned long long int prop) {
-    return (unsigned)(prop & 0xffffffff);
+  return (unsigned) (prop & 0xffffffff);
 }
 
 unsigned long long int _grin_create_property(unsigned type, unsigned prop) {
-    return ((unsigned long long int)type << 32) | prop;
+  return ((unsigned long long int) type << 32) | prop;
 }

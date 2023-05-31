@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "grin/src/predefine.h"
 #include "grin/include/topology/vertexlist.h"
+#include "grin/src/predefine.h"
 
 #ifdef GRIN_ENABLE_VERTEX_LIST
 GRIN_VERTEX_LIST grin_get_vertex_list(GRIN_GRAPH g) {
@@ -32,11 +32,12 @@ void grin_destroy_vertex_list(GRIN_GRAPH g, GRIN_VERTEX_LIST vl) {
   auto _vl = static_cast<GRIN_VERTEX_LIST_T*>(vl);
   delete _vl;
 }
-   
+
 #endif
 
 #ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR
-GRIN_VERTEX_LIST_ITERATOR grin_get_vertex_list_begin(GRIN_GRAPH g, GRIN_VERTEX_LIST vl) {
+GRIN_VERTEX_LIST_ITERATOR grin_get_vertex_list_begin(GRIN_GRAPH g,
+                                                     GRIN_VERTEX_LIST vl) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _vl = static_cast<GRIN_VERTEX_LIST_T*>(vl);
   auto iter = new GRIN_VERTEX_LIST_ITERATOR_T();
@@ -45,7 +46,7 @@ GRIN_VERTEX_LIST_ITERATOR grin_get_vertex_list_begin(GRIN_GRAPH g, GRIN_VERTEX_L
     iter->vertex_types.push_back(_vl->vertex_types[idx]);
   }
   gart::VertexIterator vertex_iter;
-  for (size_t idx = 0; idx <  _vl->vertex_types.size(); ++idx) {
+  for (size_t idx = 0; idx < _vl->vertex_types.size(); ++idx) {
     if (_vl->all_master_mirror == 0) {
       vertex_iter = _g->Vertices(_vl->vertex_types[idx]);
     } else if (_vl->all_master_mirror == 1) {
@@ -62,12 +63,14 @@ GRIN_VERTEX_LIST_ITERATOR grin_get_vertex_list_begin(GRIN_GRAPH g, GRIN_VERTEX_L
   return iter;
 }
 
-void grin_destroy_vertex_list_iter(GRIN_GRAPH g, GRIN_VERTEX_LIST_ITERATOR iter) {
+void grin_destroy_vertex_list_iter(GRIN_GRAPH g,
+                                   GRIN_VERTEX_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_VERTEX_LIST_ITERATOR_T*>(iter);
   delete _iter;
 }
 
-void grin_get_next_vertex_list_iter(GRIN_GRAPH g, GRIN_VERTEX_LIST_ITERATOR iter) {
+void grin_get_next_vertex_list_iter(GRIN_GRAPH g,
+                                    GRIN_VERTEX_LIST_ITERATOR iter) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _iter = static_cast<GRIN_VERTEX_LIST_ITERATOR_T*>(iter);
   auto vertex_iter = _iter->current_iterator;
@@ -120,7 +123,8 @@ bool grin_is_vertex_list_end(GRIN_GRAPH g, GRIN_VERTEX_LIST_ITERATOR iter) {
   return false;
 }
 
-GRIN_VERTEX grin_get_vertex_from_iter(GRIN_GRAPH g, GRIN_VERTEX_LIST_ITERATOR iter) {
+GRIN_VERTEX grin_get_vertex_from_iter(GRIN_GRAPH g,
+                                      GRIN_VERTEX_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_VERTEX_LIST_ITERATOR_T*>(iter);
   auto vertex_iter = _iter->current_iterator;
   if (vertex_iter.valid()) {
