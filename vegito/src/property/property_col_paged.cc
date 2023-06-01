@@ -168,7 +168,8 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       flexCols_[i].old_pages.assign(page_num, nullptr);
       size_t total_sz = FlexColHeader::size(page_num) +
                         page_num * (sizeof(Page) + page_sz * vlen);
-      total_sz *= 1.5;    // TODO: (hardcode) 1.5 is 1x init pages + 0.5x MVCC pages
+      // TODO: (hardcode) 1.5 is 1x init pages + 0.5x MVCC pages
+      total_sz *= 1.5;
       printf(
           "Vlabel %d column %d (flex), "
           "page size %lu, vlen %lu, page num %d, size of header %lu, "

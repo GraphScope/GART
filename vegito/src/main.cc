@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <csignal>
 #include <execinfo.h>
+#include <csignal>
 
 #include "framework/bench_runner.h"
 #include "framework/config.h"
@@ -27,10 +27,10 @@ SpinLock exit_lock;  // race between two signals
 void print_trace(int sig) {
   printf("print_trace: got signal %d\n", sig);
 
-  void           *array[32];    /* Array to store backtrace symbols */
-  size_t          size;     /* To store the exact no of values stored */
-  char          **strings;    /* To store functions from the backtrace list in ARRAY */
-  size_t          nCnt;
+  void* array[32]; /* Array to store backtrace symbols */
+  size_t size;     /* To store the exact no of values stored */
+  char** strings;  /* To store functions from the backtrace list in ARRAY */
+  size_t nCnt;
 
   size = backtrace(array, 32);
 

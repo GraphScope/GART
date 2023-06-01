@@ -174,9 +174,11 @@ int main(int argc, char** argv) {
     assert(response.is_ok());
     std::string config_str = response.value().as_string();
     json config = json::parse(config_str);
-    std::cout << "config parse ... " << std::endl;
+    std::cout << "config parse ... "
+              << " frag = " << comm_spec.fid() << std::endl;
     json edge_config = json::parse(edge_config_str);
-    std::cout << "edge config parse ... " << std::endl;
+    std::cout << "edge config parse ... "
+              << " frag = " << comm_spec.fid() << std::endl;
 
     fragment->Init(config, edge_config);
 

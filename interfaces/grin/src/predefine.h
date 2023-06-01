@@ -16,16 +16,15 @@ limitations under the License.
 #ifndef RESEARCH_GART_GRIN_SRC_PREDEFINE_H_
 #define RESEARCH_GART_GRIN_SRC_PREDEFINE_H_
 
-
 #include "etcd/Client.hpp"
 #include "etcd/Response.hpp"
 #include "vineyard/client/client.h"
 #include "vineyard/client/ds/blob.h"
 #include "vineyard/common/util/json.h"
 
-#include "grin/predefine.h"
 #include "fragment/gart_fragment.h"
 #include "fragment/iterator.h"
+#include "grin/predefine.h"
 
 template <typename T>
 struct GRIN_DATATYPE_ENUM {
@@ -85,7 +84,7 @@ typedef GRIN_GRAPH_T::vertex_t _GRIN_VERTEX_T;
 typedef GRIN_GRAPH_T::label_id_t GRIN_EDGE_TYPE_T;
 
 #ifdef GRIN_WITH_VERTEX_ORIGINAL_ID
-typedef GRIN_GRAPH_T::oid_t GRIN_VERTEX_ORIGINAL_ID_T;                   
+typedef GRIN_GRAPH_T::oid_t GRIN_VERTEX_ORIGINAL_ID_T;
 #endif
 
 struct GRIN_EDGE_T {
@@ -106,7 +105,7 @@ struct GRIN_VERTEX_LIST_T {
 #ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR
 struct GRIN_VERTEX_LIST_ITERATOR_T {
   std::vector<GRIN_VERTEX_TYPE> vertex_types;
-  unsigned all_master_mirror;  // 0 all, 1 master, 2 mirror 
+  unsigned all_master_mirror;  // 0 all, 1 master, 2 mirror
   size_t current_index;
   gart::VertexIterator current_iterator;
 };
@@ -122,12 +121,12 @@ struct GRIN_ADJACENT_LIST_T {
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 struct GRIN_ADJACENT_LIST_ITERATOR_T {
-    GRIN_VERTEX v;
-    GRIN_DIRECTION dir;
-    std::vector<GRIN_EDGE_TYPE_T> edge_types;
-    size_t current_index;
-    gart::EdgeIterator current_iterator;
-};  
+  GRIN_VERTEX v;
+  GRIN_DIRECTION dir;
+  std::vector<GRIN_EDGE_TYPE_T> edge_types;
+  size_t current_index;
+  gart::EdgeIterator current_iterator;
+};
 #endif
 
 #ifdef GRIN_ENABLE_GRAPH_PARTITION
