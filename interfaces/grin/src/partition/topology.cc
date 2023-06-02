@@ -13,7 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+extern "C" {
 #include "grin/include/partition/topology.h"
+}
 #include "grin/src/predefine.h"
 
 #ifdef GRIN_TRAIT_SELECT_MASTER_FOR_VERTEX_LIST

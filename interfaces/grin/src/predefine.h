@@ -22,9 +22,13 @@ limitations under the License.
 #include "vineyard/client/ds/blob.h"
 #include "vineyard/common/util/json.h"
 
+
 #include "fragment/gart_fragment.h"
 #include "fragment/iterator.h"
+
+extern "C" {
 #include "grin/predefine.h"
+}
 
 template <typename T>
 struct GRIN_DATATYPE_ENUM {

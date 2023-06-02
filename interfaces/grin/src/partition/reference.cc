@@ -15,7 +15,9 @@ limitations under the License.
 
 #include <sstream>
 
+extern "C" {
 #include "grin/include/partition/reference.h"
+}
 #include "grin/src/predefine.h"
 
 #ifdef GRIN_ENABLE_VERTEX_REF

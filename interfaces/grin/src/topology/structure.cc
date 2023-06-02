@@ -13,7 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+extern "C" {
 #include "grin/include/topology/structure.h"
+}
 #include "grin/src/predefine.h"
 
 GRIN_GRAPH grin_get_graph_from_storage(int, char**);
