@@ -125,19 +125,11 @@ struct GRIN_ADJACENT_LIST_T {
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 struct GRIN_ADJACENT_LIST_ITERATOR_T {
-<<<<<<< HEAD
   GRIN_VERTEX v;
   GRIN_DIRECTION dir;
   std::vector<GRIN_EDGE_TYPE_T> edge_types;
   size_t current_index;
   gart::EdgeIterator current_iterator;
-=======
-    GRIN_VERTEX v;
-    GRIN_DIRECTION dir;
-    std::vector<GRIN_EDGE_TYPE_T> edge_types;
-    size_t current_index;
-    gart::EdgeIterator current_iterator;
->>>>>>> 9f5e8f6... Add external C declare to grin implementation
 };
 #endif
 
