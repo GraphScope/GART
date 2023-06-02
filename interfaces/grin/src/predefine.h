@@ -22,9 +22,13 @@ limitations under the License.
 #include "vineyard/client/ds/blob.h"
 #include "vineyard/common/util/json.h"
 
+
 #include "fragment/gart_fragment.h"
 #include "fragment/iterator.h"
+
+extern "C" {
 #include "grin/predefine.h"
+}
 
 template <typename T>
 struct GRIN_DATATYPE_ENUM {
@@ -121,11 +125,19 @@ struct GRIN_ADJACENT_LIST_T {
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 struct GRIN_ADJACENT_LIST_ITERATOR_T {
+<<<<<<< HEAD
   GRIN_VERTEX v;
   GRIN_DIRECTION dir;
   std::vector<GRIN_EDGE_TYPE_T> edge_types;
   size_t current_index;
   gart::EdgeIterator current_iterator;
+=======
+    GRIN_VERTEX v;
+    GRIN_DIRECTION dir;
+    std::vector<GRIN_EDGE_TYPE_T> edge_types;
+    size_t current_index;
+    gart::EdgeIterator current_iterator;
+>>>>>>> 9f5e8f6... Add external C declare to grin implementation
 };
 #endif
 
