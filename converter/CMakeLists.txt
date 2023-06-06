@@ -15,7 +15,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 # ------------------------------------------------------------------------------
 # find_libraries
 # ------------------------------------------------------------------------------
-find_package(vineyard 0.13.0 REQUIRED)
+find_package(vineyard 0.15.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 
 include("../vegito/cmake/FindRdkafka.cmake")

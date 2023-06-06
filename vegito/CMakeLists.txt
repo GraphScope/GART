@@ -75,7 +75,7 @@ include_directories(${ETCD_CPP_INCLUDE_DIR})
 link_libraries(${ETCD_CPP_LIBRARIES})
 
 # find vineyard
-find_package(vineyard 0.13.0 REQUIRED)
+find_package(vineyard 0.15.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 link_libraries(${VINEYARD_LIBRARIES})
 
@@ -97,7 +97,7 @@ file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc" "src/*.h" "src/*.hpp"
          "src/property/*.h" "src/graph/*.h" "src/graph/graph_ops/*.h" "src/seggraph/core/*.hpp"
          "../interfaces/fragment/*.h"
 )
-    
+
 add_custom_target(vegito_clformat
           COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
           COMMENT "Running clang-format."

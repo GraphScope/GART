@@ -24,7 +24,7 @@ find_package(OpenMP REQUIRED)
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.13.0 REQUIRED)
+find_package(vineyard 0.15.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 link_libraries(${VINEYARD_LIBRARIES})
 

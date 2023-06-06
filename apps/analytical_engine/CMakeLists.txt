@@ -10,7 +10,7 @@ endif ()
 project(analytical_engine LANGUAGES C CXX)
 set(PROJECT_VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
 
-option(NETWORKX "networkx on?" ON)
+option(NETWORKX "networkx on?" OFF)
 option(BUILD_TESTS "Build unit test" OFF)
 option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
 option(LET_IT_CRASH_ON_EXCEPTION "Disable boost leaf's error handling and let it crash when exception occurs to help debugging" OFF)
@@ -254,7 +254,7 @@ else()
 endif()
 
 # find vineyard after arrow to avoid duplicate target names
-find_package(vineyard 0.13.0 REQUIRED)
+find_package(vineyard 0.15.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -285,52 +285,52 @@ target_link_libraries(gs_proto PUBLIC
         ${GRPC_LIBRARIES}
     )
 
-add_library(gs_util SHARED "core/flags.cc" "core/launcher.cc")
-target_link_libraries(gs_util PRIVATE
-        ${LIBGRAPELITE_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
-        ${VINEYARD_LIBRARIES}
-        ${Boost_LIBRARIES}
-    )
+# add_library(gs_util SHARED "core/flags.cc" "core/launcher.cc")
+# target_link_libraries(gs_util PRIVATE
+#         ${LIBGRAPELITE_LIBRARIES}
+#         ${GFLAGS_LIBRARIES}
+#         ${VINEYARD_LIBRARIES}
+#         ${Boost_LIBRARIES}
+#     )
 
-if (ENABLE_JAVA_SDK)
-    target_sources(gs_util PRIVATE "core/java/javasdk.cc")
-    target_compile_definitions(gs_util PUBLIC ENABLE_JAVA_SDK)
-    target_link_libraries(gs_util PRIVATE
-            ${JAVA_JVM_LIBRARY}
-            ${JNI_LIBRARIES}
-        )
-endif()
+# if (ENABLE_JAVA_SDK)
+#     target_sources(gs_util PRIVATE "core/java/javasdk.cc")
+#     target_compile_definitions(gs_util PUBLIC ENABLE_JAVA_SDK)
+#     target_link_libraries(gs_util PRIVATE
+#             ${JAVA_JVM_LIBRARY}
+#             ${JNI_LIBRARIES}
+#         )
+# endif()
 
-add_executable(grape_engine
-        "core/grape_engine.cc"
-        "core/grape_instance.cc"
-        "core/object/dynamic.cc"
-        ${CORE_RPC_SRC_FILES}
-    )
-target_include_directories(grape_engine PRIVATE proto utils)
-target_link_libraries(grape_engine PRIVATE
-        gs_proto
-        gs_util
-        ${LIBGRAPELITE_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
-        ${CMAKE_DL_LIBS}
-        ${Boost_LIBRARIES}
-        ${VINEYARD_LIBRARIES}
-    )
+# add_executable(grape_engine
+#         "core/grape_engine.cc"
+#         "core/grape_instance.cc"
+#         "core/object/dynamic.cc"
+#         ${CORE_RPC_SRC_FILES}
+#     )
+# target_include_directories(grape_engine PRIVATE proto utils)
+# target_link_libraries(grape_engine PRIVATE
+#         gs_proto
+#         gs_util
+#         ${LIBGRAPELITE_LIBRARIES}
+#         ${GFLAGS_LIBRARIES}
+#         ${CMAKE_DL_LIBS}
+#         ${Boost_LIBRARIES}
+#         ${VINEYARD_LIBRARIES}
+#     )
 
-if (ENABLE_JAVA_SDK)
-    target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
-endif()
+# if (ENABLE_JAVA_SDK)
+#     target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
+# endif()
 
-if (LET_IT_CRASH_ON_EXCEPTION)
-    target_compile_definitions(grape_engine PRIVATE LET_IT_CRASH_ON_EXCEPTION)
-endif ()
-target_link_libraries(grape_engine PRIVATE OpenMP::OpenMP_CXX)
+# if (LET_IT_CRASH_ON_EXCEPTION)
+#     target_compile_definitions(grape_engine PRIVATE LET_IT_CRASH_ON_EXCEPTION)
+# endif ()
+# target_link_libraries(grape_engine PRIVATE OpenMP::OpenMP_CXX)
 
-if (${LIBUNWIND_FOUND})
-    target_link_libraries(grape_engine PRIVATE ${LIBUNWIND_LIBRARIES})
-endif ()
+# if (${LIBUNWIND_FOUND})
+#     target_link_libraries(grape_engine PRIVATE ${LIBUNWIND_LIBRARIES})
+# endif ()
 
 # An executable to work around for graphx pregel.
 if (ENABLE_JAVA_SDK)
@@ -571,9 +571,9 @@ macro(install_gsa_dependency_modules cmake_target)
             )
 endmacro()
 
-install_gsa_binary(grape_engine)
-install_gsa_binary(gs_proto)
-install_gsa_binary(gs_util)
+# install_gsa_binary(grape_engine)
+# install_gsa_binary(gs_proto)
+# install_gsa_binary(gs_util)
 
 if (ENABLE_JAVA_SDK)
     install_gsa_binary(graphx_runner)
@@ -597,7 +597,7 @@ install(FILES "${PROJECT_BINARY_DIR}/graphscope-analytical-config.cmake"
         "${PROJECT_BINARY_DIR}/graphscope-analytical-config-version.cmake"
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical
         )
-install(EXPORT graphscope-analytical-targets
-        FILE graphscope-analytical-targets.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical
-        )
+# install(EXPORT graphscope-analytical-targets
+#         FILE graphscope-analytical-targets.cmake
+#         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical
+#         )
