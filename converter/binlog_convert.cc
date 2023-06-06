@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
   auto vertex_label_num = rg_mapping["vertexLabelNum"].get<int>();
 
   gart::IdParser<int64_t> id_parser;
-  id_parser.Init(FLAGS_numbers_of_subgraphs, vertex_label_num);
+  id_parser.Init(FLAGS_subgraph_num, vertex_label_num);
 
   string_oid2gid_maps.resize(vertex_label_num);
   int64_oid2gid_maps.resize(vertex_label_num);
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
   vertex_nums_per_fragment.resize(vertex_label_num);
 
   for (auto idx = 0; idx < vertex_label_num; idx++) {
-    vertex_nums_per_fragment[idx].resize(FLAGS_numbers_of_subgraphs, 0);
+    vertex_nums_per_fragment[idx].resize(FLAGS_subgraph_num, 0);
   }
 
   for (uint64_t idx = 0; idx < types.size(); idx++) {
@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
       if (is_edge == false) {
         auto vid_col = vertex_label_columns.find(table_name)->second;
         auto vertex_label_id = vertex_tables.find(table_name)->second;
-        int64_t fid = vertex_nums[vertex_label_id] % FLAGS_numbers_of_subgraphs;
+        int64_t fid = vertex_nums[vertex_label_id] % FLAGS_subgraph_num;
         int64_t offset = vertex_nums_per_fragment[vertex_label_id][fid];
         vertex_nums[vertex_label_id]++;
         vertex_nums_per_fragment[vertex_label_id][fid]++;

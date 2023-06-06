@@ -27,6 +27,6 @@ DECLARE_int32(logs_per_epoch);
 
 DECLARE_string(rg_mapping_file_path);
 
-DECLARE_int32(numbers_of_subgraphs);
+DECLARE_int32(subgraph_num);
 
 #endif  // CONVERTER_FLAGS_H_

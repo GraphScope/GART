@@ -29,7 +29,7 @@ DECLARE_string(v6d_ipc_socket);
 DECLARE_string(schema_file_path);
 DECLARE_string(table_schema_file_path);
 
-DECLARE_int32(server_num);
-DECLARE_int32(server_id);
+DECLARE_int32(subgraph_num);
+DECLARE_int32(subgraph_id);
 
 #endif  // VEGITO_SRC_SYSTEM_FLAGS_H_

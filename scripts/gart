@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,server-num:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,subgraph-num:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -19,7 +19,7 @@ table_schema_file="schema/db_schema.json"
 v6d_sock="/var/run/vineyard.sock"
 v6d_size="250G"
 etcd_endpoint="http://127.0.0.1:2379"
-server_num=1
+subgraph_num=1
 
 eval set -- "$VALID_ARGS"
 while [ : ]; do
@@ -64,8 +64,8 @@ while [ : ]; do
         etcd_endpoint=$2
         shift 2
         ;;
-         --server-num)
-        server_num=$2
+         --subgraph-num)
+        subgraph_num=$2
         shift 2
         ;;
     -h | --help | ?)
@@ -80,7 +80,7 @@ while [ : ]; do
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
         echo "      --v6d-size:          vineyard size (default: 110G)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
-        echo "      --server-num:        number of servers (i.e., number of sub graphs) (default: 1)"
+        echo "      --subgraph-num:      number of sub graphs (default: 1)"
         echo "  -h, --help:              help"
         exit 0
         ;;
@@ -101,7 +101,7 @@ echo "table-schema-file: $table_schema_file"
 echo "v6d-sock: $v6d_sock"
 echo "v6d-size: $v6d_size"
 echo "etcd-endpoint: $etcd_endpoint"
-echo "server-num: $server_num"
+echo "subgraph-num: $subgraph_num"
 
 unset=false
 if [ -n "$KAFKA_HOME" ]; then
@@ -200,7 +200,7 @@ CONVENTER_HOME=./converter
 
 echo "Start Converter"
 $CONVENTER_HOME/binlog_convert --rg_mapping_file_path $rgmapping_file \
-    --numbers_of_subgraphs $server_num &
+    --subgraph_num $subgraph_num &
 
 sleep 2
 
@@ -215,10 +215,10 @@ echo "Start Writer"
 
 #TODO: Fix hard code, simulate in a single machine. Use a host file to allocate
 
-for ((i=0; i<$server_num; i++)); do
+for ((i=0; i<$subgraph_num; i++)); do
     $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
        --etcd_endpoint $etcd_endpoint \
        --schema_file_path $rgmapping_file \
        --table_schema_file_path $table_schema_file \
-       --server_num $server_num --server_id $i &
+       --subgraph_num $subgraph_num --subgraph_id $i &
 done

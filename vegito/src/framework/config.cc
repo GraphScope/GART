@@ -23,8 +23,8 @@ Config config;
 
 void Config::parse_sys_args(int argc, char** argv) {
   ipc_socket_ = FLAGS_v6d_ipc_socket;
-  num_servers_ = FLAGS_server_num;
-  server_id_ = FLAGS_server_id;
+  num_servers_ = FLAGS_subgraph_num;
+  server_id_ = FLAGS_subgraph_id;
 }
 
 void Config::printConfig() const {}

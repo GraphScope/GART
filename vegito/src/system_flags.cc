@@ -34,5 +34,5 @@ DEFINE_string(schema_file_path, "schema/rgmapping-ldbc.json",
 DEFINE_string(table_schema_file_path, "schema/db_schema.json",
               "table schema path.");
 
-DEFINE_int32(server_num, 2, "total server number.");
-DEFINE_int32(server_id, 0, "server id.");
+DEFINE_int32(subgraph_num, 1, "total subgraph number.");
+DEFINE_int32(subgraph_id, 0, "subgraph id.");
