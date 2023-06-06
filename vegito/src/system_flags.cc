@@ -17,7 +17,7 @@
 
 #include <gflags/gflags.h>
 
-DEFINE_string(kafka_broker_list, "localhost:9092",
+DEFINE_string(kafka_broker_list, "127.0.0.1:9092",
               "Kafka broker list for GART writer.");
 DEFINE_string(kafka_unified_log_topic, "unified_log",
               "Kafka topic for unified logs.");

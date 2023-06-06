@@ -17,9 +17,9 @@
 
 #include "gflags/gflags.h"
 
-DEFINE_string(read_kafka_broker_list, "localhost:9092",
+DEFINE_string(read_kafka_broker_list, "127.0.0.1:9092",
               "Kafka broker list for reading TxnLogs.");
-DEFINE_string(write_kafka_broker_list, "localhost:9092",
+DEFINE_string(write_kafka_broker_list, "127.0.0.1:9092",
               "Kafka broker list for writing UnifiedLogs.");
 DEFINE_string(read_kafka_topic, "binlog", "Kafka topic for reading TxnLogs.");
 DEFINE_string(write_kafka_topic, "unified_log",

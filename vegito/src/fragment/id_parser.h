@@ -21,8 +21,8 @@
 
 namespace gart {
 
-// Hardcoded the max vertex label num to 128
-constexpr int MAX_VERTEX_LABEL_NUM = 128;
+// Hardcoded the max vertex label num to 30
+constexpr int MAX_VLABELS = 30;
 
 static inline int num_to_bitwidth(int num) {
   if (num <= 2) {
@@ -47,11 +47,11 @@ class IdParser {
   ~IdParser() {}
 
   void Init(fid_t fnum, LabelIDT label_num) {
-    assert(label_num <= MAX_VERTEX_LABEL_NUM);
+    assert(label_num <= MAX_VLABELS);
 
     int fid_width = num_to_bitwidth(fnum);
     offset_offset_ = fid_width;
-    int label_width = num_to_bitwidth(MAX_VERTEX_LABEL_NUM);
+    int label_width = num_to_bitwidth(MAX_VLABELS);
     int offset_width = (sizeof(ID_TYPE) * 8) - fid_width - label_width - 1;
     offset_width_ = offset_width;
     label_id_offset_ = (sizeof(ID_TYPE) * 8) - label_width - 1;

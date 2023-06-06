@@ -150,7 +150,7 @@ $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
 sleep 3
 
 # check Kafka failure
-for i in {1..5}
+for i in {1..3}
 do
     if grep -q "ERROR" "$KAFKA_LOG"; then
         echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
@@ -163,7 +163,7 @@ do
     else
         break
     fi
-    if [ $i -eq 5 ]; then
+    if [ $i -eq 3 ]; then
         echo "Kafka: Reached max attempts, ERROR found"
         ./stop-gart --kill-v6d-sock $v6d_sock
         exit 1
