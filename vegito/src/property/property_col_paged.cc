@@ -25,17 +25,22 @@
  */
 
 #include "property/property_col_paged.h"
+#include "graph/graph_store.h"
 
 #define LAZY_PAGE_ALLOC 1
 
 namespace {
-const uint32_t MAX_POOL = 1;
+constexpr uint32_t MAX_POOL = 1;
 thread_local uint32_t pool_off = MAX_POOL - 1;
 thread_local char* pool = nullptr;
 
-thread_local uint64_t cached_ver[20];           // table id
-thread_local uint32_t cached_page_num[20][30];  // table id, column id
-thread_local void* cached_page[20][30] = {{nullptr}};
+constexpr uint32_t MAX_TABLES = gart::graph::GraphStore::MAX_TABLES;
+constexpr uint32_t MAX_COLS = gart::graph::GraphStore::MAX_COLS;
+
+thread_local uint64_t cached_ver[MAX_TABLES];  // table id (MAX_TABLES)
+// table id (MAX_TABLES), column id (MAX_COLS)
+thread_local uint32_t cached_page_num[MAX_TABLES][MAX_COLS];
+thread_local void* cached_page[MAX_TABLES][MAX_COLS] = {{nullptr}};
 }  // namespace
 
 // NOTE: page_sz is number of objects, instead of bytes

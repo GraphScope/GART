@@ -158,15 +158,16 @@ class RGMapping {
   }
 #endif
 
+ private:
   static const int NO_EXIST = -1;
 
- private:
-  static const int MAX_TABLES = 30;
   static const int MAX_COLS = 10;
-  static const int MAX_VPROPS = 10;
-  static const int MAX_VLABELS = 30;
+  static const int MAX_TABLES = 128;
+  static const int MAX_VPROPS = MAX_COLS;
+  static const int MAX_VLABELS = MAX_TABLES;
   static const int MAX_ELABELS = MAX_VLABELS + 30;
 
+ private:
   const int p_id_;
 
   int table2graph[MAX_TABLES];

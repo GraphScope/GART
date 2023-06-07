@@ -21,8 +21,8 @@
 
 namespace gart {
 
-// Hardcoded the max vertex label num to 30
-constexpr int MAX_VLABELS = 30;
+// Hardcoded the max vertex label num to 128
+constexpr int MAX_VLABELS = 128;
 
 static inline int num_to_bitwidth(int num) {
   if (num <= 2) {

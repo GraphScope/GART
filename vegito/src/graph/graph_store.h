@@ -201,7 +201,7 @@ class GraphStore {
   }
 
   void add_global_off(uint64_t vlabel, uint64_t key, int pid) {
-    if (vlabel >= 20) {
+    if (vlabel >= MAX_VLABELS) {
       assert(false);
     }
     key_pid_map_[vlabel][key] = pid;
@@ -301,13 +301,15 @@ class GraphStore {
     return edge_table_maps_[name];
   }
 
- private:
-  static const int MAX_TABLES = 30;
   static const int MAX_COLS = 10;
-  static const int MAX_VPROPS = 10;
-  static const int MAX_VLABELS = 30;
+  static const int MAX_TABLES = 128;
+
+ private:
+  static const int MAX_VPROPS = MAX_COLS;
+  static const int MAX_VLABELS = MAX_TABLES;
   static const int MAX_ELABELS = 30;
 
+ private:
   int local_pid_;         // from 0 in each machine
   int mid_;               // machine id
   int local_pnum_;        // number of partitions in the machine
@@ -349,12 +351,16 @@ class GraphStore {
   seggraph::SparseArrayAllocator<void> array_allocator;
 
   // global
-  std::unordered_map<uint64_t, int> key_pid_map_[20];  // key -> partition
-  std::unordered_map<uint64_t, int> key_off_map_[20];  // key -> partition
-  std::unordered_map<int, int> pid_off_map_[20];  // fid -> global offset header
+  std::unordered_map<uint64_t, int>
+      key_pid_map_[MAX_VLABELS];  // key -> partition
+  std::unordered_map<uint64_t, int>
+      key_off_map_[MAX_VLABELS];  // key -> partition
+  std::unordered_map<int, int>
+      pid_off_map_[MAX_VLABELS];  // fid -> global offset header
 
   // local
-  std::unordered_map<uint64_t, uint64_t> key_lid_map_[20];  // key -> local id
+  std::unordered_map<uint64_t, uint64_t>
+      key_lid_map_[MAX_VLABELS];  // key -> local id
 
   std::shared_ptr<etcd::Client> etcd_client_;
 
