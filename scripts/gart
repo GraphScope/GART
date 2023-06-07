@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,subgraph-num:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,subgraph-num:,hostfile:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -20,6 +20,7 @@ v6d_sock="/var/run/vineyard.sock"
 v6d_size="250G"
 etcd_endpoint="http://127.0.0.1:2379"
 subgraph_num=1
+hostfile=
 
 eval set -- "$VALID_ARGS"
 while [ : ]; do
@@ -68,6 +69,10 @@ while [ : ]; do
         subgraph_num=$2
         shift 2
         ;;
+         --hostfile)
+        hostfile=$2
+        shift 2
+        ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
         echo "  -d, --db-host:           database host (default: 127.0.0.1)"
@@ -81,6 +86,7 @@ while [ : ]; do
         echo "      --v6d-size:          vineyard size (default: 110G)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
         echo "      --subgraph-num:      number of sub graphs (default: 1)"
+        echo "      --hostfile:          hostfile for distributed deployment"
         echo "  -h, --help:              help"
         exit 0
         ;;
@@ -103,6 +109,7 @@ echo "    v6d-sock: $v6d_sock"
 echo "    v6d-size: $v6d_size"
 echo "    etcd-endpoint: $etcd_endpoint"
 echo "    subgraph-num: $subgraph_num"
+echo "    hostfile: $hostfile"
 
 unset=false
 if [ -n "$KAFKA_HOME" ]; then
@@ -123,16 +130,99 @@ if [ "$unset" = true ]; then
     exit 1
 fi
 
-KAFKA_BIN=$KAFKA_HOME/bin
-KAFKA_CONFIG=$KAFKA_HOME/config
-KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
+# check a host is local host or not
+function is_local_host() {
+    local_ips=$(hostname -I)
+
+    for ip in ${local_ips[@]}; do
+        if echo "$1" | grep -qE "(^| )($ip|localhost|127\.0\.0\.1)( |$)"; then
+            echo "true"
+            return
+        fi
+    done
+    echo "false"
+}
+
+# check and parse the hostfile if exists
+start_slot=0
+hosts=()
+is_master=true
+slot=$subgraph_num
+if [ -n "$hostfile" ]; then
+    if [ ! -f "$hostfile" ]; then
+        echo "Hostfile $hostfile does not exist"
+        exit 1
+    fi
+
+    slot=0
+    # check format
+    line_number=0
+    while read -r line; do
+        line_number=$((line_number+1))
+
+        if ! echo "$line" | grep -qE '^(\S+)\s+slots=[0-9]+$'; then
+          echo "Hostfile format is invalid at line $line_number: $line"
+          exit 1
+        fi
+    done < $hostfile
+
+    # parse hostfile
+    sum_cores=0
+    while read -r line; do
+        hostname=$(echo "$line" | awk '{print $1}')
+        slot=$(echo "$line" | awk '{print substr($2, 7)}') # remove "slots="
+
+        tuple=("${hostname}:${slot}")
+        hosts+=("${tuple[@]}")
+        sum_cores=$((sum_cores+slot))
+    done < $hostfile
+
+    if [ $sum_cores -ne $subgraph_num ]; then
+        echo "The number of slots in hostfile is not equal to subgraph number"
+        exit 1
+    fi
+fi
+
+i=0
+found_mac=false
+master_hostname="127.0.0.1"
+for item in ${hosts[@]}; do
+    for pair in $item; do
+        hostname=$(echo $pair | cut -d ':' -f1)
+        slot=$(echo $pair | cut -d ':' -f2)
+        #echo "Host: $hostname, Slot: $slot"
+        if [ $i -eq 0 ]; then
+            master_hostname=$hostname
+        fi
+
+        if [ $(is_local_host "$hostname") == "true" ]; then
+            #echo "Start to launch subgraph $i on $hostname"
+            if [ $i -ne 0 ]; then
+                is_master=false
+            fi
+            found_mac=true
+        else
+            if [ $found_mac == false ]; then
+                start_slot=$((start_slot+slot))
+            fi
+        fi
+    done
+    i=$((i+1))
+done
+
+echo "    is-master: $is_master"
+echo "    start-slot: $start_slot"
+echo "    my-slot: $slot"
+echo "    master-hostname: $master_hostname"
 
 ####################### Extract Schema #######################
-echo "Start extracting schema"
-./scripts/extract_table_schema.py \
-    --host $db_host --port $db_port --db $db_name \
-    --user $user --password $password \
-    --rgmapping_file $rgmapping_file --output $table_schema_file
+if [ $is_master == true ]; then
+    echo "Start extracting schema"
+    ./scripts/extract_table_schema.py \
+        --host $db_host --port $db_port --db $db_name \
+        --user $user --password $password \
+        --rgmapping_file $rgmapping_file --output $table_schema_file
+fi
 
 ####################### Vineyard #######################
 if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
@@ -141,68 +231,78 @@ if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
 fi
 
 ####################### Capturer: Zookeeper and Kafka #######################
-echo "Start Zookeeper and Kafka"
-$KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+if [ $is_master == true ]; then
+    KAFKA_BIN=$KAFKA_HOME/bin
+    KAFKA_CONFIG=$KAFKA_HOME/config
+    KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
 
-sleep 3
+    echo "Start Zookeeper and Kafka"
+    $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
 
-$KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+    sleep 3
 
-sleep 3
+    $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
 
-# check Kafka failure
-for i in {1..3}
-do
-    if grep -q "ERROR" "$KAFKA_LOG"; then
-        if [ $i -ne 1 ]; then
-            echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
+    sleep 3
+
+    # check Kafka failure
+    for i in {1..3}
+    do
+        if grep -q "ERROR" "$KAFKA_LOG"; then
+            if [ $i -ne 1 ]; then
+                echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
+            fi
+
+            $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+            sleep 3
+            $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+            sleep 3
+        else
+            break
         fi
+        if [ $i -eq 3 ]; then
+            echo "Kafka: Reached max attempts, ERROR found"
+            ./stop-gart --kill-v6d-sock $v6d_sock
+            exit 1
+        fi
+    done
 
-        $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-        sleep 3
-        $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-        sleep 3
-    else
-        break
-    fi
-    if [ $i -eq 3 ]; then
-        echo "Kafka: Reached max attempts, ERROR found"
-        ./stop-gart --kill-v6d-sock $v6d_sock
-        exit 1
-    fi
-done
+    echo "    Clean topics: binlog & unified_log"
+    $KAFKA_BIN/kafka-topics.sh --delete --topic binlog --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+    $KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
 
-echo "    Clean topics: binlog & unified_log"
-$KAFKA_BIN/kafka-topics.sh --delete --topic binlog --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
-$KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+    #TODO: hard code: replication-factor
 
-#TODO: hard code: replication-factor
+    echo "    Create topic: binlog"
+    $KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
 
-echo "    Create topic: binlog"
-$KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
+    echo "    Create topic: unified_log"
+    $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
 
-echo "    Create topic: unified_log"
-$KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
-
-# $KAFKA_BIN/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
+    # $KAFKA_BIN/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
+fi
 
 
 ####################### Capturer: Maxwell #######################
-MAXWELL_BIN=$MAXWELL_HOME/bin
+if [ $is_master == true ]; then
+    MAXWELL_BIN=$MAXWELL_HOME/bin
 
-echo "Start Maxwell"
-$MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog  > /dev/null 2>&1 &
+    echo "Start Maxwell"
+    $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog  > /dev/null 2>&1 &
 
-sleep 3
+    sleep 3
+fi
 
 ####################### Converter #######################
-CONVENTER_HOME=./converter
+if [ $is_master == true ]; then
+    CONVENTER_HOME=./converter
 
-echo "Start Converter"
-$CONVENTER_HOME/binlog_convert --rg_mapping_file_path $rgmapping_file \
-    --subgraph_num $subgraph_num &
+    echo "Start Converter"
+    $CONVENTER_HOME/binlog_convert --rg_mapping_file_path $rgmapping_file \
+        --subgraph_num $subgraph_num &
 
-sleep 2
+    sleep 2
+fi
 
 ####################### Writer (VEGITO) #######################
 
@@ -210,14 +310,13 @@ WRITER_HOME=./vegito
 
 echo "Start Writer"
 
-#TODO: Fix hard code, simulate in a single machine. Use a host file to allocate
-
-for ((i=0; i<$subgraph_num; i++)); do
+#TODO: kafka_broker_list
+for ((i=$start_slot; i<$start_slot + $slot; i++)); do
     $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
-       --etcd_endpoint $etcd_endpoint \
-       --schema_file_path $rgmapping_file \
-       --table_schema_file_path $table_schema_file \
-       --subgraph_num $subgraph_num --subgraph_id $i &
+    --etcd_endpoint $etcd_endpoint \
+    --schema_file_path $rgmapping_file \
+    --table_schema_file_path $table_schema_file \
+    --subgraph_num $subgraph_num --subgraph_id $i &
 done
 
 sleep 2 # wait for output
