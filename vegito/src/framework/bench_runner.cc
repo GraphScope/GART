@@ -321,7 +321,6 @@ void Runner::apply_log_to_store_(std::string log, int p_id) {
 }
 
 void Runner::start_kafka_to_process_(int p_id) {
-  std::cout << "start_kafka_to_process_" << std::endl;
   RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   std::string rdkafka_err;
   if (conf->set("metadata.broker.list", FLAGS_kafka_broker_list, rdkafka_err) !=
@@ -360,6 +359,8 @@ void Runner::start_kafka_to_process_(int p_id) {
     LOG(WARNING) << "Failed to start consumer: " << RdKafka::err2str(resp);
     exit(1);
   }
+
+  printf("Start main loop for subgraph %d ...\n", p_id);
   while (1) {
     RdKafka::Message* msg = consumer->consume(topic, partition, 1000);
     std::string str;
@@ -388,8 +389,6 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
   graph_stores_.assign(num_gp_backups, nullptr);
   rg_maps_.assign(num_gp_backups, nullptr);
   int p_id = mac_id;
-
-  printf("\n***** Load Graph Partition %d ****\n", p_id);
 
   // load graph
   graph_stores_[p_id] = new graph::GraphStore(

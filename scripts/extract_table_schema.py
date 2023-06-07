@@ -66,8 +66,6 @@ if __name__ == "__main__":
     if unset:
         sys.exit(1)
 
-    print("Args: ", args)
-
     db = pymysql.connect(
         host=args.host,
         port=int(args.port),
@@ -77,4 +75,4 @@ if __name__ == "__main__":
     )
     db_cursor = db.cursor()
     exetract_schema(db_cursor, args.rgmapping_file, args.db, args.output)
-    print(f"Generate schema file: {args.output}")
+    db_cursor.close()

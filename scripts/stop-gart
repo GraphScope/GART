@@ -29,7 +29,7 @@ done
 
 unset=false
 if [ -n "$KAFKA_HOME" ]; then
-    echo "KAFKA_HOME is $KAFKA_HOME"
+    echo "KAFKA_HOME: $KAFKA_HOME"
 else
     echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
     exit 1

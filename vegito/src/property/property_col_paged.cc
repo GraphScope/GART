@@ -175,12 +175,12 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
                         page_num * (sizeof(Page) + page_sz * vlen);
       // TODO: (hardcode) 1.5 is 1x init pages + 0.5x MVCC pages
       total_sz *= 1.5;
-      printf(
-          "Vlabel %d column %d (flex), "
-          "page size %lu, vlen %lu, page num %d, size of header %lu, "
-          "malloc %lf GB\n",
-          table_id_, i, page_sz, vlen, page_num, FlexColHeader::size(page_num),
-          total_sz / 1024.0 / 1024 / 1024);
+      // printf(
+      //     "Vlabel %d column %d (flex), "
+      //     "page size %lu, vlen %lu, page num %d, size of header %lu, "
+      //     "malloc %lf GB\n",
+      //     table_id_, i, page_sz, vlen, page_num,
+      //     FlexColHeader::size(page_num), total_sz / 1024.0 / 1024 / 1024);
       char* buf = mem_alloc(total_sz, &col_ids_[i]);
       FlexColHeader* header = reinterpret_cast<FlexColHeader*>(buf);
       flex_bufs_[i].total_sz = total_sz;
