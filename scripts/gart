@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,subgraph-num:,hostfile:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,hostfile:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -19,6 +19,8 @@ table_schema_file="schema/db_schema.json"
 v6d_sock="/var/run/vineyard.sock"
 v6d_size="250G"
 etcd_endpoint="http://127.0.0.1:2379"
+etcd_prefix="gart_meta_"
+kafka_server="127.0.0.1:9092"
 subgraph_num=1
 hostfile=
 
@@ -65,6 +67,14 @@ while [ : ]; do
         etcd_endpoint=$2
         shift 2
         ;;
+         --etcd-prefix)
+        etcd_prefix=$2
+        shift 2
+        ;;
+    -k | --kafka-server)
+        kafka_server=$2
+        shift 2
+        ;;
          --subgraph-num)
         subgraph_num=$2
         shift 2
@@ -85,6 +95,8 @@ while [ : ]; do
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
         echo "      --v6d-size:          vineyard size (default: 110G)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
+        echo "      --etcd-prefix:       etcd meta prefix (default: gart_meta_)"
+        echo "  -k, --kafka-server:      kafka bootstrap server (default: 127.0.0.1:9092)"
         echo "      --subgraph-num:      number of sub graphs (default: 1)"
         echo "      --hostfile:          hostfile for distributed deployment"
         echo "  -h, --help:              help"
@@ -108,6 +120,8 @@ echo "    table-schema-file: $table_schema_file"
 echo "    v6d-sock: $v6d_sock"
 echo "    v6d-size: $v6d_size"
 echo "    etcd-endpoint: $etcd_endpoint"
+echo "    etcd-prefix: $etcd_prefix"
+echo "    kafka-server: $kafka_server"
 echo "    subgraph-num: $subgraph_num"
 echo "    hostfile: $hostfile"
 
@@ -243,7 +257,7 @@ if [ $is_master == true ]; then
 
     $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
 
-    sleep 3
+    sleep 5
 
     # check Kafka failure
     for i in {1..3}
@@ -251,12 +265,13 @@ if [ $is_master == true ]; then
         if grep -q "ERROR" "$KAFKA_LOG"; then
             if [ $i -ne 1 ]; then
                 echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
+                sleep 10
             fi
 
             $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
             sleep 3
             $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-            sleep 3
+            sleep 5
         else
             break
         fi
@@ -310,10 +325,10 @@ WRITER_HOME=./vegito
 
 echo "Start Writer"
 
-#TODO: kafka_broker_list
 for ((i=$start_slot; i<$start_slot + $slot; i++)); do
     $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
-    --etcd_endpoint $etcd_endpoint \
+    --etcd_endpoint $etcd_endpoint --meta_prefix $etcd_prefix \
+    --kafka_broker_list $kafka_server \
     --schema_file_path $rgmapping_file \
     --table_schema_file_path $table_schema_file \
     --subgraph_num $subgraph_num --subgraph_id $i &
