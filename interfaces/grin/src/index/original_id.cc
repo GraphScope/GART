@@ -12,7 +12,7 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/index/original_id.h"
+#include "grin/include/include/index/original_id.h"
 
 GRIN_DATATYPE grin_get_vertex_original_id_datatype(GRIN_GRAPH g) {
   return GRIN_DATATYPE_ENUM<GRIN_OID_T>::value;

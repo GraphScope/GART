@@ -10,9 +10,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "grin/include/property/property.h"
-#include "grin/include/common/error.h"
 #include "grin/src/predefine.h"
+
+#include "grin/include/include/property/property.h"
+#include "grin/include/include/common/error.h"
+
 
 void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {}
 

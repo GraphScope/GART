@@ -15,14 +15,14 @@ limitations under the License.
 
 #include <sstream>
 
-#include "grin/include/partition/reference.h"
 #include "grin/src/predefine.h"
+
+#include "grin/include/include/partition/reference.h"
 
 #ifdef GRIN_ENABLE_VERTEX_REF
 GRIN_VERTEX_REF grin_get_vertex_ref_by_vertex(GRIN_GRAPH g, GRIN_VERTEX v) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto gid = _g->Vertex2Gid(_GRIN_VERTEX_T(v));
-  return gid;
+  return _g->Vertex2Gid(_GRIN_VERTEX_T(v));
 }
 
 void grin_destroy_vertex_ref(GRIN_GRAPH g, GRIN_VERTEX_REF vr) {}

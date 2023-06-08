@@ -10,8 +10,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "grin/include/property/propertylist.h"
 #include "grin/src/predefine.h"
+
+#include "grin/include/include/property/propertylist.h"
+
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_property_list_by_type(

@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "grin/include/topology/structure.h"
 #include "grin/src/predefine.h"
+
+#include "grin/include/include/topology/structure.h"
+
 
 GRIN_GRAPH grin_get_graph_from_storage(int, char**);
 
@@ -36,23 +38,25 @@ bool grin_is_directed(GRIN_GRAPH g) {
 bool grin_is_multigraph(GRIN_GRAPH g) { return true; }
 #endif
 
+#if !defined(GRIN_WITH_VERTEX_PROPERTY)
 size_t grin_get_vertex_num(GRIN_GRAPH g) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   return _g->GetVerticesNum();
 }
+#endif
 
+#if !defined(GRIN_WITH_EDGE_PROPERTY)
 size_t grin_get_edge_num(GRIN_GRAPH g) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   return _g->GetEdgeNum();
 }
+#endif
 
 // Vertex
 void grin_destroy_vertex(GRIN_GRAPH g, GRIN_VERTEX v) {}
 
 bool grin_equal_vertex(GRIN_GRAPH g, GRIN_VERTEX v1, GRIN_VERTEX v2) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->Vertex2Gid(_GRIN_VERTEX_T(v1)) ==
-         _g->Vertex2Gid(_GRIN_VERTEX_T(v2));
+  return v1 == v2;
 }
 
 void grin_destroy_edge(GRIN_GRAPH g, GRIN_EDGE e) {

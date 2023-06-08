@@ -10,8 +10,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "grin/include/property/type.h"
 #include "grin/src/predefine.h"
+
+#include "grin/include/include/property/type.h"
+
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 // Vertex type

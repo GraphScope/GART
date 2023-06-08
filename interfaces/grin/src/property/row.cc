@@ -10,8 +10,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "grin/include/property/row.h"
 #include "grin/src/predefine.h"
+
+#include "grin/include/include/property/row.h"
+
 
 #ifdef GRIN_ENABLE_ROW
 void grin_destroy_row(GRIN_GRAPH g, GRIN_ROW r) {

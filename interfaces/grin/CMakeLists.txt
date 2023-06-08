@@ -47,6 +47,7 @@ include_directories(${ETCD_CPP_INCLUDE_DIR})
 link_libraries(${ETCD_CPP_LIBRARIES})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../vegito/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)

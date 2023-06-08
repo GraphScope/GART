@@ -19,8 +19,10 @@ limitations under the License.
 #include "vineyard/client/ds/blob.h"
 #include "vineyard/common/util/json.h"
 
-#include "grin/include/partition/partition.h"
 #include "grin/src/predefine.h"
+
+#include "grin/include/include/partition/partition.h"
+
 
 #ifdef GRIN_ENABLE_GRAPH_PARTITION
 

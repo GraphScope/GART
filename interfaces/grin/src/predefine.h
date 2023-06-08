@@ -81,7 +81,6 @@ unsigned long long int _grin_create_property(unsigned, unsigned);
 
 typedef gart::GartFragment<GRIN_OID_T, GRIN_VID_T> GRIN_GRAPH_T;
 typedef GRIN_GRAPH_T::vertex_t _GRIN_VERTEX_T;
-typedef GRIN_GRAPH_T::label_id_t GRIN_EDGE_TYPE_T;
 
 #ifdef GRIN_WITH_VERTEX_ORIGINAL_ID
 typedef GRIN_GRAPH_T::oid_t GRIN_VERTEX_ORIGINAL_ID_T;
@@ -91,41 +90,35 @@ struct GRIN_EDGE_T {
   GRIN_VERTEX src;
   GRIN_VERTEX dst;
   GRIN_DIRECTION dir;
-  GRIN_EDGE_TYPE_T etype;
+  GRIN_EDGE_TYPE etype;
   char* edata;
 };
 
 #ifdef GRIN_ENABLE_VERTEX_LIST
 struct GRIN_VERTEX_LIST_T {
-  std::vector<GRIN_VERTEX_TYPE> vertex_types;
+  GRIN_VERTEX_TYPE vtype;
   unsigned all_master_mirror;
-};
+}; // 0: all, 1: master, 2 minor
 #endif
 
 #ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR
-struct GRIN_VERTEX_LIST_ITERATOR_T {
-  std::vector<GRIN_VERTEX_TYPE> vertex_types;
-  unsigned all_master_mirror;  // 0 all, 1 master, 2 mirror
-  size_t current_index;
-  gart::VertexIterator current_iterator;
-};
+typedef gart::VertexIterator GRIN_VERTEX_LIST_ITERATOR_T;
 #endif
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST
 struct GRIN_ADJACENT_LIST_T {
   GRIN_VERTEX v;
   GRIN_DIRECTION dir;
-  std::vector<GRIN_EDGE_TYPE_T> edge_types;
+  GRIN_EDGE_TYPE etype;
 };
 #endif
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 struct GRIN_ADJACENT_LIST_ITERATOR_T {
-  GRIN_VERTEX v;
+  gart::EdgeIterator edge_iter;
   GRIN_DIRECTION dir;
-  std::vector<GRIN_EDGE_TYPE_T> edge_types;
-  size_t current_index;
-  gart::EdgeIterator current_iterator;
+  GRIN_VERTEX v;
+  GRIN_EDGE_TYPE etype;
 };
 #endif
 
