@@ -435,12 +435,9 @@ class GartFragment {
   }
 
   oid_t GetId(const vertex_t& v) const {
-    std::cout << "IsInnerVertex(v) = " << IsInnerVertex(v) << std::endl;
     if (IsInnerVertex(v)) {
       auto label_id = vid_parser.GetLabelId(v.GetValue());
       auto offset = vid_parser.GetOffset(v.GetValue());
-      std::cout << "label_id: " << label_id << " offset: " << offset
-                << std::endl;
       return vid_parser.GenerateId(fid_, label_id, offset);
     } else {
       auto v_offset = vid_parser.GetOffset(v.GetValue());

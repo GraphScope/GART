@@ -34,7 +34,6 @@ GRIN_VERTEX_LIST_ITERATOR grin_get_vertex_list_begin(GRIN_GRAPH g,
                                                      GRIN_VERTEX_LIST vl) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _vl = static_cast<GRIN_VERTEX_LIST_T*>(vl);
-  std::cout << "_vl->vtype = " << _vl->vtype << std::endl;
   auto iter = new GRIN_VERTEX_LIST_ITERATOR_T();
   if (_vl->all_master_mirror == 0) {
     *iter = _g->Vertices(_vl->vtype);
@@ -66,9 +65,6 @@ bool grin_is_vertex_list_end(GRIN_GRAPH g, GRIN_VERTEX_LIST_ITERATOR iter) {
 GRIN_VERTEX grin_get_vertex_from_iter(GRIN_GRAPH g,
                                       GRIN_VERTEX_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_VERTEX_LIST_ITERATOR_T*>(iter);
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  std::cout << "vertex label = " << _g->vertex_label(_iter->vertex()) 
-           << " offset = " << _g->vertex_offset(_iter->vertex()) << std::endl;
   return _iter->vertex().GetValue();  
 }
 #endif
