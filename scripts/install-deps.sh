@@ -35,6 +35,13 @@ mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j12 && sudo make install
 
+# yaml-cpp
+git clone https://github.com/jbeder/yaml-cpp.git
+cd yaml-cpp
+mkdir build && cd build
+cmake -D BUILD_SHARED_LIBS=ON ..
+make -j12 && sudo make install
+
 # librdkafka
 sudo apt install librdkafka-dev
 

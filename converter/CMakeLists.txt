@@ -18,6 +18,9 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 find_package(vineyard 0.15.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 
+find_package(yaml-cpp REQUIRED)
+include_directories(${YAML_CPP_INCLUDE_DIR})
+
 include("../vegito/cmake/FindRdkafka.cmake")
 if (NOT RDKAFKA_FOUND)
   message(SEND_ERROR "rdkafka not found")
@@ -50,3 +53,6 @@ add_executable(binlog_convert binlog_convert.cc flags.cc)
 
 target_include_directories(binlog_convert PRIVATE ${RDKAFKA_INCLUDE_DIR})
 target_link_libraries(binlog_convert ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES})
+
+add_executable(json2yaml json2yaml.cc)
+target_link_libraries(json2yaml ${YAML_CPP_LIBRARIES})
