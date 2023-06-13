@@ -1,727 +1,677 @@
 {
-    "vertexLabelNum":8,
-    "types":[
+    "vertexLabelNum": 8,
+    "types": [
         {
-            "id":0,
-            "label":"organisation",
-            "table_name":"organisation",
-            "id_column_name":"org_id",
-            "propertyDefList":[
+            "id": 0,
+            "label": "organisation",
+            "table_name": "organisation",
+            "id_column_name": "org_id",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"org_id",
+                    "id": 0,
+                    "name": "org_id",
                     "column_name": "org_id"
                 },
                 {
-                    "id":1,
-                    "name":"org_type",
+                    "id": 1,
+                    "name": "org_type",
                     "column_name": "org_type"
                 },
                 {
-                    "id":2,
-                    "name":"org_name",
+                    "id": 2,
+                    "name": "org_name",
                     "column_name": "org_name"
                 },
                 {
-                    "id":3,
-                    "name":"org_url",
+                    "id": 3,
+                    "name": "org_url",
                     "column_name": "org_url"
                 }
             ],
-            "rawRelationShips":[
-                {
-
-                }
+            "rawRelationShips": [
+                {}
             ],
-            "type":"VERTEX"
+            "type": "VERTEX"
         },
         {
-            "id":1,
-            "label":"place",
-            "table_name":"place",
-            "id_column_name":"pla_id",
-            "propertyDefList":[
+            "id": 1,
+            "label": "place",
+            "table_name": "place",
+            "id_column_name": "pla_id",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"pla_id",
+                    "id": 0,
+                    "name": "pla_id",
                     "column_name": "pla_id"
                 },
                 {
-                    "id":1,
-                    "name":"pla_name",
+                    "id": 1,
+                    "name": "pla_name",
                     "column_name": "pla_name"
                 },
                 {
-                    "id":2,
-                    "name":"pla_url",
+                    "id": 2,
+                    "name": "pla_url",
                     "column_name": "pla_url"
                 },
                 {
-                    "id":3,
-                    "name":"pla_type",
+                    "id": 3,
+                    "name": "pla_type",
                     "column_name": "pla_type"
                 }
             ],
-            "rawRelationShips":[
-                {
-
-                }
+            "rawRelationShips": [
+                {}
             ],
-            "type":"VERTEX"
+            "type": "VERTEX"
         },
         {
-            "id":2,
-            "label":"tag",
-            "table_name":"tag",
-            "id_column_name":"tag_id",
-            "propertyDefList":[
+            "id": 2,
+            "label": "tag",
+            "table_name": "tag",
+            "id_column_name": "tag_id",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"tag_id",
+                    "id": 0,
+                    "name": "tag_id",
                     "column_name": "tag_id"
                 },
                 {
-                    "id":1,
-                    "name":"tag_name",
+                    "id": 1,
+                    "name": "tag_name",
                     "column_name": "tag_name"
                 },
                 {
-                    "id":2,
-                    "name":"tag_url",
+                    "id": 2,
+                    "name": "tag_url",
                     "column_name": "tag_url"
                 }
             ],
-            "rawRelationShips":[
-                {
-
-                }
+            "rawRelationShips": [
+                {}
             ],
-            "type":"VERTEX"
+            "type": "VERTEX"
         },
         {
-            "id":3,
-            "label":"tagclass",
-            "table_name":"tagclass",
-            "id_column_name":"tagc_id",
-            "propertyDefList":[
+            "id": 3,
+            "label": "tagclass",
+            "table_name": "tagclass",
+            "id_column_name": "tagc_id",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"tagc_id",
+                    "id": 0,
+                    "name": "tagc_id",
                     "column_name": "tagc_id"
                 },
                 {
-                    "id":1,
-                    "name":"tagc_name",
+                    "id": 1,
+                    "name": "tagc_name",
                     "column_name": "tagc_name"
                 },
                 {
-                    "id":2,
-                    "name":"tagc_url",
+                    "id": 2,
+                    "name": "tagc_url",
                     "column_name": "tagc_url"
                 }
             ],
-            "rawRelationShips":[
-                {
-
-                }
+            "rawRelationShips": [
+                {}
             ],
-            "type":"VERTEX"
+            "type": "VERTEX"
         },
         {
-            "id":4,
-            "label":"person",
-            "table_name":"person",
-            "id_column_name":"p_id",
-            "propertyDefList":[
+            "id": 4,
+            "label": "person",
+            "table_name": "person",
+            "id_column_name": "p_id",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"p_id",
+                    "id": 0,
+                    "name": "p_id",
                     "column_name": "p_id"
                 },
                 {
-                    "id":1,
-                    "name":"p_first_name",
+                    "id": 1,
+                    "name": "p_first_name",
                     "column_name": "p_first_name"
                 },
                 {
-                    "id":2,
-                    "name":"p_last_name",
+                    "id": 2,
+                    "name": "p_last_name",
                     "column_name": "p_last_name"
                 },
                 {
-                    "id":3,
-                    "name":"p_gender",
+                    "id": 3,
+                    "name": "p_gender",
                     "column_name": "p_gender"
                 },
                 {
-                    "id":4,
-                    "name":"p_birthday",
+                    "id": 4,
+                    "name": "p_birthday",
                     "column_name": "p_birthday"
                 },
                 {
-                    "id":5,
-                    "name":"p_creation_date",
+                    "id": 5,
+                    "name": "p_creation_date",
                     "column_name": "p_creation_date"
                 },
                 {
-                    "id":6,
-                    "name":"p_location_ip",
+                    "id": 6,
+                    "name": "p_location_ip",
                     "column_name": "p_location_ip"
                 },
                 {
-                    "id":7,
-                    "name":"p_browser_used",
+                    "id": 7,
+                    "name": "p_browser_used",
                     "column_name": "p_browser_used"
                 }
             ],
-            "rawRelationShips":[
-                {
-
-                }
+            "rawRelationShips": [
+                {}
             ],
-            "type":"VERTEX"
+            "type": "VERTEX"
         },
         {
-            "id":5,
-            "label":"comment",
-            "table_name":"comment",
-            "id_column_name":"co_id",
-            "propertyDefList":[
+            "id": 5,
+            "label": "comment",
+            "table_name": "comment",
+            "id_column_name": "co_id",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"co_id",
+                    "id": 0,
+                    "name": "co_id",
                     "column_name": "co_id"
                 },
                 {
-                    "id":1,
-                    "name":"co_creation_date",
+                    "id": 1,
+                    "name": "co_creation_date",
                     "column_name": "co_creation_date"
                 },
                 {
-                    "id":2,
-                    "name":"co_location_ip",
+                    "id": 2,
+                    "name": "co_location_ip",
                     "column_name": "co_location_ip"
                 },
                 {
-                    "id":3,
-                    "name":"co_browser_used",
+                    "id": 3,
+                    "name": "co_browser_used",
                     "column_name": "co_browser_used"
                 },
                 {
-                    "id":4,
-                    "name":"co_content",
+                    "id": 4,
+                    "name": "co_content",
                     "column_name": "co_content"
                 },
                 {
-                    "id":5,
-                    "name":"co_length",
+                    "id": 5,
+                    "name": "co_length",
                     "column_name": "co_length"
                 }
             ],
-            "rawRelationShips":[
-                {
-
-                }
+            "rawRelationShips": [
+                {}
             ],
-            "type":"VERTEX"
+            "type": "VERTEX"
         },
         {
-            "id":6,
-            "label":"post",
-            "table_name":"post",
-            "id_column_name":"po_id",
-            "propertyDefList":[
+            "id": 6,
+            "label": "post",
+            "table_name": "post",
+            "id_column_name": "po_id",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"po_id",
+                    "id": 0,
+                    "name": "po_id",
                     "column_name": "po_id"
                 },
                 {
-                    "id":1,
-                    "name":"po_image_file",
+                    "id": 1,
+                    "name": "po_image_file",
                     "column_name": "po_image_file"
                 },
                 {
-                    "id":2,
-                    "name":"po_creation_date",
+                    "id": 2,
+                    "name": "po_creation_date",
                     "column_name": "po_creation_date"
                 },
                 {
-                    "id":3,
-                    "name":"po_location_ip",
+                    "id": 3,
+                    "name": "po_location_ip",
                     "column_name": "po_location_ip"
                 },
                 {
-                    "id":4,
-                    "name":"po_browser_used",
+                    "id": 4,
+                    "name": "po_browser_used",
                     "column_name": "po_browser_used"
                 },
                 {
-                    "id":5,
-                    "name":"po_language",
+                    "id": 5,
+                    "name": "po_language",
                     "column_name": "po_language"
                 },
                 {
-                    "id":6,
-                    "name":"po_content",
+                    "id": 6,
+                    "name": "po_content",
                     "column_name": "po_content"
                 },
                 {
-                    "id":7,
-                    "name":"po_length",
+                    "id": 7,
+                    "name": "po_length",
                     "column_name": "po_length"
                 }
             ],
-            "rawRelationShips":[
-                {
-
-                }
+            "rawRelationShips": [
+                {}
             ],
-            "type":"VERTEX"
+            "type": "VERTEX"
         },
         {
-            "id":7,
-            "label":"forum",
-            "table_name":"forum",
-            "id_column_name":"fo_id",
-            "propertyDefList":[
+            "id": 7,
+            "label": "forum",
+            "table_name": "forum",
+            "id_column_name": "fo_id",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"fo_id",
+                    "id": 0,
+                    "name": "fo_id",
                     "column_name": "fo_id"
                 },
                 {
-                    "id":1,
-                    "name":"fo_title",
+                    "id": 1,
+                    "name": "fo_title",
                     "column_name": "fo_title"
                 },
                 {
-                    "id":2,
-                    "name":"fo_creation_date",
+                    "id": 2,
+                    "name": "fo_creation_date",
                     "column_name": "fo_creation_date"
                 }
             ],
-            "rawRelationShips":[
-                {
-
-                }
+            "rawRelationShips": [
+                {}
             ],
-            "type":"VERTEX"
+            "type": "VERTEX"
         },
         {
-            "id":8,
-            "label":"org_islocationin",
-            "table_name":"org_islocationin",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 8,
+            "label": "org_islocationin",
+            "table_name": "org_islocationin",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"place",
-                    "srcVertexLabel":"organisation",
+                    "dstVertexLabel": "place",
+                    "srcVertexLabel": "organisation",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":9,
-            "label":"ispartof",
-            "table_name":"ispartof",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 9,
+            "label": "ispartof",
+            "table_name": "ispartof",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"place",
-                    "srcVertexLabel":"place",
+                    "dstVertexLabel": "place",
+                    "srcVertexLabel": "place",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":10,
-            "label":"issubclassof",
-            "table_name":"issubclassof",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 10,
+            "label": "issubclassof",
+            "table_name": "issubclassof",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"tagclass",
-                    "srcVertexLabel":"tagclass",
+                    "dstVertexLabel": "tagclass",
+                    "srcVertexLabel": "tagclass",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":11,
-            "label":"hastype",
-            "table_name":"hastype",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 11,
+            "label": "hastype",
+            "table_name": "hastype",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"tagclass",
-                    "srcVertexLabel":"tag",
+                    "dstVertexLabel": "tagclass",
+                    "srcVertexLabel": "tag",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":12,
-            "label":"comment_hascreator",
-            "table_name":"comment_hascreator",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 12,
+            "label": "comment_hascreator",
+            "table_name": "comment_hascreator",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"person",
-                    "srcVertexLabel":"comment",
+                    "dstVertexLabel": "person",
+                    "srcVertexLabel": "comment",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":13,
-            "label":"comment_hastag",
-            "table_name":"comment_hastag",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 13,
+            "label": "comment_hastag",
+            "table_name": "comment_hastag",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"tag",
-                    "srcVertexLabel":"comment",
+                    "dstVertexLabel": "tag",
+                    "srcVertexLabel": "comment",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":14,
-            "label":"comment_islocationin",
-            "table_name":"comment_islocationin",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 14,
+            "label": "comment_islocationin",
+            "table_name": "comment_islocationin",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"place",
-                    "srcVertexLabel":"comment",
+                    "dstVertexLabel": "place",
+                    "srcVertexLabel": "comment",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":15,
-            "label":"replyof_comment",
-            "table_name":"replyof_comment",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 15,
+            "label": "replyof_comment",
+            "table_name": "replyof_comment",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"comment",
-                    "srcVertexLabel":"comment",
+                    "dstVertexLabel": "comment",
+                    "srcVertexLabel": "comment",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":16,
-            "label":"replyof_post",
-            "table_name":"replyof_post",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 16,
+            "label": "replyof_post",
+            "table_name": "replyof_post",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"post",
-                    "srcVertexLabel":"comment",
+                    "dstVertexLabel": "post",
+                    "srcVertexLabel": "comment",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":17,
-            "label":"post_hascreator",
-            "table_name":"post_hascreator",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 17,
+            "label": "post_hascreator",
+            "table_name": "post_hascreator",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"person",
-                    "srcVertexLabel":"post",
+                    "dstVertexLabel": "person",
+                    "srcVertexLabel": "post",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":18,
-            "label":"post_hastag",
-            "table_name":"post_hastag",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 18,
+            "label": "post_hastag",
+            "table_name": "post_hastag",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"tag",
-                    "srcVertexLabel":"post",
+                    "dstVertexLabel": "tag",
+                    "srcVertexLabel": "post",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":19,
-            "label":"post_islocationin",
-            "table_name":"post_islocationin",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 19,
+            "label": "post_islocationin",
+            "table_name": "post_islocationin",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"place",
-                    "srcVertexLabel":"post",
+                    "dstVertexLabel": "place",
+                    "srcVertexLabel": "post",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":20,
-            "label":"forum_containerof",
-            "table_name":"forum_containerof",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 20,
+            "label": "forum_containerof",
+            "table_name": "forum_containerof",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"post",
-                    "srcVertexLabel":"forum",
+                    "dstVertexLabel": "post",
+                    "srcVertexLabel": "forum",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":21,
-            "label":"forum_hasmoderator",
-            "table_name":"forum_hasmoderator",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 21,
+            "label": "forum_hasmoderator",
+            "table_name": "forum_hasmoderator",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"person",
-                    "srcVertexLabel":"forum",
+                    "dstVertexLabel": "person",
+                    "srcVertexLabel": "forum",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":22,
-            "label":"forum_hastag",
-            "table_name":"forum_hastag",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 22,
+            "label": "forum_hastag",
+            "table_name": "forum_hastag",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"tag",
-                    "srcVertexLabel":"forum",
+                    "dstVertexLabel": "tag",
+                    "srcVertexLabel": "forum",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":23,
-            "label":"person_hasinterest",
-            "table_name":"person_hasinterest",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 23,
+            "label": "person_hasinterest",
+            "table_name": "person_hasinterest",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"tag",
-                    "srcVertexLabel":"person",
+                    "dstVertexLabel": "tag",
+                    "srcVertexLabel": "person",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":24,
-            "label":"person_islocationin",
-            "table_name":"person_islocationin",
-            "propertyDefList":[
-
-            ],
-            "rawRelationShips":[
+            "id": 24,
+            "label": "person_islocationin",
+            "table_name": "person_islocationin",
+            "propertyDefList": [],
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"place",
-                    "srcVertexLabel":"person",
+                    "dstVertexLabel": "place",
+                    "srcVertexLabel": "person",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":25,
-            "label":"forum_hasmember",
-            "table_name":"forum_hasmember",
-            "propertyDefList":[
+            "id": 25,
+            "label": "forum_hasmember",
+            "table_name": "forum_hasmember",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"fo_hm_join_data",
-                    "column_name": "fo_hm_join_data"
+                    "id": 0,
+                    "name": "fo_hm_join_date",
+                    "column_name": "fo_hm_join_date"
                 }
             ],
-            "rawRelationShips":[
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"person",
-                    "srcVertexLabel":"forum",
+                    "dstVertexLabel": "person",
+                    "srcVertexLabel": "forum",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":26,
-            "label":"knows",
-            "table_name":"knows",
-            "propertyDefList":[
+            "id": 26,
+            "label": "knows",
+            "table_name": "knows",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"kn_creation_data",
-                    "column_name": "kn_creation_data"
+                    "id": 0,
+                    "name": "kn_creation_date",
+                    "column_name": "kn_creation_date"
                 }
             ],
-            "rawRelationShips":[
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"person",
-                    "srcVertexLabel":"person",
+                    "dstVertexLabel": "person",
+                    "srcVertexLabel": "person",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":27,
-            "label":"likes_comment",
-            "table_name":"likes_comment",
-            "propertyDefList":[
+            "id": 27,
+            "label": "likes_comment",
+            "table_name": "likes_comment",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"likes_co_creation_data",
-                    "column_name": "likes_co_creation_data"
+                    "id": 0,
+                    "name": "likes_co_creation_date",
+                    "column_name": "likes_co_creation_date"
                 }
             ],
-            "rawRelationShips":[
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"comment",
-                    "srcVertexLabel":"person",
+                    "dstVertexLabel": "comment",
+                    "srcVertexLabel": "person",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":28,
-            "label":"likes_post",
-            "table_name":"likes_post",
-            "propertyDefList":[
+            "id": 28,
+            "label": "likes_post",
+            "table_name": "likes_post",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"likes_po_creation_data",
-                    "column_name": "likes_po_creation_data"
+                    "id": 0,
+                    "name": "likes_po_creation_date",
+                    "column_name": "likes_po_creation_date"
                 }
             ],
-            "rawRelationShips":[
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"post",
-                    "srcVertexLabel":"person",
+                    "dstVertexLabel": "post",
+                    "srcVertexLabel": "person",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":29,
-            "label":"studyat",
-            "table_name":"studyat",
-            "propertyDefList":[
+            "id": 29,
+            "label": "studyat",
+            "table_name": "studyat",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"sa_class_year",
+                    "id": 0,
+                    "name": "sa_class_year",
                     "column_name": "sa_class_year"
                 }
             ],
-            "rawRelationShips":[
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"organisation",
-                    "srcVertexLabel":"person",
+                    "dstVertexLabel": "organisation",
+                    "srcVertexLabel": "person",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         },
         {
-            "id":30,
-            "label":"workat",
-            "table_name":"workat",
-            "propertyDefList":[
+            "id": 30,
+            "label": "workat",
+            "table_name": "workat",
+            "propertyDefList": [
                 {
-                    "id":0,
-                    "name":"wa_work_from",
+                    "id": 0,
+                    "name": "wa_work_from",
                     "column_name": "wa_work_from"
                 }
             ],
-            "rawRelationShips":[
+            "rawRelationShips": [
                 {
-                    "dstVertexLabel":"organisation",
-                    "srcVertexLabel":"person",
+                    "dstVertexLabel": "organisation",
+                    "srcVertexLabel": "person",
                     "src_column_name": "src",
                     "dst_column_name": "dst"
                 }
             ],
-            "type":"EDGE"
+            "type": "EDGE"
         }
     ]
 }

@@ -306,7 +306,7 @@ cursor.execute("DROP TABLE IF EXISTS forum_hasmember")
 sql = """CREATE TABLE forum_hasmember (
          src VARCHAR(255),
          dst VARCHAR(255),
-         fo_hm_join_data VARCHAR(255)
+         fo_hm_join_date VARCHAR(255)
          )"""
 cursor.execute(sql)
 
@@ -316,7 +316,7 @@ cursor.execute("DROP TABLE IF EXISTS knows")
 sql = """CREATE TABLE knows (
          src VARCHAR(255),
          dst VARCHAR(255),
-         kn_creation_data VARCHAR(255)
+         kn_creation_date VARCHAR(255)
          )"""
 cursor.execute(sql)
 
@@ -326,7 +326,7 @@ cursor.execute("DROP TABLE IF EXISTS likes_comment")
 sql = """CREATE TABLE likes_comment (
          src VARCHAR(255),
          dst VARCHAR(255),
-         likes_co_creation_data VARCHAR(255)
+         likes_co_creation_date VARCHAR(255)
          )"""
 cursor.execute(sql)
 
@@ -336,7 +336,7 @@ cursor.execute("DROP TABLE IF EXISTS likes_post")
 sql = """CREATE TABLE likes_post (
          src VARCHAR(255),
          dst VARCHAR(255),
-         likes_po_creation_data VARCHAR(255)
+         likes_po_creation_date VARCHAR(255)
          )"""
 cursor.execute(sql)
 

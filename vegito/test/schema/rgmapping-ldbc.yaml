@@ -390,9 +390,9 @@ edgeMappings:
         - dataField:
             name: dst
       dataFieldMappings:
-        - property: fo_hm_join_data
+        - property: fo_hm_join_date
           dataField:
-            name: fo_hm_join_data
+            name: fo_hm_join_date
     - type_pair:
         edge: knows
         source_vertex: person
@@ -405,9 +405,9 @@ edgeMappings:
         - dataField:
             name: dst
       dataFieldMappings:
-        - property: kn_creation_data
+        - property: kn_creation_date
           dataField:
-            name: kn_creation_data
+            name: kn_creation_date
     - type_pair:
         edge: likes_comment
         source_vertex: person
@@ -420,9 +420,9 @@ edgeMappings:
         - dataField:
             name: dst
       dataFieldMappings:
-        - property: likes_co_creation_data
+        - property: likes_co_creation_date
           dataField:
-            name: likes_co_creation_data
+            name: likes_co_creation_date
     - type_pair:
         edge: likes_post
         source_vertex: person
@@ -435,9 +435,9 @@ edgeMappings:
         - dataField:
             name: dst
       dataFieldMappings:
-        - property: likes_po_creation_data
+        - property: likes_po_creation_date
           dataField:
-            name: likes_po_creation_data
+            name: likes_po_creation_date
     - type_pair:
         edge: studyat
         source_vertex: person
