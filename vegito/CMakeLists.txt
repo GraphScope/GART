@@ -79,6 +79,11 @@ find_package(vineyard 0.15.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 link_libraries(${VINEYARD_LIBRARIES})
 
+# find yaml-cpp
+find_package(yaml-cpp REQUIRED)
+include_directories(${YAML_CPP_INCLUDE_DIR})
+link_libraries(${YAML_CPP_LIBRARIES})
+
 #### Headers ####
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)

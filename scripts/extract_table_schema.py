@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import sys
+
 import argparse
 import json
-import sys
 import pymysql
+import yaml
 
 
 def get_parser():
@@ -20,7 +22,7 @@ def get_parser():
 
     parser.add_argument(
         "--rgmapping_file",
-        default="../schema/rgmapping-ldbc.json",
+        default="../schema/rgmapping-ldbc.yaml",
         help="Config file (RGMapping)",
     )
     parser.add_argument(
@@ -34,11 +36,13 @@ def get_parser():
 
 def exetract_schema(cursor, rgmapping_file, database, output):
     with open(rgmapping_file, "r", encoding="UTF-8") as f:
-        config = json.load(f)
-    tables = config["types"]
+        config = yaml.safe_load(f)
+    tables = (
+        config["vertexMappings"]["vertex_types"] + config["edgeMappings"]["edge_types"]
+    )
     schema = {}
     for table in tables:
-        table_name = table["table_name"]
+        table_name = table["dataSourceName"]
         # sql = "SHOW COLUMNS FROM " + table_name
         sql = f'''SELECT COLUMN_NAME, COLUMN_TYPE
                 FROM information_schema.COLUMNS

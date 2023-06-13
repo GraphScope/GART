@@ -23,39 +23,42 @@
 #include "graph/graph_ops/process_del_vertex.h"
 #include "librdkafka/rdkafkacpp.h"
 
+#include "yaml-cpp/yaml.h"
+
+using namespace std;
+
 namespace gart {
 namespace framework {
 
-void init_graph_schema(std::string graph_schema_path,
-                       std::string table_schema_path,
+void init_graph_schema(string graph_schema_path, string table_schema_path,
                        graph::GraphStore* graph_store,
                        graph::RGMapping* rg_map) {
   using json = vineyard::json;
 
-  std::ifstream graph_schema_file(graph_schema_path);
+  ifstream graph_schema_file(graph_schema_path);
   if (!graph_schema_file.is_open()) {
     LOG(ERROR) << "graph schema file (" << graph_schema_path << ") open failed."
                << "Not exist or permission denied.";
     exit(1);
   }
 
-  std::ifstream table_schema_file(table_schema_path);
+  ifstream table_schema_file(table_schema_path);
   if (!table_schema_file.is_open()) {
     LOG(ERROR) << "table schema file (" << table_schema_path << ") open failed."
                << "Not exist or permission denied.";
     exit(1);
   }
 
-  json config, table_schema;
-
+  YAML::Node config;
   try {
-    config = json::parse(graph_schema_file);
-  } catch (json::parse_error& e) {
+    config = YAML::LoadFile(graph_schema_path);
+  } catch (YAML::ParserException& e) {
     LOG(ERROR) << "Parse graph schema file (" << graph_schema_path
                << ") failed: " << e.what();
     exit(1);
   }
 
+  json table_schema;
   try {
     table_schema = json::parse(table_schema_file);
   } catch (json::parse_error& e) {
@@ -65,11 +68,15 @@ void init_graph_schema(std::string graph_schema_path,
   }
 
   graph::SchemaImpl graph_schema;
-  std::map<std::string, int> vertex_name_id_map;
-  int vertex_label_num = config["vertexLabelNum"].get<int>();
-  graph_store->set_vertex_label_num(vertex_label_num);
-  graph_schema.elabel_offset = vertex_label_num;
-  auto graph_info = config["types"];
+  map<string, int> vertex_name_id_map;
+
+  YAML::Node vdef = config["vertexMappings"]["vertex_types"];
+  YAML::Node edef = config["edgeMappings"]["edge_types"];
+  assert(vdef.IsSequence() && edef.IsSequence());
+  int vlabel_num = vdef.size(), elabel_num = edef.size();
+
+  graph_store->set_vertex_label_num(vlabel_num);
+  graph_schema.elabel_offset = vlabel_num;
   int prop_offset = 0;
 
   Property::Schema prop_schema;          // for vertex properties
@@ -78,49 +85,69 @@ void init_graph_schema(std::string graph_schema_path,
   Property::Column col;
   col.page_size = 0;
 
-  for (auto idx = 0; idx < graph_info.size(); idx++) {
-    auto type = graph_info[idx]["type"].get<std::string>();
-    int id = graph_info[idx]["id"].get<int>();
-    std::string name = graph_info[idx]["label"].get<std::string>();
-    std::string table_name = graph_info[idx]["table_name"].get<std::string>();
-    if (type == "VERTEX") {
-      vertex_name_id_map.emplace(name, id);
-      graph_schema.label_id_map[name] = id;
-      rg_map->define_vertex(id, id);  // (vlabel, table_id)
-      graph_store->add_vgraph(id, rg_map);
-      prop_schema.table_id = id;
-      prop_schema.klen = sizeof(uint64_t);
+  // Parse vertex
+  for (int idx = 0; idx < vlabel_num; ++idx) {
+    int id = idx;
+    string name = vdef[idx]["type_name"].as<string>();
+    string table_name = vdef[idx]["dataSourceName"].as<string>();
+    vertex_name_id_map.emplace(name, id);
+    graph_schema.label_id_map[name] = id;
+    rg_map->define_vertex(id, id);  // (vlabel, table_id)
+    graph_store->add_vgraph(id, rg_map);
+    prop_schema.table_id = id;
+    prop_schema.klen = sizeof(uint64_t);
+  }
+
+  // Parse edge
+  for (int idx = 0; idx < elabel_num; ++idx) {
+    int id = idx + vlabel_num;
+    string name = edef[idx]["type_pair"]["edge"].as<string>();
+    string src_name = edef[idx]["type_pair"]["source_vertex"].as<string>();
+    string dst_name = edef[idx]["type_pair"]["destination_vertex"].as<string>();
+    auto src_col =
+        edef[idx]["sourceVertexMappings"][0]["dataField"]["name"].as<string>();
+    auto dst_col =
+        edef[idx]["destinationVertexMappings"][0]["dataField"]["name"]
+            .as<string>();
+
+    graph_schema.label_id_map[name] = id;
+    int src_label_id = vertex_name_id_map.find(src_name)->second;
+    int dst_label_id = vertex_name_id_map.find(dst_name)->second;
+    graph_schema.edge_relation[id] = {src_label_id, dst_label_id};
+    // TODO(wanglei): fk and is_directed are hard code
+    rg_map->define_nn_edge(id, src_label_id, dst_label_id, 0, 0, false,
+                           edef[idx]["dataFieldMappings"].size());
+  }
+
+  for (int idx = 0; idx < vlabel_num + elabel_num; ++idx) {
+    int id = idx;
+    string table_name;
+    YAML::Node prop_info;
+    bool is_vertex = (idx < vlabel_num);
+    if (is_vertex) {
+      prop_info = vdef[idx]["mappings"];
+      table_name = vdef[idx]["dataSourceName"].as<string>();
     } else {
-      graph_schema.label_id_map[name] = id;
-      auto edge_src_dst_info = graph_info[idx]["rawRelationShips"].at(0);
-      std::string src_name =
-          edge_src_dst_info["srcVertexLabel"].get<std::string>();
-      std::string dst_name =
-          edge_src_dst_info["dstVertexLabel"].get<std::string>();
-      int src_label_id = vertex_name_id_map.find(src_name)->second;
-      int dst_label_id = vertex_name_id_map.find(dst_name)->second;
-      graph_schema.edge_relation[id] = {src_label_id, dst_label_id};
-      // TODO(wanglei): fk and is_directed are hard code
-      rg_map->define_nn_edge(id, src_label_id, dst_label_id, 0, 0, false,
-                             graph_info[idx]["propertyDefList"].size());
+      prop_info = edef[idx - vlabel_num]["dataFieldMappings"];
+      table_name = edef[idx - vlabel_num]["dataSourceName"].as<string>();
     }
-    auto prop_info = graph_info[idx]["propertyDefList"];
     if (prop_info.size() != 0) {
       graph_schema.label2prop_offset[id] = prop_offset;
     }
+
     uint64_t edge_prop_prefix_bytes = 0;
     for (int prop_idx = 0; prop_idx < prop_info.size(); prop_idx++) {
-      auto prop_id = prop_info[prop_idx]["id"].get<int>();
-      auto prop_name = prop_info[prop_idx]["name"].get<std::string>();
-      std::string prop_dtype;
-      auto prop_table_col_name =
-          prop_info[prop_idx]["column_name"].get<std::string>();
-      auto required_talbe_schema = table_schema[table_name];
-      for (auto table_idx = 0; table_idx < required_talbe_schema; table_idx++) {
-        if (required_talbe_schema[table_idx].at(0).get<std::string>() ==
+      int prop_id = prop_idx;
+      string prop_name = prop_info[prop_idx]["property"].as<string>();
+      string prop_dtype;
+      string prop_table_col_name =
+          prop_info[prop_idx]["dataField"]["name"].as<string>();
+      auto required_table_schema = table_schema[table_name];
+      for (int table_idx = 0; table_idx < required_table_schema; ++table_idx) {
+        if (required_table_schema[table_idx].at(0).get<string>() ==
             prop_table_col_name) {
-          std::string prop_dtype_str =
-              required_talbe_schema[table_idx].at(1).get<std::string>();
+          string prop_dtype_str =
+              required_table_schema[table_idx].at(1).get<string>();
           // TODO(wanglei): support more data types in MySQL
           if (prop_dtype_str == "int") {
             prop_dtype = "INT";
@@ -138,13 +165,14 @@ void init_graph_schema(std::string graph_schema_path,
           break;
         }
       }
-      if (type == "VERTEX") {
+
+      if (is_vertex) {
         // col.updatable = prop_info[prop_idx]["updatable"].get<bool>();
         col.updatable = true;
       }
       if (prop_dtype == "INT") {
         graph_schema.dtype_map[{id, prop_id}] = INT;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = INT;
           col.vlen = sizeof(int);
           prop_schema.cols.push_back(col);
@@ -156,7 +184,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "FLOAT") {
         graph_schema.dtype_map[{id, prop_id}] = FLOAT;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = FLOAT;
           col.vlen = sizeof(float);
           prop_schema.cols.push_back(col);
@@ -168,7 +196,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "DOUBLE") {
         graph_schema.dtype_map[{id, prop_id}] = DOUBLE;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = DOUBLE;
           col.vlen = sizeof(double);
           prop_schema.cols.push_back(col);
@@ -180,7 +208,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "LONG") {
         graph_schema.dtype_map[{id, prop_id}] = LONG;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = LONG;
           col.vlen = sizeof(uint64_t);
           prop_schema.cols.push_back(col);
@@ -192,7 +220,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "CHAR") {
         graph_schema.dtype_map[{id, prop_id}] = CHAR;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = CHAR;
           col.vlen = sizeof(char);
           prop_schema.cols.push_back(col);
@@ -204,7 +232,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "STRING") {
         graph_schema.dtype_map[{id, prop_id}] = STRING;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = STRING;
           col.vlen = sizeof(gart::graph::ldbc::String);
           prop_schema.cols.push_back(col);
@@ -216,7 +244,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "TEXT") {
         graph_schema.dtype_map[{id, prop_id}] = TEXT;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = TEXT;
           col.vlen = sizeof(gart::graph::ldbc::Text);
           prop_schema.cols.push_back(col);
@@ -228,7 +256,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "DATE") {
         graph_schema.dtype_map[{id, prop_id}] = DATE;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = DATE;
           col.vlen = sizeof(gart::graph::ldbc::Date);
           prop_schema.cols.push_back(col);
@@ -240,7 +268,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "DATETIME") {
         graph_schema.dtype_map[{id, prop_id}] = DATETIME;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = DATETIME;
           col.vlen = sizeof(gart::graph::ldbc::DateTime);
           prop_schema.cols.push_back(col);
@@ -252,7 +280,7 @@ void init_graph_schema(std::string graph_schema_path,
         }
       } else if (prop_dtype == "LONGSTRING") {
         graph_schema.dtype_map[{id, prop_id}] = LONGSTRING;
-        if (type == "VERTEX") {
+        if (is_vertex) {
           col.vtype = LONGSTRING;
           col.vlen = sizeof(gart::graph::ldbc::LongString);
           prop_schema.cols.push_back(col);
@@ -269,7 +297,7 @@ void init_graph_schema(std::string graph_schema_path,
       graph_schema.property_id_map[prop_name] = prop_offset;
       prop_offset++;
     }
-    if (type == "VERTEX") {
+    if (is_vertex) {
       graph_store->add_vprop(id, prop_schema);
       prop_schema.cols.clear();
     } else {
@@ -277,16 +305,17 @@ void init_graph_schema(std::string graph_schema_path,
       edge_prop_prefix_bytes = 0;
     }
   }
+
   graph_store->set_schema(graph_schema);
   graph_store->update_property_bytes();
 }
 
-void Runner::apply_log_to_store_(std::string log, int p_id) {
-  std::istringstream strstr(log);
-  std::string word;
-  std::vector<std::string> cmd;
+void Runner::apply_log_to_store_(string log, int p_id) {
+  istringstream strstr(log);
+  string word;
+  vector<string> cmd;
   int word_idx = 0;
-  std::string op;
+  string op;
   while (getline(strstr, word, '|')) {
     if (word_idx == 0) {
       op = word;
@@ -298,8 +327,8 @@ void Runner::apply_log_to_store_(std::string log, int p_id) {
           graph_stores_[p_id]->insert_blob_schema(latest_epoch_);
           graph_stores_[p_id]->get_blob_json(
               latest_epoch_);  // put schema to etcd
-          std::cout << "update epoch " << latest_epoch_ << " frag = " << p_id
-                    << std::endl;
+          cout << "update epoch " << latest_epoch_ << " frag = " << p_id
+               << endl;
           latest_epoch_ = cur_epoch;
         }
       }
@@ -322,7 +351,7 @@ void Runner::apply_log_to_store_(std::string log, int p_id) {
 
 void Runner::start_kafka_to_process_(int p_id) {
   RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-  std::string rdkafka_err;
+  string rdkafka_err;
   if (conf->set("metadata.broker.list", FLAGS_kafka_broker_list, rdkafka_err) !=
       RdKafka::Conf::CONF_OK) {
     LOG(WARNING) << "Failed to set metadata.broker.list: " << rdkafka_err;
@@ -363,7 +392,7 @@ void Runner::start_kafka_to_process_(int p_id) {
   printf("Start main loop for subgraph %d ...\n", p_id);
   while (1) {
     RdKafka::Message* msg = consumer->consume(topic, partition, 1000);
-    std::string str;
+    string str;
     const char* str_addr = static_cast<const char*>(msg->payload());
     int str_len = static_cast<int>(msg->len());
     if (str_len == 0) {
@@ -375,9 +404,9 @@ void Runner::start_kafka_to_process_(int p_id) {
 }
 
 void Runner::start_file_stream_to_process_(int p_id) {
-  std::ifstream infile(FLAGS_kafka_unified_log_file);
-  std::string line;
-  while (std::getline(infile, line)) {
+  ifstream infile(FLAGS_kafka_unified_log_file);
+  string line;
+  while (getline(infile, line)) {
     apply_log_to_store_(line, p_id);
   }
 }

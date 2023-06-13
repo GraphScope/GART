@@ -12,6 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g3")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g2")
+
 # ------------------------------------------------------------------------------
 # find_libraries
 # ------------------------------------------------------------------------------
@@ -52,7 +55,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 add_executable(binlog_convert binlog_convert.cc flags.cc)
 
 target_include_directories(binlog_convert PRIVATE ${RDKAFKA_INCLUDE_DIR})
-target_link_libraries(binlog_convert ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES})
+target_link_libraries(binlog_convert ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${CMAKE_DL_LIBS} ${YAML_CPP_LIBRARIES})
 
 add_executable(json2yaml json2yaml.cc)
 target_link_libraries(json2yaml ${YAML_CPP_LIBRARIES})

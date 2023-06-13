@@ -42,6 +42,8 @@ mkdir build && cd build
 cmake -D BUILD_SHARED_LIBS=ON ..
 make -j12 && sudo make install
 
+pip3 install pyyaml
+
 # librdkafka
 sudo apt install librdkafka-dev
 
