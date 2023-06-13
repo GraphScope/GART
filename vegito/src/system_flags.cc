@@ -29,7 +29,7 @@ DEFINE_string(etcd_endpoint, "http://127.0.0.1:2379",
 DEFINE_string(meta_prefix, "gart_meta_", "meta prefix for etcd.");
 DEFINE_string(v6d_ipc_socket, "/var/run/vineyard.sock", "Vineyard IPC socket.");
 
-DEFINE_string(schema_file_path, "schema/rgmapping-ldbc.json",
+DEFINE_string(schema_file_path, "schema/rgmapping-ldbc.yaml",
               "user provided schema file for input.");
 DEFINE_string(table_schema_file_path, "schema/db_schema.json",
               "table schema path.");

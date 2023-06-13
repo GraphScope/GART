@@ -14,7 +14,7 @@ db_port=3306
 db_name="my_maxwell_01"
 user=
 password=
-rgmapping_file="schema/rgmapping-ldbc.json"
+rgmapping_file="schema/rgmapping-ldbc.yaml"
 table_schema_file="schema/db_schema.json"
 v6d_sock="/var/run/vineyard.sock"
 v6d_size="250G"
@@ -90,7 +90,7 @@ while [ : ]; do
         echo "  -b, --db-name:           database name (default: my_maxwell_01)"
         echo "  -u, --user:              database user"
         echo "  -p, --password:          database password"
-        echo "  -r, --rgmapping-file:    rgmapping file path (default: schema/rgmapping-ldbc.json)"
+        echo "  -r, --rgmapping-file:    rgmapping file path (default: schema/rgmapping-ldbc.yaml)"
         echo "  -t, --table-schema-file: table schema file path (default: schema/db_schema.json)"
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
         echo "      --v6d-size:          vineyard size (default: 110G)"

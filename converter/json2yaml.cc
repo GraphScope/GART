@@ -173,9 +173,15 @@ void parse_json(const string& json_file, const string& yaml_file) {
   yaml_of.close();
 }
 
-int main() {
+int main(int argc, char* argv[]) {
   string json_file = "schema/rgmapping-ldbc.json";
   string yaml_file = "schema/rgmapping-ldbc.yaml";
+
+  if (argc == 3) {
+    json_file = argv[1];
+    yaml_file = argv[2];
+  }
+
   parse_json(json_file, yaml_file);
   return 0;
 }

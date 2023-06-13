@@ -49,7 +49,7 @@ GART should fulfill two unique goals not encountered by HTAP systems.
 ### Transparent Data Model Conversion
 To adapt to rich workloads flexibility, GART proposes transparent data model conversion by graph extraction interfaces, which define rules of relational-graph mapping.
 
-We provide a sample definition file called [rgmapping-ldbc.json](vegito/test/schema/rgmapping-ldbc.json).
+We provide a sample definition file called [rgmapping-ldbc.yaml](vegito/test/schema/rgmapping-ldbc.yaml).
 
 [TBD: format fo RGMapping]
 

@@ -27,7 +27,7 @@ DEFINE_string(write_kafka_topic, "unified_log",
 
 DEFINE_int32(logs_per_epoch, 10000, "logs_per_epoch.");
 
-DEFINE_string(rg_mapping_file_path, "schema/rgmapping-ldbc.json",
+DEFINE_string(rg_mapping_file_path, "schema/rgmapping-ldbc.yaml",
               "RGMapping file path.");
 
 DEFINE_int32(subgraph_num, 1, "Number of subgraphs for GAP workloads.");
