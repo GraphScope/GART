@@ -28,15 +28,19 @@ limitations under the License.
 
 GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(int argc,
                                                                char** argv) {
-  if (argc < 5) {
+  if (argc < 6) {
     return nullptr;
   }
   GRIN_PARTITIONED_GRAPH_T* pg = new GRIN_PARTITIONED_GRAPH_T();
   pg->etcd_endpoint = argv[0];
   pg->total_partition_num = std::stoul(argv[1]);
-  pg->local_id = std::stoul(argv[2]);
-  pg->read_epoch = std::stoi(argv[3]);
-  pg->meta_prefix = argv[4];
+  auto start_partition_id = std::stoul(argv[2]);
+  auto local_partition_num = std::stoul(argv[3]);
+  for (auto idx = 0; idx < local_partition_num; ++idx) {
+    pg->local_partition_list.push_back(start_partition_id + idx);
+  }
+  pg->read_epoch = std::stoi(argv[4]);
+  pg->meta_prefix = argv[5];
   return pg;
 }
 
@@ -53,7 +57,9 @@ size_t grin_get_total_partitions_number(GRIN_PARTITIONED_GRAPH pg) {
 GRIN_PARTITION_LIST grin_get_local_partition_list(GRIN_PARTITIONED_GRAPH pg) {
   auto _pg = static_cast<GRIN_PARTITIONED_GRAPH_T*>(pg);
   auto pl = new GRIN_PARTITION_LIST_T();
-  pl->push_back(_pg->local_id);
+  for (auto& pid : _pg->local_partition_list) {
+    pl->push_back(pid);
+  }
   return pl;
 }
 

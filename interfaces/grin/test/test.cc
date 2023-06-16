@@ -1025,22 +1025,26 @@ int main(int argc, char** argv) {
   int read_epoch = 4;
   std::string etcd_endpoint = "http://127.0.0.1:23799";
   std::string meta_prefix = "";
-  char** argv_new = new char*[5];
+  int fragment_per_machine = 1;
+  char** argv_new = new char*[6];
   argv_new[0] = new char[etcd_endpoint.length() + 1];
   argv_new[1] = new char[std::to_string(comm_spec.fnum()).length() + 1];
   argv_new[2] = new char[std::to_string(comm_spec.fid()).length() + 1];
-  argv_new[3] = new char[std::to_string(read_epoch).length() + 1];
-  argv_new[4] = new char[meta_prefix.length() + 1];
+  argv_new[3] = new char[std::to_string(fragment_per_machine).length() + 1];
+  argv_new[4] = new char[std::to_string(read_epoch).length() + 1];
+  argv_new[5] = new char[meta_prefix.length() + 1];
+  
 
   strcpy(argv_new[0], etcd_endpoint.c_str());
   strcpy(argv_new[1], std::to_string(comm_spec.fnum()).c_str());
   strcpy(argv_new[2], std::to_string(comm_spec.fid()).c_str());
-  strcpy(argv_new[3], std::to_string(read_epoch).c_str());
-  strcpy(argv_new[4], meta_prefix.c_str());
+  strcpy(argv_new[3], std::to_string(fragment_per_machine).c_str());
+  strcpy(argv_new[4], std::to_string(read_epoch).c_str());
+  strcpy(argv_new[5], meta_prefix.c_str());
 
   // test_index(6, argv_new);
-  test_property(6, argv_new);
-  test_partition(6, argv_new);
-  test_topology(6, argv_new);
+  test_property(7, argv_new);
+  test_partition(7, argv_new);
+  test_topology(7, argv_new);
   return 0;
 }

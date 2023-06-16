@@ -126,7 +126,7 @@ struct GRIN_ADJACENT_LIST_ITERATOR_T {
 struct GRIN_PARTITIONED_GRAPH_T {
   std::string etcd_endpoint;
   size_t total_partition_num;
-  size_t local_id;
+  std::vector<size_t> local_partition_list;
   int read_epoch;
   std::string meta_prefix;
 };
