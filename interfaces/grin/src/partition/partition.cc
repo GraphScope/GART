@@ -26,12 +26,24 @@ limitations under the License.
 
 #ifdef GRIN_ENABLE_GRAPH_PARTITION
 
-GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(int argc,
-                                                               char** argv) {
-  if (argc < 6) {
-    return nullptr;
-  }
+GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(const char* uri) {
   GRIN_PARTITIONED_GRAPH_T* pg = new GRIN_PARTITIONED_GRAPH_T();
+  std::string uri_str(uri);
+  URI config(uri_str);
+  std::string protocol = config.getProtocol();
+  assert(protocol == "gart");
+  std::string etcd_endpoint = config.getEtcdEndpoint();
+  pg->etcd_endpoint = etcd_endpoint;
+  auto params = config.getParams();
+  pg->total_partition_num = std::stoul(params["total_partition_num"]);
+  auto start_partition_id = std::stoul(params["start_partition_id"]);
+  auto local_partition_num = std::stoul(params["local_partition_num"]);
+  for (auto idx = 0; idx < local_partition_num; ++idx) {
+    pg->local_partition_list.push_back(start_partition_id + idx);
+  }
+  pg->read_epoch = std::stoi(params["read_epoch"]);
+  pg->meta_prefix = params["meta_prefix"];
+  /*
   pg->etcd_endpoint = argv[0];
   pg->total_partition_num = std::stoul(argv[1]);
   auto start_partition_id = std::stoul(argv[2]);
@@ -41,6 +53,7 @@ GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(int argc,
   }
   pg->read_epoch = std::stoi(argv[4]);
   pg->meta_prefix = argv[5];
+  */
   return pg;
 }
 

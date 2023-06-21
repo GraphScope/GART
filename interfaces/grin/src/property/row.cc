@@ -211,11 +211,10 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
 #if defined(GRIN_WITH_EDGE_PROPERTY) && defined(GRIN_ENABLE_ROW)
 GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  auto e_type = _e->etype;
+  auto e_type = e.etype;
   auto prop_size = _g->edge_property_num(e_type);
   auto r = new GRIN_ROW_T();
-  char* base_dir = _e->edata;
+  char* base_dir = e.edata;
   for (size_t idx = 0; idx < prop_size; idx++) {
     if (idx == 0) {
       r->push_back(base_dir);

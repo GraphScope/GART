@@ -16,6 +16,9 @@ limitations under the License.
 #ifndef RESEARCH_GART_GRIN_SRC_PREDEFINE_H_
 #define RESEARCH_GART_GRIN_SRC_PREDEFINE_H_
 
+#include <map>
+#include <string>
+
 #include "etcd/Client.hpp"
 #include "etcd/Response.hpp"
 #include "vineyard/client/client.h"
@@ -86,14 +89,6 @@ typedef GRIN_GRAPH_T::vertex_t _GRIN_VERTEX_T;
 typedef GRIN_GRAPH_T::oid_t GRIN_VERTEX_ORIGINAL_ID_T;
 #endif
 
-struct GRIN_EDGE_T {
-  GRIN_VERTEX src;
-  GRIN_VERTEX dst;
-  GRIN_DIRECTION dir;
-  GRIN_EDGE_TYPE etype;
-  char* edata;
-};
-
 #ifdef GRIN_ENABLE_VERTEX_LIST
 struct GRIN_VERTEX_LIST_T {
   GRIN_VERTEX_TYPE vtype;
@@ -103,14 +98,6 @@ struct GRIN_VERTEX_LIST_T {
 
 #ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR
 typedef gart::VertexIterator GRIN_VERTEX_LIST_ITERATOR_T;
-#endif
-
-#ifdef GRIN_ENABLE_ADJACENT_LIST
-struct GRIN_ADJACENT_LIST_T {
-  GRIN_VERTEX v;
-  GRIN_DIRECTION dir;
-  GRIN_EDGE_TYPE etype;
-};
 #endif
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
@@ -148,5 +135,39 @@ typedef std::vector<GRIN_EDGE_PROPERTY> GRIN_EDGE_PROPERTY_LIST_T;
 #if defined(GRIN_WITH_VERTEX_PROPERTY) || defined(GRIN_WITH_EDGE_PROPERTY)
 typedef std::vector<const void*> GRIN_ROW_T;
 #endif
+
+class URI {
+  public: URI(const std::string& uri) {
+    std::string::size_type pos = uri.find("://");
+    if (pos == std::string::npos) {
+      std::cout << "Invalid URI: " << uri;
+    }
+    protocol = uri.substr(0, pos);
+    std::string::size_type pos2 = uri.find("?", pos + 3);
+    if (pos2 == std::string::npos) {
+      etcd_endpoint = uri.substr(pos + 3);
+    } else {
+      etcd_endpoint = uri.substr(pos + 3, pos2 - pos - 3);
+      std::string params_str = uri.substr(pos2 + 1);
+      std::vector<std::string> params_vec;
+      std::istringstream f(params_str);
+      std::string str;
+      while (std::getline(f, str, '&')) {
+        auto equal_pos = str.find("=");
+        auto key = str.substr(0, equal_pos);
+        auto value = str.substr(equal_pos + 1);
+        params[key] = value;
+      }
+    }
+  }
+  const std::string& getProtocol() const { return protocol; }
+  const std::string& getEtcdEndpoint() const { return etcd_endpoint; }
+  const std::map<std::string, std::string>& getParams() const { return params; }
+
+  private:
+    std::string protocol;
+    std::string etcd_endpoint;
+    std::map<std::string, std::string> params;
+};
 
 #endif  // RESEARCH_GART_GRIN_SRC_PREDEFINE_H_

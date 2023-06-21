@@ -23,10 +23,7 @@ GRIN_ADJACENT_LIST grin_get_adjacent_list(GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTE
 #endif
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST
-void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
-  auto _adj_list = static_cast<GRIN_ADJACENT_LIST_T*>(adj_list);
-  delete _adj_list;
-}
+void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) { }
 #endif
 
 
@@ -34,17 +31,16 @@ void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
 GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _adj_list = static_cast<GRIN_ADJACENT_LIST_T*>(adj_list);
   auto iter = new GRIN_ADJACENT_LIST_ITERATOR_T();
-  iter->v = _adj_list->v;
-  iter->etype = _adj_list->etype;
-  if (_adj_list->dir == GRIN_DIRECTION::IN) {
-    iter->edge_iter = _g->GetIncomingAdjList(_GRIN_VERTEX_T(_adj_list->v),
-                                   _adj_list->etype);
+  iter->v = adj_list.v;
+  iter->etype = adj_list.etype;
+  if (adj_list.dir == GRIN_DIRECTION::IN) {
+    iter->edge_iter = _g->GetIncomingAdjList(_GRIN_VERTEX_T(adj_list.v),
+                                   adj_list.etype);
     iter->dir = GRIN_DIRECTION::IN;
-  } else if (_adj_list->dir == GRIN_DIRECTION::OUT) {
-    iter->edge_iter = _g->GetOutgoingAdjList(_GRIN_VERTEX_T(_adj_list->v),
-                                   _adj_list->etype);
+  } else if (adj_list.dir == GRIN_DIRECTION::OUT) {
+    iter->edge_iter = _g->GetOutgoingAdjList(_GRIN_VERTEX_T(adj_list.v),
+                                   adj_list.etype);
     iter->dir = GRIN_DIRECTION::OUT;
   } 
   return iter;
@@ -79,17 +75,17 @@ GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
 GRIN_EDGE grin_get_edge_from_adjacent_list_iter(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  auto edge = new GRIN_EDGE_T();
+  GRIN_EDGE edge;
   if (_iter->dir == GRIN_DIRECTION::IN) {
-    edge->src = _iter->edge_iter.neighbor().GetValue();
-    edge->dst = _iter->v;
+    edge.src = _iter->edge_iter.neighbor().GetValue();
+    edge.dst = _iter->v;
   } else {
-    edge->src = _iter->v;
-    edge->dst = _iter->edge_iter.neighbor().GetValue();
+    edge.src = _iter->v;
+    edge.dst = _iter->edge_iter.neighbor().GetValue();
   }
-  edge->dir = _iter->dir;
-  edge->etype = _iter->etype;
-  edge->edata = _iter->edge_iter.get_data();
+  edge.dir = _iter->dir;
+  edge.etype = _iter->etype;
+  edge.edata = _iter->edge_iter.get_data();
   return edge;
 }
 #endif

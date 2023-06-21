@@ -58,7 +58,7 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH g,
   }
   if (vps->size() == 0) {
     delete vps;
-    return GRIN_NULL_LIST;
+    return GRIN_NULL_VERTEX_PROPERTY_LIST;
   }
   return vps;
 }
@@ -101,7 +101,7 @@ GRIN_EDGE_PROPERTY_LIST grin_get_edge_properties_by_name(GRIN_GRAPH g,
   }
   if (epl->size() == 0) {
     delete epl;
-    return GRIN_NULL_LIST;
+    return GRIN_NULL_EDGE_PROPERTY_LIST;
   }
   return epl;
 }
@@ -248,8 +248,7 @@ GRIN_DATATYPE grin_get_edge_property_datatype(GRIN_GRAPH g,
 int grin_get_edge_property_value_of_int32(GRIN_GRAPH g, GRIN_EDGE e,
                                           GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -263,8 +262,7 @@ int grin_get_edge_property_value_of_int32(GRIN_GRAPH g, GRIN_EDGE e,
 unsigned int grin_get_edge_property_value_of_uint32(GRIN_GRAPH g, GRIN_EDGE e,
                                                     GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -278,8 +276,7 @@ unsigned int grin_get_edge_property_value_of_uint32(GRIN_GRAPH g, GRIN_EDGE e,
 long long int grin_get_edge_property_value_of_int64(GRIN_GRAPH g, GRIN_EDGE e,
                                                     GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -293,8 +290,7 @@ long long int grin_get_edge_property_value_of_int64(GRIN_GRAPH g, GRIN_EDGE e,
 unsigned long long int grin_get_edge_property_value_of_uint64(
     GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -308,8 +304,7 @@ unsigned long long int grin_get_edge_property_value_of_uint64(
 float grin_get_edge_property_value_of_float(GRIN_GRAPH g, GRIN_EDGE e,
                                             GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -323,8 +318,7 @@ float grin_get_edge_property_value_of_float(GRIN_GRAPH g, GRIN_EDGE e,
 double grin_get_edge_property_value_of_double(GRIN_GRAPH g, GRIN_EDGE e,
                                               GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -338,8 +332,7 @@ double grin_get_edge_property_value_of_double(GRIN_GRAPH g, GRIN_EDGE e,
 const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e,
                                                    GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -353,8 +346,7 @@ const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e,
 int grin_get_edge_property_value_of_date32(GRIN_GRAPH g, GRIN_EDGE e,
                                            GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -368,8 +360,7 @@ int grin_get_edge_property_value_of_date32(GRIN_GRAPH g, GRIN_EDGE e,
 int grin_get_edge_property_value_of_time32(GRIN_GRAPH g, GRIN_EDGE e,
                                            GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -383,8 +374,7 @@ int grin_get_edge_property_value_of_time32(GRIN_GRAPH g, GRIN_EDGE e,
 long long int grin_get_edge_property_value_of_timestamp64(
     GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
@@ -405,8 +395,7 @@ GRIN_EDGE_TYPE grin_get_edge_type_from_property(GRIN_GRAPH g,
 const void* grin_get_edge_property_value(GRIN_GRAPH g, GRIN_EDGE e,
                                          GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _e = static_cast<GRIN_EDGE_T*>(e);
-  char* base_addr = _e->edata;
+  char* base_addr = e->edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
