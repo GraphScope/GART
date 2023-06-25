@@ -16,6 +16,8 @@
 #include <fstream>
 #include <map>
 
+#include <gflags/gflags.h>
+
 #include "flags.h"           // NOLINT(build/include_subdir)
 #include "kafka_producer.h"  // NOLINT(build/include_subdir)
 #include "vegito/src/fragment/id_parser.h"

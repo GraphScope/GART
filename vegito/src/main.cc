@@ -16,6 +16,8 @@
 #include <execinfo.h>
 #include <csignal>
 
+#include <gflags/gflags.h>
+
 #include "framework/bench_runner.h"
 #include "framework/config.h"
 #include "util/spinlock.h"

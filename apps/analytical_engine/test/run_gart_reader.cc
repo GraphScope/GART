@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 
+#include "gflags/gflags.h"
 #include "glog/logging.h"
 
 #include <etcd/Client.hpp>

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <gflags/gflags.h>
+
 #include "framework/bench_runner.h"
 #include "util/spinlock.h"
 
