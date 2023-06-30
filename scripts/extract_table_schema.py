@@ -109,6 +109,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
     edefs = config["edgeMappings"]["edge_types"]
     idx = 0
     for edef in edefs:
+        id_name = ""  # TODO: not support id in edge yet
         props = edef["dataFieldMappings"]
         type = edef["type_pair"]["edge"]
         element = {"typeId": idx, "typeName": type}

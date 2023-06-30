@@ -139,15 +139,23 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     for (int prop_idx = 0; prop_idx < prop_info.size(); prop_idx++) {
       int prop_id = prop_idx;
       string prop_name = prop_info[prop_idx]["property"].as<string>();
-      string prop_dtype;
+      string prop_dtype = "";
       string prop_table_col_name =
           prop_info[prop_idx]["dataField"]["name"].as<string>();
       auto required_table_schema = table_schema[table_name];
-      for (int table_idx = 0; table_idx < required_table_schema; ++table_idx) {
-        if (required_table_schema[table_idx].at(0).get<string>() ==
+      for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
+        if (required_table_schema[col_idx].size() != 2) {
+          LOG(ERROR) << "Table schema file (" << table_schema_path
+                     << ") format error. "
+                     << "Table name" << table_name << "Column index " << col_idx
+                     << " has " << required_table_schema[col_idx].size()
+                     << " columns.";
+          assert(false);
+        }
+        if (required_table_schema[col_idx][0].get<string>() ==
             prop_table_col_name) {
           string prop_dtype_str =
-              required_table_schema[table_idx].at(1).get<string>();
+              required_table_schema[col_idx][1].get<string>();
           // TODO(wanglei): support more data types in MySQL
           if (prop_dtype_str == "int") {
             prop_dtype = "INT";
@@ -164,6 +172,14 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
           }
           break;
         }
+      }
+
+      if (prop_dtype == "") {
+        LOG(ERROR) << "Table schema file (" << table_schema_path
+                   << ") format error. "
+                   << "Table name " << table_name << " Column name "
+                   << prop_table_col_name << " not found.";
+        assert(false);
       }
 
       if (is_vertex) {
