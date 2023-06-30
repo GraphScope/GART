@@ -27,6 +27,25 @@
 using json = vineyard::json;
 using namespace std;
 
+template <typename T>
+inline void append_str(string& base, const T& append, char delimiter = '|') {
+  if (base.empty()) {
+    base = to_string(append);
+  } else {
+    base += delimiter + to_string(append);
+  }
+}
+
+template <>
+inline void append_str<string>(string& base, const string& append,
+                               char delimiter) {
+  if (base.empty()) {
+    base = append;
+  } else {
+    base += delimiter + append;
+  }
+}
+
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -76,10 +95,11 @@ int main(int argc, char** argv) {
   }
 
   // init graph schema
-  map<string, int> vertex_tables;
-  map<string, int> edge_tables;
+  map<string, int> table2vlabel;  // data source (table) -> vlabel id (from 0)
+  map<string, int> table2elabel;  // data source (table) -> elabel id (from 0)
   map<string, vector<string>> required_properties;
-  map<string, string> vertex_label_columns;
+  map<string, string> vertex_label_columns;  // table name -> id column name
+  // table name -> (src column name, dst column name)
   map<string, pair<string, string>> edge_label_columns;
   vector<pair<int, int>> edge_label2src_dst_labels;
   map<string, int> vertex_label2ids;
@@ -113,7 +133,7 @@ int main(int argc, char** argv) {
     auto id = idx;
     auto table_name = vdef[idx]["dataSourceName"].as<string>();
     auto label = vdef[idx]["type_name"].as<string>();
-    vertex_tables.emplace(table_name, id);
+    table2vlabel.emplace(table_name, id);
     vertex_label_columns.emplace(table_name,
                                  vdef[idx]["idFieldName"].as<string>());
     vertex_label2ids.emplace(label, id);
@@ -129,7 +149,7 @@ int main(int argc, char** argv) {
   // parse edges
   for (int idx = 0; idx < elabel_num; ++idx) {
     auto table_name = edef[idx]["dataSourceName"].as<string>();
-    edge_tables.emplace(table_name, idx);
+    table2elabel.emplace(table_name, idx);
     auto src_label = edef[idx]["type_pair"]["source_vertex"].as<string>();
     auto dst_label = edef[idx]["type_pair"]["destination_vertex"].as<string>();
     auto src_col =
@@ -173,37 +193,41 @@ int main(int argc, char** argv) {
     const char* str_addr = static_cast<const char*>(msg->payload());
     string line;
     line.assign(str_addr, str_addr + str_len);
-    string content;
-    bool is_edge = false;
     json log = json::parse(line);
+
+    bool is_edge = false;
     string type = log["type"].get<string>();
+    string table_name = log["table"].get<string>();
+    if (table2vlabel.find(table_name) == table2vlabel.end() &&
+        table2elabel.find(table_name) == table2elabel.end()) {
+      continue;
+    }
+
+    if (table2elabel.find(table_name) != table2elabel.end()) {
+      is_edge = true;
+      if (table2vlabel.find(table_name) != table2vlabel.end()) {
+        LOG(ERROR) << "Table name conflict: " << table_name;
+        assert(false);
+      }
+    }
+
+    string content;
+    int epoch = log_count / FLAGS_logs_per_epoch;
+    auto data = log["data"];
+
     if (type == "insert") {
-      string table_name = log["table"].get<string>();
-      if (vertex_tables.find(table_name) != vertex_tables.end()) {
-        content = "add_vertex";
-      } else if (edge_tables.find(table_name) != edge_tables.end()) {
-        is_edge = true;
-        content = "add_edge";
-      } else {
-        continue;
-      }
+      content = is_edge ? "add_edge" : "add_vertex";
+      append_str(content, epoch);
 
-      auto data = log["data"];
-      content = content + "|" + to_string(log_count / FLAGS_logs_per_epoch);
-      if (is_edge) {
-        content =
-            content + "|" + to_string(edge_tables.find(table_name)->second);
-      }
-
-      if (is_edge == false) {
+      if (!is_edge) {
         auto vid_col = vertex_label_columns.find(table_name)->second;
-        auto vertex_label_id = vertex_tables.find(table_name)->second;
+        auto vertex_label_id = table2vlabel.find(table_name)->second;
         int64_t fid = vertex_nums[vertex_label_id] % FLAGS_subgraph_num;
         int64_t offset = vertex_nums_per_fragment[vertex_label_id][fid];
         vertex_nums[vertex_label_id]++;
         vertex_nums_per_fragment[vertex_label_id][fid]++;
         auto gid = id_parser.GenerateId(fid, vertex_label_id, offset);
-        content = content + "|" + to_string(gid);
+        append_str(content, gid);
         if (data[vid_col].is_number_integer()) {
           int64_oid2gid_maps[vertex_label_id].emplace(
               data[vid_col].get<int64_t>(), gid);
@@ -212,10 +236,12 @@ int main(int argc, char** argv) {
               data[vid_col].get<string>(), gid);
         }
       } else {
+        append_str(content, table2elabel[table_name]);
+
         auto edge_col = edge_label_columns.find(table_name)->second;
         string src_name = edge_col.first;
         string dst_name = edge_col.second;
-        auto edge_label_id = edge_tables.find(table_name)->second;
+        auto edge_label_id = table2elabel.find(table_name)->second;
         int src_label_id = edge_label2src_dst_labels[edge_label_id].first;
         int dst_label_id = edge_label2src_dst_labels[edge_label_id].second;
         string src_vid, dst_vid;
@@ -237,7 +263,8 @@ int main(int argc, char** argv) {
                                   .find(data[dst_name].get<string>())
                                   ->second);
         }
-        content = content + "|" + src_vid + "|" + dst_vid;
+        append_str(content, src_vid);
+        append_str(content, dst_vid);
       }
 
       auto iter = required_properties.find(table_name);
@@ -254,20 +281,77 @@ int main(int argc, char** argv) {
         } else if (prop_value.is_number_float()) {
           prop_str = to_string(prop_value.get<float>());
         } else {
+          LOG(ERROR) << "Unsupported property type: " << prop_value.type_name();
+          assert(false);
           continue;
         }
-        content = content + "|" + prop_str;
+        append_str(content, prop_str);
       }
-      stringstream ss;
-      ss << content;
-      ostream << ss.str() << flush;
     } else if (type == "delete") {
       // TODO(wanglei): add delete vertex and edge support
+      content = is_edge ? "del_edge" : "del_vertex";
+      append_str(content, epoch);
+
+      if (!is_edge) {
+        auto vid_col = vertex_label_columns.find(table_name)->second;
+        auto vertex_label_id = table2vlabel.find(table_name)->second;
+        int64_t fid = vertex_nums[vertex_label_id] % FLAGS_subgraph_num;
+        vertex_nums[vertex_label_id]++;
+        vertex_nums_per_fragment[vertex_label_id][fid]++;
+        long gid;
+        if (data[vid_col].is_number_integer()) {
+          gid =
+              int64_oid2gid_maps[vertex_label_id][data[vid_col].get<int64_t>()];
+        } else if (data[vid_col].is_string()) {
+          gid =
+              string_oid2gid_maps[vertex_label_id][data[vid_col].get<string>()];
+        }
+        append_str(content, gid);
+
+      } else {
+        append_str(content, table2elabel[table_name]);
+
+        auto edge_col = edge_label_columns.find(table_name)->second;
+        string src_name = edge_col.first;
+        string dst_name = edge_col.second;
+        auto edge_label_id = table2elabel.find(table_name)->second;
+        int src_label_id = edge_label2src_dst_labels[edge_label_id].first;
+        int dst_label_id = edge_label2src_dst_labels[edge_label_id].second;
+        string src_vid, dst_vid;
+        if (data[src_name].is_number_integer()) {
+          src_vid = to_string(int64_oid2gid_maps[src_label_id]
+                                  .find(data[src_name].get<int64_t>())
+                                  ->second);
+        } else if (data[src_name].is_string()) {
+          src_vid = to_string(string_oid2gid_maps[src_label_id]
+                                  .find(data[src_name].get<string>())
+                                  ->second);
+        }
+        if (data[dst_name].is_number_integer()) {
+          dst_vid = to_string(int64_oid2gid_maps[dst_label_id]
+                                  .find(data[dst_name].get<int64_t>())
+                                  ->second);
+        } else if (data[dst_name].is_string()) {
+          dst_vid = to_string(string_oid2gid_maps[dst_label_id]
+                                  .find(data[dst_name].get<string>())
+                                  ->second);
+        }
+        append_str(content, src_vid);
+        append_str(content, dst_vid);
+      }
+
     } else if (type == "update") {
       // TODO(wanglei): add update vertex and edge support
+      content = is_edge ? "up_edge" : "up_vertex";
+      append_str(content, epoch);
+
     } else {
       continue;
     }
+
+    stringstream ss;
+    ss << content;
+    ostream << ss.str() << flush;
     log_count++;
   }
 }
