@@ -15,6 +15,8 @@ limitations under the License.
 #include "grin/include/include/property/property.h"
 #include "grin/include/include/common/error.h"
 
+#include "util/inline_str.h"
+
 
 void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {}
 
@@ -171,9 +173,8 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
                                                      GRIN_VERTEX v,
                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  std::string tmp_str = _g->template GetData<std::string>(
-      _GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp));
-  return tmp_str.c_str();
+  return  _g->template GetData<inline_str_8<40>>(
+      _GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp)).c_str();
 }
 
 int grin_get_vertex_property_value_of_date32(GRIN_GRAPH g, GRIN_VERTEX v,
@@ -336,10 +337,10 @@ const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e,
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
   if (prop_id == 0) {
-    return (reinterpret_cast<std::string*>(base_addr))->c_str();
+    return (reinterpret_cast<inline_str_8<40>*>(base_addr))->c_str();
   } else {
     auto offset = _g->edge_prop_offsets[e_type_id][prop_id - 1];
-    return (reinterpret_cast<std::string*>(base_addr + offset))->c_str();
+    return (reinterpret_cast<inline_str_8<40>*>(base_addr + offset))->c_str();
   }
 }
 

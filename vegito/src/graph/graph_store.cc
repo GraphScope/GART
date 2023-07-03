@@ -184,13 +184,10 @@ struct TypeDef {
   int id;
   // vector<int> index; empty
   std::string label;
-  std::vector<int> mapping;  // id of properties, raw
   std::vector<PropDef> propertyDefList;
   std::string src_vlabel;             // for edge
   std::string dst_vlabel;             // for edge
-  std::vector<int> reverse_mapping;   // raw
   std::string type;                   // "VERTEX" or "EDGE"
-  std::vector<int> valid_properties;  // all 1
 
   vineyard::json json(bool gie = false) const {
     using json = vineyard::json;
@@ -199,9 +196,6 @@ struct TypeDef {
     json index_array = json::array();
     res["indexes"] = index_array;
     res["label"] = label;
-    // mapping
-    std::string mapping_str(vector2str(mapping));
-    res["mapping"] = mapping_str;
 
     // propertyDefList
     json props_array = json::array();
@@ -220,13 +214,8 @@ struct TypeDef {
     rel_array.push_back(relation);
     res["rawRelationShips"] = rel_array;
 
-    // reverse_mapping
-    std::string rmapping_str(vector2str(reverse_mapping));
-    res["reverse_mapping"] = rmapping_str;
     res["type"] = type;
 
-    std::string vp = vector2str(valid_properties);
-    res["valid_properties"] = vp;
     return res;
   }
 
@@ -248,21 +237,6 @@ struct TypeDef {
 struct SchemaJson {
   int partitionNum;
   std::vector<TypeDef> types;
-  std::vector<std::string> uniquePropertyNames;  // raw
-
-  std::string get_names() const {
-    std::string str = "[";
-    for (int i = 0; i < uniquePropertyNames.size(); ++i) {
-      char cstr[uniquePropertyNames[i].length() + 3];
-      sprintf(cstr, "\"%s\"",  // NOLINT(runtime/printf)
-              uniquePropertyNames[i].c_str());
-      str += std::string(cstr);
-      if (i != uniquePropertyNames.size() - 1)
-        str += ", ";
-    }
-    str += "]";
-    return str;
-  }
 };
 
 }  // namespace
@@ -275,14 +249,12 @@ void SchemaImpl::fill_json(void* ptr) const {
 
   // Prop
   std::vector<PropDef> props(property_id_map.size());
-  sj.uniquePropertyNames.resize(props.size());
   for (const auto& pair : property_id_map) {
-    std::string pname = pair.first;
+    std::string pname = pair.first.first;
     int pid = pair.second;
     PropDef& prop = props[pid];
     prop.id = pid;
     prop.name = pname;
-    sj.uniquePropertyNames[pid] = pname;
   }
 
   // need to sort map
@@ -312,11 +284,8 @@ void SchemaImpl::fill_json(void* ptr) const {
         pid_end = props.size();
       }
     }
-    type.reverse_mapping.assign(props.size(), -1);
     for (int pid = pid_begin; pid < pid_end; ++pid) {
-      type.mapping.push_back(pid);
       int local_pid = pid - pid_begin;
-      type.reverse_mapping[pid] = local_pid;
       props[pid].dtype = dtype_map.at({label_id, local_pid});
     }
     type.propertyDefList.assign(props.begin() + pid_begin,
@@ -330,7 +299,6 @@ void SchemaImpl::fill_json(void* ptr) const {
     }
 
     type.type = is_v ? VERTEX : EDGE;
-    type.valid_properties.assign(props.size(), 1);
   }
 }
 
@@ -341,14 +309,12 @@ std::string SchemaImpl::get_json(bool gie, int pid) {
   fill_json(&sj);
 
   json graph_schema;
-  graph_schema["partitionNum"] = sj.partitionNum;
+  graph_schema["partitionNum"] = 0;
   json props_array = json::array();
   for (const auto& type : sj.types) {
     props_array.push_back(type.json(gie));
   }
   graph_schema["types"] = props_array;
-  std::string names = sj.get_names();
-  graph_schema["uniquePropertyNames"] = names;
 
   return graph_schema.dump();
 }

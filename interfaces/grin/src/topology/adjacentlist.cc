@@ -66,10 +66,7 @@ bool grin_is_adjacent_list_end(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
 GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  if (_iter->edge_iter.valid()) {
-    return _iter->edge_iter.neighbor().GetValue();
-  }
-  return GRIN_NULL_VERTEX;
+  return _iter->edge_iter.neighbor().GetValue();
 }
 
 GRIN_EDGE grin_get_edge_from_adjacent_list_iter(

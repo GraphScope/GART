@@ -30,8 +30,8 @@ namespace gart {
 namespace graph {
 
 struct SchemaImpl {
-  // property name -> property idx
-  std::unordered_map<std::string, int> property_id_map;
+  // property name, label_id -> property idx
+  std::map<std::pair<std::string, int>, int> property_id_map;
   // label -> property offset
   std::map<int, int> label2prop_offset;
   // label name -> label id

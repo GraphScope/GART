@@ -310,7 +310,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
         assert(false);
       }
 
-      graph_schema.property_id_map[prop_name] = prop_offset;
+      graph_schema.property_id_map[std::make_pair(prop_name, idx)] = prop_offset;
       prop_offset++;
     }
     if (is_vertex) {
