@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <fstream>
-
 #include "graph/graph_store.h"
 
 namespace gart {
