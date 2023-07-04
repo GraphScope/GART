@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef CONVERTER_PRODUCER_H_
-#define CONVERTER_PRODUCER_H_
+#ifndef CONVERTER_HELPER_H_
+#define CONVERTER_HELPER_H_
 
 #include <iostream>
 #include <memory>
@@ -22,9 +22,11 @@
 #include "glog/logging.h"
 #include "librdkafka/rdkafkacpp.h"
 
+namespace converter {
+
 /** Kafka producer class
  *
- * A kafka producer class based on librdkafka, can be used to produce
+ * A Kafka producer class based on librdkafka, can be used to produce
  * stream data to one topic.
  */
 class KafkaProducer {
@@ -62,7 +64,7 @@ class KafkaProducer {
 
   ~KafkaProducer() = default;
 
-  void AddMessage(const std::string& message) {
+  void add_message(const std::string& message) {
     if (message.empty()) {
       return;
     }
@@ -81,14 +83,15 @@ class KafkaProducer {
     }
   }
 
-  inline std::string topic() { return topic_; }
+  inline std::string topic() const { return topic_; }
 
  private:
   static const constexpr int internal_buffer_size_ = 1024 * 1024;
 
+  const std::string brokers_;
+  const std::string topic_;
+
   size_t pending_count_ = 0;
-  std::string brokers_;
-  std::string topic_;
   std::unique_ptr<RdKafka::Producer> producer_;
 };
 
@@ -111,7 +114,7 @@ class KafkaOutputStream : public std::ostream {
         : producer_(prodcuer) {}
 
     int sync() override {
-      producer_->AddMessage(this->str());
+      producer_->add_message(this->str());
       this->str("");
       return 0;
     }
@@ -121,4 +124,82 @@ class KafkaOutputStream : public std::ostream {
   };
 };
 
-#endif  // CONVERTER_PRODUCER_H_
+/** Kafka consumer class
+ *
+ * A Kafka consumer class based on librdkafka, can be used to consumer
+ * stream data from one topic.
+ */
+class KafkaConsumer {
+ public:
+  explicit KafkaConsumer(const std::string& broker_list,
+                         const std::string& topic, const std::string& group_id,
+                         int partition = 0)
+      : brokers_(broker_list),
+        topic_(topic),
+        group_id_(group_id),
+        partition_(partition) {
+    RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+    std::string rdkafka_err;
+    if (conf->set("metadata.broker.list", broker_list, rdkafka_err) !=
+        RdKafka::Conf::CONF_OK) {
+      LOG(ERROR) << "Failed to set metadata.broker.list: " << rdkafka_err;
+    }
+    if (conf->set("group.id", group_id_, rdkafka_err) !=
+        RdKafka::Conf::CONF_OK) {
+      LOG(ERROR) << "Failed to set group.id: " << rdkafka_err;
+    }
+    if (conf->set("enable.auto.commit", "false", rdkafka_err) !=
+        RdKafka::Conf::CONF_OK) {
+      LOG(ERROR) << "Failed to set enable.auto.commit: " << rdkafka_err;
+    }
+    if (conf->set("auto.offset.reset", "earliest", rdkafka_err) !=
+        RdKafka::Conf::CONF_OK) {
+      LOG(ERROR) << "Failed to set auto.offset.reset: " << rdkafka_err;
+    }
+
+    consumer_ = std::unique_ptr<RdKafka::Consumer>(
+        RdKafka::Consumer::create(conf, rdkafka_err));
+    if (!consumer_) {
+      LOG(ERROR) << "Failed to create consumer: " << rdkafka_err << std::endl;
+      exit(1);
+    }
+
+    RdKafka::Conf* tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+
+    topic_ptr_ =
+        RdKafka::Topic::create(consumer_.get(), topic_, tconf, rdkafka_err);
+    int64_t start_offset = RdKafka::Topic::OFFSET_BEGINNING;
+
+    RdKafka::ErrorCode resp =
+        consumer_->start(topic_ptr_, partition_, start_offset);
+
+    if (resp != RdKafka::ERR_NO_ERROR) {
+      LOG(ERROR) << "Failed to start consumer: " << RdKafka::err2str(resp);
+      exit(1);
+    }
+  }
+
+  RdKafka::Message* consume(int timeout_ms = 1000) const {
+    RdKafka::Message* msg =
+        consumer_->consume(topic_ptr_, partition_, timeout_ms);
+    if (msg == nullptr) {
+      LOG(ERROR) << "Failed to consume message";
+    }
+    return msg;
+  }
+
+  ~KafkaConsumer() = default;
+
+ private:
+  const std::string brokers_;
+  const std::string topic_;
+  const std::string group_id_;
+  const int partition_;
+
+  RdKafka::Topic* topic_ptr_;
+  std::unique_ptr<RdKafka::Consumer> consumer_;
+};
+
+}  // namespace converter
+
+#endif  // CONVERTER_HELPER_H_

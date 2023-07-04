@@ -16,7 +16,7 @@
 #ifndef CONVERTER_FLAGS_H_
 #define CONVERTER_FLAGS_H_
 
-#include "gflags/gflags_declare.h"
+#include <gflags/gflags.h>
 
 DECLARE_string(read_kafka_broker_list);
 DECLARE_string(write_kafka_broker_list);

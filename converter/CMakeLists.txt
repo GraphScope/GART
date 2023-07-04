@@ -52,7 +52,7 @@ add_custom_target(convert_clformat
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-add_executable(binlog_convert binlog_convert.cc flags.cc)
+add_executable(binlog_convert binlog_convert.cc flags.cc parser.cc)
 
 target_include_directories(binlog_convert PRIVATE ${RDKAFKA_INCLUDE_DIR})
 target_link_libraries(binlog_convert ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${CMAKE_DL_LIBS} ${YAML_CPP_LIBRARIES})

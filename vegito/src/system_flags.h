@@ -16,7 +16,7 @@
 #ifndef VEGITO_SRC_SYSTEM_FLAGS_H_
 #define VEGITO_SRC_SYSTEM_FLAGS_H_
 
-#include <gflags/gflags_declare.h>
+#include <gflags/gflags.h>
 
 DECLARE_string(kafka_broker_list);
 DECLARE_string(kafka_unified_log_topic);

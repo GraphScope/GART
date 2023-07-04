@@ -15,8 +15,6 @@
 
 #include "flags.h"  // NOLINT(build/include_subdir)
 
-#include "gflags/gflags.h"
-
 DEFINE_string(read_kafka_broker_list, "127.0.0.1:9092",
               "Kafka broker list for reading TxnLogs.");
 DEFINE_string(write_kafka_broker_list, "127.0.0.1:9092",
