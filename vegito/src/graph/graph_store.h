@@ -214,7 +214,7 @@ class GraphStore {
 
   inline void set_ovg2l(std::shared_ptr<hashmap_t>& hmap, uint64_t v_label,
                         int64_t gid, int64_t lid) {
-    ovg2ls_[v_label]->emplace(hmap, gid, lid);
+    VINEYARD_CHECK_OK(ovg2ls_[v_label]->emplace(hmap, gid, lid));
     if (hmap != nullptr) {
       ovg2ls_[v_label] = hmap;
     }

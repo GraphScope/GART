@@ -293,8 +293,8 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
   for (size_t prop_id = 0; prop_id < required_prop_names.size(); prop_id++) {
     const string& prop_name = required_prop_names[prop_id];
     json prop_value;
-    if (update && !data["old"][prop_name].is_null()) {
-      prop_value = data["old"][prop_name];
+    if (update && !log["old"][prop_name].is_null()) {
+      prop_value = log["old"][prop_name];
     } else {
       prop_value = data[prop_name];
     }
