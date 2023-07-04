@@ -13,15 +13,7 @@
  * limitations under the License.
  */
 
-#ifndef VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_
-#define VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_
-
-#include <string>
-#include <vector>
-#include "vineyard/basic/ds/hashmap_mvcc.h"
-
-#include "graph/graph_store.h"
-#include "graph/type_def.h"
+#include "graph/graph_ops.h"
 
 namespace gart {
 namespace graph {
@@ -156,5 +148,3 @@ void process_add_edge(std::vector<std::string> cmd,
 
 }  // namespace graph
 }  // namespace gart
-
-#endif  // VEGITO_SRC_GRAPH_GRAPH_OPS_PROCESS_ADD_EDGE_H_

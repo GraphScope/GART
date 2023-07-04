@@ -91,17 +91,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 ### add main files ###
 
 file(GLOB SOURCES
-          "src/system_flags.cc" "src/framework/*.cc" "src/framework/utils/*.cc"
-          "src/property/*.cc" "src/graph/*.cc" "src/seggraph/src/*.cpp"
+          "src/system_flags.cc" "src/framework/*.cc"
+          "src/graph/*.cc" "src/graph/graph_ops/*.cc"
+          "src/property/*.cc" "src/seggraph/src/*.cpp"
           )
 
-file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc" "src/*.h" "src/*.hpp"
-         "src/framework/*.cc" "src/framework/utils/*.cc" "src/fragment/*.cc"
-         "src/property/*.cc" "src/graph/*.cc" "src/graph/graph_ops/*.cc" "src/seggraph/src/*.cpp"
-         "src/framework/*.h" "src/framework/utils/*.h" "src/fragment/*.h"
-         "src/property/*.h" "src/graph/*.h" "src/graph/graph_ops/*.h" "src/seggraph/core/*.hpp"
-         "../interfaces/fragment/*.h"
-)
+file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h" "*.cpp" "*.hpp")
 
 add_custom_target(vegito_clformat
           COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}

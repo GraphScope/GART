@@ -17,10 +17,7 @@
 
 #include <fstream>
 
-#include "graph/graph_ops/process_add_edge.h"
-#include "graph/graph_ops/process_add_vertex.h"
-#include "graph/graph_ops/process_del_edge.h"
-#include "graph/graph_ops/process_del_vertex.h"
+#include "graph/graph_ops.h"
 #include "librdkafka/rdkafkacpp.h"
 
 #include "yaml-cpp/yaml.h"
