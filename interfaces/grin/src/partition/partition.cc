@@ -23,10 +23,10 @@ limitations under the License.
 
 #include "grin/include/include/partition/partition.h"
 
-
 #ifdef GRIN_ENABLE_GRAPH_PARTITION
 
-GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(const char* uri) {
+GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(
+    const char* uri) {
   GRIN_PARTITIONED_GRAPH_T* pg = new GRIN_PARTITIONED_GRAPH_T();
   std::string uri_str(uri);
   URI config(uri_str);

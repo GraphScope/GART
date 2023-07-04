@@ -19,6 +19,7 @@
 #include "etcd/Client.hpp"
 #include "etcd/Response.hpp"
 #include "glog/logging.h"
+#include "vineyard/basic/ds/hashmap_mvcc.h"
 
 #include "fragment/id_parser.h"
 #include "property/property_col_array.h"
@@ -28,6 +29,8 @@
 
 namespace gart {
 namespace graph {
+
+using hashmap_t = vineyard::HashmapMVCC<int64_t, int64_t>;
 
 struct SchemaImpl {
   // property name, label_id -> property idx
@@ -200,6 +203,23 @@ class GraphStore {
     ovl2gs_[vlabel][offset] = gid;
   }
 
+  inline void init_ovg2ls(uint64_t vlabel_num) {
+    auto v6d_client = array_allocator.get_client();
+    for (auto idx = 0; idx < vlabel_num; idx++) {
+      std::shared_ptr<hashmap_t> hmap;
+      VINEYARD_CHECK_OK(hashmap_t::Make(*v6d_client, 1, hmap));
+      ovg2ls_.emplace_back(hmap);
+    }
+  }
+
+  inline void set_ovg2l(std::shared_ptr<hashmap_t>& hmap, uint64_t v_label,
+                        int64_t gid, int64_t lid) {
+    ovg2ls_[v_label]->emplace(hmap, gid, lid);
+    if (hmap != nullptr) {
+      ovg2ls_[v_label] = hmap;
+    }
+  }
+
   void add_global_off(uint64_t vlabel, uint64_t key, int pid) {
     if (vlabel >= MAX_VLABELS) {
       assert(false);
@@ -340,6 +360,8 @@ class GraphStore {
 
   std::unordered_map<uint64_t, VTable> vertex_tables_;
   std::unordered_map<uint64_t, uint64_t*> ovl2gs_;
+
+  std::vector<std::shared_ptr<hashmap_t>> ovg2ls_;
 
   // vlabel -> vertex blob schemas
   std::map<uint64_t, gart::BlobSchema> blob_schemas_;

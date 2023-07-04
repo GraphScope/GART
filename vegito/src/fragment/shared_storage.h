@@ -233,6 +233,8 @@ class BlobSchema {
 
   void set_prop_meta(const std::vector<VPropMeta>& meta) { vprops = meta; }
 
+  void set_ovg2l_oid(oid_t oid) { ov_g2l_blob_oid = oid; }
+
   oid_t get_block_oid() const { return block_oid; }
 
   oid_t get_vertex_table_oid() const { return vertex_table.get_object_id(); }
@@ -249,6 +251,7 @@ class BlobSchema {
     single_blob_schema["block_oid"] = block_oid;
     single_blob_schema["elabel2seg"] = elabel2seg.json();
     single_blob_schema["num_vprops"] = vprops.size();
+    single_blob_schema["ovg2l_blob"] = ov_g2l_blob_oid;
 
     json vprop_schema = json::array();
 
@@ -270,6 +273,7 @@ class BlobSchema {
 
   oid_t block_oid;       // Blob of blocks created by BlockManger
   ArrayMeta elabel2seg;  // indexed by vertex label
+  oid_t ov_g2l_blob_oid;
 
   // uint64_t num_vprops;
   std::vector<VPropMeta> vprops;
@@ -279,7 +283,6 @@ class BlobSchema {
 
   VTableMeta vertex_table;  // indexed by vertex label
   ArrayMeta ovl2g;          // indexed by vertex label, array
-  oid_t ovg2l;              // TODO: hash map
 
   // TODO: properties
 };

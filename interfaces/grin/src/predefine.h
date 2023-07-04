@@ -93,7 +93,7 @@ typedef GRIN_GRAPH_T::oid_t GRIN_VERTEX_ORIGINAL_ID_T;
 struct GRIN_VERTEX_LIST_T {
   GRIN_VERTEX_TYPE vtype;
   unsigned all_master_mirror;
-}; // 0: all, 1: master, 2 minor
+};  // 0: all, 1: master, 2 minor
 #endif
 
 #ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR
@@ -137,7 +137,8 @@ typedef std::vector<const void*> GRIN_ROW_T;
 #endif
 
 class URI {
-  public: URI(const std::string& uri) {
+ public:
+  URI(const std::string& uri) {
     std::string::size_type pos = uri.find("://");
     if (pos == std::string::npos) {
       std::cout << "Invalid URI: " << uri;
@@ -164,10 +165,10 @@ class URI {
   const std::string& getEtcdEndpoint() const { return etcd_endpoint; }
   const std::map<std::string, std::string>& getParams() const { return params; }
 
-  private:
-    std::string protocol;
-    std::string etcd_endpoint;
-    std::map<std::string, std::string> params;
+ private:
+  std::string protocol;
+  std::string etcd_endpoint;
+  std::map<std::string, std::string> params;
 };
 
 #endif  // RESEARCH_GART_GRIN_SRC_PREDEFINE_H_

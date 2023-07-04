@@ -12,11 +12,10 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/property/property.h"
 #include "grin/include/include/common/error.h"
+#include "grin/include/include/property/property.h"
 
 #include "util/inline_str.h"
-
 
 void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {}
 
@@ -173,8 +172,10 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
                                                      GRIN_VERTEX v,
                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return  _g->template GetData<inline_str_8<40>>(
-      _GRIN_VERTEX_T(v), _grin_get_prop_from_property(vp)).c_str();
+  return _g
+      ->template GetData<inline_str_8<40>>(_GRIN_VERTEX_T(v),
+                                           _grin_get_prop_from_property(vp))
+      .c_str();
 }
 
 int grin_get_vertex_property_value_of_date32(GRIN_GRAPH g, GRIN_VERTEX v,

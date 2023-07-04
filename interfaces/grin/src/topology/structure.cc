@@ -17,7 +17,6 @@ limitations under the License.
 
 #include "grin/include/include/topology/structure.h"
 
-
 GRIN_GRAPH grin_get_graph_from_storage(const char*);
 
 void grin_destroy_graph(GRIN_GRAPH g) {
@@ -59,7 +58,7 @@ bool grin_equal_vertex(GRIN_GRAPH g, GRIN_VERTEX v1, GRIN_VERTEX v2) {
   return v1 == v2;
 }
 
-void grin_destroy_edge(GRIN_GRAPH g, GRIN_EDGE e) { }
+void grin_destroy_edge(GRIN_GRAPH g, GRIN_EDGE e) {}
 
 GRIN_VERTEX grin_get_src_vertex_from_edge(GRIN_GRAPH g, GRIN_EDGE e) {
   return e.src;

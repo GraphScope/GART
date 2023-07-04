@@ -17,9 +17,8 @@ limitations under the License.
 
 #include "grin/include/include/topology/vertexlist.h"
 
-
 #if defined(GRIN_ENABLE_VERTEX_LIST) && !defined(GRIN_WITH_VERTEX_PROPERTY)
-GRIN_VERTEX_LIST grin_get_vertex_list(GRIN_GRAPH g) { }
+GRIN_VERTEX_LIST grin_get_vertex_list(GRIN_GRAPH g) {}
 #endif
 
 #ifdef GRIN_ENABLE_VERTEX_LIST
@@ -39,7 +38,7 @@ GRIN_VERTEX_LIST_ITERATOR grin_get_vertex_list_begin(GRIN_GRAPH g,
     *iter = _g->Vertices(_vl->vtype);
   } else if (_vl->all_master_mirror == 1) {
     *iter = _g->InnerVertices(_vl->vtype);
-  } else if (_vl->all_master_mirror == 2){
+  } else if (_vl->all_master_mirror == 2) {
     *iter = _g->OuterVertices(_vl->vtype);
   }
   return iter;
@@ -65,6 +64,6 @@ bool grin_is_vertex_list_end(GRIN_GRAPH g, GRIN_VERTEX_LIST_ITERATOR iter) {
 GRIN_VERTEX grin_get_vertex_from_iter(GRIN_GRAPH g,
                                       GRIN_VERTEX_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_VERTEX_LIST_ITERATOR_T*>(iter);
-  return _iter->vertex().GetValue();  
+  return _iter->vertex().GetValue();
 }
 #endif

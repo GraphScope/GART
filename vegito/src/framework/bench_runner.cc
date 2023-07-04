@@ -310,7 +310,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
         assert(false);
       }
 
-      graph_schema.property_id_map[std::make_pair(prop_name, idx)] = prop_offset;
+      graph_schema.property_id_map[std::make_pair(prop_name, idx)] =
+          prop_offset;
       prop_offset++;
     }
     if (is_vertex) {
@@ -442,6 +443,8 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
   init_graph_schema(FLAGS_schema_file_path, FLAGS_table_schema_file_path,
                     graph_stores_[p_id], rg_maps_[p_id]);
   graph_stores_[p_id]->put_schema();
+  int v_label_num = graph_stores_[p_id]->get_total_vertex_label_num();
+  graph_stores_[p_id]->init_ovg2ls(v_label_num);
 #ifndef WITH_TEST
   start_kafka_to_process_(p_id);
 #else

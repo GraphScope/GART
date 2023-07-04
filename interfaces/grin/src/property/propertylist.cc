@@ -14,7 +14,6 @@ limitations under the License.
 
 #include "grin/include/include/property/propertylist.h"
 
-
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_property_list_by_type(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {

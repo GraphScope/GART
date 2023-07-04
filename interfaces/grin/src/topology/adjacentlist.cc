@@ -17,15 +17,14 @@ limitations under the License.
 
 #include "grin/include/include/topology/adjacentlist.h"
 
-
 #if defined(GRIN_ENABLE_ADJACENT_LIST) && !defined(GRIN_ENABLE_EDGE_PROPERTY)
-GRIN_ADJACENT_LIST grin_get_adjacent_list(GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX);
+GRIN_ADJACENT_LIST grin_get_adjacent_list(GRIN_GRAPH, GRIN_DIRECTION,
+                                          GRIN_VERTEX);
 #endif
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST
-void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) { }
+void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {}
 #endif
-
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
@@ -35,14 +34,14 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
   iter->v = adj_list.v;
   iter->etype = adj_list.etype;
   if (adj_list.dir == GRIN_DIRECTION::IN) {
-    iter->edge_iter = _g->GetIncomingAdjList(_GRIN_VERTEX_T(adj_list.v),
-                                   adj_list.etype);
+    iter->edge_iter =
+        _g->GetIncomingAdjList(_GRIN_VERTEX_T(adj_list.v), adj_list.etype);
     iter->dir = GRIN_DIRECTION::IN;
   } else if (adj_list.dir == GRIN_DIRECTION::OUT) {
-    iter->edge_iter = _g->GetOutgoingAdjList(_GRIN_VERTEX_T(adj_list.v),
-                                   adj_list.etype);
+    iter->edge_iter =
+        _g->GetOutgoingAdjList(_GRIN_VERTEX_T(adj_list.v), adj_list.etype);
     iter->dir = GRIN_DIRECTION::OUT;
-  } 
+  }
   return iter;
 }
 

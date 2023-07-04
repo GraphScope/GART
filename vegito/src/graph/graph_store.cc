@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <fstream>
+
 #include "graph/graph_store.h"
 
 namespace gart {
@@ -144,6 +146,7 @@ void GraphStore::update_blob(uint64_t blob_epoch) {
     schema.set_vtable_location(
         graph->get_max_vertex_id() + graph->get_deleted_inner_num(),
         ov_graph->get_max_vertex_id() + ov_graph->get_deleted_outer_num());
+    schema.set_ovg2l_oid(ovg2ls_[vlabel]->id());
   }
   blob_epoch_ = blob_epoch;
 }
@@ -185,9 +188,9 @@ struct TypeDef {
   // vector<int> index; empty
   std::string label;
   std::vector<PropDef> propertyDefList;
-  std::string src_vlabel;             // for edge
-  std::string dst_vlabel;             // for edge
-  std::string type;                   // "VERTEX" or "EDGE"
+  std::string src_vlabel;  // for edge
+  std::string dst_vlabel;  // for edge
+  std::string type;        // "VERTEX" or "EDGE"
 
   vineyard::json json(bool gie = false) const {
     using json = vineyard::json;

@@ -16,15 +16,17 @@ limitations under the License.
 
 #include "grin/include/include/partition/topology.h"
 
-
-#if defined(GRIN_TRAIT_SELECT_MASTER_FOR_VERTEX_LIST) && !defined(GRIN_WITH_VERTEX_PROPERTY)
+#if defined(GRIN_TRAIT_SELECT_MASTER_FOR_VERTEX_LIST) && \
+    !defined(GRIN_WITH_VERTEX_PROPERTY)
 GRIN_VERTEX_LIST grin_get_vertex_list_select_master(GRIN_GRAPH);
 
 GRIN_VERTEX_LIST grin_get_vertex_list_select_mirror(GRIN_GRAPH);
 #endif
 
-#if defined(GRIN_TRAIT_SELECT_MASTER_FOR_VERTEX_LIST) && defined(GRIN_WITH_VERTEX_PROPERTY)
-GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_master(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
+#if defined(GRIN_TRAIT_SELECT_MASTER_FOR_VERTEX_LIST) && \
+    defined(GRIN_WITH_VERTEX_PROPERTY)
+GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_master(
+    GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vl = new GRIN_VERTEX_LIST_T();
   vl->all_master_mirror = 1;
@@ -32,7 +34,8 @@ GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_master(GRIN_GRAPH g, GRIN_V
   return vl;
 }
 
-GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_mirror(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
+GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_mirror(
+    GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vl = new GRIN_VERTEX_LIST_T();
   vl->all_master_mirror = 2;
@@ -41,55 +44,77 @@ GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_mirror(GRIN_GRAPH g, GRIN_V
 }
 #endif
 
-#if defined(GRIN_TRAIT_SELECT_PARTITION_FOR_VERTEX_LIST) && !defined(GRIN_WITH_VERTEX_PROPERTY)
-GRIN_VERTEX_LIST grin_get_vertex_list_select_partition(GRIN_GRAPH, GRIN_PARTITION);
+#if defined(GRIN_TRAIT_SELECT_PARTITION_FOR_VERTEX_LIST) && \
+    !defined(GRIN_WITH_VERTEX_PROPERTY)
+GRIN_VERTEX_LIST grin_get_vertex_list_select_partition(GRIN_GRAPH,
+                                                       GRIN_PARTITION);
 #endif
 
-#if defined(GRIN_TRAIT_SELECT_PARTITION_FOR_VERTEX_LIST) && defined(GRIN_WITH_VERTEX_PROPERTY)
-GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_partition(GRIN_GRAPH, GRIN_VERTEX_TYPE, GRIN_PARTITION);
+#if defined(GRIN_TRAIT_SELECT_PARTITION_FOR_VERTEX_LIST) && \
+    defined(GRIN_WITH_VERTEX_PROPERTY)
+GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_partition(GRIN_GRAPH,
+                                                               GRIN_VERTEX_TYPE,
+                                                               GRIN_PARTITION);
 #endif
 
-
-
-#if defined(GRIN_TRAIT_SELECT_MASTER_FOR_EDGE_LIST) && !defined(GRIN_WITH_EDGE_PROPERTY)
+#if defined(GRIN_TRAIT_SELECT_MASTER_FOR_EDGE_LIST) && \
+    !defined(GRIN_WITH_EDGE_PROPERTY)
 GRIN_EDGE_LIST grin_get_edge_list_select_master(GRIN_GRAPH);
 
 GRIN_EDGE_LIST grin_get_edge_list_select_mirror(GRIN_GRAPH);
 #endif
 
-#if defined(GRIN_TRAIT_SELECT_MASTER_FOR_EDGE_LIST) && defined(GRIN_WITH_EDGE_PROPERTY)
-GRIN_EDGE_LIST grin_get_edge_list_by_type_select_master(GRIN_GRAPH, GRIN_EDGE_TYPE);
+#if defined(GRIN_TRAIT_SELECT_MASTER_FOR_EDGE_LIST) && \
+    defined(GRIN_WITH_EDGE_PROPERTY)
+GRIN_EDGE_LIST grin_get_edge_list_by_type_select_master(GRIN_GRAPH,
+                                                        GRIN_EDGE_TYPE);
 
-GRIN_EDGE_LIST grin_get_edge_list_by_type_select_mirror(GRIN_GRAPH, GRIN_EDGE_TYPE);
+GRIN_EDGE_LIST grin_get_edge_list_by_type_select_mirror(GRIN_GRAPH,
+                                                        GRIN_EDGE_TYPE);
 #endif
 
-
-#if defined(GRIN_TRAIT_SELECT_PARTITION_FOR_EDGE_LIST) && !defined(GRIN_WITH_EDGE_PROPERTY)
+#if defined(GRIN_TRAIT_SELECT_PARTITION_FOR_EDGE_LIST) && \
+    !defined(GRIN_WITH_EDGE_PROPERTY)
 GRIN_EDGE_LIST grin_get_edge_list_select_partition(GRIN_GRAPH, GRIN_PARTITION);
 #endif
 
-#if defined(GRIN_TRAIT_SELECT_PARTITION_FOR_EDGE_LIST) && defined(GRIN_WITH_EDGE_PROPERTY)
-GRIN_EDGE_LIST grin_get_edge_list_by_type_select_partition(GRIN_GRAPH, GRIN_EDGE_TYPE, GRIN_PARTITION);
+#if defined(GRIN_TRAIT_SELECT_PARTITION_FOR_EDGE_LIST) && \
+    defined(GRIN_WITH_EDGE_PROPERTY)
+GRIN_EDGE_LIST grin_get_edge_list_by_type_select_partition(GRIN_GRAPH,
+                                                           GRIN_EDGE_TYPE,
+                                                           GRIN_PARTITION);
 #endif
 
+#if defined(GRIN_TRAIT_SELECT_MASTER_NEIGHBOR_FOR_ADJACENT_LIST) && \
+    !defined(GRIN_WITH_VERTEX_PROPERTY)
+GRIN_ADJACENT_LIST grin_get_adjacent_list_select_master_neighbor(GRIN_GRAPH,
+                                                                 GRIN_DIRECTION,
+                                                                 GRIN_VERTEX);
 
-#if defined(GRIN_TRAIT_SELECT_MASTER_NEIGHBOR_FOR_ADJACENT_LIST) && !defined(GRIN_WITH_VERTEX_PROPERTY)
-GRIN_ADJACENT_LIST grin_get_adjacent_list_select_master_neighbor(GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX);
-
-GRIN_ADJACENT_LIST grin_get_adjacent_list_select_mirror_neighbor(GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX);
+GRIN_ADJACENT_LIST grin_get_adjacent_list_select_mirror_neighbor(GRIN_GRAPH,
+                                                                 GRIN_DIRECTION,
+                                                                 GRIN_VERTEX);
 #endif
 
-#if defined(GRIN_TRAIT_SELECT_MASTER_NEIGHBOR_FOR_ADJACENT_LIST) && defined(GRIN_WITH_VERTEX_PROPERTY)
-GRIN_ADJACENT_LIST grin_get_adjacent_list_by_edge_type_select_master_neighbor(GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_EDGE_TYPE);
+#if defined(GRIN_TRAIT_SELECT_MASTER_NEIGHBOR_FOR_ADJACENT_LIST) && \
+    defined(GRIN_WITH_VERTEX_PROPERTY)
+GRIN_ADJACENT_LIST grin_get_adjacent_list_by_edge_type_select_master_neighbor(
+    GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_EDGE_TYPE);
 
-GRIN_ADJACENT_LIST grin_get_adjacent_list_by_edge_type_select_mirror_neighbor(GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_EDGE_TYPE);
+GRIN_ADJACENT_LIST grin_get_adjacent_list_by_edge_type_select_mirror_neighbor(
+    GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_EDGE_TYPE);
 #endif
 
-
-#if defined(GRIN_TRAIT_SELECT_NEIGHBOR_PARTITION_FOR_ADJACENT_LIST) && !defined(GRIN_WITH_VERTEX_PROPERTY)
-GRIN_ADJACENT_LIST grin_get_adjacent_list_select_partition_neighbor(GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_PARTITION);
+#if defined(GRIN_TRAIT_SELECT_NEIGHBOR_PARTITION_FOR_ADJACENT_LIST) && \
+    !defined(GRIN_WITH_VERTEX_PROPERTY)
+GRIN_ADJACENT_LIST grin_get_adjacent_list_select_partition_neighbor(
+    GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_PARTITION);
 #endif
 
-#if defined(GRIN_TRAIT_SELECT_NEIGHBOR_PARTITION_FOR_ADJACENT_LIST) && defined(GRIN_WITH_VERTEX_PROPERTY)
-GRIN_ADJACENT_LIST grin_get_adjacent_list_by_edge_type_select_partition_neighbor(GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_EDGE_TYPE, GRIN_PARTITION);
+#if defined(GRIN_TRAIT_SELECT_NEIGHBOR_PARTITION_FOR_ADJACENT_LIST) && \
+    defined(GRIN_WITH_VERTEX_PROPERTY)
+GRIN_ADJACENT_LIST
+    grin_get_adjacent_list_by_edge_type_select_partition_neighbor(
+        GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_EDGE_TYPE,
+        GRIN_PARTITION);
 #endif

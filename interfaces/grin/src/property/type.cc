@@ -14,7 +14,6 @@ limitations under the License.
 
 #include "grin/include/include/property/type.h"
 
-
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 // Vertex type
 bool grin_equal_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1,
@@ -109,9 +108,7 @@ bool grin_equal_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et1,
   return (et1 == et2);
 }
 
-GRIN_EDGE_TYPE grin_get_edge_type(GRIN_GRAPH g, GRIN_EDGE e) {
-  return e.etype;
-}
+GRIN_EDGE_TYPE grin_get_edge_type(GRIN_GRAPH g, GRIN_EDGE e) { return e.etype; }
 
 void grin_destroy_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
   // do nothing

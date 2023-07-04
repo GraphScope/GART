@@ -52,6 +52,8 @@ struct SparseArrayAllocator {
 
   void set_client(vineyard::Client* _client) { client = _client; }
 
+  vineyard::Client* get_client() { return client; }
+
   T* allocate_v6d(size_t n, vineyard::ObjectID& oid) {
     size_t size = n * sizeof(T);
     if (n > std::numeric_limits<std::size_t>::max() / sizeof(T))

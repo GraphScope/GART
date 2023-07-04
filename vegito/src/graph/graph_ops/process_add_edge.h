@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include "vineyard/basic/ds/hashmap_mvcc.h"
 
 #include "graph/graph_store.h"
 #include "graph/type_def.h"
@@ -26,6 +27,7 @@ namespace gart {
 namespace graph {
 using SegGraph = seggraph::SegGraph;
 using vertex_t = seggraph::vertex_t;
+
 void process_add_edge(std::vector<std::string> cmd,
                       graph::GraphStore* graph_store) {
   int write_epoch = 0, write_seq = 0;
@@ -111,6 +113,8 @@ void process_add_edge(std::vector<std::string> cmd,
       ov = ov_writer.new_vertex();
       graph_store->set_lid(dst_label, dst_vid, ov);
       auto dst_lid = parser.GenerateId(0, dst_label, max_outer_id_offset - ov);
+      std::shared_ptr<hashmap_t> hmap;
+      graph_store->set_ovg2l(hmap, dst_label, dst_vid, dst_lid);
       graph_store->add_outer(dst_label, dst_lid);
       graph_store->set_ovl2g(dst_label, ov, dst_vid);
     }
@@ -128,6 +132,8 @@ void process_add_edge(std::vector<std::string> cmd,
       ov = ov_writer.new_vertex();
       graph_store->set_lid(src_label, src_vid, ov);
       auto src_lid = parser.GenerateId(0, src_label, max_outer_id_offset - ov);
+      std::shared_ptr<hashmap_t> hmap;
+      graph_store->set_ovg2l(hmap, src_label, src_vid, src_lid);
       graph_store->add_outer(src_label, src_lid);
       graph_store->set_ovl2g(src_label, ov, src_vid);
     }

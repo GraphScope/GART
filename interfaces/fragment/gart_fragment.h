@@ -17,7 +17,7 @@
 #define INTERFACES_FRAGMENT_GART_FRAGMENT_H_
 
 #include "grape/fragment/fragment_base.h"
-#include "vineyard/basic/ds/hashmap.vineyard.h"
+#include "vineyard/basic/ds/hashmap_mvcc.h"
 
 #include "interfaces/fragment/iterator.h"
 #include "interfaces/fragment/property_util.h"
@@ -41,6 +41,7 @@ class GartFragment {
   using VegitoSegmentHeader = seggraph::VegitoSegmentHeader;
   using EdgeLabelBlockHeader = seggraph::EdgeLabelBlockHeader;
   using dir_t = seggraph::dir_t;
+  using hashmap_t = vineyard::HashmapMVCC<int64_t, int64_t>;
 
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
@@ -213,6 +214,13 @@ class GartFragment {
           blob_info[i]["vertex_table"]["min_outer_location"].get<size_t>();
       vertex_table_lens_[vlabel] =
           vertex_table_blob->allocated_size() / sizeof(vid_t);
+
+      auto ovg2l_blob_id = blob_info[i]["ovg2l_blob"].get<uint64_t>();
+      std::shared_ptr<vineyard::Blob> ovg2l_blob;
+      VINEYARD_CHECK_OK(client_.GetBlob(ovg2l_blob_id, true, ovg2l_blob));
+      std::shared_ptr<const hashmap_t> hmapview;
+      VINEYARD_CHECK_OK(hashmap_t::View(client_, ovg2l_blob, hmapview));
+      ovg2l_maps_[vlabel] = hmapview;
 
       for (size_t j = inner_offsets_[vlabel]; j >= 0; j--) {
         vid_t v = vertex_tables_[vlabel][j];
@@ -707,7 +715,6 @@ class GartFragment {
   }
 
   inline bool OuterVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
-    assert(false);  // TODO(wanglei): not supported in GART currently
     auto map = ovg2l_maps_[vid_parser.GetLabelId(gid)];
     auto iter = map->find(gid);
     if (iter != map->end()) {
@@ -801,9 +808,7 @@ class GartFragment {
     return max_outer_id_offset_ - min_outer_offsets_[vlabel] + 1;
   }
 
-  inline vid_t GetMaxOuterIdOffset() const {
-    return max_outer_id_offset_;
-  }
+  inline vid_t GetMaxOuterIdOffset() const { return max_outer_id_offset_; }
 
   void PrepareToRunApp(const grape::CommSpec& comm_spec,
                        grape::PrepareConf conf) {
@@ -1041,7 +1046,7 @@ class GartFragment {
 
   std::vector<vid_t*> ovl2g_;
   std::vector<size_t> valid_ovl2g_element_;
-  std::vector<vineyard::Hashmap<vid_t, vid_t>*> ovg2l_maps_;
+  std::vector<std::shared_ptr<const hashmap_t>> ovg2l_maps_;
 
   std::vector<uint64_t*> inner_edge_label_ptrs_;
   std::vector<uint64_t*> outer_edge_label_ptrs_;
