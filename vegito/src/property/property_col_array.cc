@@ -51,9 +51,8 @@ PropertyColArray::PropertyColArray(Property::Schema s, uint64_t max_items)
   }
 }
 
-void PropertyColArray::insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
-                              uint64_t ver) {
-  _put(off, k, v, seq, ver, true);
+void PropertyColArray::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
+  _put(off, k, v, 0, ver, true);
 }
 
 void PropertyColArray::update(uint64_t off, const std::vector<int>& cids,

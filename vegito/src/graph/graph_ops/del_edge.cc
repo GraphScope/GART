@@ -21,8 +21,7 @@ using SegGraph = seggraph::SegGraph;
 using vertex_t = seggraph::vertex_t;
 void process_del_edge(const std::vector<std::string>& cmd,
                       graph::GraphStore* graph_store) {
-  int write_epoch = 0, write_seq = 0;
-  write_epoch = stoi(cmd[0]);
+  int write_epoch = stoi(cmd[0]);
   int elabel = stoi(cmd[1]);
   uint64_t src_vid = static_cast<uint64_t>(stoll(cmd[2]));
   uint64_t dst_vid = static_cast<uint64_t>(stoll(cmd[3]));

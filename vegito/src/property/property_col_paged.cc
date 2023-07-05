@@ -297,8 +297,7 @@ inline PropertyColPaged::Page* PropertyColPaged::findPage(int colID,
   return nullptr;
 }
 
-void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
-                              uint64_t ver) {
+void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
   assert(off < max_items_);
 
   // assert(k != 0);  // for LDBC

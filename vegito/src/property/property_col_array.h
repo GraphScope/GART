@@ -33,8 +33,7 @@ class PropertyColArray : public Property {
  public:
   explicit PropertyColArray(Property::Schema schema, uint64_t max_items);
 
-  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
-                      uint64_t ver);
+  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
 
   virtual void update(uint64_t off, const std::vector<int>& cids, char* v,
                       uint64_t seq, uint64_t ver);

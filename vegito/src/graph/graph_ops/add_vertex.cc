@@ -75,7 +75,6 @@ void assign_prop(int data_type, void* prop_ptr, const std::string& val) {
 void process_add_vertex(const std::vector<std::string>& cmd,
                         graph::GraphStore* graph_store) {
   int write_epoch = stoi(cmd[0]);
-  const int write_seq = 0;  // TODO: remove the unused sequence number
   uint64_t vid = static_cast<uint64_t>(stoll(cmd[1]));
   gart::IdParser<seggraph::vertex_t> parser;
   parser.Init(graph_store->get_total_partitions(),
@@ -111,7 +110,7 @@ void process_add_vertex(const std::vector<std::string>& cmd,
     void* prop_ptr = prop_buffer + property_offset;
     assign_prop(dtype, prop_ptr, cmd[idx]);
   }
-  property->insert(v, vid, prop_buffer, write_seq, write_epoch);
+  property->insert(v, vid, prop_buffer, write_epoch);
   free(prop_buffer);
 }
 

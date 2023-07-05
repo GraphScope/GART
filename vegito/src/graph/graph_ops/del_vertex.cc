@@ -28,7 +28,6 @@ void process_del_vertex(const std::vector<std::string>& cmd,
                         graph::GraphStore* graph_store) {
   int write_epoch = stoi(cmd[0]);
   uint64_t vid = static_cast<uint64_t>(stoll(cmd[1]));
-  const int write_seq = 0;
   gart::IdParser<vertex_t> parser;
   parser.Init(graph_store->get_total_partitions(),
               graph_store->get_total_vertex_label_num());

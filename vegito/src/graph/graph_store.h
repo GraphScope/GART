@@ -45,7 +45,7 @@ struct SchemaImpl {
   std::unordered_map<int, std::pair<int, int>> edge_relation;
   // the first id of elabel
   int elabel_offset;
-  std::string get_json(int pid = 0);
+  std::string get_json(int pid);
 
  private:
   void fill_json(void* ptr) const;

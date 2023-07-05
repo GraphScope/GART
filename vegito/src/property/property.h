@@ -77,8 +77,7 @@ class Property {  // NOLINT(build/class)
   };
 
   // ATTENTION: add lock in the index level!
-  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t seq,
-                      uint64_t ver) {
+  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
     assert(false);
   }
 
@@ -89,7 +88,7 @@ class Property {  // NOLINT(build/class)
 
     uint64_t off = 0;
     for (; row_cursor->nextRow(); ++off) {
-      this->insert(off, row_cursor->key(), row_cursor->value(), 2, 0);
+      this->insert(off, row_cursor->key(), row_cursor->value(), 2);
     }
 
     return off;
