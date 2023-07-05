@@ -19,7 +19,7 @@ namespace gart {
 namespace graph {
 using SegGraph = seggraph::SegGraph;
 using vertex_t = seggraph::vertex_t;
-void process_del_edge(std::vector<std::string> cmd,
+void process_del_edge(const std::vector<std::string>& cmd,
                       graph::GraphStore* graph_store) {
   int write_epoch = 0, write_seq = 0;
   write_epoch = stoi(cmd[0]);

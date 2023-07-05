@@ -15,12 +15,67 @@
 
 #include "graph/graph_ops.h"
 
+namespace {
+
+template <typename T>
+inline void assign(void* ptr, T val) {
+  *reinterpret_cast<T*>(ptr) = val;
+}
+
+}  // namespace
+
 namespace gart {
 namespace graph {
-void process_add_vertex(std::vector<std::string> cmd,
+
+void assign_prop(int data_type, void* prop_ptr, const std::string& val) {
+  try {
+    switch (data_type) {
+    case CHAR:
+      assign(prop_ptr, val.at(0));
+      break;
+    case SHORT:
+      assign(prop_ptr, short(std::stoi(val)));
+      break;
+    case INT:
+      assign(prop_ptr, std::stoi(val));
+      break;
+    case LONG:
+      assign(prop_ptr, std::stoll(val));
+      break;
+    case FLOAT:
+      assign(prop_ptr, std::stof(val));
+      break;
+    case DOUBLE:
+      assign(prop_ptr, std::stod(val));
+      break;
+    case STRING:
+      assign(prop_ptr, ldbc::String(val));
+      break;
+    case TEXT:
+      assign(prop_ptr, ldbc::Text(val));
+      break;
+    case DATE:
+      assign(prop_ptr, ldbc::Date(val));
+      break;
+    case DATETIME:
+      assign(prop_ptr, ldbc::DateTime(val));
+      break;
+    case LONGSTRING:
+      assign(prop_ptr, ldbc::LongString(val));
+      break;
+    default:
+      LOG(ERROR) << "Unsupported data type: " << data_type;
+    }
+  } catch (std::exception& e) {
+    LOG(ERROR) << "Failed to assign property: " << e.what()
+               << ", data type: " << data_type << ", value: " << val;
+  }
+}
+
+void process_add_vertex(const std::vector<std::string>& cmd,
                         graph::GraphStore* graph_store) {
-  int write_epoch = 0, write_seq = 0;
-  write_epoch = stoi(cmd[0]);
+  int write_epoch = stoi(cmd[0]);
+  const int write_seq = 0;  // TODO: remove the unused sequence number
   uint64_t vid = static_cast<uint64_t>(stoll(cmd[1]));
   gart::IdParser<seggraph::vertex_t> parser;
   parser.Init(graph_store->get_total_partitions(),
@@ -53,38 +108,8 @@ void process_add_vertex(std::vector<std::string> cmd,
     auto dtype = prop_schema.cols[idx - 2].vtype;
     uint64_t property_offset =
         graph_store->get_prefix_property_bytes(vlabel, idx - 2);
-    if (dtype == INT) {
-      *reinterpret_cast<int*>(prop_buffer + property_offset) =
-          std::stoi(cmd[idx]);
-    } else if (dtype == FLOAT) {
-      *reinterpret_cast<float*>(prop_buffer + property_offset) =
-          std::stof(cmd[idx]);
-    } else if (dtype == DOUBLE) {
-      *reinterpret_cast<double*>(prop_buffer + property_offset) =
-          std::stod(cmd[idx]);
-    } else if (dtype == LONG) {
-      *reinterpret_cast<uint64_t*>(prop_buffer + property_offset) =
-          std::stoll(cmd[idx]);
-    } else if (dtype == CHAR) {
-      *(prop_buffer + property_offset) = cmd[idx].at(0);
-    } else if (dtype == STRING) {
-      ldbc::String tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::String*>(prop_buffer + property_offset) = tmp;
-    } else if (dtype == TEXT) {
-      ldbc::Text tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::Text*>(prop_buffer + property_offset) = tmp;
-    } else if (dtype == DATE) {
-      ldbc::Date tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::Date*>(prop_buffer + property_offset) = tmp;
-    } else if (dtype == DATETIME) {
-      ldbc::DateTime tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::DateTime*>(prop_buffer + property_offset) = tmp;
-    } else if (dtype == LONGSTRING) {
-      ldbc::LongString tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::LongString*>(prop_buffer + property_offset) = tmp;
-    } else {
-      assert(false);
-    }
+    void* prop_ptr = prop_buffer + property_offset;
+    assign_prop(dtype, prop_ptr, cmd[idx]);
   }
   property->insert(v, vid, prop_buffer, write_seq, write_epoch);
   free(prop_buffer);

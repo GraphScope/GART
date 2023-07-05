@@ -24,7 +24,7 @@ using EpochBlockHeader = seggraph::EpochBlockHeader;
 using segid_t = seggraph::segid_t;
 using vertex_t = seggraph::vertex_t;
 using SegGraph = seggraph::SegGraph;
-void process_del_vertex(std::vector<std::string> cmd,
+void process_del_vertex(const std::vector<std::string>& cmd,
                         graph::GraphStore* graph_store) {
   int write_epoch = stoi(cmd[0]);
   uint64_t vid = static_cast<uint64_t>(stoll(cmd[1]));

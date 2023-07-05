@@ -20,10 +20,10 @@ namespace graph {
 using SegGraph = seggraph::SegGraph;
 using vertex_t = seggraph::vertex_t;
 
-void process_add_edge(std::vector<std::string> cmd,
+void process_add_edge(const std::vector<std::string>& cmd,
                       graph::GraphStore* graph_store) {
-  int write_epoch = 0, write_seq = 0;
-  write_epoch = stoi(cmd[0]);
+  int write_epoch = stoi(cmd[0]);
+  const int write_seq = 0;  // TODO: remove the unused sequence number
   int elabel = stoi(cmd[1]);
   uint64_t src_vid = static_cast<uint64_t>(stoll(cmd[2]));
   uint64_t dst_vid = static_cast<uint64_t>(stoll(cmd[3]));
@@ -58,38 +58,8 @@ void process_add_edge(std::vector<std::string> cmd,
         elabel + graph_store->get_total_vertex_label_num(), idx - 4);
     uint64_t property_offset = graph_store->get_edge_prop_prefix_bytes(
         elabel + graph_store->get_total_vertex_label_num(), idx - 4);
-    if (dtype == INT) {
-      *reinterpret_cast<int*>(prop_buffer + property_offset) =
-          std::stoi(cmd[idx]);
-    } else if (dtype == FLOAT) {
-      *reinterpret_cast<float*>(prop_buffer + property_offset) =
-          std::stof(cmd[idx]);
-    } else if (dtype == DOUBLE) {
-      *reinterpret_cast<double*>(prop_buffer + property_offset) =
-          std::stod(cmd[idx]);
-    } else if (dtype == LONG) {
-      *reinterpret_cast<uint64_t*>(prop_buffer + property_offset) =
-          std::stoll(cmd[idx]);
-    } else if (dtype == CHAR) {
-      *(prop_buffer + property_offset) = cmd[idx].at(0);
-    } else if (dtype == STRING) {
-      ldbc::String tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::String*>(prop_buffer + property_offset) = tmp;
-    } else if (dtype == TEXT) {
-      ldbc::Text tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::Text*>(prop_buffer + property_offset) = tmp;
-    } else if (dtype == DATE) {
-      ldbc::Date tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::Date*>(prop_buffer + property_offset) = tmp;
-    } else if (dtype == DATETIME) {
-      ldbc::DateTime tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::DateTime*>(prop_buffer + property_offset) = tmp;
-    } else if (dtype == LONGSTRING) {
-      ldbc::LongString tmp(cmd[idx].c_str(), cmd[idx].length());
-      *reinterpret_cast<ldbc::LongString*>(prop_buffer + property_offset) = tmp;
-    } else {
-      assert(false);
-    }
+    void* prop_ptr = prop_buffer + property_offset;
+    assign_prop(dtype, prop_ptr, cmd[idx]);
   }
   std::string buf(prop_buffer, edge_prop_bytes);
   std::string_view edge_data(buf);
