@@ -45,9 +45,7 @@ struct SchemaImpl {
   std::unordered_map<int, std::pair<int, int>> edge_relation;
   // the first id of elabel
   int elabel_offset;
-  // gie == false: for native
-  // gie == true: for GIE frontend (LONGSTRING, DATA, DATATIME, TEXT) -> STRING
-  std::string get_json(bool gie = false, int pid = 0);
+  std::string get_json(int pid = 0);
 
  private:
   void fill_json(void* ptr) const;

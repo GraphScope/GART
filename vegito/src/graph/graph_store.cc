@@ -39,15 +39,10 @@ GraphType* GraphStore::get_graph(uint64_t vlabel) {
 
 void GraphStore::put_schema() {
   auto schema = get_schema();
-  std::string schema_str = schema.get_json(false, get_local_pid());
+  std::string schema_str = schema.get_json(get_local_pid());
   std::string schema_key =
       FLAGS_meta_prefix + "gart_schema_p" + std::to_string(get_local_pid());
   auto response_task = etcd_client_->put(schema_key, schema_str).get();
-  assert(response_task.is_ok());
-  std::string gie_schema_str = schema.get_json(true, get_local_pid());
-  schema_key =
-      FLAGS_meta_prefix + "gart_gie_schema_p" + std::to_string(get_local_pid());
-  response_task = etcd_client_->put(schema_key, schema_str).get();
   assert(response_task.is_ok());
   // insert the latest epoch as std::numeric_limits<uint64_t>::max() at first
   std::string latest_epoch = FLAGS_meta_prefix + "gart_latest_epoch_p" +
@@ -156,7 +151,7 @@ struct PropDef {
   int id;
   std::string name;
 
-  vineyard::json json(bool gie = false) const {
+  vineyard::json json() const {
     using json = vineyard::json;
     json res;
     std::string type_str[] = {
@@ -165,12 +160,6 @@ struct PropDef {
         "INT_LIST",    "LONG_LIST", "FLOAT_LIST", "DOUBLE_LIST",           // 13
         "STRING_LIST", "DATE",      "DATETIME",   "LONGSTRING",  "TEXT"    // 18
     };
-    if (gie) {
-      type_str[DATE] = type_str[STRING];
-      type_str[DATETIME] = type_str[STRING];
-      type_str[LONGSTRING] = type_str[STRING];
-      type_str[TEXT] = type_str[STRING];
-    }
     res["data_type"] = type_str[dtype];
     res["id"] = id;
     res["name"] = name;
@@ -190,7 +179,7 @@ struct TypeDef {
   std::string dst_vlabel;  // for edge
   std::string type;        // "VERTEX" or "EDGE"
 
-  vineyard::json json(bool gie = false) const {
+  vineyard::json json() const {
     using json = vineyard::json;
     json res;
     res["id"] = id;
@@ -201,7 +190,7 @@ struct TypeDef {
     // propertyDefList
     json props_array = json::array();
     for (const auto& prop : propertyDefList) {
-      props_array.push_back(prop.json(gie));
+      props_array.push_back(prop.json());
     }
     res["propertyDefList"] = props_array;
 
@@ -303,7 +292,7 @@ void SchemaImpl::fill_json(void* ptr) const {
   }
 }
 
-std::string SchemaImpl::get_json(bool gie, int pid) {
+std::string SchemaImpl::get_json(int pid) {
   using json = vineyard::json;
   SchemaJson sj;
   // fill
@@ -313,7 +302,7 @@ std::string SchemaImpl::get_json(bool gie, int pid) {
   graph_schema["partitionNum"] = 0;
   json props_array = json::array();
   for (const auto& type : sj.types) {
-    props_array.push_back(type.json(gie));
+    props_array.push_back(type.json());
   }
   graph_schema["types"] = props_array;
 
