@@ -288,16 +288,11 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
   const json& data = log["data"];
   auto iter = required_properties_.find(table_name);
   const vector<string>& required_prop_names = iter->second;
-  bool update = out.op_type == LogEntry::OpType::UPDATE;
 
   for (size_t prop_id = 0; prop_id < required_prop_names.size(); prop_id++) {
     const string& prop_name = required_prop_names[prop_id];
     json prop_value;
-    if (update && !log["old"][prop_name].is_null()) {
-      prop_value = log["old"][prop_name];
-    } else {
-      prop_value = data[prop_name];
-    }
+    prop_value = data[prop_name];
     string prop_str;
     if (prop_value.is_string()) {
       prop_str = prop_value.get<string>();
