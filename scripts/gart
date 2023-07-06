@@ -229,6 +229,10 @@ echo "    start-slot: $start_slot"
 echo "    my-slot: $slot"
 echo "    master-hostname: $master_hostname"
 
+##################### Stop Previous GART ######################
+echo "Stop previous GART"
+./stop-gart --kill-v6d-sock $v6d_sock
+
 ####################### Extract Schema #######################
 if [ $is_master == true ]; then
     echo "Start extracting schema"
