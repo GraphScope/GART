@@ -22,32 +22,26 @@ limitations under the License.
 #include "grape/config.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
-#include "grape/utils/gcontainer.h"
-#include "grape/utils/vertex_array.h"
 #include "interfaces/fragment/gart_fragment.h"
 #include "interfaces/fragment/iterator.h"
 
 namespace gart {
 
 template <typename VID_T, typename T>
-class GartVertexArray : public grape::Array<T, grape::Allocator<T>> {
-  using Base = grape::Array<T, grape::Allocator<T>>;
-
+class GartVertexArray {
  public:
-  GartVertexArray() : Base(), fake_start_(NULL) {}
-  explicit GartVertexArray(const gart::VertexIterator& iter)
-      : Base(), fake_start_(NULL) {}
+  GartVertexArray() {}
+  explicit GartVertexArray(const gart::VertexIterator& iter) {}
 
-  GartVertexArray(const gart::VertexIterator& iter, const T& value)
-      : Base(), fake_start_(NULL) {}
+  GartVertexArray(const gart::VertexIterator& iter, const T& value) {}
 
   ~GartVertexArray() = default;
 
   void Init(const gart::GartFragment<VID_T, VID_T>* frag,
             const gart::VertexIterator& iter) {
     frag_ = frag;
-    size_t iter_size = iter.addrs_.size();
     size_t total_size = 0;
+    size_t iter_size = iter.addrs_.size();
     for (size_t idx = 0; idx < iter_size; idx++) {
       if (iter.high_to_low_flags_[idx] == true) {
         total_size += frag_->GetMaxInnerVerticesNum(iter.vlabel_);
@@ -61,32 +55,28 @@ class GartVertexArray : public grape::Array<T, grape::Allocator<T>> {
       }
     }
 
-    Base::clear();
-    Base::resize(total_size);
-    fake_start_ = Base::data();
+    data_.resize(total_size);
   }
 
   void Init(const gart::GartFragment<VID_T, VID_T>* frag,
             const gart::VertexIterator& iter, const T& value) {
     frag_ = frag;
-    size_t iter_size = iter.addrs_.size();
     size_t total_size = 0;
+    size_t iter_size = iter.addrs_.size();
     for (size_t idx = 0; idx < iter_size; idx++) {
       if (iter.high_to_low_flags_[idx] == true) {
         total_size += frag_->GetMaxInnerVerticesNum(iter.vlabel_);
-        if (iter.addrs_[idx].first == nullptr ||
-            iter.addrs_[idx].second == nullptr) {
+        if (iter.addrs_[idx].first == nullptr || iter.addrs_[idx].second) {
           inner_size_ = 0;
         } else {
           inner_size_ = iter.addrs_[idx].first - iter.addrs_[idx].second;
         }
       } else {
-        total_size += frag->GetMaxOuterVerticesNum(iter.vlabel_);
+        total_size += frag_->GetMaxOuterVerticesNum(iter.vlabel_);
       }
     }
-    Base::clear();
-    Base::resize(total_size, value);
-    fake_start_ = Base::data();
+
+    data_.assign(total_size, value);
   }
 
   void SetValue(gart::VertexIterator& iter, const T& value) {
@@ -95,50 +85,46 @@ class GartVertexArray : public grape::Array<T, grape::Allocator<T>> {
   void SetValue(const grape::Vertex<VID_T>& loc, const T& value) {
     auto offset = frag_->GetOffset(loc);
     if (frag_->IsInnerVertex(loc)) {
-      fake_start_[offset] = value;
+      data_[offset] = value;
     } else if (frag_->IsOuterVertex(loc)) {
       offset = offset + inner_size_;
-      fake_start_[offset] = value;
+      data_[offset] = value;
     }
   }
 
-  void SetValue(const T& value) {
-    std::fill_n(Base::data(), Base::size(), value);
-  }
+  void SetValue(const T& value) { data_.assign(data_.size(), value); }
 
   inline T& operator[](const grape::Vertex<VID_T>& loc) {
     auto offset = frag_->GetOffset(loc);
     if (frag_->IsOuterVertex(loc)) {
       offset = offset + inner_size_;
     }
-    return fake_start_[offset];
+    return data_[offset];
   }
   inline const T& operator[](const grape::Vertex<VID_T>& loc) const {
     auto offset = frag_->GetOffset(loc);
     if (frag_->IsOuterVertex(loc)) {
       offset = offset + inner_size_;
     }
-    return fake_start_[offset];
+    return data_[offset];
   }
 
   void Swap(GartVertexArray& rhs) {
-    Base::swap((Base&) rhs);
-    std::swap(fake_start_, rhs.fake_start_);
+    data_.swap(rhs.data_);
+    std::swap(frag_, rhs.frag_);
+    std::swap(inner_size_, rhs.inner_size_);
   }
 
   void Clear() {
-    Base::clear();
-    Base::resize(0);
-    fake_start_ = NULL;
+    data_.clear();
+    frag_ = nullptr;
+    inner_size_ = 0;
   }
-
-  // const gart::VertexIterator& GetVertexRange() const { return iter_; }
 
  private:
   void Resize() {}
 
-  // gart::VertexIterator iter_ = nullptr;
-  T* fake_start_;
+  std::vector<T> data_;
   const gart::GartFragment<VID_T, VID_T>* frag_;
   size_t inner_size_ = 0;
 };

@@ -80,8 +80,8 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
   }
 
   std::vector<gart::GartVertexArray<gart::vid_t, int>> result;
-  std::vector<gart::GartVertexArray<gart::vid_t, bool>> updated;
-  std::vector<gart::GartVertexArray<gart::vid_t, bool>> updated_next;
+  std::vector<gart::GartVertexArray<gart::vid_t, int>> updated;
+  std::vector<gart::GartVertexArray<gart::vid_t, int>> updated_next;
   oid_t source_id;
 };
 

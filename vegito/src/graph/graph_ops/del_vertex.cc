@@ -559,7 +559,7 @@ void process_del_vertex(const std::vector<std::string>& cmd,
       return;
     }
 
-    auto v_offset = parser.GetOffset(vid);
+    auto v_offset = ov;
     auto max_outer_id_offset =
         (((vertex_t) 1) << parser.GetOffsetWidth()) - (vertex_t) 1;
     seggraph::SegGraph* src_graph = graph_store->get_ov_graph(v_label);

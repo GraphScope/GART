@@ -66,9 +66,9 @@ class GartFragment {
     ovl2g_.resize(vertex_label_num_);
     valid_ovl2g_element_.resize(vertex_label_num_);
     ovg2l_maps_.resize(vertex_label_num_);
-    inner_offsets_.resize(vertex_label_num_, 0);
-    outer_offsets_.resize(vertex_label_num_, 0);
-    max_inner_offsets_.resize(vertex_label_num_, 0);
+    inner_offsets_.resize(vertex_label_num_, -1);
+    outer_offsets_.resize(vertex_label_num_, -1);
+    max_inner_offsets_.resize(vertex_label_num_, -1);
     vertex_table_lens_.resize(vertex_label_num_);
     ivnums_.resize(vertex_label_num_);
     ovnums_.resize(vertex_label_num_);
@@ -96,7 +96,7 @@ class GartFragment {
     vid_parser.Init(fnum_, vertex_label_num_);
     max_outer_id_offset_ =
         (((vid_t) 1) << vid_parser.GetOffsetWidth()) - (vid_t) 1;
-    min_outer_offsets_.resize(vertex_label_num_, max_outer_id_offset_);
+    min_outer_offsets_.resize(vertex_label_num_, max_outer_id_offset_ + 1);
 
     edge_label_num_ = 0;
     std::map<std::string, int> vertex_name_id_map;
@@ -209,9 +209,9 @@ class GartFragment {
       vertex_tables_[vlabel] = (vid_t*) vertex_table_blob->data();
 
       inner_offsets_[vlabel] =
-          blob_info[i]["vertex_table"]["max_inner_location"].get<size_t>() - 1;
+          blob_info[i]["vertex_table"]["max_inner_location"].get<int64_t>() - 1;
       outer_offsets_[vlabel] =
-          blob_info[i]["vertex_table"]["min_outer_location"].get<size_t>();
+          blob_info[i]["vertex_table"]["min_outer_location"].get<int64_t>();
       vertex_table_lens_[vlabel] =
           vertex_table_blob->allocated_size() / sizeof(vid_t);
 
@@ -222,7 +222,7 @@ class GartFragment {
       VINEYARD_CHECK_OK(hashmap_t::View(client_, ovg2l_blob, hmapview));
       ovg2l_maps_[vlabel] = hmapview;
 
-      for (size_t j = inner_offsets_[vlabel]; j >= 0; j--) {
+      for (int64_t j = inner_offsets_[vlabel]; j >= 0; j--) {
         vid_t v = vertex_tables_[vlabel][j];
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
         if (delete_flag == 0) {
@@ -231,7 +231,7 @@ class GartFragment {
         }
       }
 
-      for (size_t j = outer_offsets_[vlabel]; j < vertex_table_lens_[vlabel];
+      for (int64_t j = outer_offsets_[vlabel]; j < vertex_table_lens_[vlabel];
            j++) {
         vid_t v = vertex_tables_[vlabel][j];
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
@@ -363,8 +363,8 @@ class GartFragment {
 
   gart::VertexIterator Vertices(label_id_t label_id) const {
     vid_t* table_addr = vertex_tables_[label_id];
-    size_t inner_offset = inner_offsets_[label_id];
-    size_t outer_offset = outer_offsets_[label_id];
+    int64_t inner_offset = inner_offsets_[label_id];
+    int64_t outer_offset = outer_offsets_[label_id];
     vid_t* inner_begin_addr = nullptr;
     vid_t* inner_end_addr = nullptr;
     if (table_addr != nullptr) {
@@ -395,7 +395,7 @@ class GartFragment {
 
   gart::VertexIterator InnerVertices(label_id_t label_id) const {
     vid_t* table_addr = vertex_tables_[label_id];
-    size_t inner_offset = inner_offsets_[label_id];
+    int64_t inner_offset = inner_offsets_[label_id];
     vid_t* begin_addr = nullptr;
     vid_t* end_addr = nullptr;
     if (table_addr != nullptr) {
@@ -413,7 +413,7 @@ class GartFragment {
 
   gart::VertexIterator OuterVertices(label_id_t label_id) const {
     vid_t* table_addr = vertex_tables_[label_id];
-    size_t outer_offset = outer_offsets_[label_id];
+    int64_t outer_offset = outer_offsets_[label_id];
     vid_t* begin_addr = nullptr;
     vid_t* end_addr = nullptr;
     if (table_addr != nullptr) {
@@ -802,9 +802,6 @@ class GartFragment {
   }
 
   inline vid_t GetMaxOuterVerticesNum(int vlabel) const {
-    if (min_outer_offsets_[vlabel] == 0) {
-      return 0;
-    }
     return max_outer_id_offset_ - min_outer_offsets_[vlabel] + 1;
   }
 
@@ -1035,10 +1032,10 @@ class GartFragment {
   std::string ipc_socket_;
 
   size_t read_epoch_number_;
-  std::vector<size_t> inner_offsets_, outer_offsets_;
+  std::vector<int64_t> inner_offsets_, outer_offsets_;
   std::vector<vid_t*> vertex_tables_;
   std::vector<size_t> vertex_table_lens_;
-  std::vector<vid_t> max_inner_offsets_, min_outer_offsets_;
+  std::vector<int64_t> max_inner_offsets_, min_outer_offsets_;
   vid_t max_outer_id_offset_;
 
   std::vector<size_t> ivnums_, ovnums_, tvnums_;

@@ -224,9 +224,10 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
   int64_t offset = vertex_nums_per_fragment_[vertex_label_id][fid];
   vertex_nums_[vertex_label_id]++;
   vertex_nums_per_fragment_[vertex_label_id][fid]++;
-  int64_t gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
 
+  int64_t gid;
   if (out.op_type == LogEntry::OpType::INSERT) {
+    gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
     if (data[vid_col].is_number_integer()) {
       int64_oid2gid_maps_[vertex_label_id].emplace(data[vid_col].get<int64_t>(),
                                                    gid);
@@ -234,8 +235,26 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
       string_oid2gid_maps_[vertex_label_id].emplace(data[vid_col].get<string>(),
                                                     gid);
     }
+  } else {
+    if (data[vid_col].is_number_integer()) {
+      auto it = int64_oid2gid_maps_[vertex_label_id].find(
+          data[vid_col].get<int64_t>());
+      if (it == int64_oid2gid_maps_[vertex_label_id].end()) {
+        LOG(ERROR) << "Vertex id not found: " << data[vid_col].get<int64_t>();
+      }
+      gid = it->second;
+    } else if (data[vid_col].is_string()) {
+      auto it = string_oid2gid_maps_[vertex_label_id].find(
+          data[vid_col].get<string>());
+      if (it == string_oid2gid_maps_[vertex_label_id].end()) {
+        LOG(ERROR) << "Vertex id not found: " << data[vid_col].get<string>();
+      }
+      gid = it->second;
+    } else {
+      LOG(ERROR) << "Unknown vertex id type: " << data[vid_col].type_name();
+      gid = -1;
+    }
   }
-
   out.vertex.gid = gid;
 }
 
@@ -301,7 +320,9 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
     } else if (prop_value.is_number_float()) {
       prop_str = to_string(prop_value.get<float>());
     } else {
-      LOG(ERROR) << "Unsupported property type: " << prop_value.type_name();
+      LOG(ERROR) << "Unsupported "
+                    "property type: "
+                 << prop_value.type_name();
       assert(false);
       continue;
     }

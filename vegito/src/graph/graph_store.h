@@ -140,14 +140,14 @@ class GraphStore {
 
   inline void delete_inner(uint64_t vlabel, seggraph::vertex_t offset) {
     VTable& vtable = vertex_tables_[vlabel];
+    gart::IdParser<seggraph::vertex_t> parser;
+    parser.Init(get_total_partitions(), get_total_vertex_label_num());
     for (auto i = 0; i < vtable.max_inner_location; i++) {
       auto value = vtable.table[i];
       auto delete_flag = value >> (sizeof(seggraph::vertex_t) * 8 - 1);
       if (delete_flag == 1) {
         continue;
       }
-      gart::IdParser<seggraph::vertex_t> parser;
-      parser.Init(get_total_partitions(), get_total_vertex_label_num());
       if (parser.GetOffset(value) == offset) {
         uint64_t delete_mask = ((uint64_t) 1) << (sizeof(uint64_t) * 8 - 1);
         vtable.table[vtable.max_inner_location] = (i | delete_mask);
