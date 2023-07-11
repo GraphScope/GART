@@ -169,16 +169,23 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     return;
   }
 
-  // skip unused tables
+// skip unused tables
+#ifndef USE_DEBEZIUM
   string table_name = log["table"].get<string>();
+#else
+  string table_name = log["source"]["table"].get<string>();
+#endif
   auto table2vlabel_it = table2vlabel_.find(table_name);
   auto table2elabel_it = table2elabel_.find(table_name);
   if (table2vlabel_it == table2vlabel_.end() &&
       table2elabel_it == table2elabel_.end()) {
     return;
   }
-
+#ifndef USE_DEBEZIUM
   string type = log["type"].get<string>();
+#else
+  string type = log["op"].get<string>();
+#endif
   if (table2elabel_it != table2elabel_.end()) {
     if (table2vlabel_it != table2vlabel_.end()) {
       LOG(ERROR) << "Table name conflict: " << table_name;
@@ -189,13 +196,17 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     out.entity_type = LogEntry::EntityType::VERTEX;
   }
 
-  string content;
-  json data = log["data"];
-
+#ifndef USE_DEBEZIUM
   out.op_type = type == "insert"   ? LogEntry::OpType::INSERT
                 : type == "update" ? LogEntry::OpType::UPDATE
                 : type == "delete" ? LogEntry::OpType::DELETE
                                    : LogEntry::OpType::UNKNOWN;
+#else
+  out.op_type = type == "c"   ? LogEntry::OpType::INSERT
+                : type == "u" ? LogEntry::OpType::UPDATE
+                : type == "d" ? LogEntry::OpType::DELETE
+                              : LogEntry::OpType::UNKNOWN;
+#endif
   if (out.op_type == LogEntry::OpType::UNKNOWN) {
     LOG(ERROR) << "Unknown operation type: " << type;
     return;
@@ -213,20 +224,32 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
 }
 
 void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
+#ifndef USE_DEBEZIUM
   const string& table_name(log["table"].get<string>());
   const json& data = log["data"];
+#else
+  const string& table_name(log["source"]["table"].get<string>());
+  json data;
+  if (out.op_type == LogEntry::OpType::INSERT) {
+    data = log["after"];
+  } else if (out.op_type == LogEntry::OpType::DELETE) {
+    data = log["before"];
+  } else if (out.op_type == LogEntry::OpType::UPDATE) {
+    ;
+  }
+#endif
 
   const string& vid_col = vertex_id_columns_.find(table_name)->second;
   int vertex_label_id = table2vlabel_.find(table_name)->second;
 
-  // partition by round-robin
-  int64_t fid = vertex_nums_[vertex_label_id] % subgraph_num_;
-  int64_t offset = vertex_nums_per_fragment_[vertex_label_id][fid];
-  vertex_nums_[vertex_label_id]++;
-  vertex_nums_per_fragment_[vertex_label_id][fid]++;
-
   int64_t gid;
   if (out.op_type == LogEntry::OpType::INSERT) {
+    // partition by round-robin
+    int64_t fid = vertex_nums_[vertex_label_id] % subgraph_num_;
+    int64_t offset = vertex_nums_per_fragment_[vertex_label_id][fid];
+    vertex_nums_[vertex_label_id]++;
+    vertex_nums_per_fragment_[vertex_label_id][fid]++;
+
     gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
     if (data[vid_col].is_number_integer()) {
       int64_oid2gid_maps_[vertex_label_id].emplace(data[vid_col].get<int64_t>(),
@@ -259,8 +282,20 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
 }
 
 void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
+#ifndef USE_DEBEZIUM
   const string& table_name(log["table"].get<string>());
   const json& data = log["data"];
+#else
+  const string& table_name(log["source"]["table"].get<string>());
+  json data;
+  if (out.op_type == LogEntry::OpType::INSERT) {
+    data = log["after"];
+  } else if (out.op_type == LogEntry::OpType::DELETE) {
+    data = log["before"];
+  } else if (out.op_type == LogEntry::OpType::UPDATE) {
+    ;
+  }
+#endif
 
   out.edge.elabel = table2elabel_.find(table_name)->second;
 
@@ -303,8 +338,20 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
 }
 
 void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
+#ifndef USE_DEBEZIUM
   const string& table_name(log["table"].get<string>());
   const json& data = log["data"];
+#else
+  const string& table_name(log["source"]["table"].get<string>());
+  json data;
+  if (out.op_type == LogEntry::OpType::INSERT) {
+    data = log["after"];
+  } else if (out.op_type == LogEntry::OpType::DELETE) {
+    data = log["before"];
+  } else if (out.op_type == LogEntry::OpType::UPDATE) {
+    ;
+  }
+#endif
   auto iter = required_properties_.find(table_name);
   const vector<string>& required_prop_names = iter->second;
 
