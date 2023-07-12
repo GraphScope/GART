@@ -153,14 +153,15 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
             prop_table_col_name) {
           string prop_dtype_str =
               required_table_schema[col_idx][1].get<string>();
-          // TODO(wanglei): support more data types in MySQL
-          if (prop_dtype_str == "int") {
+          // TODO(wanglei): support more data types in MySQL and PostgreSQL
+          if (prop_dtype_str == "int" || prop_dtype_str == "integer") {
             prop_dtype = "INT";
           } else if (prop_dtype_str == "int64") {
             prop_dtype = "LONG";
           } else if (prop_dtype_str == "float") {
             prop_dtype = "FLOAT";
-          } else if (prop_dtype_str == "varchar(255)") {
+          } else if (prop_dtype_str == "varchar(255)" ||
+                     prop_dtype_str == "character varying") {
             prop_dtype = "LONGSTRING";  // TODO: unified string types
           } else if (prop_dtype_str == "text") {
             prop_dtype = "TEXT";

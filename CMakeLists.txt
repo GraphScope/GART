@@ -21,6 +21,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/scripts)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/gart gart SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/stop-gart stop-gart SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py scripts/extract_table_schema.py SYMBOLIC)
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema_postgresql.py scripts/extract_table_schema_postgresql.py SYMBOLIC)
 
 ### check format ###
 file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h" "*.cpp" "*.hpp")
