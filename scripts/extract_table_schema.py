@@ -4,7 +4,7 @@ import sys
 
 import argparse
 import json
-import pymysql
+from sqlalchemy import create_engine
 import yaml
 
 
@@ -14,11 +14,14 @@ def get_parser():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--host", default="127.0.0.1", help="MySQL host")
-    parser.add_argument("--port", default=3306, help="MySQL port")
-    parser.add_argument("--user", help="MySQL user")
-    parser.add_argument("--password", help="MySQL password")
-    parser.add_argument("--db", default="my_maxwell_01", help="MySQL database")
+    parser.add_argument("--host", default="127.0.0.1", help="Database server host")
+    parser.add_argument("--port", default=3306, help="Database server port")
+    parser.add_argument("--user", help="Database user")
+    parser.add_argument("--password", help="Database password")
+    parser.add_argument("--db", default="ldbc", help="Database name")
+    parser.add_argument(
+        "--db_type", default="mysql", help="Which database to use, mysql or postgresql"
+    )
 
     parser.add_argument(
         "--rgmapping_file",
@@ -50,9 +53,15 @@ def exetract_schema(cursor, rgmapping_file, database, output):
     for table in tables:
         table_name = table["dataSourceName"]
         # sql = "SHOW COLUMNS FROM " + table_name
-        sql = f'''SELECT COLUMN_NAME, COLUMN_TYPE
-                FROM information_schema.COLUMNS
-                WHERE TABLE_NAME="{table_name}" and TABLE_SCHEMA="{database}"'''
+        if args.db_type == "mysql":
+            sql = f'''SELECT COLUMN_NAME, COLUMN_TYPE
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_NAME="{table_name}" and TABLE_SCHEMA="{database}"'''
+        elif args.db_type == "postgresql":
+            sql = (
+                "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME='%s' and table_catalog='%s'"
+                % (table_name, database)
+            )
         cursor.execute(sql)
         results = cursor.fetchall()
         schema[table_name] = results
@@ -169,15 +178,31 @@ if __name__ == "__main__":
     if unset:
         sys.exit(1)
 
-    db = pymysql.connect(
-        host=args.host,
-        port=int(args.port),
-        user=args.user,
-        password=args.password,
-        database=args.db,
-    )
-    db_cursor = db.cursor()
-    schema = exetract_schema(db_cursor, args.rgmapping_file, args.db, args.output)
-    db_cursor.close()
+    if args.db_type == "mysql":
+        connection_string = "mysql+pymysql://%s:%s@%s:%s/%s" % (
+            args.user,
+            args.password,
+            args.host,
+            args.port,
+            args.db,
+        )
+        engine = create_engine(connection_string, echo=False)
+    elif args.db_type == "postgresql":
+        connection_string = "postgresql://%s:%s@%s:%s/%s" % (
+            args.user,
+            args.password,
+            args.host,
+            args.port,
+            args.db,
+        )
+        engine = create_engine(connection_string, echo=False)
+    else:
+        print("We now only support mysql and postgresql")
+        exit(1)
+    conn = engine.raw_connection()
+    cursor = conn.cursor()
+
+    schema = exetract_schema(cursor, args.rgmapping_file, args.db, args.output)
+    conn.close()
 
     produce_graph_schema(schema, args.rgmapping_file, args.output_yaml)

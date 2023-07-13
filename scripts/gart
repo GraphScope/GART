@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,hostfile:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,hostfile:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -22,6 +22,8 @@ etcd_endpoint="http://127.0.0.1:2379"
 etcd_prefix="gart_meta_"
 kafka_server="127.0.0.1:9092"
 subgraph_num=1
+use_debezium=1
+db_type="mysql"
 hostfile=
 
 eval set -- "$VALID_ARGS"
@@ -63,6 +65,14 @@ while [ : ]; do
         v6d_size=$2
         shift 2
         ;;
+        --use-debezium)
+        use_debezium=$2
+        shift 2
+        ;;
+         --db-type)
+        db_type=$2
+        shift 2
+        ;;
     -e | --etcd-endpoint)
         etcd_endpoint=$2
         shift 2
@@ -94,6 +104,8 @@ while [ : ]; do
         echo "  -t, --table-schema-file: table schema file path (default: schema/db_schema.json)"
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
         echo "      --v6d-size:          vineyard size (default: 110G)"
+        echo "      --use-debezium:      whether to use Debezium to parse txn logs (default: 1)"
+        echo "      --db-type:           which relational database to use (default: mysql)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
         echo "      --etcd-prefix:       etcd meta prefix (default: gart_meta_)"
         echo "  -k, --kafka-server:      kafka bootstrap server (default: 127.0.0.1:9092)"
@@ -119,6 +131,8 @@ echo "    rgmapping-file: $rgmapping_file"
 echo "    table-schema-file: $table_schema_file"
 echo "    v6d-sock: $v6d_sock"
 echo "    v6d-size: $v6d_size"
+echo "    use-debezium: $use_debezium"
+echo "    db-type: $db_type"
 echo "    etcd-endpoint: $etcd_endpoint"
 echo "    etcd-prefix: $etcd_prefix"
 echo "    kafka-server: $kafka_server"
@@ -133,15 +147,17 @@ else
     unset=true
 fi
 
-if [ -n "$MAXWELL_HOME" ]; then
-    echo "    MAXWELL_HOME: $MAXWELL_HOME"
-else
-    echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
-    unset=true
-fi
+if [ "$use_debezium" == 0 ]; then
+    if [ -n "$MAXWELL_HOME" ]; then
+        echo "    MAXWELL_HOME: $MAXWELL_HOME"
+    else
+        echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
+        unset=true
+    fi
 
-if [ "$unset" = true ]; then
-    exit 1
+    if [ "$unset" = true ]; then
+        exit 1
+    fi
 fi
 
 # check a host is local host or not
@@ -238,7 +254,7 @@ if [ $is_master == true ]; then
     echo "Start extracting schema"
     ./scripts/extract_table_schema.py \
         --host $db_host --port $db_port --db $db_name \
-        --user $user --password $password \
+        --user $user --password $password --db_type $db_type\
         --rgmapping_file $rgmapping_file --output $table_schema_file
 fi
 
@@ -303,13 +319,35 @@ fi
 
 
 ####################### Capturer: Maxwell #######################
-if [ $is_master == true ]; then
-    MAXWELL_BIN=$MAXWELL_HOME/bin
+if [ "$use_debezium" == 0 ]; then
+    if [ $is_master == true ]; then
+        MAXWELL_BIN=$MAXWELL_HOME/bin
 
-    echo "Start Maxwell"
-    $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog  > /dev/null 2>&1 &
+        echo "Start Maxwell"
+        $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog  > /dev/null 2>&1 &
 
-    sleep 3
+        sleep 3
+    fi
+fi
+
+####################### Capturer: Debezium #######################
+# TODO(wanglei): add distributed deployment of debezium
+if [ "$use_debezium" == 1 ]; then
+    if [ $is_master == true ]; then
+        echo "Start Debezium"
+        if [ "$db_type" == "mysql" ]; then
+            echo "    Start MySQL Debezium"
+            $KAFKA_HOME/bin/connect-standalone.sh config/connect-standalone.properties $KAFKA_HOME/config/connect-debezium-mysql.properties > /dev/null 2>&1 &
+        elif [ "$db_type" == "postgresql" ]; then
+            echo "    Start PostgreSQL Debezium"
+            $KAFKA_HOME/bin/connect-standalone.sh config/connect-standalone.properties $KAFKA_HOME/config/connect-debezium-postgresql.properties > /dev/null 2>&1 &
+        else
+            echo "Unsupported database type: $db_type"
+            exit 1
+        fi
+
+        sleep 5
+    fi
 fi
 
 ####################### Converter #######################
@@ -317,8 +355,15 @@ if [ $is_master == true ]; then
     CONVENTER_HOME=./converter
 
     echo "Start Converter"
-    $CONVENTER_HOME/binlog_convert --rg_mapping_file_path $rgmapping_file \
-        --subgraph_num $subgraph_num &
+    if [ "$use_debezium" == 1 ]; then
+        echo "    Use Debezium converter"
+        $CONVENTER_HOME/binlog_convert_debezium --rg_mapping_file_path $rgmapping_file \
+            --subgraph_num $subgraph_num &
+    else
+        echo "    Use Maxwell converter"
+        $CONVENTER_HOME/binlog_convert_maxwell --rg_mapping_file_path $rgmapping_file \
+            --subgraph_num $subgraph_num &
+    fi
 
     sleep 2
 fi

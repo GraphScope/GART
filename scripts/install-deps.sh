@@ -96,3 +96,6 @@ tar zxvf maxwell-1.40.0.tar.gz
 rm maxwell-1.40.0.tar.gz
 mv maxwell-1.40.0 maxwell
 export MAXWELL_HOME=`pwd`/maxwell
+
+# Install sqlalchemy, pymysql, psycopg2
+pip3 install sqlalchemy pymysql psycopg2

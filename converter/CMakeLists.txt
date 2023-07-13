@@ -52,11 +52,16 @@ add_custom_target(convert_clformat
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-add_executable(binlog_convert binlog_convert.cc flags.cc parser.cc)
+add_executable(binlog_convert_debezium binlog_convert.cc flags.cc parser.cc)
 
-target_include_directories(binlog_convert PRIVATE ${RDKAFKA_INCLUDE_DIR})
-target_link_libraries(binlog_convert ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${CMAKE_DL_LIBS} ${YAML_CPP_LIBRARIES})
-# target_compile_definitions(binlog_convert PUBLIC -DUSE_DEBEZIUM)
+target_include_directories(binlog_convert_debezium PRIVATE ${RDKAFKA_INCLUDE_DIR})
+target_link_libraries(binlog_convert_debezium ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${CMAKE_DL_LIBS} ${YAML_CPP_LIBRARIES})
+target_compile_definitions(binlog_convert_debezium PUBLIC -DUSE_DEBEZIUM)
+
+add_executable(binlog_convert_maxwell binlog_convert.cc flags.cc parser.cc)
+
+target_include_directories(binlog_convert_maxwell PRIVATE ${RDKAFKA_INCLUDE_DIR})
+target_link_libraries(binlog_convert_maxwell ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${CMAKE_DL_LIBS} ${YAML_CPP_LIBRARIES})
 
 add_executable(json2yaml json2yaml.cc)
 target_link_libraries(json2yaml ${YAML_CPP_LIBRARIES})

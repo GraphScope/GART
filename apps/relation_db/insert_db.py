@@ -2,21 +2,23 @@
 
 import argparse
 import sys
-import psycopg2
+from sqlalchemy import create_engine
 
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Initialize the LDBC dataset in PostgesSQL",
+        description="Insert LDBC dataset into relational database",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--host", default="127.0.0.1", help="PostgesSQL host")
-    parser.add_argument("--port", default=5432, help="PostgesSQL port")
-    parser.add_argument("--user", help="PostgesSQL user")
-    parser.add_argument("--password", help="PostgesSQL password")
-    parser.add_argument("--db", default="ldbc", help="PostgesSQL database")
-
+    parser.add_argument("--host", default="127.0.0.1", help="Database server host")
+    parser.add_argument("--port", default=3306, help="Database server port")
+    parser.add_argument("--user", help="Database user")
+    parser.add_argument("--password", help="Database password")
+    parser.add_argument("--db", default="ldbc", help="Database name")
+    parser.add_argument(
+        "--db_type", default="mysql", help="Which database to use, mysql or postgresql"
+    )
     parser.add_argument("--data_dir", help="LDBC dataset directory (dynamic)")
 
     return parser
@@ -43,15 +45,32 @@ if unset:
 
 print("Args: ", args)
 
+if args.db_type == "mysql":
+    connection_string = "mysql+pymysql://%s:%s@%s:%s/%s" % (
+        args.user,
+        args.password,
+        args.host,
+        args.port,
+        args.db,
+    )
+    engine = create_engine(connection_string, echo=False)
+elif args.db_type == "postgresql":
+    connection_string = "postgresql://%s:%s@%s:%s/%s" % (
+        args.user,
+        args.password,
+        args.host,
+        args.port,
+        args.db,
+    )
+    engine = create_engine(connection_string, echo=False)
+else:
+    print("We now only support mysql and postgresql")
+    exit(1)
+
+conn = engine.raw_connection()
+cursor = conn.cursor()
+
 base_dir = args.data_dir
-db = psycopg2.connect(
-    host=args.host,
-    port=int(args.port),
-    user=args.user,
-    password=args.password,
-    database=args.db,
-)
-cursor = db.cursor()
 
 print("01. Inserting organisation table...")
 file_name = base_dir + "/organisation_0_0.csv"
@@ -69,7 +88,7 @@ with open(file_name, "r", encoding="UTF-8") as f:
         )
         line = f.readline()
         num_lines += 1
-db.commit()
+conn.commit()
 print(f"01. Insert {num_lines} rows into organisation table")
 
 print("02. Inserting place table...")
@@ -88,7 +107,7 @@ with open(file_name, "r", encoding="UTF-8") as f:
         )
         line = f.readline()
         num_lines += 1
-db.commit()
+conn.commit()
 print(f"02. Insert {num_lines} rows into place table")
 
 print("03. Inserting tag table...")
@@ -103,7 +122,7 @@ with open(file_name, "r", encoding="UTF-8") as f:
         cursor.execute(f"insert into tag values('{tag_id}', '{tag_name}', '{tag_url}')")
         line = f.readline()
         num_lines += 1
-db.commit()
+conn.commit()
 print(f"03. Insert {num_lines} rows into tag table")
 
 print("04. Inserting tagclass table...")
@@ -120,7 +139,7 @@ with open(file_name, "r", encoding="UTF-8") as f:
         )
         line = f.readline()
         num_lines += 1
-db.commit()
+conn.commit()
 print(f"04. Insert {num_lines} rows into tagclass table")
 
 print("05. Inserting person table...")
@@ -148,7 +167,7 @@ with open(file_name, "r", encoding="UTF-8") as f:
         )
         line = f.readline()
         num_lines += 1
-db.commit()
+conn.commit()
 print(f"05. Insert {num_lines} rows into person table")
 
 print("06. Inserting comment table...")
@@ -174,7 +193,7 @@ with open(file_name, "r", encoding="UTF-8") as f:
         )
         line = f.readline()
         num_lines += 1
-db.commit()
+conn.commit()
 print(f"06. Insert {num_lines} rows into comment table")
 
 print("07. Inserting post table...")
@@ -203,7 +222,7 @@ with open(file_name, "r", encoding="UTF-8") as f:
         )
         line = f.readline()
         num_lines += 1
-db.commit()
+conn.commit()
 print(f"07. Insert {num_lines} rows into post table")
 
 print("08. Inserting forum table...")
@@ -221,7 +240,7 @@ with open(file_name, "r", encoding="UTF-8") as f:
         )
         line = f.readline()
         num_lines += 1
-db.commit()
+conn.commit()
 print(f"08. Insert {num_lines} rows into forum table")
 
 # insert edge tables
@@ -239,7 +258,7 @@ def insert_simple_edges(prefix, csv_file, table_name):
             cursor.execute(f"insert into {table_name} values('{src}', '{dst}')")
             line = f.readline()
             num_lines += 1
-    db.commit()
+    conn.commit()
     print(f"{prefix}. Insert {num_lines} rows into {table_name} table")
 
 
@@ -294,7 +313,7 @@ def insert_prop_edges(prefix, csv_file, table_name):
             )
             line = f.readline()
             num_lines += 1
-    db.commit()
+    conn.commit()
     print(f"{prefix}. Insert {num_lines} rows into {table_name} table")
 
 
@@ -310,4 +329,4 @@ insert_prop_edges("30", "/person_studyAt_organisation_0_0.csv", "studyat")
 
 insert_prop_edges("31", "/person_workAt_organisation_0_0.csv", "workat")
 
-db.close()
+conn.close()
