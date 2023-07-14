@@ -33,6 +33,32 @@ int main(int argc, char** argv) {
   TxnLogParser parser(FLAGS_rg_mapping_file_path, FLAGS_subgraph_num);
 
   int log_count = 0;
+#ifdef USE_DEBEZIUM
+  if (FLAGS_enable_bulkload) {
+    while (1) {
+      RdKafka::Message* msg = consumer->consume();
+      // skip empty message to avoid JSON parser error
+      if (msg->len() == 0) {
+        continue;
+      }
+
+      string line(static_cast<const char*>(msg->payload()), msg->len());
+      converter::LogEntry log_entry;
+      bool bulkload_ended = parser.parse(log_entry, line, 0);
+      if (!log_entry.valid) {
+        continue;
+      }
+      if (bulkload_ended) {
+        log_entry.epoch = 1;
+        log_count = FLAGS_logs_per_epoch + 1;
+        ostream << log_entry.to_string() << flush;
+        break;
+      }
+
+      ostream << log_entry.to_string() << flush;
+    }
+  }
+#endif
   while (1) {
     RdKafka::Message* msg = consumer->consume();
 

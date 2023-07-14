@@ -17,6 +17,7 @@
 #define CONVERTER_FLAGS_H_
 
 #include <gflags/gflags.h>
+#include <gflags/gflags_declare.h>
 
 DECLARE_string(read_kafka_broker_list);
 DECLARE_string(write_kafka_broker_list);
@@ -28,5 +29,6 @@ DECLARE_int32(logs_per_epoch);
 DECLARE_string(rg_mapping_file_path);
 
 DECLARE_int32(subgraph_num);
+DECLARE_bool(enable_bulkload);
 
 #endif  // CONVERTER_FLAGS_H_

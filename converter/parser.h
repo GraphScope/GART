@@ -54,7 +54,8 @@ class TxnLogParser {
     init(rgmapping_file, subgraph_num);
   }
 
-  void parse(LogEntry& out, const std::string& log_str, int epoch);
+  // true: bulkload has been done
+  bool parse(LogEntry& out, const std::string& log_str, int epoch);
 
   ~TxnLogParser() = default;
 

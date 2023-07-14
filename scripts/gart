@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,hostfile:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,hostfile:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -24,6 +24,7 @@ kafka_server="127.0.0.1:9092"
 subgraph_num=1
 use_debezium=1
 db_type="mysql"
+enable_backload=0
 hostfile=
 
 eval set -- "$VALID_ARGS"
@@ -73,6 +74,10 @@ while [ : ]; do
         db_type=$2
         shift 2
         ;;
+        --enable-bulkload)
+        enable_bulkload=$2
+        shift 2
+        ;;
     -e | --etcd-endpoint)
         etcd_endpoint=$2
         shift 2
@@ -106,6 +111,7 @@ while [ : ]; do
         echo "      --v6d-size:          vineyard size (default: 110G)"
         echo "      --use-debezium:      whether to use Debezium to parse txn logs (default: 1)"
         echo "      --db-type:           which relational database to use (default: mysql)"
+        echo "      --enable-bulkload:   which enable bulkload (default: 0)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
         echo "      --etcd-prefix:       etcd meta prefix (default: gart_meta_)"
         echo "  -k, --kafka-server:      kafka bootstrap server (default: 127.0.0.1:9092)"
@@ -133,6 +139,7 @@ echo "    v6d-sock: $v6d_sock"
 echo "    v6d-size: $v6d_size"
 echo "    use-debezium: $use_debezium"
 echo "    db-type: $db_type"
+echo "    enable-bulkload: $enable_bulkload"
 echo "    etcd-endpoint: $etcd_endpoint"
 echo "    etcd-prefix: $etcd_prefix"
 echo "    kafka-server: $kafka_server"
@@ -337,7 +344,7 @@ if [ "$use_debezium" == 1 ]; then
         echo "Start Debezium"
         if [ "$db_type" == "mysql" ]; then
             echo "    Start MySQL Debezium"
-            $KAFKA_HOME/bin/connect-standalone.sh $KAFKA_HOME/config/connect-standalone.properties $KAFKA_HOME/config/connect-debezium-mysql.properties > /dev/null 2>&1 &
+            # $KAFKA_HOME/bin/connect-standalone.sh $KAFKA_HOME/config/connect-standalone.properties $KAFKA_HOME/config/connect-debezium-mysql.properties > /dev/null 2>&1 &
         elif [ "$db_type" == "postgresql" ]; then
             echo "    Start PostgreSQL Debezium"
             $KAFKA_HOME/bin/connect-standalone.sh $KAFKA_HOME/config/connect-standalone.properties $KAFKA_HOME/config/connect-debezium-postgresql.properties > /dev/null 2>&1 &
@@ -356,8 +363,13 @@ if [ $is_master == true ]; then
     echo "Start Converter"
     if [ "$use_debezium" == 1 ]; then
         echo "    Use Debezium converter"
-        $CONVENTER_HOME/binlog_convert_debezium --rg_mapping_file_path $rgmapping_file \
-            --subgraph_num $subgraph_num &
+        if [ "$enable_bulkload" == 1 ]; then
+            $CONVENTER_HOME/binlog_convert_debezium --rg_mapping_file_path $rgmapping_file \
+                --subgraph_num $subgraph_num --enable_bulkload true &
+        else
+            $CONVENTER_HOME/binlog_convert_debezium --rg_mapping_file_path $rgmapping_file \
+                --subgraph_num $subgraph_num --enable_bulkload false &
+        fi
     else
         echo "    Use Maxwell converter"
         $CONVENTER_HOME/binlog_convert_maxwell --rg_mapping_file_path $rgmapping_file \

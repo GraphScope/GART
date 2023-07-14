@@ -155,7 +155,7 @@ void TxnLogParser::init(const string& rgmapping_file, int subgraph_num) {
   }
 }
 
-void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
+bool TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   out.properties.clear();
   out.valid = false;
   out.epoch = epoch;
@@ -166,7 +166,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     log = json::parse(log_str);
   } catch (json::exception& e) {
     LOG(ERROR) << "TxnLog parse failed. Error message: " << e.what();
-    return;
+    return false;
   }
 
 // skip unused tables
@@ -179,7 +179,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   auto table2elabel_it = table2elabel_.find(table_name);
   if (table2vlabel_it == table2vlabel_.end() &&
       table2elabel_it == table2elabel_.end()) {
-    return;
+    return false;
   }
 #ifndef USE_DEBEZIUM
   string type = log["type"].get<string>();
@@ -189,7 +189,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   if (table2elabel_it != table2elabel_.end()) {
     if (table2vlabel_it != table2vlabel_.end()) {
       LOG(ERROR) << "Table name conflict: " << table_name;
-      return;
+      return false;
     }
     out.entity_type = LogEntry::EntityType::EDGE;
   } else {
@@ -205,11 +205,12 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   out.op_type = type == "c"   ? LogEntry::OpType::INSERT
                 : type == "u" ? LogEntry::OpType::UPDATE
                 : type == "d" ? LogEntry::OpType::DELETE
+                : type == "r" ? LogEntry::OpType::INSERT
                               : LogEntry::OpType::UNKNOWN;
 #endif
   if (out.op_type == LogEntry::OpType::UNKNOWN) {
     LOG(ERROR) << "Unknown operation type: " << type;
-    return;
+    return false;
   }
 
   if (out.entity_type == LogEntry::EntityType::VERTEX) {
@@ -221,6 +222,16 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   fill_prop(out, log);
 
   out.valid = true;
+#ifdef USE_DEBEZIUM
+  if (type == "r") {
+    return false;
+  } else {
+    return true;
+  }
+#else
+  // TODO(wanglei): currently only debezium support bulkload
+  return true;
+#endif
 }
 
 void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {

@@ -243,6 +243,11 @@ with open(file_name, "r", encoding="UTF-8") as f:
 conn.commit()
 print(f"08. Insert {num_lines} rows into forum table")
 
+#for buldload test
+print("Input any key to insert edge tables...")
+content = sys.stdin.readline()
+print("Inserting edge tables...", content)
+
 # insert edge tables
 
 

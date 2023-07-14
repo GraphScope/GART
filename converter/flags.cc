@@ -29,3 +29,5 @@ DEFINE_string(rg_mapping_file_path, "schema/rgmapping-ldbc.yaml",
               "RGMapping file path.");
 
 DEFINE_int32(subgraph_num, 1, "Number of subgraphs for GAP workloads.");
+
+DEFINE_bool(enable_bulkload, false, "Enable bulkload from existing data.");
