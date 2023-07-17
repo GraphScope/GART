@@ -365,15 +365,17 @@ if [ $is_master == true ]; then
         echo "    Use Debezium converter"
         if [ "$enable_bulkload" == 1 ]; then
             $CONVENTER_HOME/binlog_convert_debezium --rg_mapping_file_path $rgmapping_file \
-                --subgraph_num $subgraph_num --enable_bulkload true &
+                --subgraph_num $subgraph_num --logs_per_epoch 10000 \
+                --enable_bulkload true &
         else
             $CONVENTER_HOME/binlog_convert_debezium --rg_mapping_file_path $rgmapping_file \
-                --subgraph_num $subgraph_num --enable_bulkload false &
+                --subgraph_num $subgraph_num --logs_per_epoch 10000 \
+                --enable_bulkload false &
         fi
     else
         echo "    Use Maxwell converter"
         $CONVENTER_HOME/binlog_convert_maxwell --rg_mapping_file_path $rgmapping_file \
-            --subgraph_num $subgraph_num &
+            --subgraph_num $subgraph_num --logs_per_epoch 10000 &
     fi
 
     sleep 2

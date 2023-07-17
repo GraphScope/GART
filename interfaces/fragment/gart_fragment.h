@@ -222,7 +222,7 @@ class GartFragment {
       VINEYARD_CHECK_OK(hashmap_t::View(client_, ovg2l_blob, hmapview));
       ovg2l_maps_[vlabel] = hmapview;
 
-      for (int64_t j = inner_offsets_[vlabel]; j >= 0; j--) {
+      for (uint64_t j = inner_offsets_[vlabel]; j >= 0; j--) {
         vid_t v = vertex_tables_[vlabel][j];
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
         if (delete_flag == 0) {
@@ -231,7 +231,7 @@ class GartFragment {
         }
       }
 
-      for (int64_t j = outer_offsets_[vlabel]; j < vertex_table_lens_[vlabel];
+      for (uint64_t j = outer_offsets_[vlabel]; j < vertex_table_lens_[vlabel];
            j++) {
         vid_t v = vertex_tables_[vlabel][j];
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
@@ -671,13 +671,13 @@ class GartFragment {
 
   inline bool IsInnerVertex(const vertex_t& v) const {
     auto v_label = vid_parser.GetLabelId(v.GetValue());
-    uint64_t v_offset = vid_parser.GetOffset(v.GetValue());
+    int64_t v_offset = vid_parser.GetOffset(v.GetValue());
     return v_offset <= max_inner_offsets_[v_label] ? true : false;
   }
 
   inline bool IsOuterVertex(const vertex_t& v) const {
     auto v_label = vid_parser.GetLabelId(v.GetValue());
-    uint64_t v_offset = vid_parser.GetOffset(v.GetValue());
+    int64_t v_offset = vid_parser.GetOffset(v.GetValue());
     return v_offset >= min_outer_offsets_[v_label] ? true : false;
   }
 
