@@ -11,7 +11,8 @@ GART is an in-memory system extended from HTAP systems for hybrid transactional 
     - [Requirements](#requirements)
     - [Building from source](#building-from-source)
 - [Getting Started](#getting-started)
-    - [Configure Data Source](#building-from-source)
+    - [Configure Data Source](#configure-data-source)
+    - [Configure Capturer](#configure-capturer)
     - [Run GART](#run-gart)
     - [Mirco Demo: Graph Analysis on Data from MySQL](#mirco-demo-graph-analysis-on-data-from-mysql)
 - [License](#license)
@@ -31,7 +32,27 @@ In detail, the workflow of GART can be broken into the following steps:
 ![](docs/images/arch.png)
 
 - **1. Preprocess (Capturer & Parser)**:
-GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we support [Maxwell](https://github.com/zendesk/maxwell) and [Debezium](https://debezium.io/) as the log capturer.
+GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use [Debezium](https://debezium.io/) (for MySQL, PostgreSQL, ...) or [Maxwell](https://github.com/zendesk/maxwell) (only for MySQL) as the log capturer.
+
+  The sample format of TxnLog is as follows (Debezium style, only necessary information):
+  ```
+  {
+    "before": null,
+    "after": {
+        "org_id": "0",
+        "org_type": "company",
+        "org_name": "Kam_Air",
+        "org_url": "http://dbpedia.org/resource/Kam_Air"
+    },
+    "source": {
+        "ts_ms": 1689159703811,
+        "db": "ldbc",
+        "table": "organisation"
+    },
+    "op": "c"
+  }
+  ```
+  This sample records the log that inserts a tuple of `organisation`.
 
 - **2. Model Convert (RGMapping Converter)**:
 This step is an important step for GART. The conversion between different data models for HTGAP workloads requires more semantic information.
@@ -69,7 +90,7 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 - [librdkafka](https://github.com/confluentinc/librdkafka)
 - [Vineyard](https://github.com/v6d-io/v6d)
 - [Apach Kafka](https://kafka.apache.org/quickstart)
-- [Maxwell](https://github.com/zendesk/maxwell) or 
+- [Maxwell](https://github.com/zendesk/maxwell) or
 - [Debezium](https://github.com/debezium/debezium)
 
 ### Building from source
@@ -89,13 +110,9 @@ The dependencies can be installed by [scripts/install-deps.sh](scripts/install-d
 ### Configure Data Source
 
 Before running GART, we need to configure the data source to capture its logs.
-Currently, we have supported MySQL and PostgreSQL as relational data source.
+Currently, we have supported MySQL and PostgreSQL as the relational data source.
 
-- Kafka configuration file `$KAFKA_HOME/config/server.properties`
-    ```
-    delete.topic.enable=true
-    ```
-If we use MySQL as relational database
+#### MySQL
 - MySQL configuration file `/etc/mysql/my.cnf`:
     ```
     [mysqld]
@@ -122,33 +139,45 @@ If we use MySQL as relational database
 
     # Grant privileges on the database "maxwell"
     GRANT ALL ON maxwell.* TO 'maxwell'@'localhost';
+    ```
 
-If we use PostgreSQL as relational database
-- In PostgreSQL configuration file `/etc/postgresql/<postgresql_version>/main/postgresql.conf`, 
-    we modify the following fields:
+#### PostgreSQL
+- The PostgreSQL configuration file is `/etc/postgresql/<postgresql_version>/main/postgresql.conf`
+
+- Modify the configuration file to enable WAL as follows:
     ```
     wal_level = logical
     max_replication_slots = <larger than 0>
     max_wal_senders = <larger than 0>
     ```
 
-- Create a PostgreSQL user for the log capturer Debezium:
+- Create a PostgreSQL user (`debezium`) for the log capturer Debezium:
+    ```
+    CREATE USER 'debezium'@'localhost' IDENTIFIED BY '123456';
+    ALTER USER debezium REPLICATION;
+    ALTER USER debezium LOGIN;
+    ```
+
+- Modify the configuration file to trust the user `debezium`
+    ```
+    local   replication     debezium                          trust
+    host    replication     debezium  127.0.0.1/32            trust
+    host    replication     debezium  ::1/128                 trust
+    ```
+
+- Finally, we restart PostgreSQL
+    ```
+    sudo /etc/init.d/postgresql restart
+    ```
+
+### Configure Capturer
+
+Configure Kafka (`$KAFKA_HOME/config/server.properties`) as follows:
 ```
-CREATE USER 'debezium'@'localhost' IDENTIFIED BY '123456';
-ALTER USER debezium REPLICATION;
-ALTER USER debezium LOGIN;
+delete.topic.enable=true
 ```
 
-- Modify `/etc/postgresql/<postgresql_version>/main/postgresql.conf`
-```
-local   replication     debezium                          trust   
-host    replication     debezium  127.0.0.1/32            trust   
-host    replication     debezium  ::1/128                 trust 
-```
-
-Finally, we restart PostgreSQL `sudo /etc/init.d/postgresql restart`
-
-If we use Debezium as log capturer, we also need to set up configuration of Debezium, and please refer to [install-deps.sh](scripts/install-deps.sh) for more details.
+If we use Debezium as the log capturer, we also need to set up a configuration of Debezium, and please refer to [install-deps.sh](scripts/install-deps.sh) for more details.
 
 ### Run GART
 

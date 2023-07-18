@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
       }
 
       string line(static_cast<const char*>(msg->payload()), msg->len());
-      converter::LogEntry log_entry;
+      LogEntry log_entry;
       bool bulkload_ended = parser.parse(log_entry, line, 0);
       if (!log_entry.valid) {
         continue;
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
     string line(static_cast<const char*>(msg->payload()), msg->len());
     int epoch = log_count / FLAGS_logs_per_epoch;
 
-    converter::LogEntry log_entry;
+    LogEntry log_entry;
     parser.parse(log_entry, line, epoch);
     if (!log_entry.valid) {
       continue;
