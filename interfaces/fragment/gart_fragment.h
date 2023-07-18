@@ -16,6 +16,7 @@
 #ifndef INTERFACES_FRAGMENT_GART_FRAGMENT_H_
 #define INTERFACES_FRAGMENT_GART_FRAGMENT_H_
 
+#include <cstdint>
 #include "grape/fragment/fragment_base.h"
 #include "vineyard/basic/ds/hashmap_mvcc.h"
 
@@ -222,7 +223,7 @@ class GartFragment {
       VINEYARD_CHECK_OK(hashmap_t::View(client_, ovg2l_blob, hmapview));
       ovg2l_maps_[vlabel] = hmapview;
 
-      for (uint64_t j = inner_offsets_[vlabel]; j >= 0; j--) {
+      for (int64_t j = inner_offsets_[vlabel]; j >= 0; j--) {
         vid_t v = vertex_tables_[vlabel][j];
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
         if (delete_flag == 0) {
@@ -231,7 +232,7 @@ class GartFragment {
         }
       }
 
-      for (uint64_t j = outer_offsets_[vlabel]; j < vertex_table_lens_[vlabel];
+      for (int64_t j = outer_offsets_[vlabel]; j < vertex_table_lens_[vlabel];
            j++) {
         vid_t v = vertex_tables_[vlabel][j];
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
@@ -1034,7 +1035,7 @@ class GartFragment {
   size_t read_epoch_number_;
   std::vector<int64_t> inner_offsets_, outer_offsets_;
   std::vector<vid_t*> vertex_tables_;
-  std::vector<size_t> vertex_table_lens_;
+  std::vector<int64_t> vertex_table_lens_;
   std::vector<int64_t> max_inner_offsets_, min_outer_offsets_;
   vid_t max_outer_id_offset_;
 

@@ -156,10 +156,12 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
           // TODO(wanglei): support more data types in MySQL and PostgreSQL
           if (prop_dtype_str == "int" || prop_dtype_str == "integer") {
             prop_dtype = "INT";
-          } else if (prop_dtype_str == "int64") {
+          } else if (prop_dtype_str == "bigint") {
             prop_dtype = "LONG";
           } else if (prop_dtype_str == "float") {
             prop_dtype = "FLOAT";
+          } else if (prop_dtype_str == "double" || prop_dtype_str == "double precision") {
+            prop_dtype = "DOUBLE";
           } else if (prop_dtype_str == "varchar(255)" ||
                      prop_dtype_str == "character varying") {
             prop_dtype = "LONGSTRING";  // TODO: unified string types
