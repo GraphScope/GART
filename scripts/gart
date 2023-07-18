@@ -24,7 +24,7 @@ kafka_server="127.0.0.1:9092"
 subgraph_num=1
 use_debezium=1
 db_type="mysql"
-enable_backload=0
+enable_bulkload=false
 hostfile=
 
 eval set -- "$VALID_ARGS"
@@ -161,10 +161,10 @@ if [ "$use_debezium" == 0 ]; then
         echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
         unset=true
     fi
+fi
 
-    if [ "$unset" = true ]; then
-        exit 1
-    fi
+if [ "$unset" = true ]; then
+    exit 1
 fi
 
 # check a host is local host or not
@@ -363,15 +363,10 @@ if [ $is_master == true ]; then
     echo "Start Converter"
     if [ "$use_debezium" == 1 ]; then
         echo "    Use Debezium converter"
-        if [ "$enable_bulkload" == 1 ]; then
-            $CONVENTER_HOME/binlog_convert_debezium --rg_mapping_file_path $rgmapping_file \
-                --subgraph_num $subgraph_num --logs_per_epoch 10000 \
-                --enable_bulkload true &
-        else
-            $CONVENTER_HOME/binlog_convert_debezium --rg_mapping_file_path $rgmapping_file \
-                --subgraph_num $subgraph_num --logs_per_epoch 10000 \
-                --enable_bulkload false &
-        fi
+        $CONVENTER_HOME/binlog_convert_debezium \
+            --rg_mapping_file_path $rgmapping_file \
+            --subgraph_num $subgraph_num --logs_per_epoch 10000 \
+            --enable_bulkload $enable_bulkload &
     else
         echo "    Use Maxwell converter"
         $CONVENTER_HOME/binlog_convert_maxwell --rg_mapping_file_path $rgmapping_file \

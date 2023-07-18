@@ -155,7 +155,7 @@ void TxnLogParser::init(const string& rgmapping_file, int subgraph_num) {
   }
 }
 
-bool TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
+void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   out.properties.clear();
   out.valid = false;
   out.epoch = epoch;
@@ -166,7 +166,7 @@ bool TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     log = json::parse(log_str);
   } catch (json::exception& e) {
     LOG(ERROR) << "TxnLog parse failed. Error message: " << e.what();
-    return false;
+    return;
   }
 
 // skip unused tables
@@ -179,7 +179,7 @@ bool TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   auto table2elabel_it = table2elabel_.find(table_name);
   if (table2vlabel_it == table2vlabel_.end() &&
       table2elabel_it == table2elabel_.end()) {
-    return false;
+    return;
   }
 #ifndef USE_DEBEZIUM
   string type = log["type"].get<string>();
@@ -189,7 +189,7 @@ bool TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   if (table2elabel_it != table2elabel_.end()) {
     if (table2vlabel_it != table2vlabel_.end()) {
       LOG(ERROR) << "Table name conflict: " << table_name;
-      return false;
+      return;
     }
     out.entity_type = LogEntry::EntityType::EDGE;
   } else {
@@ -210,7 +210,7 @@ bool TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
 #endif
   if (out.op_type == LogEntry::OpType::UNKNOWN) {
     LOG(ERROR) << "Unknown operation type: " << type;
-    return false;
+    return;
   }
 
   if (out.entity_type == LogEntry::EntityType::VERTEX) {
@@ -221,17 +221,16 @@ bool TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
 
   fill_prop(out, log);
 
-  out.valid = true;
+  out.bulkload_ended = true;
 #ifdef USE_DEBEZIUM
-  if (type == "r") {
-    return false;
-  } else {
-    return true;
-  }
-#else
   // TODO(wanglei): currently only debezium support bulkload
-  return true;
+  if (type == "r") {
+    out.bulkload_ended = false;
+  }
 #endif
+
+  out.valid = true;
+  return;
 }
 
 void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {

@@ -33,7 +33,9 @@ int main(int argc, char** argv) {
   TxnLogParser parser(FLAGS_rg_mapping_file_path, FLAGS_subgraph_num);
 
   int log_count = 0;
+
 #ifdef USE_DEBEZIUM
+  // bulk load data
   if (FLAGS_enable_bulkload) {
     while (1) {
       RdKafka::Message* msg = consumer->consume();
@@ -44,11 +46,11 @@ int main(int argc, char** argv) {
 
       string line(static_cast<const char*>(msg->payload()), msg->len());
       LogEntry log_entry;
-      bool bulkload_ended = parser.parse(log_entry, line, 0);
+      parser.parse(log_entry, line, 0);
       if (!log_entry.valid) {
         continue;
       }
-      if (bulkload_ended) {
+      if (log_entry.bulkload_ended) {
         log_entry.epoch = 1;
         log_count = FLAGS_logs_per_epoch + 1;
         ostream << log_entry.to_string() << flush;
@@ -59,6 +61,7 @@ int main(int argc, char** argv) {
     }
   }
 #endif
+
   while (1) {
     RdKafka::Message* msg = consumer->consume();
 

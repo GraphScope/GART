@@ -99,23 +99,25 @@ export MAXWELL_HOME=`pwd`/maxwell
 
 # Debezium
 # we need to mkdir connect plugins for kafka
-sudo mkdir /kafka/connect
+KAFKA_CONNECT_DIR=$KAFKA_HOME/connect
+mkdir $KAFKA_CONNECT_DIR
 # mysql connector
 wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/2.3.0.Final/debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
 tar zxvf debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
 rm debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
-sudo mv debezium-connector-mysql/* /kafka/connect
+mv debezium-connector-mysql/* $KAFKA_CONNECT_DIR
 #postgresql connector
 wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/2.3.0.Final/debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
 tar zxvf debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
 rm debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
-sudo mv debezium-connector-postgres/* /kafka/connect
+mv debezium-connector-postgres/* $KAFKA_CONNECT_DIR
 #link kafka connect plugins
-ln -s /kafka/connect/*.jar ${KAFKA_HOME}/libs/
+ln -s $KAFKA_CONNECT_DIR/*.jar $KAFKA_HOME/libs/
 #write config for kafka connect
-echo "plugin.path=/kafka/connect" >> $KAFKA_HOME/config/connect-standalone.properties
+echo "plugin.path=$KAFKA_CONNECT_DIR" >> $KAFKA_HOME/config/connect-standalone.properties
+
 #write connect-debezium-mysql.properties
-sudo cat << EOT >> $KAFKA_HOME/config/connect-debezium-mysql.properties
+cat << EOT >> $KAFKA_HOME/config/connect-debezium-mysql.properties
 
 name=test-connector
 connector.class=io.debezium.connector.mysql.MySqlConnector
@@ -143,8 +145,9 @@ key.converter.schemas.enable=false
 value.converter.schemas.enable=false
 
 EOT
+
 #write connect-debezium-postgresql.properties
-sudo cat << EOT >> $KAFKA_HOME/config/connect-debezium-postgresql.properties
+cat << EOT >> $KAFKA_HOME/config/connect-debezium-postgresql.properties
 
 name=test-connector
 connector.class=io.debezium.connector.postgresql.PostgresConnector

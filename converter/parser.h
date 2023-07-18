@@ -29,7 +29,13 @@ struct LogEntry {
   enum class EntityType { VERTEX, EDGE };
   enum class OpType { INSERT, UPDATE, DELETE, UNKNOWN };
 
+  std::string to_string() const;
+
+  // log status
   bool valid;
+  bool bulkload_ended;  // true: bulkload has been done
+
+  // log content
   EntityType entity_type;
   OpType op_type;
   int epoch;
@@ -44,8 +50,6 @@ struct LogEntry {
     } edge;
   };
   std::vector<std::string> properties;
-
-  std::string to_string() const;
 };
 
 class TxnLogParser {
@@ -54,8 +58,7 @@ class TxnLogParser {
     init(rgmapping_file, subgraph_num);
   }
 
-  // true: bulkload has been done
-  bool parse(LogEntry& out, const std::string& log_str, int epoch);
+  void parse(LogEntry& out, const std::string& log_str, int epoch);
 
   ~TxnLogParser() = default;
 
