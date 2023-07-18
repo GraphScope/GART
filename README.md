@@ -31,7 +31,7 @@ In detail, the workflow of GART can be broken into the following steps:
 ![](docs/images/arch.png)
 
 - **1. Preprocess (Capturer & Parser)**:
-GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use [Maxwell](https://github.com/zendesk/maxwell) as the log capturer.
+GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we support [Maxwell](https://github.com/zendesk/maxwell) and [Debezium](https://debezium.io/) as the log capturer.
 
 - **2. Model Convert (RGMapping Converter)**:
 This step is an important step for GART. The conversion between different data models for HTGAP workloads requires more semantic information.
@@ -69,7 +69,8 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 - [librdkafka](https://github.com/confluentinc/librdkafka)
 - [Vineyard](https://github.com/v6d-io/v6d)
 - [Apach Kafka](https://kafka.apache.org/quickstart)
-- [Maxwell](https://github.com/zendesk/maxwell)
+- [Maxwell](https://github.com/zendesk/maxwell) or 
+- [Debezium](https://github.com/debezium/debezium)
 
 ### Building from source
 ```shell
@@ -88,13 +89,13 @@ The dependencies can be installed by [scripts/install-deps.sh](scripts/install-d
 ### Configure Data Source
 
 Before running GART, we need to configure the data source to capture its logs.
-Take MySQL as an example.
+Currently, we have supported MySQL and PostgreSQL as relational data source.
 
 - Kafka configuration file `$KAFKA_HOME/config/server.properties`
     ```
     delete.topic.enable=true
     ```
-
+If we use MySQL as relational database
 - MySQL configuration file `/etc/mysql/my.cnf`:
     ```
     [mysqld]
@@ -103,13 +104,14 @@ Take MySQL as an example.
 
     # Binlog Format: row-based logging, maxwell needs binlog_format=row
     binlog_format=row
+    binlog_row_image=full
 
     # The databases captured. GART will capture all databases if not specified.
     binlog-do-db=ldbc  # change the name to your database
     binlog-do-db=...   # change the name to your database
     ```
 
-- Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md))
+- Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md)) or Debezium:
     ```
     # Create a user call "maxwell" with password "123456"
     # The host name part of the account name, if omitted, defaults to '%'.
@@ -120,7 +122,33 @@ Take MySQL as an example.
 
     # Grant privileges on the database "maxwell"
     GRANT ALL ON maxwell.* TO 'maxwell'@'localhost';
+
+If we use PostgreSQL as relational database
+- In PostgreSQL configuration file `/etc/postgresql/<postgresql_version>/main/postgresql.conf`, 
+    we modify the following fields:
     ```
+    wal_level = logical
+    max_replication_slots = <larger than 0>
+    max_wal_senders = <larger than 0>
+    ```
+
+- Create a PostgreSQL user for the log capturer Debezium:
+```
+CREATE USER 'debezium'@'localhost' IDENTIFIED BY '123456';
+ALTER USER debezium REPLICATION;
+ALTER USER debezium LOGIN;
+```
+
+- Modify `/etc/postgresql/<postgresql_version>/main/postgresql.conf`
+```
+local   replication     debezium                          trust   
+host    replication     debezium  127.0.0.1/32            trust   
+host    replication     debezium  ::1/128                 trust 
+```
+
+Finally, we restart PostgreSQL `sudo /etc/init.d/postgresql restart`
+
+If we use Debezium as log capturer, we also need to set up configuration of Debezium, and please refer to [install-deps.sh](scripts/install-deps.sh) for more details.
 
 ### Run GART
 

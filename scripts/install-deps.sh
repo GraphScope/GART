@@ -97,5 +97,85 @@ rm maxwell-1.40.0.tar.gz
 mv maxwell-1.40.0 maxwell
 export MAXWELL_HOME=`pwd`/maxwell
 
+# Debezium
+# we need to mkdir connect plugins for kafka
+sudo mkdir /kafka/connect
+# mysql connector
+wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/2.3.0.Final/debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
+tar zxvf debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
+rm debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
+sudo mv debezium-connector-mysql/* /kafka/connect
+#postgresql connector
+wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/2.3.0.Final/debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
+tar zxvf debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
+rm debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
+sudo mv debezium-connector-postgres/* /kafka/connect
+#link kafka connect plugins
+ln -s /kafka/connect/*.jar ${KAFKA_HOME}/libs/
+#write config for kafka connect
+echo "plugin.path=/kafka/connect" >> $KAFKA_HOME/config/connect-standalone.properties
+#write connect-debezium-mysql.properties
+sudo cat << EOT >> $KAFKA_HOME/config/connect-debezium-mysql.properties
+
+name=test-connector
+connector.class=io.debezium.connector.mysql.MySqlConnector
+database.hostname=<mysql host>
+database.port=<mysql port>
+database.user=<mysql user>
+database.password=<mysql password>
+database.server.id=1
+database.include.list=<which databse is needed to capture, e.g., ldbc>
+database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+include.schema.changes=true
+tombstones.on.delete=false
+topic.prefix=fullfillment
+schema.history.internal.kafka.topic=schemahistory.fullfillment
+transforms=Combine,ReplaceField
+transforms.Combine.type=io.debezium.transforms.ByLogicalTableRouter
+transforms.Combine.topic.regex=(.*)
+transforms.Combine.topic.replacement=binlog
+transforms.ReplaceField.type=org.apache.kafka.connect.transforms.ReplaceField$Value
+transforms.ReplaceField.exclude=ts_ms,transaction
+key.converter=org.apache.kafka.connect.json.JsonConverter
+value.converter=org.apache.kafka.connect.json.JsonConverter
+key.converter.schemas.enable=false
+value.converter.schemas.enable=false
+
+EOT
+#write connect-debezium-postgresql.properties
+sudo cat << EOT >> $KAFKA_HOME/config/connect-debezium-postgresql.properties
+
+name=test-connector
+connector.class=io.debezium.connector.postgresql.PostgresConnector
+database.hostname=<postgresql host>
+database.port=<postgresql port>
+database.user=<postgresql user>
+database.password=<postgresql password>
+database.dbname=<which databse is needed to capture, e.g., ldbc>
+database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+plugin.name=pgoutput
+snapshot.mode=<if enable buldload, set as `always`, otherwise set as `never`>
+database.server.id=1
+include.schema.changes=true
+tombstones.on.delete=false
+publication.autocreate.mode=filtered
+topic.prefix=fullfillment
+schema.history.internal.kafka.topic=schemahistory.fullfillment
+transforms=Combine,ReplaceField
+transforms.Combine.type=io.debezium.transforms.ByLogicalTableRouter
+transforms.Combine.topic.regex=(.*)
+transforms.Combine.topic.replacement=binlog
+transforms.ReplaceField.type=org.apache.kafka.connect.transforms.ReplaceField$Value
+transforms.ReplaceField.exclude=ts_ms,transaction
+key.converter=org.apache.kafka.connect.json.JsonConverter
+value.converter=org.apache.kafka.connect.json.JsonConverter
+key.converter.schemas.enable=false
+value.converter.schemas.enable=false
+
+EOT
+
+
 # Install sqlalchemy, pymysql, psycopg2
 pip3 install sqlalchemy pymysql psycopg2
