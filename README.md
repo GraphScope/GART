@@ -128,7 +128,7 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     binlog-do-db=...   # change the name to your database
     ```
 
-- Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md)) or Debezium:
+- Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md) or Debezium):
     ```
     # Create a user call "maxwell" with password "123456"
     # The host name part of the account name, if omitted, defaults to '%'.
@@ -156,6 +156,10 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     CREATE USER 'debezium'@'localhost' IDENTIFIED BY '123456';
     ALTER USER debezium REPLICATION;
     ALTER USER debezium LOGIN;
+
+    # TODO: for dbuser
+    CREATE DATABASE ldbc;
+    GRANT ALL ON DATABASE ldbc TO dbuser;
     ```
 
 - Modify the configuration file to trust the user `debezium`
@@ -215,7 +219,7 @@ You can stop GART by:
     pip3 install pymysql cryptography
 
     cd gart
-    ./apps/mysql/init_scehma.py --user [username] --password [password] --db ldbc
+    ./apps/rdbms/init_scehma.py --user [username] --password [password] --db ldbc
     ```
 
     If you have no such user, you can create the user (called `test`) before running `init_scehma.py` like:
@@ -237,7 +241,7 @@ You can stop GART by:
 
 - Start transactional data insertion
     ```
-    ./insert_db.py --user maxwell --password 123456 --db ldbc --data_dir /path/to/gstest/ldbc_sample
+    ./apps/rdbms/insert_db.py --user [username] --password [password] --db ldbc --data_dir /path/to/gstest/ldbc_sample
     ```
 
 - Start graph analysis

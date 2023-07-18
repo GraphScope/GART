@@ -47,12 +47,11 @@ print("Args: ", args)
 print("\n========================================\n")
 
 if args.db_type == "mysql":
-    connection_string = "mysql+pymysql://%s:%s@%s:%s/%s" % (
+    connection_string = "mysql+pymysql://%s:%s@%s:%s/" % (
         args.user,
         args.password,
         args.host,
         args.port,
-        args.db,
     )
     engine = create_engine(connection_string, echo=False)
 elif args.db_type == "postgresql":
@@ -70,20 +69,19 @@ else:
 
 conn = engine.raw_connection()
 cursor = conn.cursor()
+
 # create the database
 if args.drop:
     print(f"Drop database {args.db}")
-    cursor.execute(f"DROP DATABASE IF EXISTS {args.db}")
+    if args.db_type == "mysql":
+        cursor.execute(f"DROP DATABASE IF EXISTS {args.db}")
+    elif args.db_type == "postgresql":
+        print("Not supported drop database for postgresql.")
+
 if args.db_type == "mysql":
     cursor.execute(f"CREATE DATABASE IF NOT EXISTS {args.db}")
     cursor.execute(f"USE {args.db}")
-elif args.db_type == "postgresql":
-    cursor.execute(
-        "SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s", (args.db,)
-    )
-    exists = cursor.fetchone()
-    if not exists:
-        cursor.execute(f"CREATE DATABASE {args.db}")
+# Not supported create database for postgresql
 
 # create vertex tables
 cursor.execute("DROP TABLE IF EXISTS organisation")
