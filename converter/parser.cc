@@ -220,7 +220,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     } else {
       out.op_type = LogEntry::OpType::INSERT;
     }
-  } 
+  }
 
   if (out.entity_type == LogEntry::EntityType::VERTEX) {
     fill_vertex(out, log);
