@@ -213,6 +213,15 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     return;
   }
 
+  if (out.op_type == LogEntry::OpType::UPDATE) {
+    if (out.update_has_finish_delete == false) {
+      out.update_has_finish_delete = true;
+      out.op_type = LogEntry::OpType::DELETE;
+    } else {
+      out.op_type = LogEntry::OpType::INSERT;
+    }
+  } 
+
   if (out.entity_type == LogEntry::EntityType::VERTEX) {
     fill_vertex(out, log);
   } else {
@@ -245,14 +254,14 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
   } else if (out.op_type == LogEntry::OpType::DELETE) {
     data = log["before"];
   } else if (out.op_type == LogEntry::OpType::UPDATE) {
-    ;
+    data = log["after"];
   }
 #endif
 
   const string& vid_col = vertex_id_columns_.find(table_name)->second;
   int vertex_label_id = table2vlabel_.find(table_name)->second;
 
-  int64_t gid;
+  int64_t gid = 0;
   if (out.op_type == LogEntry::OpType::INSERT) {
     // partition by round-robin
     int64_t fid = vertex_nums_[vertex_label_id] % subgraph_num_;
@@ -262,13 +271,11 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
 
     gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
     if (data[vid_col].is_number_integer()) {
-      int64_oid2gid_maps_[vertex_label_id].emplace(data[vid_col].get<int64_t>(),
-                                                   gid);
+      int64_oid2gid_maps_[vertex_label_id][data[vid_col].get<int64_t>()] = gid;
     } else if (data[vid_col].is_string()) {
-      string_oid2gid_maps_[vertex_label_id].emplace(data[vid_col].get<string>(),
-                                                    gid);
+      string_oid2gid_maps_[vertex_label_id][data[vid_col].get<string>()] = gid;
     }
-  } else {
+  } else if (out.op_type == LogEntry::OpType::DELETE) {
     if (data[vid_col].is_number_integer()) {
       auto it = int64_oid2gid_maps_[vertex_label_id].find(
           data[vid_col].get<int64_t>());
@@ -303,7 +310,7 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
   } else if (out.op_type == LogEntry::OpType::DELETE) {
     data = log["before"];
   } else if (out.op_type == LogEntry::OpType::UPDATE) {
-    ;
+    data = log["after"];
   }
 #endif
 
@@ -359,7 +366,7 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
   } else if (out.op_type == LogEntry::OpType::DELETE) {
     data = log["before"];
   } else if (out.op_type == LogEntry::OpType::UPDATE) {
-    ;
+    data = log["after"];
   }
 #endif
   auto iter = required_properties_.find(table_name);

@@ -34,6 +34,7 @@ struct LogEntry {
   // log status
   bool valid;
   bool bulkload_ended;  // true: bulkload has been done
+  bool update_has_finish_delete;
 
   // log content
   EntityType entity_type;

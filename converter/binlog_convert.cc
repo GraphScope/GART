@@ -74,9 +74,16 @@ int main(int argc, char** argv) {
     int epoch = log_count / FLAGS_logs_per_epoch;
 
     LogEntry log_entry;
+    log_entry.update_has_finish_delete = false;
     parser.parse(log_entry, line, epoch);
     if (!log_entry.valid) {
       continue;
+    }
+
+    if (log_entry.update_has_finish_delete == true) {
+      ostream << log_entry.to_string() << flush;
+      parser.parse(log_entry, line, epoch);
+      log_entry.update_has_finish_delete = false;
     }
 
     ostream << log_entry.to_string() << flush;

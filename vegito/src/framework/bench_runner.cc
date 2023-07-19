@@ -354,7 +354,6 @@ void Runner::apply_log_to_store_(string log, int p_id) {
     word_idx++;
   }
 
-  // TODO: till now, update = delete + insert
   if (op == "add_vertex") {
     process_add_vertex(cmd, graph_stores_[p_id]);
   } else if (op == "add_edge") {
@@ -363,13 +362,14 @@ void Runner::apply_log_to_store_(string log, int p_id) {
     process_del_vertex(cmd, graph_stores_[p_id]);
   } else if (op == "delete_edge") {
     process_del_edge(cmd, graph_stores_[p_id]);
-  } else if (op == "update_vertex") {
+  } /*else if (op == "update_vertex") {
     process_del_vertex(cmd, graph_stores_[p_id]);
     process_add_vertex(cmd, graph_stores_[p_id]);
   } else if (op == "update_edge") {
     process_del_edge(cmd, graph_stores_[p_id]);
     process_add_edge(cmd, graph_stores_[p_id]);
-  } else {
+  }*/
+  else {
     LOG(ERROR) << "Unsupported operator " << op;
   }
 }
