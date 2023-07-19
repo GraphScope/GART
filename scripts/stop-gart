@@ -41,8 +41,9 @@ kill $(ps aux | grep '[v]egito' | awk '{print $2}') > /dev/null 2>&1
 echo "Stop converter"
 kill $(ps aux | grep '[b]inlog_convert' | awk '{print $2}') > /dev/null 2>&1
 
-echo "Stop Maxwell"
+echo "Stop Maxwell and Debezium"
 kill $(ps aux | grep '[m]axwell.Maxwell' | awk '{print $2}') > /dev/null 2>&1
+kill $(ps aux | grep '[d]ebezium-api' | awk '{print $2}') > /dev/null 2>&1
 
 my_pid=$$
 

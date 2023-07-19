@@ -19,7 +19,10 @@ WORKDIR /deps
 RUN /workspace/gart/scripts/install-deps.sh
 ENV KAFKA_HOME="/deps/kafka"
 ENV MAXWELL_HOME="/deps/maxwell"
-RUN /workspace/gart/scripts/install-mysql.sh
+
+# Install PostgreSQL
+# If you want to install MySQL, use install-mysql.sh instead of install-psql.sh
+RUN /workspace/gart/scripts/install-psql.sh
 
 WORKDIR /workspace
 RUN git clone https://github.com/GraphScope/gstest.git

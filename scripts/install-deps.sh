@@ -88,7 +88,9 @@ tar -xzf kafka_2.13-3.4.0.tgz
 rm kafka_2.13-3.4.0.tgz
 mv kafka_2.13-3.4.0 kafka
 export KAFKA_HOME=`pwd`/kafka
-echo "delete.topic.enable=true" >> $KAFKA_HOME/config/server.properties
+export KAFKA_CONFIG=$KAFKA_HOME/config
+export KAFKA_PLUGIN=$KAFKA_HOME/connect
+echo "delete.topic.enable=true" >> $KAFKA_CONFIG/server.properties
 
 # Maxwell
 wget https://github.com/zendesk/maxwell/releases/download/v1.40.0/maxwell-1.40.0.tar.gz
@@ -99,7 +101,6 @@ export MAXWELL_HOME=`pwd`/maxwell
 
 # Debezium
 # we need to mkdir connect plugins for kafka
-KAFKA_PLUGIN=$KAFKA_HOME/connect
 mkdir $KAFKA_PLUGIN
 # mysql connector
 wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/2.3.0.Final/debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
@@ -114,21 +115,10 @@ mv debezium-connector-postgres/* $KAFKA_PLUGIN
 #link kafka connect plugins
 ln -s $KAFKA_PLUGIN/*.jar $KAFKA_HOME/libs/
 #write config for kafka connect
-echo "plugin.path=$KAFKA_PLUGIN" >> $KAFKA_HOME/config/connect-standalone.properties
+echo "plugin.path=$KAFKA_PLUGIN" >> $KAFKA_CONFIG/connect-standalone.properties
 
-#write connect-debezium-mysql.properties
-cat << EOT >> $KAFKA_HOME/config/connect-debezium-mysql.properties
-
-name=test-connector
-connector.class=io.debezium.connector.mysql.MySqlConnector
-database.hostname=<mysql host>
-database.port=<mysql port>
-database.user=<mysql user>
-database.password=<mysql password>
+COMM_CONFIG=$(cat <<EOT
 database.server.id=1
-database.include.list=<which databse is needed to capture, e.g., ldbc>
-database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
-schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 include.schema.changes=false
 tombstones.on.delete=false
 topic.prefix=fullfillment
@@ -143,11 +133,28 @@ key.converter=org.apache.kafka.connect.json.JsonConverter
 value.converter=org.apache.kafka.connect.json.JsonConverter
 key.converter.schemas.enable=false
 value.converter.schemas.enable=false
+EOT
+)
+
+#write connect-debezium-mysql.properties
+cat << EOT >> $KAFKA_CONFIG/connect-debezium-mysql.properties
+
+name=test-connector
+connector.class=io.debezium.connector.mysql.MySqlConnector
+database.hostname=<mysql host>
+database.port=<mysql port>
+database.user=<mysql user>
+database.password=<mysql password>
+database.include.list=<which databse is needed to capture, e.g., ldbc>
+database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+
+$COMM_CONFIG
 
 EOT
 
 #write connect-debezium-postgresql.properties
-cat << EOT >> $KAFKA_HOME/config/connect-debezium-postgresql.properties
+cat << EOT >> $KAFKA_CONFIG/connect-debezium-postgresql.properties
 
 name=test-connector
 connector.class=io.debezium.connector.postgresql.PostgresConnector
@@ -158,24 +165,12 @@ database.password=<postgresql password>
 database.dbname=<which databse is needed to capture, e.g., ldbc>
 database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+
 plugin.name=pgoutput
-snapshot.mode=<if enable buldload, set as `always`, otherwise set as `never`>
-database.server.id=1
-include.schema.changes=false
-tombstones.on.delete=false
 publication.autocreate.mode=filtered
-topic.prefix=fullfillment
-schema.history.internal.kafka.topic=schemahistory.fullfillment
-transforms=Combine,ReplaceField
-transforms.Combine.type=io.debezium.transforms.ByLogicalTableRouter
-transforms.Combine.topic.regex=(.*)
-transforms.Combine.topic.replacement=binlog
-transforms.ReplaceField.type=org.apache.kafka.connect.transforms.ReplaceField$Value
-transforms.ReplaceField.exclude=ts_ms,transaction
-key.converter=org.apache.kafka.connect.json.JsonConverter
-value.converter=org.apache.kafka.connect.json.JsonConverter
-key.converter.schemas.enable=false
-value.converter.schemas.enable=false
+snapshot.mode=<if enable buldload, set as `always`, otherwise set as `never`>
+
+$COMM_CONFIG
 
 EOT
 

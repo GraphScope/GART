@@ -3,7 +3,7 @@
 sudo apt install -y mysql-server
 pip3 install pymysql cryptography
 
-sudo cat << EOT >> /etc/mysql/my.cnf
+sudo tee -a /etc/mysql/my.cnf << EOT
 
 [mysqld]
 # Prefix of the binlogs
