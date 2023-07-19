@@ -162,7 +162,7 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     GRANT ALL ON DATABASE ldbc TO dbuser;
     ```
 
-- Modify the configuration file to trust the user `debezium`
+- Modify the configuration file to [trust the user](https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings) `debezium`
     ```
     local   replication     debezium                          trust
     host    replication     debezium  127.0.0.1/32            trust

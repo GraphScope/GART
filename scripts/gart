@@ -100,6 +100,7 @@ while [ : ]; do
         ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
+        echo "      --db-type:           type of data source: mysql, postgresql (default: mysql)"
         echo "  -d, --db-host:           database host (default: 127.0.0.1)"
         echo "      --db-port:           database port (default: 3306)"
         echo "  -b, --db-name:           database name (default: my_maxwell_01)"
@@ -109,9 +110,8 @@ while [ : ]; do
         echo "  -t, --table-schema-file: table schema file path (default: schema/db_schema.json)"
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
         echo "      --v6d-size:          vineyard size (default: 110G)"
-        echo "      --use-debezium:      whether to use Debezium to parse txn logs (default: 1)"
-        echo "      --db-type:           which relational database to use (default: mysql)"
-        echo "      --enable-bulkload:   which enable bulkload (default: 0)"
+        echo "      --use-debezium:      if use Debezium to parse txn logs (default: 1)"
+        echo "      --enable-bulkload:   if enable bulkload (default: false)"
         echo "  -e, --etcd-endpoint:     etcd endpoint (default: http://127.0.0.1:2379)"
         echo "      --etcd-prefix:       etcd meta prefix (default: gart_meta_)"
         echo "  -k, --kafka-server:      kafka bootstrap server (default: 127.0.0.1:9092)"
@@ -128,6 +128,7 @@ while [ : ]; do
 done
 
 echo "Arguments:"
+echo "    db-type: $db_type"
 echo "    db-host: $db_host"
 echo "    db-port: $db_port"
 echo "    db-name: $db_name"
@@ -138,7 +139,6 @@ echo "    table-schema-file: $table_schema_file"
 echo "    v6d-sock: $v6d_sock"
 echo "    v6d-size: $v6d_size"
 echo "    use-debezium: $use_debezium"
-echo "    db-type: $db_type"
 echo "    enable-bulkload: $enable_bulkload"
 echo "    etcd-endpoint: $etcd_endpoint"
 echo "    etcd-prefix: $etcd_prefix"
@@ -146,6 +146,18 @@ echo "    kafka-server: $kafka_server"
 echo "    subgraph-num: $subgraph_num"
 echo "    hostfile: $hostfile"
 
+# check arguments
+if [ "$db_type" != "mysql" ] && [ "$db_type" != "postgresql" ]; then
+    echo "Invalid value for 'db_type': $db_type"
+    exit 1
+fi
+
+if [ "$use_debezium" == 0 ] && [ "$db_type" != "mysql" ]; then
+    echo "Maxwell only supports MySQL"
+    exit 1
+fi
+
+# check environment variables
 unset=false
 if [ -n "$KAFKA_HOME" ]; then
     echo "    KAFKA_HOME: $KAFKA_HOME"
@@ -343,16 +355,12 @@ if [ "$use_debezium" == 1 ]; then
     if [ $is_master == true ]; then
         echo "Start Debezium"
         if [ "$db_type" == "mysql" ]; then
-            echo "    Start MySQL Debezium"
-            $KAFKA_HOME/bin/connect-standalone.sh $KAFKA_HOME/config/connect-standalone.properties $KAFKA_HOME/config/connect-debezium-mysql.properties > /dev/null 2>&1 &
+            echo "    Start Debezium connector for MySQL"
+            $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-mysql.properties > /dev/null 2>&1 &
         elif [ "$db_type" == "postgresql" ]; then
-            echo "    Start PostgreSQL Debezium"
-            $KAFKA_HOME/bin/connect-standalone.sh $KAFKA_HOME/config/connect-standalone.properties $KAFKA_HOME/config/connect-debezium-postgresql.properties > /dev/null 2>&1 &
-        else
-            echo "Unsupported database type: $db_type"
-            exit 1
+            echo "    Start Debezium connector for PostgreSQL"
+            $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-postgresql.properties > /dev/null 2>&1 &
         fi
-
         sleep 5
     fi
 fi
