@@ -9,7 +9,7 @@ GART is an in-memory system extended from HTAP systems for hybrid transactional 
     - [Efficient Dynamic Graph Storage](#efficient-dynamic-graph-storage)
 - [Deployment](#deployment)
     - [Requirements](#requirements)
-    - [Building from source](#building-from-source)
+    - [Building](#building)
 - [Getting Started](#getting-started)
     - [Configure Data Source](#configure-data-source)
     - [Configure Capturer](#configure-capturer)
@@ -93,7 +93,7 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 - [Maxwell](https://github.com/zendesk/maxwell) or
 - [Debezium](https://github.com/debezium/debezium)
 
-### Building from source
+### Building
 ```shell
 git clone https://github.com/GraphScope/GART.git gart
 cd gart
@@ -104,6 +104,12 @@ make -j
 ```
 
 The dependencies can be installed by [scripts/install-deps.sh](scripts/install-deps.sh) in a proper directory.
+
+To build GART by Docker, we provide a [Dockerfile](./Dockerfile):
+```
+docker image rm gart; docker build -t gart .
+docker run -it --name gart0 gart
+```
 
 ## Getting Started
 
@@ -173,6 +179,9 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     ```
     sudo /etc/init.d/postgresql restart
     ```
+
+#### User-defined Data Source
+Please refer to [Usage of GART Storage](./docs/storage.md).
 
 ### Configure Capturer
 
