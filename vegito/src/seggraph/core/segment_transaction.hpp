@@ -200,7 +200,8 @@ class SegTransaction {
 
   void check_vertex_id(vertex_t vertex_id) {
     if (vertex_id >= graph.vertex_id.load(std::memory_order_relaxed))
-      throw std::invalid_argument("The vertex id is invalid.");
+      throw std::invalid_argument(
+          "[segment_transaction] The vertex id is invalid.");
   }
 
   bool ensure_segment_read_lock(segid_t seg_id, bool write) {

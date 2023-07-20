@@ -68,7 +68,8 @@ class EpochGraphWriter {
 
   void check_vertex_id(vertex_t vertex_id) {
     if (vertex_id >= graph.vertex_id.load(std::memory_order_relaxed))
-      throw std::invalid_argument("The vertex id is invalid.");
+      throw std::invalid_argument(
+          "[epoch_graph_writer] The vertex id is invalid.");
   }
 
   void update_edge_label_block(vertex_t src, label_t label, dir_t dir,

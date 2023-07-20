@@ -27,6 +27,7 @@ db_type="mysql"
 enable_bulkload=false
 hostfile=
 
+set_port=false
 eval set -- "$VALID_ARGS"
 while [ : ]; do
   case "$1" in
@@ -37,6 +38,7 @@ while [ : ]; do
          --db-port)
         db_port=$2
         shift 2
+        set_port=true
         ;;
     -b | --db-name)
         db_name=$2
@@ -102,8 +104,8 @@ while [ : ]; do
         echo "Usage: $0 [options]"
         echo "      --db-type:           type of data source: mysql, postgresql (default: mysql)"
         echo "  -d, --db-host:           database host (default: 127.0.0.1)"
-        echo "      --db-port:           database port (default: 3306)"
-        echo "  -b, --db-name:           database name (default: my_maxwell_01)"
+        echo "      --db-port:           database port (default: 3306 for MySQL, 5432 for PostgreSQL)"
+        echo "  -b, --db-name:           database name (default: ldbc)"
         echo "  -u, --user:              database user"
         echo "  -p, --password:          database password"
         echo "  -r, --rgmapping-file:    rgmapping file path (default: schema/rgmapping-ldbc.yaml)"
@@ -127,24 +129,18 @@ while [ : ]; do
   esac
 done
 
-echo "Arguments:"
-echo "    db-type: $db_type"
-echo "    db-host: $db_host"
-echo "    db-port: $db_port"
-echo "    db-name: $db_name"
-echo "    user: $user"
-echo "    password: $password"
-echo "    rgmapping-file: $rgmapping_file"
-echo "    table-schema-file: $table_schema_file"
-echo "    v6d-sock: $v6d_sock"
-echo "    v6d-size: $v6d_size"
-echo "    use-debezium: $use_debezium"
-echo "    enable-bulkload: $enable_bulkload"
-echo "    etcd-endpoint: $etcd_endpoint"
-echo "    etcd-prefix: $etcd_prefix"
-echo "    kafka-server: $kafka_server"
-echo "    subgraph-num: $subgraph_num"
-echo "    hostfile: $hostfile"
+# set default port
+if $set_port && [ "$db_type" == "postgresql" ]; then
+    db_port=5432
+fi
+
+if [ "$enbale_bulkload" == 1 ]; then
+    enbale_bulkload=true
+fi
+
+if [ "$enbale_bulkload" == 0 ]; then
+    enbale_bulkload=false
+fi
 
 # check arguments
 if [ "$db_type" != "mysql" ] && [ "$db_type" != "postgresql" ]; then
@@ -259,10 +255,35 @@ for item in ${hosts[@]}; do
     i=$((i+1))
 done
 
+echo "Arguments:"
+echo "    db-type: $db_type"
+echo "    db-host: $db_host"
+echo "    db-port: $db_port"
+echo "    db-name: $db_name"
+echo "    user: $user"
+echo "    password: $password"
+echo "    rgmapping-file: $rgmapping_file"
+echo "    table-schema-file: $table_schema_file"
+echo "    v6d-sock: $v6d_sock"
+echo "    v6d-size: $v6d_size"
+echo "    use-debezium: $use_debezium"
+echo "    enable-bulkload: $enable_bulkload"
+echo "    etcd-endpoint: $etcd_endpoint"
+echo "    etcd-prefix: $etcd_prefix"
+echo "    kafka-server: $kafka_server"
+echo "    subgraph-num: $subgraph_num"
+echo "    hostfile: $hostfile"
+
 echo "    is-master: $is_master"
 echo "    start-slot: $start_slot"
 echo "    my-slot: $slot"
 echo "    master-hostname: $master_hostname"
+
+################### Bulk Load Initialize ######################
+if [ "$use_debezium" == 1 ] && $enable_bulkload; then
+    rm /tmp/connect.offsets
+    echo "Remove /tmp/connect.offsets for bulk load"
+fi
 
 ##################### Stop Previous GART ######################
 echo "Stop previous GART"
@@ -292,11 +313,11 @@ if [ $is_master == true ]; then
     echo "Start Zookeeper and Kafka"
     $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
 
-    sleep 3
+    sleep 5
 
     $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
 
-    sleep 5
+    sleep 10
 
     # check Kafka failure
     for i in {1..3}
@@ -343,7 +364,7 @@ if [ "$use_debezium" == 0 ]; then
         MAXWELL_BIN=$MAXWELL_HOME/bin
 
         echo "Start Maxwell"
-        $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog  > /dev/null 2>&1 &
+        $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog > /dev/null 2>&1 &
 
         sleep 3
     fi

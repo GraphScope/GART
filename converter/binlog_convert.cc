@@ -37,6 +37,8 @@ int main(int argc, char** argv) {
 #ifdef USE_DEBEZIUM
   // bulk load data
   if (FLAGS_enable_bulkload) {
+    cout << "Bulk load data start" << endl;
+    int init_logs = 0;
     while (1) {
       RdKafka::Message* msg = consumer->consume();
       // skip empty message to avoid JSON parser error
@@ -47,8 +49,12 @@ int main(int argc, char** argv) {
       string line(static_cast<const char*>(msg->payload()), msg->len());
       LogEntry log_entry;
       parser.parse(log_entry, line, 0);
+      ++init_logs;
       if (!log_entry.valid) {
         continue;
+      }
+      if (init_logs % 1000 == 0 && init_logs) {
+        cout << "Bulk load data: " << init_logs << " logs" << endl;
       }
       if (log_entry.bulkload_ended) {
         log_entry.epoch = 1;
@@ -59,6 +65,7 @@ int main(int argc, char** argv) {
 
       ostream << log_entry.to_string() << flush;
     }
+    cout << "Bulk load data finished: " << init_logs << " logs" << endl;
   }
 #endif
 

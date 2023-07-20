@@ -12,12 +12,11 @@ GART is an in-memory system extended from HTAP systems for hybrid transactional 
     - [Building](#building)
 - [Getting Started](#getting-started)
     - [Configure Data Source](#configure-data-source)
-    - [Configure Capturer](#configure-capturer)
+    - [Configure Capture](#configure-capture)
     - [Run GART](#run-gart)
     - [Mirco Demo: Graph Analysis on Data from MySQL](#mirco-demo-graph-analysis-on-data-from-mysql)
 - [License](#license)
 - [Publications](#publications)
-
 
 ## What is GART
 
@@ -31,8 +30,8 @@ In detail, the workflow of GART can be broken into the following steps:
 
 ![](docs/images/arch.png)
 
-- **1. Preprocess (Capturer & Parser)**:
-GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use [Debezium](https://debezium.io/) (for MySQL, PostgreSQL, ...) or [Maxwell](https://github.com/zendesk/maxwell) (only for MySQL) as the log capturer.
+- **1. Preprocess (Capture & Parser)**:
+GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use [Debezium](https://debezium.io/) (for MySQL, PostgreSQL, ...) or [Maxwell](https://github.com/zendesk/maxwell) (only for MySQL) as the log capture.
 
   The sample format of TxnLog is as follows (Debezium style, only necessary information):
   ```
@@ -134,7 +133,7 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     binlog-do-db=...   # change the name to your database
     ```
 
-- Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md) or [Debezium](https://debezium.io/documentation/reference/stable/connectors/mysql.html#mysql-creating-user)):
+- Create a MySQL user for the log capture ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md) or [Debezium](https://debezium.io/documentation/reference/stable/connectors/mysql.html#mysql-creating-user)):
     ```
     # Create a user call "maxwell" with password "123456"
     # The host name part of the account name, if omitted, defaults to '%'.
@@ -158,7 +157,7 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     max_wal_senders = <larger than 0>
     ```
 
-- Create a PostgreSQL user (`debezium`) for the log capturer Debezium:
+- Create a PostgreSQL user (`debezium`) for the log capture Debezium:
     ```
     CREATE USER 'debezium'@'localhost' IDENTIFIED BY '123456';
     ALTER USER debezium REPLICATION;
@@ -184,14 +183,14 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
 #### User-defined Data Source
 Please refer to [Usage of GART Storage](./docs/storage.md).
 
-### Configure Capturer
+### Configure Capture
 
 Configure Kafka (`$KAFKA_HOME/config/server.properties`) as follows:
 ```
 delete.topic.enable=true
 ```
 
-If we use Debezium as the log capturer, we also need to set up a configuration of Debezium, and please refer to [install-deps.sh](scripts/install-deps.sh) for more details.
+If we use Debezium as the log capture, we also need to set up a configuration of Debezium. Please replace the fields in the configuration file (`$KAFKA_HOME/config/connect-debezium-{mysql,postgresql}.properties`) that have sharp brackets (`<>`) with the actual contents (e.g., `database.user`, `database.password`).
 
 ### Run GART
 

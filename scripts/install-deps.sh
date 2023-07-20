@@ -151,6 +151,7 @@ database.password=<mysql password>
 database.include.list=<which databse is needed to capture, e.g., ldbc>
 database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+snapshot.mode=<if enable buldload, set as `initial`, otherwise set as `never`>
 
 $COMM_CONFIG
 
@@ -168,10 +169,10 @@ database.password=<postgresql password>
 database.dbname=<which databse is needed to capture, e.g., ldbc>
 database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+snapshot.mode=<if enable buldload, set as `initial`, otherwise set as `never`>
 
 plugin.name=pgoutput
 publication.autocreate.mode=filtered
-snapshot.mode=<if enable buldload, set as `always`, otherwise set as `never`>
 
 $COMM_CONFIG
 
