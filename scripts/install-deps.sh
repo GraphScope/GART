@@ -53,6 +53,9 @@ pip3 install pyyaml
 # librdkafka
 sudo apt-get install -y librdkafka-dev
 
+# Install sqlalchemy, pymysql, psycopg2
+pip3 install sqlalchemy pymysql psycopg2
+
 # vineyard
 # pip3 install vineyard
 sudo apt-get install -y ca-certificates \
@@ -173,7 +176,3 @@ snapshot.mode=<if enable buldload, set as `always`, otherwise set as `never`>
 $COMM_CONFIG
 
 EOT
-
-
-# Install sqlalchemy, pymysql, psycopg2
-pip3 install sqlalchemy pymysql psycopg2

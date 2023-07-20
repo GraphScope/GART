@@ -11,7 +11,7 @@ fi
 
 db_host="127.0.0.1"
 db_port=3306
-db_name="my_maxwell_01"
+db_name="ldbc"
 user=
 password=
 rgmapping_file="schema/rgmapping-ldbc.yaml"

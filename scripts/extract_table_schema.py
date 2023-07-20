@@ -10,7 +10,7 @@ import yaml
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Launch database schema extracter for MySQL",
+        description="Launch database schema extracter",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
@@ -20,7 +20,7 @@ def get_parser():
     parser.add_argument("--password", help="Database password")
     parser.add_argument("--db", default="ldbc", help="Database name")
     parser.add_argument(
-        "--db_type", default="mysql", help="Which database to use, mysql or postgresql"
+        "--db_type", default="mysql", help="Database type: mysql, postgresql"
     )
 
     parser.add_argument(
@@ -52,16 +52,16 @@ def exetract_schema(cursor, rgmapping_file, database, output):
     schema = {}
     for table in tables:
         table_name = table["dataSourceName"]
+        sql = ""
         # sql = "SHOW COLUMNS FROM " + table_name
         if args.db_type == "mysql":
-            sql = f'''SELECT COLUMN_NAME, COLUMN_TYPE
+            sql = f"""SELECT COLUMN_NAME, COLUMN_TYPE
                     FROM information_schema.COLUMNS
-                    WHERE TABLE_NAME="{table_name}" and TABLE_SCHEMA="{database}"'''
+                    WHERE TABLE_NAME='{table_name}' and TABLE_SCHEMA='{database}'"""
         elif args.db_type == "postgresql":
-            sql = (
-                "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME='%s' and table_catalog='%s'"
-                % (table_name, database)
-            )
+            sql = f"""SELECT COLUMN_NAME, DATA_TYPE
+            FROM information_schema.COLUMNS
+            WHERE TABLE_NAME='{table_name}' and TABLE_CATALOG='{database}'"""
         cursor.execute(sql)
         results = cursor.fetchall()
         schema[table_name] = results
@@ -168,11 +168,19 @@ if __name__ == "__main__":
 
     unset = False
     if not isinstance(args.user, str) or len(args.user) == 0:
-        print("Please specify the MySQL user with --user")
+        print("Please specify the database user with --user")
         unset = True
 
     if not isinstance(args.password, str) or len(args.password) == 0:
-        print("Please specify the MySQL password with --password")
+        print("Please specify the database password with --password")
+        unset = True
+
+    if not isinstance(args.db, str) or len(args.db) == 0:
+        print("Please specify the database name with --password")
+        unset = True
+
+    if not isinstance(args.db_type, str) or args.db_type not in ["mysql", "postgresql"]:
+        print("Please specify the database type with --db_type: mysql or postgresql")
         unset = True
 
     if unset:

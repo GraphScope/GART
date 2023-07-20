@@ -134,23 +134,24 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     binlog-do-db=...   # change the name to your database
     ```
 
-- Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md) or Debezium):
+- Create a MySQL user for the log capturer ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md) or [Debezium](https://debezium.io/documentation/reference/stable/connectors/mysql.html#mysql-creating-user)):
     ```
     # Create a user call "maxwell" with password "123456"
     # The host name part of the account name, if omitted, defaults to '%'.
     CREATE USER 'maxwell'@'localhost' IDENTIFIED BY '123456';
 
-    # Grant replication and read-only privileges
-    GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE ON *.* TO 'maxwell'@'localhost';
+    # Grant necesarry privileges
+    # PrivilegesRELOAD and SHOW DATABASES are only used for Debezium
+    GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'maxwell'@'localhost';
 
-    # Grant privileges on the database "maxwell"
+    # Grant privileges on the database "maxwell", only used for Maxwell
     GRANT ALL ON maxwell.* TO 'maxwell'@'localhost';
     ```
 
 #### PostgreSQL
-- The PostgreSQL configuration file is `/etc/postgresql/<postgresql_version>/main/postgresql.conf`
+- The PostgreSQL configuration file is in the directory `/etc/postgresql/<postgresql_version>/main/`
 
-- Modify the configuration file to enable WAL as follows:
+- Modify the configuration file `postgresql.conf` to enable WAL as follows:
     ```
     wal_level = logical
     max_replication_slots = <larger than 0>
@@ -168,7 +169,7 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     GRANT ALL ON DATABASE ldbc TO dbuser;
     ```
 
-- Modify the configuration file to [trust the user](https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings) `debezium`
+- Modify the configuration file `pg_hba.conf` to [trust the user](https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings) `debezium`
     ```
     local   replication     debezium                          trust
     host    replication     debezium  127.0.0.1/32            trust
