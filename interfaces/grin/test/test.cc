@@ -13,7 +13,6 @@
 #include "../include/include/partition/partition.h"
 #include "../include/include/partition/reference.h"
 #include "../include/include/partition/topology.h"
-#include "../include/include/property/partition.h"
 #include "../include/include/property/primarykey.h"
 #include "../include/include/property/property.h"
 #include "../include/include/property/propertylist.h"
