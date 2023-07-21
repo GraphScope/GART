@@ -134,12 +134,12 @@ if $set_port && [ "$db_type" == "postgresql" ]; then
     db_port=5432
 fi
 
-if [ "$enbale_bulkload" == 1 ]; then
-    enbale_bulkload=true
+if [ "$enable_bulkload" == 1 ]; then
+    enable_bulkload=true
 fi
 
-if [ "$enbale_bulkload" == 0 ]; then
-    enbale_bulkload=false
+if [ "$enable_bulkload" == 0 ]; then
+    enable_bulkload=false
 fi
 
 # check arguments
@@ -343,8 +343,10 @@ if [ $is_master == true ]; then
     done
 
     echo "    Clean topics: binlog & unified_log"
-    $KAFKA_BIN/kafka-topics.sh --delete --topic binlog --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+    $KAFKA_BIN/kafka-topics.sh --delete --topic 'binlog.*' --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
     $KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+
+    sleep 2
 
     #TODO: hard code: replication-factor
 
@@ -390,12 +392,15 @@ fi
 if [ $is_master == true ]; then
     CONVENTER_HOME=./converter
     echo "Start Converter"
+    # For bool flags, = is necessary,
+    # since --enable_bulkload will be parsed as --enable_bulkload=true,
+    # and --no_enable_bulkload will be parsed as --enable_bulkload=false
     if [ "$use_debezium" == 1 ]; then
         echo "    Use Debezium converter"
         $CONVENTER_HOME/binlog_convert_debezium \
             --rg_mapping_file_path $rgmapping_file \
             --subgraph_num $subgraph_num --logs_per_epoch 10000 \
-            --enable_bulkload $enable_bulkload &
+            --enable_bulkload=$enable_bulkload &
     else
         echo "    Use Maxwell converter"
         $CONVENTER_HOME/binlog_convert_maxwell --rg_mapping_file_path $rgmapping_file \

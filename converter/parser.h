@@ -66,6 +66,10 @@ class TxnLogParser {
  private:
   TxnLogParser() = default;
 
+  int64_t get_gid(const vineyard::json& oid, int vlabel) const;
+
+  void set_gid(const vineyard::json& oid, int vlabel, int64_t gid);
+
   void init(const std::string& rgmapping_file, int subgraph_num);
 
   void fill_vertex(LogEntry& out, const vineyard::json& log);

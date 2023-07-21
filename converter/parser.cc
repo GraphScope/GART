@@ -16,7 +16,6 @@
 #include "parser.h"
 
 #include <glog/logging.h>
-#include <cassert>
 #include <fstream>
 
 #include "vineyard/common/util/json.h"
@@ -242,6 +241,40 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   return;
 }
 
+int64_t TxnLogParser::get_gid(const json& oid, int vlabel) const {
+  int64_t gid = -1;
+
+  if (oid.is_number_integer()) {
+    auto it = int64_oid2gid_maps_[vlabel].find(oid.get<int64_t>());
+    if (it == int64_oid2gid_maps_[vlabel].end()) {
+      LOG(ERROR) << "Vertex id not found: " << oid.get<int64_t>();
+    } else {
+      gid = it->second;
+    }
+  } else if (oid.is_string()) {
+    auto it = string_oid2gid_maps_[vlabel].find(oid.get<string>());
+    if (it == string_oid2gid_maps_[vlabel].end()) {
+      LOG(ERROR) << "Vertex id not found: " << oid.get<string>();
+    } else {
+      gid = it->second;
+    }
+  } else {
+    LOG(ERROR) << "Unknown vertex id type: " << oid.type_name();
+  }
+
+  return gid;
+}
+
+void TxnLogParser::set_gid(const vineyard::json& oid, int vlabel, int64_t gid) {
+  if (oid.is_number_integer()) {
+    int64_oid2gid_maps_[vlabel][oid.get<int64_t>()] = gid;
+  } else if (oid.is_string()) {
+    string_oid2gid_maps_[vlabel][oid.get<string>()] = gid;
+  } else {
+    LOG(ERROR) << "Unknown vertex id type: " << oid.type_name();
+  }
+}
+
 void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
 #ifndef USE_DEBEZIUM
   const string& table_name(log["table"].get<string>());
@@ -270,30 +303,9 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
     vertex_nums_per_fragment_[vertex_label_id][fid]++;
 
     gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
-    if (data[vid_col].is_number_integer()) {
-      int64_oid2gid_maps_[vertex_label_id][data[vid_col].get<int64_t>()] = gid;
-    } else if (data[vid_col].is_string()) {
-      string_oid2gid_maps_[vertex_label_id][data[vid_col].get<string>()] = gid;
-    }
+    set_gid(data[vid_col], vertex_label_id, gid);
   } else if (out.op_type == LogEntry::OpType::DELETE) {
-    if (data[vid_col].is_number_integer()) {
-      auto it = int64_oid2gid_maps_[vertex_label_id].find(
-          data[vid_col].get<int64_t>());
-      if (it == int64_oid2gid_maps_[vertex_label_id].end()) {
-        LOG(ERROR) << "Vertex id not found: " << data[vid_col].get<int64_t>();
-      }
-      gid = it->second;
-    } else if (data[vid_col].is_string()) {
-      auto it = string_oid2gid_maps_[vertex_label_id].find(
-          data[vid_col].get<string>());
-      if (it == string_oid2gid_maps_[vertex_label_id].end()) {
-        LOG(ERROR) << "Vertex id not found: " << data[vid_col].get<string>();
-      }
-      gid = it->second;
-    } else {
-      LOG(ERROR) << "Unknown vertex id type: " << data[vid_col].type_name();
-      gid = -1;
-    }
+    gid = get_gid(data[vid_col], vertex_label_id);
   }
   out.vertex.gid = gid;
 }
@@ -323,32 +335,8 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
   int src_label_id = edge_label2src_dst_labels_[edge_label_id].first;
   int dst_label_id = edge_label2src_dst_labels_[edge_label_id].second;
 
-  int64_t src_gid, dst_gid;
-  if (data[src_name].is_number_integer()) {
-    src_gid = int64_oid2gid_maps_[src_label_id]
-                  .find(data[src_name].get<int64_t>())
-                  ->second;
-  } else if (data[src_name].is_string()) {
-    src_gid = string_oid2gid_maps_[src_label_id]
-                  .find(data[src_name].get<string>())
-                  ->second;
-  } else {
-    LOG(ERROR) << "Unknown src type: " << data[src_name].type_name();
-    src_gid = -1;
-  }
-
-  if (data[dst_name].is_number_integer()) {
-    dst_gid = int64_oid2gid_maps_[dst_label_id]
-                  .find(data[dst_name].get<int64_t>())
-                  ->second;
-  } else if (data[dst_name].is_string()) {
-    dst_gid = string_oid2gid_maps_[dst_label_id]
-                  .find(data[dst_name].get<string>())
-                  ->second;
-  } else {
-    LOG(ERROR) << "Unknown dst type: " << data[dst_name].type_name();
-    dst_gid = -1;
-  }
+  int64_t src_gid = get_gid(data[src_name], src_label_id);
+  int64_t dst_gid = get_gid(data[dst_name], dst_label_id);
 
   out.edge.src_gid = src_gid;
   out.edge.dst_gid = dst_gid;

@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
       if (!log_entry.valid) {
         continue;
       }
-      if (init_logs % 1000 == 0 && init_logs) {
+      if (init_logs % 100000 == 0 && init_logs) {
         cout << "Bulk load data: " << init_logs << " logs" << endl;
       }
       if (log_entry.bulkload_ended) {
