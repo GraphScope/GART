@@ -102,18 +102,8 @@ void process_add_vertex(const StringViewList& cmd,
   graph_store->add_inner(vlabel, lid);
 
   // insert property
-  auto prop_schema = graph_store->get_property_schema(vlabel);
-  uint64_t prop_byte_size = graph_store->get_total_property_bytes(vlabel);
-  char* prop_buffer = reinterpret_cast<char*>(malloc(prop_byte_size));
-  for (auto idx = 2; idx < cmd.size(); idx++) {
-    auto dtype = prop_schema.cols[idx - 2].vtype;
-    uint64_t property_offset =
-        graph_store->get_prefix_property_bytes(vlabel, idx - 2);
-    void* prop_ptr = prop_buffer + property_offset;
-    assign_prop(dtype, prop_ptr, string(cmd[idx]));
-  }
-  property->insert(v, vid, prop_buffer, write_epoch);
-  free(prop_buffer);
+  StringViewList props(cmd.begin() + 2, cmd.end());
+  property->insert(v, vid, props, write_epoch);
 }
 
 }  // namespace graph

@@ -26,21 +26,82 @@
 
 #include "property/property_col_paged.h"
 #include "graph/graph_store.h"
+#include "graph/type_def.h"
 
 #define LAZY_PAGE_ALLOC 1
+
+using namespace std;
+using namespace gart::graph;
 
 namespace {
 constexpr uint32_t MAX_POOL = 1;
 thread_local uint32_t pool_off = MAX_POOL - 1;
 thread_local char* pool = nullptr;
 
-constexpr uint32_t MAX_TABLES = gart::graph::GraphStore::MAX_TABLES;
-constexpr uint32_t MAX_COLS = gart::graph::GraphStore::MAX_COLS;
+constexpr uint32_t MAX_TABLES = GraphStore::MAX_TABLES;
+constexpr uint32_t MAX_COLS = GraphStore::MAX_COLS;
 
 thread_local uint64_t cached_ver[MAX_TABLES];  // table id (MAX_TABLES)
 // table id (MAX_TABLES), column id (MAX_COLS)
 thread_local uint32_t cached_page_num[MAX_TABLES][MAX_COLS];
 thread_local void* cached_page[MAX_TABLES][MAX_COLS] = {{nullptr}};
+
+template <typename T>
+inline void assign(void* ptr, T val) {
+  *reinterpret_cast<T*>(ptr) = val;
+}
+
+template <typename T>
+inline void assign_inline_str(void* ptr, const string_view& val) {
+  reinterpret_cast<T*>(ptr)->assign(val);
+}
+
+inline void assign_prop(int data_type, void* prop_ptr, const string_view& val) {
+  try {
+    switch (data_type) {
+    case CHAR:
+      assign(prop_ptr, val.at(0));
+      break;
+    case SHORT:
+      assign(prop_ptr, short(stoi(string(val))));
+      break;
+    case INT:
+      assign(prop_ptr, stoi(string(val)));
+      break;
+    case LONG:
+      assign(prop_ptr, stoll(string(val)));
+      break;
+    case FLOAT:
+      assign(prop_ptr, stof(string(val)));
+      break;
+    case DOUBLE:
+      assign(prop_ptr, stod(string(val)));
+      break;
+    // FIXME: coupled with LDBC?
+    case STRING:
+      assign_inline_str<ldbc::String>(prop_ptr, val);
+      break;
+    case TEXT:
+      assign_inline_str<ldbc::Text>(prop_ptr, val);
+      break;
+    case DATE:
+      assign_inline_str<ldbc::Date>(prop_ptr, val);
+      break;
+    case DATETIME:
+      assign_inline_str<ldbc::DateTime>(prop_ptr, val);
+      break;
+    case LONGSTRING:
+      assign_inline_str<ldbc::LongString>(prop_ptr, val);
+      break;
+    default:
+      LOG(ERROR) << "Unsupported data type: " << data_type;
+    }
+  } catch (exception& e) {
+    LOG(ERROR) << "Failed to assign property: " << e.what()
+               << ", data type: " << data_type << ", value: " << val;
+  }
+}
+
 }  // namespace
 
 // NOTE: page_sz is number of objects, instead of bytes
@@ -114,7 +175,7 @@ inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(uint64_t page_sz,
 }
 
 PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
-                                   const std::vector<uint32_t>* split)
+                                   const vector<uint32_t>* split)
     : Property(max_items),
       table_id_(s.table_id),
       cols_(s.cols),
@@ -325,8 +386,35 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
   }
 }
 
-void PropertyColPaged::update(uint64_t off, const std::vector<int>& cids,
-                              char* v, uint64_t seq, uint64_t ver) {
+void PropertyColPaged::insert(uint64_t off, uint64_t k,
+                              const StringViewList& v_list, uint64_t ver) {
+  assert(off < max_items_);
+  assert(v_list.size() == cols_.size());
+
+  for (int i = 0; i < cols_.size(); ++i) {
+    const Property::Column& col = cols_[i];
+
+    size_t vlen = col.vlen;
+    char* dst = nullptr;
+    if (col.updatable) {
+      int pg_num = off / col.page_size;
+
+      Page* page = findWithInsertPage_(i, pg_num, ver);
+      assert(page && page->ver == ver);
+      dst = page->content + (off % col.page_size) * vlen;
+    } else {
+      dst = fixCols_[i] + off * vlen;
+    }
+    assign_prop(col.vtype, dst, v_list[i]);
+
+#if UPDATE_STAT
+    ++stat_.num_update;
+#endif
+  }
+}
+
+void PropertyColPaged::update(uint64_t off, const vector<int>& cids, char* v,
+                              uint64_t seq, uint64_t ver) {
   if (val_len_ == 0)
     return;
   assert(off < max_items_);
@@ -396,7 +484,7 @@ void PropertyColPaged::gc(uint64_t ver) {
   for (int i = 0; i < cols_.size(); i++) {
     if (!cols_[i].updatable)
       continue;
-    std::vector<Page*>& old_pages = flexCols_[i].old_pages;
+    vector<Page*>& old_pages = flexCols_[i].old_pages;
     int pgsz = cols_[i].page_size;
     size_t vlen = cols_[i].vlen;
     int used_page = (header + pgsz - 1) / pgsz;
@@ -462,7 +550,7 @@ char* PropertyColPaged::getByOffset(uint64_t offset, int col_id,
 }
 
 size_t PropertyColPaged::getCol(int col_id, uint64_t start_off, size_t size,
-                                uint64_t lver, std::vector<char*>& pages) {
+                                uint64_t lver, vector<char*>& pages) {
   const Property::Column& col = cols_[col_id];
   pages.clear();
   assert(col.updatable);

@@ -83,6 +83,11 @@ class Property {  // NOLINT(build/class)
     assert(false);
   }
 
+  virtual void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
+                      uint64_t ver) {
+    assert(false);
+  }
+
   uint64_t copy(const Property* store) {
     uint64_t max_ver = uint64_t(-1);
     auto row_cursor = store->getRowCursor(max_ver);

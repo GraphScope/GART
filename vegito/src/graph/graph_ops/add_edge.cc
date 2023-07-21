@@ -15,17 +15,19 @@
 
 #include "graph/graph_ops.h"
 
+using namespace std;
+
 namespace gart {
 namespace graph {
 using SegGraph = seggraph::SegGraph;
 using vertex_t = seggraph::vertex_t;
 
-void process_add_edge(const std::vector<std::string>& cmd,
+void process_add_edge(const StringViewList& cmd,
                       graph::GraphStore* graph_store) {
-  int write_epoch = stoi(cmd[0]);
-  int elabel = stoi(cmd[1]);
-  uint64_t src_vid = static_cast<uint64_t>(stoll(cmd[2]));
-  uint64_t dst_vid = static_cast<uint64_t>(stoll(cmd[3]));
+  int write_epoch = stoi(string(cmd[0]));
+  int elabel = stoi(string(cmd[1]));
+  uint64_t src_vid = static_cast<uint64_t>(stoll(string(cmd[2])));
+  uint64_t dst_vid = static_cast<uint64_t>(stoll(string(cmd[3])));
   gart::IdParser<seggraph::vertex_t> parser;
   parser.Init(graph_store->get_total_partitions(),
               graph_store->get_total_vertex_label_num());
@@ -48,7 +50,7 @@ void process_add_edge(const std::vector<std::string>& cmd,
   auto src_writer = src_graph->create_graph_writer(write_epoch);  // write epoch
   auto dst_writer = dst_graph->create_graph_writer(write_epoch);  // write epoch
 
-  // process edge prop
+  // process edge properties
   uint64_t edge_prop_bytes = graph_store->get_edge_prop_total_bytes(
       elabel + graph_store->get_total_vertex_label_num());
   char* prop_buffer = reinterpret_cast<char*>(malloc(edge_prop_bytes));
@@ -58,7 +60,7 @@ void process_add_edge(const std::vector<std::string>& cmd,
     uint64_t property_offset = graph_store->get_edge_prop_prefix_bytes(
         elabel + graph_store->get_total_vertex_label_num(), idx - 4);
     void* prop_ptr = prop_buffer + property_offset;
-    assign_prop(dtype, prop_ptr, cmd[idx]);
+    assign_prop(dtype, prop_ptr, string(cmd[idx]));
   }
   std::string buf(prop_buffer, edge_prop_bytes);
   std::string_view edge_data(buf);

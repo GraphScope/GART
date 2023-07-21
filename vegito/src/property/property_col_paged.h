@@ -38,6 +38,9 @@ class PropertyColPaged : public Property {
   // for insert
   virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
 
+  virtual void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
+                      uint64_t ver) override;
+
   virtual void update(uint64_t off, const std::vector<int>& cids, char* v,
                       uint64_t seq, uint64_t ver);
 
@@ -45,7 +48,7 @@ class PropertyColPaged : public Property {
 
   // get cursor
   virtual std::unique_ptr<ColCursor> getColCursor(int col_id,
-                                                  uint64_t ver) const {
+                                                  uint64_t ver) const override {
     ColCursor* c = new Cursor(*this, col_id, ver);
     return std::unique_ptr<ColCursor>(c);
   }
@@ -56,13 +59,13 @@ class PropertyColPaged : public Property {
   }
 
   virtual char* getByOffset(uint64_t offset, int columnID, uint64_t version,
-                            uint64_t* walk_cnt = nullptr);
+                            uint64_t* walk_cnt = nullptr) override;
 
-  virtual void gc(uint64_t version);
+  virtual void gc(uint64_t version) override;
 
   const std::vector<uint64_t>& getKeyCol() const;
 
-  virtual char* col(int col_id, uint64_t* len = nullptr) const {
+  virtual char* col(int col_id, uint64_t* len = nullptr) const override {
     assert(!cols_[col_id].updatable);
     if (len)
       *len = header_;

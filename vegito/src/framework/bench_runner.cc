@@ -361,17 +361,12 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
     latest_epoch_ = cur_epoch;
   }
 
-  vector<string> cmd;
-  for (int i = 1; i < sv_vec.size(); ++i) {
-    cmd.push_back(string(sv_vec[i]));
-  }
-
   sv_vec.erase(sv_vec.begin(), sv_vec.begin() + 1);
 
   if (op == "add_vertex") {
     process_add_vertex(sv_vec, graph_stores_[p_id]);
   } else if (op == "add_edge") {
-    process_add_edge(cmd, graph_stores_[p_id]);
+    process_add_edge(sv_vec, graph_stores_[p_id]);
   } else if (op == "delete_vertex") {
     process_del_vertex(sv_vec, graph_stores_[p_id]);
   } else if (op == "delete_edge") {

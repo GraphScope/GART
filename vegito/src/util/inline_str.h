@@ -94,6 +94,10 @@ class inline_str_base {
     assign(s.data(), s.size());
   }
 
+  inline ALWAYS_INLINE void assign(const std::string_view& sv) {
+    assign(sv.data(), sv.size());
+  }
+
   inline void resize(size_t n, char c = 0) {
     INVARIANT(n <= N);
     if (n > sz)
@@ -207,6 +211,10 @@ class inline_str_fixed {
 
   inline ALWAYS_INLINE void assign(const std::string& s) {
     assign(s.data(), s.size());
+  }
+
+  inline ALWAYS_INLINE void assign(const std::string_view& sv) {
+    assign(sv.data(), sv.size());
   }
 
   inline bool operator==(const inline_str_fixed& other) const {
