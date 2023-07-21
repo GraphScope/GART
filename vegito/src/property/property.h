@@ -31,6 +31,8 @@
 #include "seggraph/core/allocator.hpp"
 #include "util/util.h"
 
+typedef std::vector<std::string_view> StringViewList;
+
 enum PropertyStoreType { /* PROP_KV, PROP_ROW, */
                          PROP_COLUMN = 2,
                          PROP_COLUMN2

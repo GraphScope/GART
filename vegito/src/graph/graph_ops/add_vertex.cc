@@ -15,6 +15,8 @@
 
 #include "graph/graph_ops.h"
 
+using namespace std;
+
 namespace {
 
 template <typename T>
@@ -72,10 +74,10 @@ void assign_prop(int data_type, void* prop_ptr, const std::string& val) {
   }
 }
 
-void process_add_vertex(const std::vector<std::string>& cmd,
+void process_add_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store) {
-  int write_epoch = stoi(cmd[0]);
-  uint64_t vid = static_cast<uint64_t>(stoll(cmd[1]));
+  int write_epoch = stoi(string(cmd[0]));
+  uint64_t vid = static_cast<uint64_t>(stoll(string(cmd[1])));
   gart::IdParser<seggraph::vertex_t> parser;
   parser.Init(graph_store->get_total_partitions(),
               graph_store->get_total_vertex_label_num());
@@ -108,7 +110,7 @@ void process_add_vertex(const std::vector<std::string>& cmd,
     uint64_t property_offset =
         graph_store->get_prefix_property_bytes(vlabel, idx - 2);
     void* prop_ptr = prop_buffer + property_offset;
-    assign_prop(dtype, prop_ptr, cmd[idx]);
+    assign_prop(dtype, prop_ptr, string(cmd[idx]));
   }
   property->insert(v, vid, prop_buffer, write_epoch);
   free(prop_buffer);

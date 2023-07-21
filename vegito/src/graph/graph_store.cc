@@ -15,6 +15,8 @@
 
 #include "graph/graph_store.h"
 
+using namespace std;
+
 namespace gart {
 namespace graph {
 
@@ -39,18 +41,17 @@ GraphType* GraphStore::get_graph(uint64_t vlabel) {
 
 void GraphStore::put_schema() {
   auto schema = get_schema();
-  std::string schema_str = schema.get_json(get_local_pid());
-  std::string schema_key =
-      FLAGS_meta_prefix + "gart_schema_p" + std::to_string(get_local_pid());
+  string schema_str = schema.get_json(get_local_pid());
+  string schema_key =
+      FLAGS_meta_prefix + "gart_schema_p" + to_string(get_local_pid());
   auto response_task = etcd_client_->put(schema_key, schema_str).get();
   assert(response_task.is_ok());
-  // insert the latest epoch as std::numeric_limits<uint64_t>::max() at first
-  std::string latest_epoch = FLAGS_meta_prefix + "gart_latest_epoch_p" +
-                             std::to_string(get_local_pid());
+  // insert the latest epoch as numeric_limits<uint64_t>::max() at first
+  string latest_epoch =
+      FLAGS_meta_prefix + "gart_latest_epoch_p" + to_string(get_local_pid());
   response_task =
       etcd_client_
-          ->put(latest_epoch,
-                std::to_string(std::numeric_limits<uint64_t>::max()))
+          ->put(latest_epoch, to_string(numeric_limits<uint64_t>::max()))
           .get();
   assert(response_task.is_ok());
 }
@@ -70,8 +71,8 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 
   // vertex_table
   {
-    auto alloc = std::allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<seggraph::vertex_t>(array_allocator);
+    auto alloc = allocator_traits<decltype(array_allocator)>::rebind_alloc<
+        seggraph::vertex_t>(array_allocator);
 
     vineyard::ObjectID oid;
     uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
@@ -90,8 +91,9 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 
   // ovl2g
   {
-    auto alloc = std::allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<uint64_t>(array_allocator);
+    auto alloc =
+        allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
+            array_allocator);
 
     vineyard::ObjectID oid;
     uint64_t max_v = ov_seg_graphs_[vlabel]->get_vertex_capacity();
@@ -149,12 +151,12 @@ namespace {
 struct PropDef {
   PropertyStoreDataType dtype;
   int id;
-  std::string name;
+  string name;
 
   vineyard::json json() const {
     using json = vineyard::json;
     json res;
-    std::string type_str[] = {
+    string type_str[] = {
         "INVALID",     "BOOL",      "CHAR",       "SHORT",       "INT",    // 4
         "LONG",        "FLOAT",     "DOUBLE",     "STRING",      "BYTES",  // 9
         "INT_LIST",    "LONG_LIST", "FLOAT_LIST", "DOUBLE_LIST",           // 13
@@ -167,17 +169,17 @@ struct PropDef {
   }
 };
 
-const std::string VERTEX = "VERTEX";  // NOLINT(runtime/string)
-const std::string EDGE = "EDGE";      // NOLINT(runtime/string)
+const string VERTEX = "VERTEX";  // NOLINT(runtime/string)
+const string EDGE = "EDGE";      // NOLINT(runtime/string)
 
 struct TypeDef {
   int id;
   // vector<int> index; empty
-  std::string label;
-  std::vector<PropDef> propertyDefList;
-  std::string src_vlabel;  // for edge
-  std::string dst_vlabel;  // for edge
-  std::string type;        // "VERTEX" or "EDGE"
+  string label;
+  vector<PropDef> propertyDefList;
+  string src_vlabel;  // for edge
+  string dst_vlabel;  // for edge
+  string type;        // "VERTEX" or "EDGE"
 
   vineyard::json json() const {
     using json = vineyard::json;
@@ -210,12 +212,12 @@ struct TypeDef {
   }
 
  private:
-  static std::string vector2str(const std::vector<int> v) {
-    std::string mapping_str = "[";
+  static string vector2str(const vector<int> v) {
+    string mapping_str = "[";
     for (int i = 0; i < v.size(); ++i) {
       char cstr[20];
       sprintf(cstr, "%d", v[i]);  // NOLINT(runtime/printf)
-      mapping_str += std::string(cstr);
+      mapping_str += string(cstr);
       if (i != v.size() - 1)
         mapping_str += ", ";
     }
@@ -226,7 +228,7 @@ struct TypeDef {
 
 struct SchemaJson {
   int partitionNum;
-  std::vector<TypeDef> types;
+  vector<TypeDef> types;
 };
 
 }  // namespace
@@ -238,9 +240,9 @@ void SchemaImpl::fill_json(void* ptr) const {
   sj.types.resize(label_id_map.size());
 
   // Prop
-  std::vector<PropDef> props(property_id_map.size());
+  vector<PropDef> props(property_id_map.size());
   for (const auto& pair : property_id_map) {
-    std::string pname = pair.first.first;
+    string pname = pair.first.first;
     int pid = pair.second;
     PropDef& prop = props[pid];
     prop.id = pid;
@@ -248,14 +250,14 @@ void SchemaImpl::fill_json(void* ptr) const {
   }
 
   // need to sort map
-  std::map<int, std::string> sort_id_label_map;
+  map<int, string> sort_id_label_map;
   for (const auto& pair : label_id_map) {
     sort_id_label_map[pair.second] = pair.first;
   }
   assert(sort_id_label_map.size() == label_id_map.size());
 
   for (const auto& pair : sort_id_label_map) {
-    std::string label = pair.second;
+    string label = pair.second;
     int label_id = pair.first;
     TypeDef& type = sj.types[label_id];
 
@@ -292,7 +294,7 @@ void SchemaImpl::fill_json(void* ptr) const {
   }
 }
 
-std::string SchemaImpl::get_json(int pid) {
+string SchemaImpl::get_json(int pid) {
   using json = vineyard::json;
   SchemaJson sj;
   // fill
@@ -309,7 +311,7 @@ std::string SchemaImpl::get_json(int pid) {
   return graph_schema.dump();
 }
 
-void GraphStore::get_blob_json(uint64_t write_epoch) const {
+void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
   using json = vineyard::json;
   json blob_schema;
   blob_schema["ipc_socket"] = gart::framework::config.getIPCScoket();
@@ -327,18 +329,17 @@ void GraphStore::get_blob_json(uint64_t write_epoch) const {
   }
   blob_schema["blob"] = blob_array;
 
-  std::string blob_schema_str = blob_schema.dump();
-  std::string blob_json_key =
-      FLAGS_meta_prefix + "gart_blob_m" + std::to_string(0) + "_p" +
-      std::to_string(local_pid_) + "_e" + std::to_string(write_epoch);
+  string blob_schema_str = blob_schema.dump();
+  string blob_json_key = FLAGS_meta_prefix + "gart_blob_m" + to_string(0) +
+                         "_p" + to_string(local_pid_) + "_e" +
+                         to_string(write_epoch);
 
   auto response_task = etcd_client_->put(blob_json_key, blob_schema_str).get();
   assert(response_task.is_ok());
 
-  std::string latest_epoch =
-      FLAGS_meta_prefix + "gart_latest_epoch_p" + std::to_string(local_pid_);
-  response_task =
-      etcd_client_->put(latest_epoch, std::to_string(write_epoch)).get();
+  string latest_epoch =
+      FLAGS_meta_prefix + "gart_latest_epoch_p" + to_string(local_pid_);
+  response_task = etcd_client_->put(latest_epoch, to_string(write_epoch)).get();
   assert(response_task.is_ok());
 }
 

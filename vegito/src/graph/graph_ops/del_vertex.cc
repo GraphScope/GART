@@ -15,6 +15,8 @@
 
 #include "graph/graph_ops.h"
 
+using namespace std;
+
 namespace gart {
 namespace graph {
 using VegitoEdgeEntry = seggraph::VegitoEdgeEntry;
@@ -24,10 +26,10 @@ using EpochBlockHeader = seggraph::EpochBlockHeader;
 using segid_t = seggraph::segid_t;
 using vertex_t = seggraph::vertex_t;
 using SegGraph = seggraph::SegGraph;
-void process_del_vertex(const std::vector<std::string>& cmd,
+void process_del_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store) {
-  int write_epoch = stoi(cmd[0]);
-  uint64_t vid = static_cast<uint64_t>(stoll(cmd[1]));
+  int write_epoch = stoi(string(cmd[0]));
+  uint64_t vid = static_cast<uint64_t>(stoll(string(cmd[1])));
   gart::IdParser<vertex_t> parser;
   parser.Init(graph_store->get_total_partitions(),
               graph_store->get_total_vertex_label_num());

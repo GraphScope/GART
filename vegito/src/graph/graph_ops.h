@@ -24,13 +24,13 @@ namespace graph {
 
 void assign_prop(int data_type, void* prop_ptr, const std::string& val);
 
-void process_add_vertex(const std::vector<std::string>& cmd,
+void process_add_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store);
 void process_add_edge(const std::vector<std::string>& cmd,
                       graph::GraphStore* graph_store);
-void process_del_vertex(const std::vector<std::string>& cmd,
+void process_del_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store);
-void process_del_edge(const std::vector<std::string>& cmd,
+void process_del_edge(const StringViewList& cmd,
                       graph::GraphStore* graph_store);
 
 }  // namespace graph

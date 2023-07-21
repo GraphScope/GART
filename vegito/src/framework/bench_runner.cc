@@ -19,10 +19,30 @@
 
 #include "graph/graph_ops.h"
 #include "librdkafka/rdkafkacpp.h"
-
 #include "yaml-cpp/yaml.h"
 
 using namespace std;
+
+namespace {
+inline vector<string_view> splitString(const string_view& str, char delimiter) {
+  vector<std::string_view> result;
+  size_t startPos = 0;
+  size_t endPos = str.find(delimiter);
+
+  while (endPos != string::npos) {
+    result.push_back(string_view(str.data() + startPos, endPos - startPos));
+    startPos = endPos + 1;
+    endPos = str.find(delimiter, startPos);
+  }
+
+  if (startPos < str.length()) {
+    result.push_back(
+        string_view(str.data() + startPos, str.length() - startPos));
+  }
+
+  return result;
+}
+}  // anonymous namespace
 
 namespace gart {
 namespace framework {
@@ -160,7 +180,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
             prop_dtype = "LONG";
           } else if (prop_dtype_str == "float") {
             prop_dtype = "FLOAT";
-          } else if (prop_dtype_str == "double" || prop_dtype_str == "double precision") {
+          } else if (prop_dtype_str == "double" ||
+                     prop_dtype_str == "double precision") {
             prop_dtype = "DOUBLE";
           } else if (prop_dtype_str == "varchar(255)" ||
                      prop_dtype_str == "character varying") {
@@ -327,41 +348,34 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   graph_store->update_property_bytes();
 }
 
-void Runner::apply_log_to_store_(string log, int p_id) {
-  istringstream strstr(log);
-  string word;
-  vector<string> cmd;
-  int word_idx = 0;
-  string op;
-  while (getline(strstr, word, '|')) {
-    if (word_idx == 0) {
-      op = word;
-    } else {
-      if (word_idx == 1) {
-        int cur_epoch = stoi(word);
-        if (cur_epoch > latest_epoch_) {
-          graph_stores_[p_id]->update_blob(latest_epoch_);
-          graph_stores_[p_id]->insert_blob_schema(latest_epoch_);
-          graph_stores_[p_id]->get_blob_json(
-              latest_epoch_);  // put schema to etcd
-          cout << "update epoch " << latest_epoch_ << " frag = " << p_id
-               << endl;
-          latest_epoch_ = cur_epoch;
-        }
-      }
-      cmd.push_back(word);
-    }
-    word_idx++;
+void Runner::apply_log_to_store_(const string_view& log, int p_id) {
+  auto sv_vec = splitString(log, '|');
+  string_view op(sv_vec[0]);
+  int cur_epoch = stoi(string(sv_vec[1]));
+  if (cur_epoch > latest_epoch_) {
+    graph_stores_[p_id]->update_blob(latest_epoch_);
+    graph_stores_[p_id]->insert_blob_schema(latest_epoch_);
+    // put schema to etcd
+    graph_stores_[p_id]->put_blob_json_etcd(latest_epoch_);
+    cout << "update epoch " << latest_epoch_ << " frag = " << p_id << endl;
+    latest_epoch_ = cur_epoch;
   }
 
+  vector<string> cmd;
+  for (int i = 1; i < sv_vec.size(); ++i) {
+    cmd.push_back(string(sv_vec[i]));
+  }
+
+  sv_vec.erase(sv_vec.begin(), sv_vec.begin() + 1);
+
   if (op == "add_vertex") {
-    process_add_vertex(cmd, graph_stores_[p_id]);
+    process_add_vertex(sv_vec, graph_stores_[p_id]);
   } else if (op == "add_edge") {
     process_add_edge(cmd, graph_stores_[p_id]);
   } else if (op == "delete_vertex") {
-    process_del_vertex(cmd, graph_stores_[p_id]);
+    process_del_vertex(sv_vec, graph_stores_[p_id]);
   } else if (op == "delete_edge") {
-    process_del_edge(cmd, graph_stores_[p_id]);
+    process_del_edge(sv_vec, graph_stores_[p_id]);
   } else {
     LOG(ERROR) << "Unsupported operator " << op;
   }
@@ -410,14 +424,13 @@ void Runner::start_kafka_to_process_(int p_id) {
   printf("Start main loop for subgraph %d ...\n", p_id);
   while (1) {
     RdKafka::Message* msg = consumer->consume(topic, partition, 1000);
-    string str;
-    const char* str_addr = static_cast<const char*>(msg->payload());
-    int str_len = static_cast<int>(msg->len());
-    if (str_len == 0) {
+    const char* log_base = static_cast<const char*>(msg->payload());
+    size_t log_bytes = msg->len();
+    if (log_bytes == 0) {
       continue;
     }
-    str.assign(str_addr, str_addr + str_len);
-    apply_log_to_store_(str, p_id);
+    string_view log(log_base, log_bytes);
+    apply_log_to_store_(log, p_id);
   }
 }
 
