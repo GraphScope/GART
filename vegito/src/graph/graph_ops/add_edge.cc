@@ -60,7 +60,7 @@ void process_add_edge(const StringViewList& cmd,
     uint64_t property_offset = graph_store->get_edge_prop_prefix_bytes(
         elabel + graph_store->get_total_vertex_label_num(), idx - 4);
     void* prop_ptr = prop_buffer + property_offset;
-    assign_prop(dtype, prop_ptr, string(cmd[idx]));
+    assign_prop(dtype, prop_ptr, graph_store, string(cmd[idx]));
   }
   std::string buf(prop_buffer, edge_prop_bytes);
   std::string_view edge_data(buf);

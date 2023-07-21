@@ -16,6 +16,7 @@
 #ifndef INTERFACES_FRAGMENT_GART_FRAGMENT_H_
 #define INTERFACES_FRAGMENT_GART_FRAGMENT_H_
 
+#include <cassert>
 #include <cstdint>
 #include "grape/fragment/fragment_base.h"
 #include "vineyard/basic/ds/hashmap_mvcc.h"
@@ -62,6 +63,12 @@ class GartFragment {
     fid_ = config["fid"].get<fid_t>();
     vertex_label_num_ = config["vertex_label_num"].get<int>();
     read_epoch_number_ = config["epoch"].get<size_t>();
+    auto string_buffer_object_id =
+        config["string_buffer_object_id"].get<uint64_t>();
+    std::shared_ptr<vineyard::Blob> string_buffer_blob;
+    VINEYARD_CHECK_OK(
+        client_.GetBlob(string_buffer_object_id, true, string_buffer_blob));
+    string_buffer_ = (char*) string_buffer_blob->data();
 
     vertex_tables_.resize(vertex_label_num_, nullptr);
     ovl2g_.resize(vertex_label_num_);
@@ -165,20 +172,17 @@ class GartFragment {
           edge_prop_offset.push_back(accum_offset + sizeof(char));
           edge_prop_dtype.push_back(CHAR);
         } else if (dtype == "STRING") {
-          edge_prop_offset.push_back(accum_offset + sizeof(gart::String));
+          edge_prop_offset.push_back(accum_offset + sizeof(int64_t));
           edge_prop_dtype.push_back(STRING);
-        } else if (dtype == "TEXT") {
-          edge_prop_offset.push_back(accum_offset + sizeof(gart::Text));
-          edge_prop_dtype.push_back(TEXT);
         } else if (dtype == "DATE") {
           edge_prop_offset.push_back(accum_offset + sizeof(gart::Date));
           edge_prop_dtype.push_back(DATE);
         } else if (dtype == "DATETIME") {
           edge_prop_offset.push_back(accum_offset + sizeof(gart::DateTime));
           edge_prop_dtype.push_back(DATETIME);
-        } else if (dtype == "LONGSTRING") {
-          edge_prop_offset.push_back(accum_offset + sizeof(gart::LongString));
-          edge_prop_dtype.push_back(LONGSTRING);
+        } else {
+          LOG(FATAL) << "Unsupported data type: " << dtype;
+          assert(false);
         }
       }
       edge_prop_offsets.push_back(edge_prop_offset);
@@ -582,6 +586,12 @@ class GartFragment {
 
   template <typename T>
   char* GetDataAddr(const vertex_t& v, prop_id_t prop_id) const {
+    T t{};
+    return GetDataAddrImpl(t, v, prop_id);
+  }
+
+  template <typename T>
+  char* GetDataAddrImpl(T& t, const vertex_t& v, prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
@@ -610,8 +620,8 @@ class GartFragment {
     }
   }
 
-  template <typename T>
-  T GetData(const vertex_t& v, prop_id_t prop_id) const {
+  char* GetDataAddrImpl(std::string& t, const vertex_t& v,
+                        prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
@@ -630,17 +640,94 @@ class GartFragment {
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
           char* data = page_header->get_data();
-          return *(((T*) data) + page_idx);
+          int64_t value = *(((int64_t*) data) + page_idx);
+          int64_t str_offset = value >> 16;
+          return string_buffer_ + str_offset;
         }
       }
     } else {
       char* data =
           (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
-      return *(((T*) data) + v_offset);
+      int64_t value = *(((int64_t*) data) + v_offset);
+      int64_t str_offset = value >> 16;
+      return string_buffer_ + str_offset;
     }
+  }
 
+  template <typename T>
+  T GetData(const vertex_t& v, prop_id_t prop_id) const {
+    T t{};
+    GetDataImpl(t, v, prop_id);
+    return t;
+  }
+
+  template <typename T>
+  void GetDataImpl(T& t, const vertex_t& v, prop_id_t prop_id) const {
+    assert(IsInnerVertex(v));
+    label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    auto v_offset = GetOffset(v);
+    auto header_offset = prop_cols_meta[label_id][prop_id].header;
+    if (prop_cols_meta[label_id][prop_id].updatable == true) {
+      FlexColBlobHeader* header =
+          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+                                header_offset);
+      int vertex_per_page = header->get_num_row_per_page();
+      int page_id = v_offset / vertex_per_page;
+      PageHeader* page_header =
+          header->get_page_header_ptr((uintptr_t) header, page_id);
+      int page_idx = v_offset % vertex_per_page;
+
+      for (; page_header;
+           page_header = page_header->get_prev((uintptr_t) header)) {
+        if (page_header->get_epoch() <= (int) read_epoch_number_) {
+          char* data = page_header->get_data();
+          t = *(((T*) data) + page_idx);
+          return;
+        }
+      }
+    } else {
+      char* data =
+          (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
+      t = *(((T*) data) + v_offset);
+      return;
+    }
     assert(false);
-    return T();  // unreachable
+  }
+
+  void GetDataImpl(std::string& t, const vertex_t& v, prop_id_t prop_id) const {
+    assert(IsInnerVertex(v));
+    label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    auto v_offset = GetOffset(v);
+    auto header_offset = prop_cols_meta[label_id][prop_id].header;
+    if (prop_cols_meta[label_id][prop_id].updatable == true) {
+      FlexColBlobHeader* header =
+          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+                                header_offset);
+      int vertex_per_page = header->get_num_row_per_page();
+      int page_id = v_offset / vertex_per_page;
+      PageHeader* page_header =
+          header->get_page_header_ptr((uintptr_t) header, page_id);
+      int page_idx = v_offset % vertex_per_page;
+
+      for (; page_header;
+           page_header = page_header->get_prev((uintptr_t) header)) {
+        if (page_header->get_epoch() <= (int) read_epoch_number_) {
+          char* data = page_header->get_data();
+          int64_t value = *(((int64_t*) data) + page_idx);
+          int64_t str_offset = value >> 16;
+          int64_t str_len = value & 0xffff;
+          t = std::string(string_buffer_ + str_offset, str_len);
+          return;
+        }
+      }
+    } else {
+      char* data =
+          (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
+      int64_t value = *(((int64_t*) data) + v_offset);
+      int64_t str_offset = value >> 16;
+      int64_t str_len = value & 0xffff;
+      t = std::string(string_buffer_ + str_offset, str_len);
+    }
   }
 
   int GetLocalOutDegree(const vertex_t& v, label_id_t e_label) const {
@@ -888,7 +975,7 @@ class GartFragment {
                                               int* prop_offsets) const {
     if (!segment) {
       return gart::EdgeIterator(nullptr, nullptr, nullptr, nullptr, 0, 0,
-                                read_epoch_number_, nullptr);
+                                read_epoch_number_, nullptr, string_buffer_);
     }
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     char* edge_blob_ptr = nullptr;
@@ -911,18 +998,18 @@ class GartFragment {
     if (!epoch_table || !edge_block || epoch_table_offset == 0 ||
         edge_block_offset == 0) {
       return gart::EdgeIterator(nullptr, nullptr, nullptr, nullptr, 0, 0,
-                                read_epoch_number_, nullptr);
+                                read_epoch_number_, nullptr, string_buffer_);
     }
 
     auto num_entries = edge_block->get_num_entries();
     if (num_entries == 0) {  // no edges to read
       return gart::EdgeIterator(nullptr, nullptr, nullptr, nullptr, 0, 0,
-                                read_epoch_number_, nullptr);
+                                read_epoch_number_, nullptr, string_buffer_);
     }
 
     return gart::EdgeIterator(segment, edge_block, epoch_table, edge_blob_ptr,
                               num_entries, edge_prop_size, read_epoch_number_,
-                              prop_offsets);
+                              prop_offsets, string_buffer_);
   }
 
   void initDestFidList(
@@ -1038,6 +1125,7 @@ class GartFragment {
   std::vector<int64_t> vertex_table_lens_;
   std::vector<int64_t> max_inner_offsets_, min_outer_offsets_;
   vid_t max_outer_id_offset_;
+  char* string_buffer_;
 
   std::vector<size_t> ivnums_, ovnums_, tvnums_;
   std::vector<size_t> tenums_;

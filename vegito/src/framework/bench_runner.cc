@@ -102,6 +102,10 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   Property::Column col;
   col.page_size = 0;
 
+  // alloc string buffer
+  // TODO(wanglei): hard code
+  graph_store->add_string_buffer((1ul << 30) * 5);  // 5GB
+
   // Parse vertex
   for (int idx = 0; idx < vlabel_num; ++idx) {
     int id = idx;
@@ -183,11 +187,10 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
           } else if (prop_dtype_str == "double" ||
                      prop_dtype_str == "double precision") {
             prop_dtype = "DOUBLE";
-          } else if (prop_dtype_str == "varchar(255)" ||
-                     prop_dtype_str == "character varying") {
-            prop_dtype = "LONGSTRING";  // TODO: unified string types
-          } else if (prop_dtype_str == "text") {
-            prop_dtype = "TEXT";
+          } else if (prop_dtype_str.rfind("varchar", 0) == 0 ||
+                     prop_dtype_str == "character varying" ||
+                     prop_dtype_str == "text") {
+            prop_dtype = "STRING";
           } else {
             assert(false);
           }
@@ -271,25 +274,13 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
         graph_schema.dtype_map[{id, prop_id}] = STRING;
         if (is_vertex) {
           col.vtype = STRING;
-          col.vlen = sizeof(gart::graph::ldbc::String);
+          col.vlen = sizeof(int64_t);
           prop_schema.cols.push_back(col);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, STRING);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
                                                      edge_prop_prefix_bytes);
-          edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::String);
-        }
-      } else if (prop_dtype == "TEXT") {
-        graph_schema.dtype_map[{id, prop_id}] = TEXT;
-        if (is_vertex) {
-          col.vtype = TEXT;
-          col.vlen = sizeof(gart::graph::ldbc::Text);
-          prop_schema.cols.push_back(col);
-        } else {
-          graph_store->insert_edge_property_dtypes(id, prop_id, TEXT);
-          graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
-                                                     edge_prop_prefix_bytes);
-          edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::Text);
+          edge_prop_prefix_bytes += sizeof(int64_t);
         }
       } else if (prop_dtype == "DATE") {
         graph_schema.dtype_map[{id, prop_id}] = DATE;
@@ -314,18 +305,6 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
                                                      edge_prop_prefix_bytes);
           edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::DateTime);
-        }
-      } else if (prop_dtype == "LONGSTRING") {
-        graph_schema.dtype_map[{id, prop_id}] = LONGSTRING;
-        if (is_vertex) {
-          col.vtype = LONGSTRING;
-          col.vlen = sizeof(gart::graph::ldbc::LongString);
-          prop_schema.cols.push_back(col);
-        } else {
-          graph_store->insert_edge_property_dtypes(id, prop_id, LONGSTRING);
-          graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
-                                                     edge_prop_prefix_bytes);
-          edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::LongString);
         }
       } else {
         assert(false);

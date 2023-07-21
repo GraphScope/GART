@@ -14,6 +14,7 @@
  */
 
 #include "graph/graph_store.h"
+#include <cstddef>
 
 using namespace std;
 
@@ -56,6 +57,16 @@ void GraphStore::put_schema() {
   assert(response_task.is_ok());
 }
 
+void GraphStore::add_string_buffer(size_t size) {
+  auto alloc =
+      std::allocator_traits<decltype(array_allocator)>::rebind_alloc<char>(
+          array_allocator);
+  vineyard::ObjectID object_id;
+  string_buffer_ = alloc.allocate_v6d(size, object_id);
+  string_buffer_object_id_ = object_id;
+  string_buffer_size_ = size;
+}
+
 void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
   seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
   auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
@@ -71,8 +82,8 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 
   // vertex_table
   {
-    auto alloc = allocator_traits<decltype(array_allocator)>::rebind_alloc<
-        seggraph::vertex_t>(array_allocator);
+    auto alloc = allocator_traits<decltype(
+        array_allocator)>::rebind_alloc<seggraph::vertex_t>(array_allocator);
 
     vineyard::ObjectID oid;
     uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
@@ -320,6 +331,7 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
   blob_schema["fnum"] = local_pnum_;
   blob_schema["epoch"] = write_epoch;
   blob_schema["vertex_label_num"] = blob_schemas_.size();
+  blob_schema["string_buffer_object_id"] = string_buffer_object_id_;
   auto blob_schemas = fetch_blob_schema(write_epoch);
   json blob_array = json::array();
   for (const auto& pair : blob_schemas) {

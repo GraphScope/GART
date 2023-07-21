@@ -116,6 +116,8 @@ class GraphStore {
     }
   }
 
+  void add_string_buffer(size_t size);
+
   void add_vgraph(uint64_t vlabel, RGMapping* rg_map);
 
   void add_vprop(uint64_t vlabel, Property::Schema schema);
@@ -319,6 +321,14 @@ class GraphStore {
     return edge_table_maps_[name];
   }
 
+  char* get_string_buffer() { return string_buffer_; }
+
+  size_t get_string_buffer_offset() { return string_buffer_offset_; }
+
+  void set_string_buffer_offset(size_t loc) { string_buffer_offset_ = loc; }
+
+  size_t get_string_buffer_size() { return string_buffer_size_; }
+
   static const int MAX_COLS = 10;
   static const int MAX_TABLES = 128;
 
@@ -358,6 +368,11 @@ class GraphStore {
 
   std::unordered_map<uint64_t, VTable> vertex_tables_;
   std::unordered_map<uint64_t, uint64_t*> ovl2gs_;
+
+  char* string_buffer_;
+  size_t string_buffer_size_;
+  size_t string_buffer_offset_ = 0;
+  vineyard::ObjectID string_buffer_object_id_;
 
   std::vector<std::shared_ptr<hashmap_t>> ovg2ls_;
 

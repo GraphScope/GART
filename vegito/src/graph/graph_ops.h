@@ -22,7 +22,8 @@
 namespace gart {
 namespace graph {
 
-void assign_prop(int data_type, void* prop_ptr, const std::string& val);
+void assign_prop(int data_type, void* prop_ptr, graph::GraphStore* graph_store,
+                 const std::string& val);
 
 void process_add_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store);

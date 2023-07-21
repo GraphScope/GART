@@ -16,6 +16,7 @@
 #ifndef INTERFACES_FRAGMENT_ITERATOR_H_
 #define INTERFACES_FRAGMENT_ITERATOR_H_
 
+#include <cstdint>
 #include "interfaces/fragment/types.h"
 #include "vegito/src/seggraph/core/blocks.hpp"
 
@@ -219,7 +220,8 @@ class EdgeIterator {
                VegitoEdgeBlockHeader* edge_block_header,
                EpochBlockHeader* epoch_table_header, char* edge_blob_ptr,
                size_t num_entries, size_t edge_prop_size,
-               size_t read_epoch_number, int* prop_offsets) {
+               size_t read_epoch_number, int* prop_offsets,
+               char* string_buffer) {
     prop_offsets_ = prop_offsets;
     seg_header_ = seg_header;
     edge_block_header_ = edge_block_header;
@@ -227,6 +229,7 @@ class EdgeIterator {
     num_entries_ = num_entries;
     edge_prop_size_ = edge_prop_size;
     read_epoch_number_ = read_epoch_number;
+    string_buffer_ = string_buffer;
     edge_blob_ptr_ = edge_blob_ptr;
     if (edge_block_header && epoch_table_header) {
       init();
@@ -309,14 +312,38 @@ class EdgeIterator {
 
   template <typename EDATA_T>
   EDATA_T get_data(int prop_id) {
+    EDATA_T t{};
+    get_data_impl(t, prop_id);
+    return t;
+  }
+
+  template <typename EDATA_T>
+  EDATA_T get_data_impl(EDATA_T& t, int prop_id) {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
     if (prop_id == 0) {
-      return *(EDATA_T*) (data);
+      t = *(EDATA_T*) (data);
+      return t;
     }
 
-    return *(EDATA_T*) (data + prop_offsets_[prop_id - 1]);
+    t = *(EDATA_T*) (data + prop_offsets_[prop_id - 1]);
+    return t;
+  }
+
+  std::string get_data_impl(std::string& t, int prop_id) {
+    char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
+                          (edge_prop_offset_ + entries_ - entries_cursor_) *
+                              edge_prop_size_);
+    int64_t value;
+    if (prop_id == 0) {
+      value = *(int64_t*) (data);
+    } else {
+      value = *(int64_t*) (data + prop_offsets_[prop_id - 1]);
+    }
+    int64_t str_offset = value >> 16;
+    int64_t str_len = value & 0xffff;
+    return std::string(string_buffer_ + str_offset, str_len);
   }
 
   uintptr_t get_edge_property_offset() {
@@ -403,6 +430,7 @@ class EdgeIterator {
   size_t seg_block_size_;
   size_t edge_prop_offset_;
   int* prop_offsets_;
+  char* string_buffer_;
 };
 }  // namespace gart
 

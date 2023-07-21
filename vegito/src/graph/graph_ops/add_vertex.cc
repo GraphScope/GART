@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cassert>
 #include "graph/graph_ops.h"
 
 using namespace std;
@@ -29,7 +30,8 @@ inline void assign(void* ptr, T val) {
 namespace gart {
 namespace graph {
 
-void assign_prop(int data_type, void* prop_ptr, const std::string& val) {
+void assign_prop(int data_type, void* prop_ptr, graph::GraphStore* graph_store,
+                 const std::string& val) {
   try {
     switch (data_type) {
     case CHAR:
@@ -50,20 +52,23 @@ void assign_prop(int data_type, void* prop_ptr, const std::string& val) {
     case DOUBLE:
       assign(prop_ptr, std::stod(val));
       break;
-    case STRING:
-      assign(prop_ptr, ldbc::String(val));
+    case STRING: {
+      auto str_len = val.length();
+      size_t old_offset = graph_store->get_string_buffer_offset();
+      char* string_buffer = graph_store->get_string_buffer();
+      size_t new_offset = old_offset + str_len;
+      assert(new_offset < graph_store->get_string_buffer_size());
+      memcpy(string_buffer + old_offset, val.c_str(), str_len);
+      graph_store->set_string_buffer_offset(new_offset);
+      size_t value = (old_offset << 16) | str_len;
+      assign(prop_ptr, value);
       break;
-    case TEXT:
-      assign(prop_ptr, ldbc::Text(val));
-      break;
+    }
     case DATE:
       assign(prop_ptr, ldbc::Date(val));
       break;
     case DATETIME:
       assign(prop_ptr, ldbc::DateTime(val));
-      break;
-    case LONGSTRING:
-      assign(prop_ptr, ldbc::LongString(val));
       break;
     default:
       LOG(ERROR) << "Unsupported data type: " << data_type;
@@ -102,8 +107,22 @@ void process_add_vertex(const StringViewList& cmd,
   graph_store->add_inner(vlabel, lid);
 
   // insert property
+  auto prop_schema = graph_store->get_property_schema(vlabel);
+  uint64_t prop_byte_size = graph_store->get_total_property_bytes(vlabel);
+  char* prop_buffer = reinterpret_cast<char*>(malloc(prop_byte_size));
+  for (auto idx = 2; idx < cmd.size(); idx++) {
+    auto dtype = prop_schema.cols[idx - 2].vtype;
+    uint64_t property_offset =
+        graph_store->get_prefix_property_bytes(vlabel, idx - 2);
+    void* prop_ptr = prop_buffer + property_offset;
+    assign_prop(dtype, prop_ptr, graph_store, string(cmd[idx]));
+  }
+  property->insert(v, vid, prop_buffer, write_epoch);
+  free(prop_buffer);
+  /*
   StringViewList props(cmd.begin() + 2, cmd.end());
   property->insert(v, vid, props, write_epoch);
+  */
 }
 
 }  // namespace graph

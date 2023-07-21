@@ -118,6 +118,20 @@ class PropertyPageRank
 
     int local_vertex_num = 0;
 
+    /*
+    for (auto v_label = 0; v_label < 1; v_label++) {
+      auto inner_vertices_iter = frag.InnerVertices(v_label);
+      while (inner_vertices_iter.valid()) {
+        auto v = inner_vertices_iter.vertex();
+        std::string v_data = frag.template GetData<std::string>(v, 2);
+        if (frag.fid() == 0) {
+          std::cout << "v_ofset " << frag.GetOffset(v) << " v_data: " << v_data << std::endl;
+        }
+        inner_vertices_iter.next();
+      }
+    }
+    */
+
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto inner_vertices_iter = frag.InnerVertices(v_label);
       while (inner_vertices_iter.valid()) {
