@@ -23,9 +23,6 @@ namespace gart {
 
 using obj_id_t = vineyard::ObjectID;
 
-typedef inline_str_8<40> String;
-typedef inline_str_8<256> LongString;
-typedef inline_str_16<2000> Text;
 typedef inline_str_fixed<10> Date;  // yyyy-mm-dd
 typedef inline_str_fixed<28>
     DateTime;  // yyyy-mm-ddTHH:MM:ss.sss+0000

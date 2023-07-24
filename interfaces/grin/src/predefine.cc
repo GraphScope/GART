@@ -51,10 +51,6 @@ GRIN_DATATYPE StringToDataType(std::string dtype_str) {
     return GRIN_DATATYPE::UInt64;
   } else if (dtype_str == "STRING") {
     return GRIN_DATATYPE::String;
-  } else if (dtype_str == "TEXT") {
-    return GRIN_DATATYPE::String;
-  } else if (dtype_str == "LONGSTRING") {
-    return GRIN_DATATYPE::String;
   } else if (dtype_str == "DATE") {
     return GRIN_DATATYPE::String;
   } else if (dtype_str == "DATETIME") {

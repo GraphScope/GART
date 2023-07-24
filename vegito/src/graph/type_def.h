@@ -24,9 +24,6 @@ namespace ldbc {
 
 typedef uint64_t ID;
 typedef uint32_t Uint;
-typedef inline_str_8<40> String;
-typedef inline_str_8<256> LongString;  // TODO: unified string types, inc. text?
-typedef inline_str_16<2000> Text;
 typedef inline_str_fixed<10> Date;  // yyyy-mm-dd
 typedef inline_str_fixed<28>
     DateTime;  // yyyy-mm-ddTHH:MM:ss.sss+0000

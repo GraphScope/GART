@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef RESEARCH_GART_GRIN_SRC_PREDEFINE_H_
-#define RESEARCH_GART_GRIN_SRC_PREDEFINE_H_
+#ifndef INTERFACES_GRIN_SRC_PREDEFINE_H_
+#define INTERFACES_GRIN_SRC_PREDEFINE_H_
 
 #include <map>
 #include <string>
@@ -171,4 +171,4 @@ class URI {
   std::map<std::string, std::string> params;
 };
 
-#endif  // RESEARCH_GART_GRIN_SRC_PREDEFINE_H_
+#endif  // INTERFACES_GRIN_SRC_PREDEFINE_H_

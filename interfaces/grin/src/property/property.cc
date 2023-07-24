@@ -172,8 +172,7 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
                                                      GRIN_VERTEX v,
                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g
-      ->template GetData<inline_str_8<40>>(_GRIN_VERTEX_T(v),
+  return _g->template GetData<std::string>(_GRIN_VERTEX_T(v),
                                            _grin_get_prop_from_property(vp))
       .c_str();
 }
@@ -337,12 +336,17 @@ const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e,
   char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
+  int64_t fake_edata = 0;
   if (prop_id == 0) {
-    return (reinterpret_cast<inline_str_8<40>*>(base_addr))->c_str();
+    fake_edata = *reinterpret_cast<int64_t*>(base_addr);
   } else {
     auto offset = _g->edge_prop_offsets[e_type_id][prop_id - 1];
-    return (reinterpret_cast<inline_str_8<40>*>(base_addr + offset))->c_str();
+    fake_edata = *reinterpret_cast<int64_t*>(base_addr + offset);
   }
+  int64_t edata_offset = fake_edata >> 16;
+  int64_t edata_len = fake_edata & 0xffff;
+  std::string tmp_str(_g->GetStringBuffer() + edata_offset, edata_len);
+  return tmp_str.c_str();
 }
 
 int grin_get_edge_property_value_of_date32(GRIN_GRAPH g, GRIN_EDGE e,
@@ -397,14 +401,27 @@ GRIN_EDGE_TYPE grin_get_edge_type_from_property(GRIN_GRAPH g,
 const void* grin_get_edge_property_value(GRIN_GRAPH g, GRIN_EDGE e,
                                          GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  char* base_addr = e->edata;
+  char* base_addr = e.edata;
   auto prop_id = _grin_get_prop_from_property(ep);
   auto e_type_id = _grin_get_type_from_property(ep);
+  auto dt = grin_get_edge_property_datatype(g, ep);
   if (prop_id == 0) {
-    return base_addr;
+    if (dt != GRIN_DATATYPE::String) {
+      return base_addr;
+    } else {
+      int64_t fake_edata = *reinterpret_cast<int64_t*>(base_addr);
+      int64_t edata_offset = fake_edata >> 16;
+      return _g->GetStringBuffer() + edata_offset;
+    }
   } else {
     auto offset = _g->edge_prop_offsets[e_type_id][prop_id - 1];
-    return base_addr + offset;
+    if (dt != GRIN_DATATYPE::String) {
+      return base_addr + offset;
+    } else {
+      int64_t fake_edata = *reinterpret_cast<int64_t*>(base_addr + offset);
+      int64_t edata_offset = fake_edata >> 16;
+      return _g->GetStringBuffer() + edata_offset;
+    }
   }
 }
 #endif

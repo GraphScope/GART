@@ -12,7 +12,10 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
+#include "grin/include/include/property/property.h"
+#include "grin/include/include/property/propertylist.h"
 #include "grin/include/include/property/row.h"
+
 
 #ifdef GRIN_ENABLE_ROW
 void grin_destroy_row(GRIN_GRAPH g, GRIN_ROW r) {
@@ -52,11 +55,13 @@ double grin_get_double_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
 }
 
 const char* grin_get_string_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _r = static_cast<GRIN_ROW_T*>(r);
-  auto s = static_cast<const std::string*>((*_r)[idx]);
-  int len = s->length() + 1;
+  int64_t fake_edata = *static_cast<const int64_t*>((*_r)[idx]);
+  auto edata_offset = fake_edata >> 16;
+  int64_t len = (fake_edata & 0xffff) + 1;
   char* out = new char[len];
-  snprintf(out, len, "%s", s->c_str());
+  snprintf(out, len, "%s", _g->GetStringBuffer() + edata_offset);
   return out;
 }
 
@@ -187,7 +192,7 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
   auto v_type = _g->vertex_label(_v);
   auto prop_size = _g->vertex_property_num(v_type);
   auto r = new GRIN_ROW_T();
-  for (size_t prop_id = 0; prop_id < prop_size; prop_id++) {
+  for (auto prop_id = 0; prop_id < prop_size; prop_id++) {
     std::string dtype_str = _g->GetVertexPropDataType(v_type, prop_id);
     if (dtype_str == "INT") {
       r->push_back(_g->template GetDataAddr<int32_t>(_v, prop_id));
@@ -213,14 +218,9 @@ GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
   auto e_type = e.etype;
   auto prop_size = _g->edge_property_num(e_type);
   auto r = new GRIN_ROW_T();
-  char* base_dir = e.edata;
-  for (size_t idx = 0; idx < prop_size; idx++) {
-    if (idx == 0) {
-      r->push_back(base_dir);
-    } else {
-      auto offset = _g->edge_prop_offsets[e_type][idx - 1];
-      r->push_back(base_dir + offset);
-    }
+  for (auto idx = 0; idx < prop_size; idx++) {
+    auto ep = grin_get_edge_property_by_id(g, e_type, idx);
+    r->push_back(grin_get_edge_property_value(g, e, ep));
   }
   return r;
 }

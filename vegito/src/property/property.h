@@ -215,17 +215,11 @@ class Property {  // NOLINT(build/class)
         // use string id (str_offset << 16 | str_len) instead of itself
         assign(prop_ptr, stoull(std::string(val)));
         break;
-      case TEXT:
-        assign_inline_str<gart::graph::ldbc::Text>(prop_ptr, val);
-        break;
       case DATE:
         assign_inline_str<gart::graph::ldbc::Date>(prop_ptr, val);
         break;
       case DATETIME:
         assign_inline_str<gart::graph::ldbc::DateTime>(prop_ptr, val);
-        break;
-      case LONGSTRING:
-        assign_inline_str<gart::graph::ldbc::LongString>(prop_ptr, val);
         break;
       default:
         LOG(ERROR) << "Unsupported data type: " << data_type;

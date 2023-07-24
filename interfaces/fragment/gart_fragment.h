@@ -895,6 +895,8 @@ class GartFragment {
 
   inline vid_t GetMaxOuterIdOffset() const { return max_outer_id_offset_; }
 
+  inline char* GetStringBuffer() const { return string_buffer_; }
+
   void PrepareToRunApp(const grape::CommSpec& comm_spec,
                        grape::PrepareConf conf) {
     if (conf.message_strategy ==
