@@ -83,46 +83,8 @@ void process_add_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store) {
   int write_epoch = stoi(string(cmd[0]));
   uint64_t vid = static_cast<uint64_t>(stoll(string(cmd[1])));
-  gart::IdParser<seggraph::vertex_t> parser;
-  parser.Init(graph_store->get_total_partitions(),
-              graph_store->get_total_vertex_label_num());
-
-  auto fid = parser.GetFid(vid);
-  if (fid != graph_store->get_local_pid()) {
-    return;
-  }
-  auto vlabel = parser.GetLabelId(vid);
-  seggraph::SegGraph* graph =
-      graph_store->get_graph<seggraph::SegGraph>(vlabel);
-  Property* property = graph_store->get_property(vlabel);
-
-  auto writer = graph->create_graph_writer(write_epoch);  // write epoch
-
-  // insert vertex
-  seggraph::vertex_t v = writer.new_vertex();
-  auto off = property->getNewOffset();
-  assert(v == off);
-  auto voffset = parser.GetOffset(vid);
-  auto lid = parser.GenerateId(0, vlabel, voffset);
-  graph_store->add_inner(vlabel, lid);
-
-  // insert property
-  auto prop_schema = graph_store->get_property_schema(vlabel);
-  uint64_t prop_byte_size = graph_store->get_total_property_bytes(vlabel);
-  char* prop_buffer = reinterpret_cast<char*>(malloc(prop_byte_size));
-  for (auto idx = 2; idx < cmd.size(); idx++) {
-    auto dtype = prop_schema.cols[idx - 2].vtype;
-    uint64_t property_offset =
-        graph_store->get_prefix_property_bytes(vlabel, idx - 2);
-    void* prop_ptr = prop_buffer + property_offset;
-    assign_prop(dtype, prop_ptr, graph_store, string(cmd[idx]));
-  }
-  property->insert(v, vid, prop_buffer, write_epoch);
-  free(prop_buffer);
-  /*
   StringViewList props(cmd.begin() + 2, cmd.end());
-  property->insert(v, vid, props, write_epoch);
-  */
+  graph_store->insert_inner_vertex(write_epoch, vid, props);
 }
 
 }  // namespace graph

@@ -18,145 +18,6 @@
 
 using namespace std;
 
-namespace gart {
-namespace graph {
-
-GraphStore::~GraphStore() {
-  for (const auto& schema : blob_schemas_) {
-    vineyard::ObjectID vertex_table_oid = schema.second.get_vertex_table_oid(),
-                       ovl2g_oid = schema.second.get_ovl2g_oid();
-    array_allocator.deallocate_v6d(vertex_table_oid);
-    array_allocator.deallocate_v6d(ovl2g_oid);
-  }
-}
-
-template <>
-seggraph::SegGraph* GraphStore::get_graph<seggraph::SegGraph>(uint64_t vlabel) {
-  return seg_graphs_[vlabel];
-}
-
-template <class GraphType>
-GraphType* GraphStore::get_graph(uint64_t vlabel) {
-  return nullptr;
-}
-
-void GraphStore::put_schema() {
-  auto schema = get_schema();
-  string schema_str = schema.get_json(get_local_pid());
-  string schema_key =
-      FLAGS_meta_prefix + "gart_schema_p" + to_string(get_local_pid());
-  auto response_task = etcd_client_->put(schema_key, schema_str).get();
-  assert(response_task.is_ok());
-  // insert the latest epoch as numeric_limits<uint64_t>::max() at first
-  string latest_epoch =
-      FLAGS_meta_prefix + "gart_latest_epoch_p" + to_string(get_local_pid());
-  response_task =
-      etcd_client_
-          ->put(latest_epoch, to_string(numeric_limits<uint64_t>::max()))
-          .get();
-  assert(response_task.is_ok());
-}
-
-void GraphStore::add_string_buffer(size_t size) {
-  auto alloc =
-      std::allocator_traits<decltype(array_allocator)>::rebind_alloc<char>(
-          array_allocator);
-  vineyard::ObjectID object_id;
-  string_buffer_ = alloc.allocate_v6d(size, object_id);
-  string_buffer_object_id_ = object_id;
-  string_buffer_size_ = size;
-}
-
-void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
-  seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
-  auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
-
-  // add outer CSR and its schema
-  ov_seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
-  auto& ov_schema = ov_seg_graphs_[vlabel]->get_blob_schema();
-  blob_schema.set_ov_block_oid(ov_schema.get_block_oid());
-  blob_schema.set_ov_elabel2segs(ov_schema.get_elabel2segs());
-
-  // add common information
-  blob_schema.set_vlabel(vlabel);
-
-  // vertex_table
-  {
-    auto alloc = allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<seggraph::vertex_t>(array_allocator);
-
-    vineyard::ObjectID oid;
-    uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
-                     ov_seg_graphs_[vlabel]->get_vertex_capacity();
-    auto& vtable = vertex_tables_[vlabel];
-    vtable.table = alloc.allocate_v6d(max_v, oid);
-    vtable.max_inner = 0;
-    vtable.min_outer = max_v;
-    vtable.max_inner_location = 0;
-    vtable.min_outer_location = max_v;
-    vtable.size = max_v;
-
-    gart::VTableMeta meta(oid, max_v);  // TODO(sijie): update args
-    blob_schema.set_vtable_meta(meta);
-  }
-
-  // ovl2g
-  {
-    auto alloc =
-        allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
-            array_allocator);
-
-    vineyard::ObjectID oid;
-    uint64_t max_v = ov_seg_graphs_[vlabel]->get_vertex_capacity();
-    ovl2gs_[vlabel] = alloc.allocate_v6d(max_v, oid);
-    gart::ArrayMeta meta(oid, max_v);
-    blob_schema.set_ovl2g_meta(meta);
-  }
-
-  blob_schemas_[vlabel] = blob_schema;
-}
-
-void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
-  assert(seg_graphs_[vlabel]);
-
-  property_schemas_[vlabel] = schema;
-  uint64_t v_capacity = seg_graphs_[vlabel]->get_vertex_capacity();
-
-  switch (schema.store_type) {
-  case PROP_COLUMN: {
-    property_stores_[vlabel] = new PropertyColPaged(schema, v_capacity);
-    assert(blob_schemas_.find(vlabel) != blob_schemas_.end());
-    auto& blob_schema = blob_schemas_[vlabel];
-    auto p = property_stores_[vlabel];
-    blob_schema.set_prop_meta(p->get_blob_metas());
-    break;
-  }
-  case PROP_COLUMN2: {
-    property_stores_[vlabel] = new PropertyColArray(schema, v_capacity);
-    break;
-  }
-  default:
-    printf("Not implement this property store type: %d\n", schema.store_type);
-    assert(false);
-  }
-}
-
-void GraphStore::update_blob(uint64_t blob_epoch) {
-  for (auto& pair : blob_schemas_) {
-    uint64_t vlabel = pair.first;
-    gart::BlobSchema& schema = pair.second;
-    seggraph::SegGraph* graph = seg_graphs_[vlabel];
-    seggraph::SegGraph* ov_graph = ov_seg_graphs_[vlabel];
-    schema.set_vtable_bound(graph->get_max_vertex_id(),
-                            ov_graph->get_max_vertex_id());
-    schema.set_vtable_location(
-        graph->get_max_vertex_id() + graph->get_deleted_inner_num(),
-        ov_graph->get_max_vertex_id() + ov_graph->get_deleted_outer_num());
-    schema.set_ovg2l_oid(ovg2ls_[vlabel]->id());
-  }
-  blob_epoch_ = blob_epoch;
-}
-
 namespace {
 
 struct PropDef {
@@ -243,6 +104,145 @@ struct SchemaJson {
 };
 
 }  // namespace
+
+namespace gart {
+namespace graph {
+
+GraphStore::~GraphStore() {
+  for (const auto& schema : blob_schemas_) {
+    vineyard::ObjectID vertex_table_oid = schema.second.get_vertex_table_oid(),
+                       ovl2g_oid = schema.second.get_ovl2g_oid();
+    array_allocator.deallocate_v6d(vertex_table_oid);
+    array_allocator.deallocate_v6d(ovl2g_oid);
+  }
+}
+
+template <>
+seggraph::SegGraph* GraphStore::get_graph<seggraph::SegGraph>(uint64_t vlabel) {
+  return seg_graphs_[vlabel];
+}
+
+template <class GraphType>
+GraphType* GraphStore::get_graph(uint64_t vlabel) {
+  return nullptr;
+}
+
+void GraphStore::put_schema() {
+  auto schema = get_schema();
+  string schema_str = schema.get_json(get_local_pid());
+  string schema_key =
+      FLAGS_meta_prefix + "gart_schema_p" + to_string(get_local_pid());
+  auto response_task = etcd_client_->put(schema_key, schema_str).get();
+  assert(response_task.is_ok());
+  // insert the latest epoch as numeric_limits<uint64_t>::max() at first
+  string latest_epoch =
+      FLAGS_meta_prefix + "gart_latest_epoch_p" + to_string(get_local_pid());
+  response_task =
+      etcd_client_
+          ->put(latest_epoch, to_string(numeric_limits<uint64_t>::max()))
+          .get();
+  assert(response_task.is_ok());
+}
+
+void GraphStore::add_string_buffer(size_t size) {
+  auto alloc =
+      std::allocator_traits<decltype(array_allocator)>::rebind_alloc<char>(
+          array_allocator);
+  vineyard::ObjectID object_id;
+  string_buffer_ = alloc.allocate_v6d(size, object_id);
+  string_buffer_object_id_ = object_id;
+  string_buffer_size_ = size;
+}
+
+void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
+  seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
+  auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
+
+  // add outer CSR and its schema
+  ov_seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
+  auto& ov_schema = ov_seg_graphs_[vlabel]->get_blob_schema();
+  blob_schema.set_ov_block_oid(ov_schema.get_block_oid());
+  blob_schema.set_ov_elabel2segs(ov_schema.get_elabel2segs());
+
+  // add common information
+  blob_schema.set_vlabel(vlabel);
+
+  // vertex_table
+  {
+    auto alloc = allocator_traits<decltype(array_allocator)>::rebind_alloc<
+        seggraph::vertex_t>(array_allocator);
+
+    vineyard::ObjectID oid;
+    uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
+                     ov_seg_graphs_[vlabel]->get_vertex_capacity();
+    auto& vtable = vertex_tables_[vlabel];
+    vtable.table = alloc.allocate_v6d(max_v, oid);
+    vtable.max_inner = 0;
+    vtable.min_outer = max_v;
+    vtable.max_inner_location = 0;
+    vtable.min_outer_location = max_v;
+    vtable.size = max_v;
+
+    gart::VTableMeta meta(oid, max_v);  // TODO(sijie): update args
+    blob_schema.set_vtable_meta(meta);
+  }
+
+  // ovl2g
+  {
+    auto alloc =
+        allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
+            array_allocator);
+
+    vineyard::ObjectID oid;
+    uint64_t max_v = ov_seg_graphs_[vlabel]->get_vertex_capacity();
+    ovl2gs_[vlabel] = alloc.allocate_v6d(max_v, oid);
+    gart::ArrayMeta meta(oid, max_v);
+    blob_schema.set_ovl2g_meta(meta);
+  }
+
+  blob_schemas_[vlabel] = blob_schema;
+}
+
+void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
+  assert(seg_graphs_[vlabel]);
+
+  property_schemas_[vlabel] = schema;
+  uint64_t v_capacity = seg_graphs_[vlabel]->get_vertex_capacity();
+
+  switch (schema.store_type) {
+  case PROP_COLUMN: {
+    property_stores_[vlabel] = new PropertyColPaged(schema, v_capacity);
+    assert(blob_schemas_.find(vlabel) != blob_schemas_.end());
+    auto& blob_schema = blob_schemas_[vlabel];
+    auto p = property_stores_[vlabel];
+    blob_schema.set_prop_meta(p->get_blob_metas());
+    break;
+  }
+  case PROP_COLUMN2: {
+    property_stores_[vlabel] = new PropertyColArray(schema, v_capacity);
+    break;
+  }
+  default:
+    printf("Not implement this property store type: %d\n", schema.store_type);
+    assert(false);
+  }
+}
+
+void GraphStore::update_blob(uint64_t blob_epoch) {
+  for (auto& pair : blob_schemas_) {
+    uint64_t vlabel = pair.first;
+    gart::BlobSchema& schema = pair.second;
+    seggraph::SegGraph* graph = seg_graphs_[vlabel];
+    seggraph::SegGraph* ov_graph = ov_seg_graphs_[vlabel];
+    schema.set_vtable_bound(graph->get_max_vertex_id(),
+                            ov_graph->get_max_vertex_id());
+    schema.set_vtable_location(
+        graph->get_max_vertex_id() + graph->get_deleted_inner_num(),
+        ov_graph->get_max_vertex_id() + ov_graph->get_deleted_outer_num());
+    schema.set_ovg2l_oid(ovg2ls_[vlabel]->id());
+  }
+  blob_epoch_ = blob_epoch;
+}
 
 void SchemaImpl::fill_json(void* ptr) const {
   SchemaJson& sj = *reinterpret_cast<SchemaJson*>(ptr);
@@ -353,6 +353,56 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
       FLAGS_meta_prefix + "gart_latest_epoch_p" + to_string(local_pid_);
   response_task = etcd_client_->put(latest_epoch, to_string(write_epoch)).get();
   assert(response_task.is_ok());
+}
+
+bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
+                                     StringViewList& vprop) {
+  // parse id
+  IdParser<seggraph::vertex_t> parser;
+  parser.Init(total_partitions_, total_vertex_label_num_);
+  auto fid = parser.GetFid(gid);
+  if (fid != local_pid_) {
+    return false;  // not in this partition
+  }
+
+  auto vlabel = parser.GetLabelId(gid);
+  auto voffset = parser.GetOffset(gid);
+  auto lid = parser.GenerateId(0, vlabel, voffset);
+
+  // get handle of graph and property
+  seggraph::SegGraph* graph = get_graph<seggraph::SegGraph>(vlabel);
+  auto writer = graph->create_graph_writer(epoch);  // write epoch
+  Property* property = get_property(vlabel);
+
+  // insert the topology
+  seggraph::vertex_t v = writer.new_vertex();
+  auto off = property->getNewOffset();
+  assert(v == off);
+  add_inner(vlabel, lid);
+
+  // deal with string
+  // allocate space for string
+  vector<string> tmp_str(vprop.size());  // for store string_view
+  for (size_t idx = 0; idx < vprop.size(); ++idx) {
+    auto dtype = get_property_schema(vlabel).cols[idx].vtype;
+    if (dtype == STRING) {
+      auto str_len = vprop[idx].length();
+      size_t old_offset = get_string_buffer_offset();
+      char* string_buffer = get_string_buffer();
+      size_t new_offset = old_offset + str_len;
+      assert(new_offset < get_string_buffer_size());
+      memcpy(string_buffer + old_offset, vprop[idx].data(), str_len);
+      set_string_buffer_offset(new_offset);
+      uint64_t value = (old_offset << 16) | str_len;
+      tmp_str[idx] = to_string(value);
+      vprop[idx] = tmp_str[idx];
+    }
+  }
+
+  // insert properties
+  property->insert(v, gid, vprop, epoch);
+
+  return true;
 }
 
 }  // namespace graph

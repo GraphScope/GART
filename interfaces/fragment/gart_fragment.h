@@ -172,7 +172,7 @@ class GartFragment {
           edge_prop_offset.push_back(accum_offset + sizeof(char));
           edge_prop_dtype.push_back(CHAR);
         } else if (dtype == "STRING") {
-          edge_prop_offset.push_back(accum_offset + sizeof(int64_t));
+          edge_prop_offset.push_back(accum_offset + sizeof(uint64_t));
           edge_prop_dtype.push_back(STRING);
         } else if (dtype == "DATE") {
           edge_prop_offset.push_back(accum_offset + sizeof(gart::Date));

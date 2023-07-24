@@ -79,7 +79,9 @@ inline void assign_prop(int data_type, void* prop_ptr, const string_view& val) {
       break;
     // FIXME: coupled with LDBC?
     case STRING:
-      assign_inline_str<ldbc::String>(prop_ptr, val);
+      // assign_inline_str<ldbc::String>(prop_ptr, val);
+      // use string id (str_offset << 16 | str_len) instead of itself
+      assign(prop_ptr, stoull(string(val)));
       break;
     case TEXT:
       assign_inline_str<ldbc::Text>(prop_ptr, val);

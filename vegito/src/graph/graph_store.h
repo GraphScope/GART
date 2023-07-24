@@ -69,6 +69,10 @@ class GraphStore {
         mid_(mid),
         local_pnum_(total_partitions),
         total_partitions_(total_partitions),
+        total_vertex_label_num_(0),
+        string_buffer_(nullptr),
+        string_buffer_size_(0),
+        string_buffer_offset_(0),
         etcd_client_(std::make_shared<etcd::Client>(FLAGS_etcd_endpoint)) {}
 
   ~GraphStore();
@@ -95,7 +99,6 @@ class GraphStore {
 
   inline SchemaImpl get_schema() { return this->schema_; }
 
-  inline uint64_t get_mid() const { return mid_; }
   inline uint64_t get_local_pid() const { return local_pid_; }
   inline int get_total_partitions() const { return total_partitions_; }
   inline int get_total_vertex_label_num() const {
@@ -115,6 +118,9 @@ class GraphStore {
         property->updateHeader();
     }
   }
+
+  // return true if the vertex is in the local partition, else false
+  bool insert_inner_vertex(int epoch, uint64_t gid, StringViewList& vprop);
 
   void add_string_buffer(size_t size);
 
@@ -321,13 +327,13 @@ class GraphStore {
     return edge_table_maps_[name];
   }
 
-  char* get_string_buffer() { return string_buffer_; }
+  char* get_string_buffer() const { return string_buffer_; }
 
-  size_t get_string_buffer_offset() { return string_buffer_offset_; }
+  size_t get_string_buffer_offset() const { return string_buffer_offset_; }
 
   void set_string_buffer_offset(size_t loc) { string_buffer_offset_ = loc; }
 
-  size_t get_string_buffer_size() { return string_buffer_size_; }
+  size_t get_string_buffer_size() const { return string_buffer_size_; }
 
   static const int MAX_COLS = 10;
   static const int MAX_TABLES = 128;
@@ -337,11 +343,10 @@ class GraphStore {
   static const int MAX_VLABELS = MAX_TABLES;
   static const int MAX_ELABELS = 30;
 
- private:
-  int local_pid_;         // from 0 in each machine
-  int mid_;               // machine id
-  int local_pnum_;        // number of partitions in the machine
-  int total_partitions_;  // total number of partitions
+  const int local_pid_;         // from 0 in each machine
+  const int mid_;               // machine id
+  const int local_pnum_;        // number of partitions in the machine
+  const int total_partitions_;  // total number of partitions
   int total_vertex_label_num_;
 
   // graph store schema
@@ -349,11 +354,22 @@ class GraphStore {
 
   // vlabel -> graph storage
   std::unordered_map<uint64_t, seggraph::SegGraph*> seg_graphs_;
+  std::unordered_map<uint64_t, seggraph::SegGraph*> ov_seg_graphs_;  // outer v
 
   // vlabel -> vertex property storage
   std::unordered_map<uint64_t, Property*> property_stores_;
   std::unordered_map<uint64_t, Property::Schema> property_schemas_;
 
+  // vlabel -> vertex table
+  std::unordered_map<uint64_t, VTable> vertex_tables_;
+
+  // outer v: vlabel, offset -> gid
+  std::unordered_map<uint64_t, uint64_t*> ovl2gs_;
+
+  // outer v: vlabel -> pointer of lid hashmap
+  std::vector<std::shared_ptr<hashmap_t>> ovg2ls_;
+
+  // meta data for property fields
   std::map<uint64_t, uint64_t> property_bytes_;
   std::map<std::pair<uint64_t, uint64_t>, uint64_t> property_prefix_bytes_;
 
@@ -364,17 +380,25 @@ class GraphStore {
   std::map<std::string, uint64_t> vertex_table_maps_;
   std::map<std::string, uint64_t> edge_table_maps_;
 
-  std::unordered_map<uint64_t, seggraph::SegGraph*> ov_seg_graphs_;  // outer v
+  // key is vid in SegCSR
+  // global id (gid)
+  std::unordered_map<uint64_t, int>
+      key_pid_map_[MAX_VLABELS];  // key -> partition
+  std::unordered_map<uint64_t, int>
+      key_off_map_[MAX_VLABELS];  // key -> partition
+  std::unordered_map<int, int>
+      pid_off_map_[MAX_VLABELS];  // fid -> global offset header
 
-  std::unordered_map<uint64_t, VTable> vertex_tables_;
-  std::unordered_map<uint64_t, uint64_t*> ovl2gs_;
+  // local id (lid)
+  std::unordered_map<uint64_t, uint64_t>
+      key_lid_map_[MAX_VLABELS];  // key -> local id
 
+  // for string buffer
+  // TODO: now a global string buffer, need to refine for each column
   char* string_buffer_;
   size_t string_buffer_size_;
-  size_t string_buffer_offset_ = 0;
+  size_t string_buffer_offset_;
   vineyard::ObjectID string_buffer_object_id_;
-
-  std::vector<std::shared_ptr<hashmap_t>> ovg2ls_;
 
   // vlabel -> vertex blob schemas
   std::map<uint64_t, gart::BlobSchema> blob_schemas_;
@@ -384,18 +408,6 @@ class GraphStore {
   uint64_t blob_epoch_;
 
   seggraph::SparseArrayAllocator<void> array_allocator;
-
-  // global
-  std::unordered_map<uint64_t, int>
-      key_pid_map_[MAX_VLABELS];  // key -> partition
-  std::unordered_map<uint64_t, int>
-      key_off_map_[MAX_VLABELS];  // key -> partition
-  std::unordered_map<int, int>
-      pid_off_map_[MAX_VLABELS];  // fid -> global offset header
-
-  // local
-  std::unordered_map<uint64_t, uint64_t>
-      key_lid_map_[MAX_VLABELS];  // key -> local id
 
   std::shared_ptr<etcd::Client> etcd_client_;
 

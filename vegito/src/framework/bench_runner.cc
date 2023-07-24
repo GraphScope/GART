@@ -274,7 +274,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
         graph_schema.dtype_map[{id, prop_id}] = STRING;
         if (is_vertex) {
           col.vtype = STRING;
-          col.vlen = sizeof(int64_t);
+          // use string id (str_offset << 16 | str_len) instead of itself
+          col.vlen = sizeof(uint64_t);
           prop_schema.cols.push_back(col);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, STRING);
