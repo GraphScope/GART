@@ -26,7 +26,6 @@
 
 #include "property/property_col_paged.h"
 #include "graph/graph_store.h"
-#include "graph/type_def.h"
 
 #define LAZY_PAGE_ALLOC 1
 
@@ -45,64 +44,6 @@ thread_local uint64_t cached_ver[MAX_TABLES];  // table id (MAX_TABLES)
 // table id (MAX_TABLES), column id (MAX_COLS)
 thread_local uint32_t cached_page_num[MAX_TABLES][MAX_COLS];
 thread_local void* cached_page[MAX_TABLES][MAX_COLS] = {{nullptr}};
-
-template <typename T>
-inline void assign(void* ptr, T val) {
-  *reinterpret_cast<T*>(ptr) = val;
-}
-
-template <typename T>
-inline void assign_inline_str(void* ptr, const string_view& val) {
-  reinterpret_cast<T*>(ptr)->assign(val);
-}
-
-inline void assign_prop(int data_type, void* prop_ptr, const string_view& val) {
-  try {
-    switch (data_type) {
-    case CHAR:
-      assign(prop_ptr, val.at(0));
-      break;
-    case SHORT:
-      assign(prop_ptr, short(stoi(string(val))));
-      break;
-    case INT:
-      assign(prop_ptr, stoi(string(val)));
-      break;
-    case LONG:
-      assign(prop_ptr, stoll(string(val)));
-      break;
-    case FLOAT:
-      assign(prop_ptr, stof(string(val)));
-      break;
-    case DOUBLE:
-      assign(prop_ptr, stod(string(val)));
-      break;
-    // FIXME: coupled with LDBC?
-    case STRING:
-      // assign_inline_str<ldbc::String>(prop_ptr, val);
-      // use string id (str_offset << 16 | str_len) instead of itself
-      assign(prop_ptr, stoull(string(val)));
-      break;
-    case TEXT:
-      assign_inline_str<ldbc::Text>(prop_ptr, val);
-      break;
-    case DATE:
-      assign_inline_str<ldbc::Date>(prop_ptr, val);
-      break;
-    case DATETIME:
-      assign_inline_str<ldbc::DateTime>(prop_ptr, val);
-      break;
-    case LONGSTRING:
-      assign_inline_str<ldbc::LongString>(prop_ptr, val);
-      break;
-    default:
-      LOG(ERROR) << "Unsupported data type: " << data_type;
-    }
-  } catch (exception& e) {
-    LOG(ERROR) << "Failed to assign property: " << e.what()
-               << ", data type: " << data_type << ", value: " << val;
-  }
-}
 
 }  // namespace
 

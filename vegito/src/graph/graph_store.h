@@ -122,6 +122,9 @@ class GraphStore {
   // return true if the vertex is in the local partition, else false
   bool insert_inner_vertex(int epoch, uint64_t gid, StringViewList& vprop);
 
+  void construct_eprop(int elabel, const StringViewList& eprop,
+                       std::string& out);
+
   void add_string_buffer(size_t size);
 
   void add_vgraph(uint64_t vlabel, RGMapping* rg_map);

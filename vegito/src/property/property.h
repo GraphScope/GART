@@ -27,7 +27,10 @@
 #ifndef VEGITO_SRC_PROPERTY_PROPERTY_H_
 #define VEGITO_SRC_PROPERTY_PROPERTY_H_
 
+#include <glog/logging.h>
+
 #include "fragment/shared_storage.h"
+#include "graph/type_def.h"
 #include "seggraph/core/allocator.hpp"
 #include "util/util.h"
 
@@ -184,6 +187,55 @@ class Property {  // NOLINT(build/class)
     return nullptr;
   }
 
+  static inline void assign_prop(int data_type, void* prop_ptr,
+                                 const std::string_view& val) {
+    try {
+      switch (data_type) {
+      case CHAR:
+        assign(prop_ptr, val.at(0));
+        break;
+      case SHORT:
+        assign(prop_ptr, short(stoi(std::string(val))));
+        break;
+      case INT:
+        assign(prop_ptr, stoi(std::string(val)));
+        break;
+      case LONG:
+        assign(prop_ptr, stoll(std::string(val)));
+        break;
+      case FLOAT:
+        assign(prop_ptr, stof(std::string(val)));
+        break;
+      case DOUBLE:
+        assign(prop_ptr, stod(std::string(val)));
+        break;
+      // FIXME: coupled with LDBC?
+      case STRING:
+        // assign_inline_str<gart::graph::ldbc::String>(prop_ptr, val);
+        // use string id (str_offset << 16 | str_len) instead of itself
+        assign(prop_ptr, stoull(std::string(val)));
+        break;
+      case TEXT:
+        assign_inline_str<gart::graph::ldbc::Text>(prop_ptr, val);
+        break;
+      case DATE:
+        assign_inline_str<gart::graph::ldbc::Date>(prop_ptr, val);
+        break;
+      case DATETIME:
+        assign_inline_str<gart::graph::ldbc::DateTime>(prop_ptr, val);
+        break;
+      case LONGSTRING:
+        assign_inline_str<gart::graph::ldbc::LongString>(prop_ptr, val);
+        break;
+      default:
+        LOG(ERROR) << "Unsupported data type: " << data_type;
+      }
+    } catch (std::exception& e) {
+      LOG(ERROR) << "Failed to assign property: " << e.what()
+                 << ", data type: " << data_type << ", value: " << val;
+    }
+  }
+
  protected:
   explicit Property(uint64_t max_items)
       : max_items_(max_items), header_(0), stable_header_(0) {}
@@ -225,5 +277,16 @@ class Property {  // NOLINT(build/class)
   volatile uint64_t stable_header_;
   uint64_t padding3_[8];
 #endif
+
+ private:
+  template <typename T>
+  static inline void assign(void* ptr, T val) {
+    *reinterpret_cast<T*>(ptr) = val;
+  }
+
+  template <typename T>
+  static inline void assign_inline_str(void* ptr, const std::string_view& val) {
+    reinterpret_cast<T*>(ptr)->assign(val);
+  }
 };      // NOLINT(readability/braces)
 #endif  // VEGITO_SRC_PROPERTY_PROPERTY_H_

@@ -14,6 +14,7 @@
  */
 
 #include "graph/graph_ops.h"
+#include "property/property.h"
 
 using namespace std;
 
@@ -51,20 +52,12 @@ void process_add_edge(const StringViewList& cmd,
   auto dst_writer = dst_graph->create_graph_writer(write_epoch);  // write epoch
 
   // process edge properties
-  uint64_t edge_prop_bytes = graph_store->get_edge_prop_total_bytes(
-      elabel + graph_store->get_total_vertex_label_num());
-  char* prop_buffer = reinterpret_cast<char*>(malloc(edge_prop_bytes));
-  for (auto idx = 4; idx < cmd.size(); idx++) {
-    auto dtype = graph_store->get_edge_property_dtypes(
-        elabel + graph_store->get_total_vertex_label_num(), idx - 4);
-    uint64_t property_offset = graph_store->get_edge_prop_prefix_bytes(
-        elabel + graph_store->get_total_vertex_label_num(), idx - 4);
-    void* prop_ptr = prop_buffer + property_offset;
-    assign_prop(dtype, prop_ptr, graph_store, string(cmd[idx]));
-  }
-  std::string buf(prop_buffer, edge_prop_bytes);
-  std::string_view edge_data(buf);
-  free(prop_buffer);
+
+  // remove first 4 elements (epoch, elabel, src_vid, dst_vid)
+  StringViewList eprop(cmd.begin() + 4, cmd.end());
+  string buf;
+  graph_store->construct_eprop(elabel, eprop, buf);
+  string_view edge_data(buf);
 
   if (src_fid == graph_store->get_local_pid() &&
       dst_fid != graph_store->get_local_pid()) {

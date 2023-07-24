@@ -405,5 +405,36 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   return true;
 }
 
+void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
+                                 std::string& out) {
+  out.clear();
+  out.resize(get_edge_prop_total_bytes(elabel + total_vertex_label_num_));
+  uint64_t edge_prop_bytes =
+      get_edge_prop_total_bytes(elabel + total_vertex_label_num_);
+  char* prop_buffer = out.data();
+  vector<string> tmp_str(eprop.size());  // for store string_view
+  for (size_t idx = 0; idx < eprop.size(); idx++) {
+    auto dtype =
+        get_edge_property_dtypes(elabel + total_vertex_label_num_, idx);
+    uint64_t property_offset =
+        get_edge_prop_prefix_bytes(elabel + total_vertex_label_num_, idx);
+    void* prop_ptr = prop_buffer + property_offset;
+    if (dtype == STRING) {
+      auto str_len = eprop[idx].length();
+      size_t old_offset = get_string_buffer_offset();
+      char* string_buffer = get_string_buffer();
+      size_t new_offset = old_offset + str_len;
+      assert(new_offset < get_string_buffer_size());
+      memcpy(string_buffer + old_offset, eprop[idx].data(), str_len);
+      set_string_buffer_offset(new_offset);
+      uint64_t value = (old_offset << 16) | str_len;
+      tmp_str[idx] = to_string(value);
+      Property::assign_prop(dtype, prop_ptr, tmp_str[idx]);
+    } else {
+      Property::assign_prop(dtype, prop_ptr, eprop[idx]);
+    }
+  }
+}
+
 }  // namespace graph
 }  // namespace gart
