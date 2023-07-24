@@ -411,7 +411,9 @@ const void* grin_get_edge_property_value(GRIN_GRAPH g, GRIN_EDGE e,
     } else {
       int64_t fake_edata = *reinterpret_cast<int64_t*>(base_addr);
       int64_t edata_offset = fake_edata >> 16;
-      return _g->GetStringBuffer() + edata_offset;
+      int64_t edata_len = fake_edata & 0xffff;
+      std::string tmp_str(_g->GetStringBuffer() + edata_offset, edata_len);
+      return tmp_str.c_str();
     }
   } else {
     auto offset = _g->edge_prop_offsets[e_type_id][prop_id - 1];
@@ -420,7 +422,9 @@ const void* grin_get_edge_property_value(GRIN_GRAPH g, GRIN_EDGE e,
     } else {
       int64_t fake_edata = *reinterpret_cast<int64_t*>(base_addr + offset);
       int64_t edata_offset = fake_edata >> 16;
-      return _g->GetStringBuffer() + edata_offset;
+      int64_t edata_len = fake_edata & 0xffff;
+      std::string tmp_str(_g->GetStringBuffer() + edata_offset, edata_len);
+      return tmp_str.c_str();
     }
   }
 }
