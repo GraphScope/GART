@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
+#include <vineyard/common/util/json.h>
 #include <yaml-cpp/emittermanip.h>
+#include <yaml-cpp/yaml.h>
+
 #include <fstream>
+#include <iterator>
 #include <string>
 
-#include "vineyard/common/util/json.h"
-#include "yaml-cpp/yaml.h"
-
-using namespace std;
-using namespace vineyard;
+using std::cerr;
+using std::endl;
+using std::string;
+using vineyard::json;
 
 void parse_json(const string& json_file, const string& yaml_file) {
   // check if the file exists and can be parsed
@@ -105,7 +108,7 @@ void parse_json(const string& json_file, const string& yaml_file) {
   out << YAML::Key << "edgeMappings";
   out << YAML::Value << YAML::BeginMap << YAML::Key << "edge_types";
   out << YAML::Value << YAML::BeginSeq;
-  for (int idx = vertex_label_num; idx < int(types.size()); ++idx) {
+  for (size_t idx = vertex_label_num; idx < types.size(); ++idx) {
     out << YAML::BeginMap;
 
     auto type = types[idx]["type"].get<std::string>();

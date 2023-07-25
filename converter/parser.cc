@@ -13,16 +13,25 @@
  * limitations under the License.
  */
 
-#include "parser.h"
+#include "converter/parser.h"
 
 #include <glog/logging.h>
+#include <vineyard/common/util/json.h>
+#include <yaml-cpp/yaml.h>
+
 #include <fstream>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "vineyard/common/util/json.h"
-#include "yaml-cpp/yaml.h"
+using std::ifstream;
+using std::string;
+using std::vector;
 
-using namespace std;
-using json = vineyard::json;
+using std::make_pair;
+using std::to_string;
+
+using vineyard::json;
 
 namespace {
 template <typename T>

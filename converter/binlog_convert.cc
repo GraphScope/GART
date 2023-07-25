@@ -13,12 +13,23 @@
  * limitations under the License.
  */
 
-#include "flags.h"         // NOLINT(build/include_subdir)
-#include "kafka_helper.h"  // NOLINT(build/include_subdir)
-#include "parser.h"
+#include "converter/flags.h"
+#include "converter/kafka_helper.h"
+#include "converter/parser.h"
 
-using namespace std;
-using namespace converter;
+using converter::KafkaConsumer;
+using converter::KafkaOutputStream;
+using converter::KafkaProducer;
+using converter::LogEntry;
+using converter::TxnLogParser;
+
+using std::shared_ptr;
+using std::string;
+
+using std::cout;
+using std::endl;
+using std::flush;
+using std::make_shared;
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);

@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef CONVERTER_HELPER_H_
-#define CONVERTER_HELPER_H_
+#ifndef CONVERTER_KAFKA_HELPER_H_
+#define CONVERTER_KAFKA_HELPER_H_
+
+#include <glog/logging.h>
+#include <librdkafka/rdkafkacpp.h>
 
 #include <iostream>
 #include <memory>
-
-#include "glog/logging.h"
-#include "librdkafka/rdkafkacpp.h"
+#include <string>
 
 namespace converter {
 
@@ -202,4 +203,4 @@ class KafkaConsumer {
 
 }  // namespace converter
 
-#endif  // CONVERTER_HELPER_H_
+#endif  // CONVERTER_KAFKA_HELPER_H_

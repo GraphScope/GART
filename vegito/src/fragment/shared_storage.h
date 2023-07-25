@@ -16,18 +16,21 @@
 #ifndef VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
 #define VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
 
-#include "vineyard/common/util/json.h"
-#include "vineyard/common/util/uuid.h"
+#include <vineyard/common/util/json.h>
+#include <vineyard/common/util/uuid.h>
+
+#include <algorithm>
+#include <vector>
 
 #include "seggraph/core/blocks.hpp"
 
 namespace gart {
 
-// TODO: need to refine typedef
+// TODO(ssj): need to refine typedef
 typedef vineyard::ObjectID oid_t;  // object id for Blob
 typedef uint64_t index_t;
 
-#define get_blob_ptr(oid) ((char*) nullptr)
+#define get_blob_ptr(oid) (static_cast<char*>(nullptr))
 
 // ================== Layout ===================
 
@@ -35,7 +38,7 @@ typedef uint64_t index_t;
 // [min, max_inner) ... [min_outer, max)
 //   inner ID ->    ...    <- outer ID
 struct VTable {
-  typedef uint64_t lid_t;  // TODO: need to refine this type
+  typedef uint64_t lid_t;  // TODO(ssj): need to refine this type
 
   lid_t lids[0];
 };
@@ -170,7 +173,7 @@ struct ArrayMeta {
 struct VPropMeta {
   VPropMeta() {}
 
-  void init(uint64_t prop_id, int val_sz, bool updatable, short type) {
+  void init(uint64_t prop_id, int val_sz, bool updatable, int16_t type) {
     this->prop_id = prop_id;
     this->val_sz = val_sz;
     this->updatable = updatable;
@@ -199,8 +202,8 @@ struct VPropMeta {
   oid_t object_id;
   uintptr_t header;  // for extension
   int prop_id;
-  short val_sz;  // size of value in bytes
-  short type;
+  int16_t val_sz;  // size of value in bytes
+  int16_t type;
   bool updatable;
 };
 
@@ -284,7 +287,7 @@ class BlobSchema {
   VTableMeta vertex_table;  // indexed by vertex label
   ArrayMeta ovl2g;          // indexed by vertex label, array
 
-  // TODO: properties
+  // TODO(ssj): properties
 };
 
 }  // namespace gart

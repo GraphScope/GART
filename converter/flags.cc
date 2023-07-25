@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "flags.h"  // NOLINT(build/include_subdir)
+#include "converter/flags.h"
 
 DEFINE_string(read_kafka_broker_list, "127.0.0.1:9092",
               "Kafka broker list for reading TxnLogs.");
