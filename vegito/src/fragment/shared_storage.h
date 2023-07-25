@@ -16,11 +16,11 @@
 #ifndef VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
 #define VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
 
-#include <vineyard/common/util/json.h>
-#include <vineyard/common/util/uuid.h>
-
 #include <algorithm>
 #include <vector>
+
+#include "vineyard/common/util/json.h"
+#include "vineyard/common/util/uuid.h"
 
 #include "seggraph/core/blocks.hpp"
 

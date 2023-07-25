@@ -15,15 +15,15 @@
 
 #pragma once
 
-#include <vineyard/client/client.h>
-#include <vineyard/client/ds/blob.h>
-
 #include <sys/mman.h>
 
 #include <limits>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "vineyard/client/client.h"
+#include "vineyard/client/ds/blob.h"
 
 #include "framework/config.h"  // NOLINT(build/include_subdir)
 

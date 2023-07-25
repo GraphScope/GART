@@ -16,12 +16,12 @@
 #ifndef CONVERTER_PARSER_H_
 #define CONVERTER_PARSER_H_
 
-#include <vineyard/common/util/json.h>
-
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "vineyard/common/util/json.h"
 
 #include "vegito/src/fragment/id_parser.h"
 

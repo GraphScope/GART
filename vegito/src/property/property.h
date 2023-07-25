@@ -27,12 +27,12 @@
 #ifndef VEGITO_SRC_PROPERTY_PROPERTY_H_
 #define VEGITO_SRC_PROPERTY_PROPERTY_H_
 
-#include <glog/logging.h>
-
 #include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "glog/logging.h"
 
 #include "fragment/shared_storage.h"
 #include "graph/type_def.h"

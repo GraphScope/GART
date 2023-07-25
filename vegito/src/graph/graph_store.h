@@ -16,9 +16,6 @@
 #ifndef VEGITO_SRC_GRAPH_GRAPH_STORE_H_
 #define VEGITO_SRC_GRAPH_GRAPH_STORE_H_
 
-#include <glog/logging.h>
-#include <vineyard/basic/ds/hashmap_mvcc.h>
-
 #include <limits>
 #include <map>
 #include <memory>
@@ -27,8 +24,10 @@
 #include <utility>
 #include <vector>
 
-#include <etcd/Client.hpp>
-#include <etcd/Response.hpp>
+#include "etcd/Client.hpp"
+#include "etcd/Response.hpp"
+#include "glog/logging.h"
+#include "vineyard/basic/ds/hashmap_mvcc.h"
 
 #include "fragment/id_parser.h"
 #include "property/property_col_array.h"

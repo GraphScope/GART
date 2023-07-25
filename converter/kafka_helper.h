@@ -16,12 +16,12 @@
 #ifndef CONVERTER_KAFKA_HELPER_H_
 #define CONVERTER_KAFKA_HELPER_H_
 
-#include <glog/logging.h>
-#include <librdkafka/rdkafkacpp.h>
-
 #include <iostream>
 #include <memory>
 #include <string>
+
+#include "glog/logging.h"
+#include "librdkafka/rdkafkacpp.h"
 
 namespace converter {
 

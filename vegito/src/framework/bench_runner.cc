@@ -15,13 +15,13 @@
 
 #include "framework/bench_runner.h"
 
-#include <librdkafka/rdkafkacpp.h>
-#include <yaml-cpp/yaml.h>
-
 #include <fstream>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "librdkafka/rdkafkacpp.h"
+#include "yaml-cpp/yaml.h"
 
 #include "graph/graph_ops.h"
 
