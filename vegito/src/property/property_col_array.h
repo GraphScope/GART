@@ -36,37 +36,32 @@ class PropertyColArray : public Property {
  public:
   explicit PropertyColArray(Property::Schema schema, uint64_t max_items);
 
-  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
-
-  virtual void update(uint64_t off, const std::vector<int>& cids, char* v,
-                      uint64_t seq, uint64_t ver);
+  void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
 
   // get cursor
-  virtual std::unique_ptr<ColCursor> getColCursor(int col_id,
-                                                  uint64_t ver) const {
+  std::unique_ptr<ColCursor> getColCursor(int col_id,
+                                          uint64_t ver) const override {
     ColCursor* c = new Cursor(*this, col_id, ver);
     return std::unique_ptr<ColCursor>(c);
-  }
-
-  virtual uint64_t locateCol(int col_id, int64_t width) const {
-    assert(cols_[col_id].vlen == width);
-    return 0;
   }
 
   char* getByOffset(uint64_t offset, uint64_t version) override;
   char* getByOffset(uint64_t offset, int columnID, uint64_t version,
                     uint64_t* walk_cnt = nullptr) override;
 
-  size_t getItemNum(uint64_t lver) const;
-  const std::vector<uint64_t>& getKeyCol() const;
-  char* getFixCol(int col_id) const;
-
-  virtual char* col(int col_id, uint64_t* len = nullptr) const {
+  char* col(int col_id, uint64_t* len = nullptr) const override {
     assert(!cols_[col_id].updatable);
     if (len)
       *len = header_;
     return fixCols_[col_id];
   }
+
+  void update(uint64_t off, const std::vector<int>& cids, char* v, uint64_t seq,
+              uint64_t ver);
+
+  size_t getItemNum(uint64_t lver) const;
+  const std::vector<uint64_t>& getKeyCol() const;
+  char* getFixCol(int col_id) const;
 
  private:
   // for insert or update
@@ -97,14 +92,14 @@ class PropertyColArray : public Property {
   class Cursor : public Property::ColCursor {
    public:
     Cursor(const PropertyColArray& store, int col_id, uint64_t ver);
-    virtual void seekOffset(uint64_t begin, uint64_t end);
-    virtual bool nextRow(uint64_t* walk_cnt = nullptr);
-    virtual uint64_t key() const { return col_.key_col_[cur_]; }
-    virtual char* value() const;
+    void seekOffset(uint64_t begin, uint64_t end) override;
+    bool nextRow(uint64_t* walk_cnt = nullptr) override;
+    char* value() const override;
+    uint64_t cur() const override { return cur_; }
+    char* base() const override { return base_; }
 
-    virtual uint64_t cur() const { return cur_; }
-    virtual char* base() const { return base_; }
-    virtual uint64_t length() const { return col_.header_; }
+    uint64_t key() const { return col_.key_col_[cur_]; }
+    uint64_t length() const { return col_.header_; }
 
    private:
     const PropertyColArray& col_;

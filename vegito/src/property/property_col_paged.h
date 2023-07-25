@@ -39,41 +39,37 @@ class PropertyColPaged : public Property {
   ~PropertyColPaged();
 
   // for insert
-  virtual void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
+  void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
 
-  virtual void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
-                      uint64_t ver) override;
-
-  virtual void update(uint64_t off, const std::vector<int>& cids, char* v,
-                      uint64_t seq, uint64_t ver);
-
-  virtual void update(uint64_t off, int cid, char* v, uint64_t ver);
+  void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
+              uint64_t ver) override;
 
   // get cursor
-  virtual std::unique_ptr<ColCursor> getColCursor(int col_id,
-                                                  uint64_t ver) const override {
+  std::unique_ptr<ColCursor> getColCursor(int col_id,
+                                          uint64_t ver) const override {
     ColCursor* c = new Cursor(*this, col_id, ver);
     return std::unique_ptr<ColCursor>(c);
   }
 
-  virtual uint64_t locateCol(int col_id, int64_t width) const {
-    assert(cols_[col_id].vlen == width);
-    return 0;
-  }
+  char* getByOffset(uint64_t offset, int columnID, uint64_t version,
+                    uint64_t* walk_cnt = nullptr) override;
 
-  virtual char* getByOffset(uint64_t offset, int columnID, uint64_t version,
-                            uint64_t* walk_cnt = nullptr) override;
+  void gc(uint64_t version) override;
 
-  virtual void gc(uint64_t version) override;
-
-  const std::vector<uint64_t>& getKeyCol() const;
-
-  virtual char* col(int col_id, uint64_t* len = nullptr) const override {
+  char* col(int col_id, uint64_t* len = nullptr) const override {
     assert(!cols_[col_id].updatable);
     if (len)
       *len = header_;
     return fixCols_[col_id];
   }
+
+  void update(uint64_t off, const std::vector<int>& cids, char* v, uint64_t seq,
+              uint64_t ver);
+
+  void update(uint64_t off, int cid, char* v, uint64_t ver);
+
+  const std::vector<uint64_t>& getKeyCol() const;
+
   // return pagesize of the col
   size_t getCol(int col_id, uint64_t start_off, size_t size, uint64_t lver,
                 std::vector<char*>& pages);
@@ -167,12 +163,12 @@ class PropertyColPaged : public Property {
   class Cursor : public Property::ColCursor {
    public:
     Cursor(const PropertyColPaged& store, int col_id, uint64_t ver);
-    virtual void seekOffset(uint64_t begin, uint64_t end);
-    virtual inline bool nextRow(uint64_t* walk_cnt = nullptr);
-    virtual char* value() const { return ptr_; }
+    void seekOffset(uint64_t begin, uint64_t end) override;
+    inline bool nextRow(uint64_t* walk_cnt = nullptr) override;
+    char* value() const override { return ptr_; }
 
-    virtual uint64_t cur() const { return cur_; }
-    virtual char* base() const {
+    uint64_t cur() const override { return cur_; }
+    char* base() const override {
       assert(!update_);
       return base_;
     }
