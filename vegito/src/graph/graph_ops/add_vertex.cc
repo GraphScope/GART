@@ -16,7 +16,7 @@
 #include <cassert>
 #include "graph/graph_ops.h"
 
-using namespace std;
+using std::string;
 
 namespace {
 
@@ -38,7 +38,7 @@ void assign_prop(int data_type, void* prop_ptr, graph::GraphStore* graph_store,
       assign(prop_ptr, val.at(0));
       break;
     case SHORT:
-      assign(prop_ptr, short(std::stoi(val)));
+      assign(prop_ptr, int16_t(std::stoi(val)));
       break;
     case INT:
       assign(prop_ptr, std::stoi(val));

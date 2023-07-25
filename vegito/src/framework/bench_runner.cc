@@ -15,13 +15,24 @@
 
 #include "framework/bench_runner.h"
 
+#include <librdkafka/rdkafkacpp.h>
+#include <yaml-cpp/yaml.h>
+
 #include <fstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "graph/graph_ops.h"
-#include "librdkafka/rdkafkacpp.h"
-#include "yaml-cpp/yaml.h"
 
-using namespace std;
+using std::ifstream;
+using std::map;
+using std::string;
+using std::string_view;
+using std::vector;
+
+using std::cout;
+using std::endl;
 
 namespace {
 inline vector<string_view> splitString(const string_view& str, char delimiter) {

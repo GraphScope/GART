@@ -24,7 +24,11 @@
 
 #pragma once
 
-#include "tbb/concurrent_queue.h"
+#include <tbb/concurrent_queue.h>
+
+#include <algorithm>
+#include <tuple>
+#include <vector>
 
 #include "fragment/shared_storage.h"
 #include "graph/ddl.h"
@@ -72,8 +76,8 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     seg_mutexes = shared_mutex_allocater.allocate(max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    auto pointer_allocater = std::allocator_traits<
+        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
     vertex_ptrs = pointer_allocater.allocate(max_vertex_id);
 
     edge_label_ptrs =
@@ -104,8 +108,8 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     shared_mutex_allocater.deallocate(seg_mutexes, max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    auto pointer_allocater = std::allocator_traits<
+        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
 
     pointer_allocater.deallocate(vertex_ptrs, max_vertex_id);
 
@@ -215,7 +219,6 @@ class SegGraph {
 
   vertex_t* vertex_table;
   vertex_t* ovl2g;
-  // TODO: vineyard::Hashmap<vid_t, vid_t> ovg2l_map;
 
   vineyard::ObjectID edge_label_ptrs_oid;
   vineyard::ObjectID ovl2g_oid;

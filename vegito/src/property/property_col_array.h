@@ -27,6 +27,9 @@
 #ifndef VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_
 #define VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_
 
+#include <memory>
+#include <vector>
+
 #include "property/property.h"
 
 class PropertyColArray : public Property {

@@ -27,7 +27,7 @@
 #ifndef VEGITO_SRC_UTIL_SPINLOCK_H_
 #define VEGITO_SRC_UTIL_SPINLOCK_H_
 
-#include "atomic.h"
+#include "atomic.h"  // NOLINT(build/include_subdir)
 
 /* The counter should be initialized to be 0. */
 class SpinLock {
@@ -43,8 +43,10 @@ class SpinLock {
 
   inline void Lock() {
     while (1) {
-      if (!xchg16((uint16_t*) &lock, 1))
-        return;  // NOLINT(readability/casting)
+      uint16_t* p = const_cast<uint16_t*>(
+          reinterpret_cast<const volatile uint16_t*>(&lock));
+      if (!xchg16(p, 1))
+        return;
 
       while (lock)
         cpu_relax();
@@ -57,7 +59,9 @@ class SpinLock {
   }
 
   inline uint16_t Trylock() {
-    return xchg16((uint16_t*) &lock, 1);  // NOLINT(readability/casting)
+    uint16_t* p = const_cast<uint16_t*>(
+        reinterpret_cast<const volatile uint16_t*>(&lock));
+    return xchg16(p, 1);
   }
 
   inline uint16_t IsLocked() { return lock; }

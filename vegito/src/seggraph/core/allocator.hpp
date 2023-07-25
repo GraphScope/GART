@@ -15,10 +15,15 @@
 
 #pragma once
 
+#include <vineyard/client/client.h>
+#include <vineyard/client/ds/blob.h>
+
 #include <sys/mman.h>
 
-#include "vineyard/client/client.h"
-#include "vineyard/client/ds/blob.h"
+#include <limits>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "framework/config.h"  // NOLINT(build/include_subdir)
 
@@ -28,7 +33,7 @@ template <typename T>
 struct SparseArrayAllocator {
   using value_type = T;
 
-  SparseArrayAllocator(bool init_client = true)
+  explicit SparseArrayAllocator(bool init_client = true)
       : client(init_client ? new vineyard::Client : nullptr), copied(false) {
     if (init_client) {
       std::string ipc_socket = gart::framework::config.getIPCScoket();

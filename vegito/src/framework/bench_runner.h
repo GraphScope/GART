@@ -16,6 +16,8 @@
 #ifndef VEGITO_SRC_FRAMEWORK_BENCH_RUNNER_H_
 #define VEGITO_SRC_FRAMEWORK_BENCH_RUNNER_H_
 
+#include <vector>
+
 #include "graph/ddl.h"
 #include "graph/graph_store.h"
 

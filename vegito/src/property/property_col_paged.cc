@@ -29,8 +29,8 @@
 
 #define LAZY_PAGE_ALLOC 1
 
-using namespace std;
-using namespace gart::graph;
+using gart::graph::GraphStore;
+using std::vector;
 
 namespace {
 constexpr uint32_t MAX_POOL = 1;
@@ -177,7 +177,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       flexCols_[i].old_pages.assign(page_num, nullptr);
       size_t total_sz = FlexColHeader::size(page_num) +
                         page_num * (sizeof(Page) + page_sz * vlen);
-      // TODO: (hardcode) 1.5 is 1x init pages + 0.5x MVCC pages
+      // TODO(ssj): (hardcode) 1.5 is 1x init pages + 0.5x MVCC pages
       total_sz *= 1.5;
       // printf(
       //     "Vlabel %d column %d (flex), "

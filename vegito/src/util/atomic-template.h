@@ -25,6 +25,7 @@
  */
 
 /* The following code may be included multiple times in a single file. */
+// NOLINT(build/header_guard)
 
 #if DATA_BITS == 64
 #define DATA_TYPE uint64_t

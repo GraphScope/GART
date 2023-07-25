@@ -14,12 +14,16 @@
  */
 
 #include "graph/graph_store.h"
-#include <cstddef>
 
-using namespace std;
+using std::allocator_traits;
+using std::map;
+using std::numeric_limits;
+using std::string;
+using std::vector;
+
+using std::to_string;
 
 namespace {
-
 struct PropDef {
   PropertyStoreDataType dtype;
   int id;
@@ -29,10 +33,13 @@ struct PropDef {
     using json = vineyard::json;
     json res;
     string type_str[] = {
-        "INVALID",     "BOOL",      "CHAR",       "SHORT",       "INT",    // 4
-        "LONG",        "FLOAT",     "DOUBLE",     "STRING",      "BYTES",  // 9
-        "INT_LIST",    "LONG_LIST", "FLOAT_LIST", "DOUBLE_LIST",           // 13
-        "STRING_LIST", "DATE",      "DATETIME",   "LONGSTRING",  "TEXT"    // 18
+        "INVALID",     "BOOL",      "CHAR",       "SHORT",
+        "INT",  // 4
+        "LONG",        "FLOAT",     "DOUBLE",     "STRING",
+        "BYTES",                                                  // 9
+        "INT_LIST",    "LONG_LIST", "FLOAT_LIST", "DOUBLE_LIST",  // 13
+        "STRING_LIST", "DATE",      "DATETIME",   "LONGSTRING",
+        "TEXT"  // 18
     };
     res["data_type"] = type_str[dtype];
     res["id"] = id;

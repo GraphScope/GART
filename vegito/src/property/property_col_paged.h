@@ -27,6 +27,9 @@
 #ifndef VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_
 #define VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_
 
+#include <memory>
+#include <vector>
+
 #include "property/property.h"
 
 class PropertyColPaged : public Property {

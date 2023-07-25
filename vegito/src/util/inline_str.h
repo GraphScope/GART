@@ -29,6 +29,7 @@ of
 #define VEGITO_SRC_UTIL_INLINE_STR_H_
 
 #include <cstring>
+#include <string>
 
 #include "util/serializer.h"
 

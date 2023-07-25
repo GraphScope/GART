@@ -91,15 +91,15 @@ static __inline__ uint8_t atomic_cmpxchg8b(uint32_t* memp, uint32_t old0,
 }
 
 #define DATA_BITS 8
-#include "atomic-template.h"
+#include "atomic-template.h"  // NOLINT
 
 #define DATA_BITS 16
-#include "atomic-template.h"  // NOLINT(build/include)
+#include "atomic-template.h"  // NOLINT
 
 #define DATA_BITS 32
-#include "atomic-template.h"  // NOLINT(build/include)
+#include "atomic-template.h"  // NOLINT
 
 #define DATA_BITS 64
-#include "atomic-template.h"  // NOLINT(build/include)
+#include "atomic-template.h"  // NOLINT
 
 #endif  // VEGITO_SRC_UTIL_ATOMIC_H_

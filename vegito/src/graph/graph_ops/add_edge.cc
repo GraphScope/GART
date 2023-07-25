@@ -16,12 +16,15 @@
 #include "graph/graph_ops.h"
 #include "property/property.h"
 
-using namespace std;
+// using namespace std;
+
+using seggraph::SegGraph;
+using seggraph::vertex_t;
+using std::string;
+using std::string_view;
 
 namespace gart {
 namespace graph {
-using SegGraph = seggraph::SegGraph;
-using vertex_t = seggraph::vertex_t;
 
 void process_add_edge(const StringViewList& cmd,
                       graph::GraphStore* graph_store) {

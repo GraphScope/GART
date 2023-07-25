@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "seggraph/core/segment_graph.hpp"
 
 namespace seggraph {

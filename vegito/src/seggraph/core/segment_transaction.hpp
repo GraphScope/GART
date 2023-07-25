@@ -24,9 +24,15 @@
 
 #pragma once
 
-#include "seggraph/core/segment_graph.hpp"
-
 #include <deque>
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#include "seggraph/core/segment_graph.hpp"
 
 namespace seggraph {
 class SegTransaction {

@@ -16,10 +16,19 @@
 #ifndef VEGITO_SRC_GRAPH_GRAPH_STORE_H_
 #define VEGITO_SRC_GRAPH_GRAPH_STORE_H_
 
-#include "etcd/Client.hpp"
-#include "etcd/Response.hpp"
-#include "glog/logging.h"
-#include "vineyard/basic/ds/hashmap_mvcc.h"
+#include <glog/logging.h>
+#include <vineyard/basic/ds/hashmap_mvcc.h>
+
+#include <limits>
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <etcd/Client.hpp>
+#include <etcd/Response.hpp>
 
 #include "fragment/id_parser.h"
 #include "property/property_col_array.h"
@@ -397,7 +406,7 @@ class GraphStore {
       key_lid_map_[MAX_VLABELS];  // key -> local id
 
   // for string buffer
-  // TODO: now a global string buffer, need to refine for each column
+  // TODO(ssj): now a global string buffer, need to refine for each column
   char* string_buffer_;
   size_t string_buffer_size_;
   size_t string_buffer_offset_;

@@ -29,6 +29,11 @@
 
 #include <glog/logging.h>
 
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "fragment/shared_storage.h"
 #include "graph/type_def.h"
 #include "seggraph/core/allocator.hpp"
@@ -195,7 +200,7 @@ class Property {  // NOLINT(build/class)
         assign(prop_ptr, val.at(0));
         break;
       case SHORT:
-        assign(prop_ptr, short(stoi(std::string(val))));
+        assign(prop_ptr, int16_t(stoi(std::string(val))));
         break;
       case INT:
         assign(prop_ptr, stoi(std::string(val)));

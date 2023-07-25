@@ -25,6 +25,7 @@
 #pragma once
 
 #include <cassert>
+#include <utility>
 
 #include "seggraph/core/bloom_filter.hpp"
 #include "seggraph/core/utils.hpp"
@@ -347,14 +348,16 @@ class EdgeBlockHeader : public N2OBlockHeader {
     size_t block_size = get_block_size();
     if (get_order() >= BLOOM_FILTER_THRESHOLD)
       block_size -= block_size >> BLOOM_FILTER_PORTION;
-    return (EdgeEntry*) ((uint8_t*) this + block_size);
+    return reinterpret_cast<const EdgeEntry*>(
+        reinterpret_cast<const uint8_t*>(this) + block_size);
   }
 
   EdgeEntry* get_entries() {
     size_t block_size = get_block_size();
     if (get_order() >= BLOOM_FILTER_THRESHOLD)
       block_size -= block_size >> BLOOM_FILTER_PORTION;
-    return (EdgeEntry*) ((uint8_t*) this + block_size);
+    return reinterpret_cast<EdgeEntry*>(reinterpret_cast<uint8_t*>(this) +
+                                        block_size);
   }
 
   const BloomFilter get_bloom_filter() const {
@@ -362,8 +365,10 @@ class EdgeBlockHeader : public N2OBlockHeader {
       return BloomFilter();
     size_t block_size = get_block_size();
     size_t bloom_filter_size = block_size >> BLOOM_FILTER_PORTION;
-    return BloomFilter(bloom_filter_size,
-                       ((uint8_t*) this) + block_size - bloom_filter_size);
+    return BloomFilter(
+        bloom_filter_size,
+        (const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(this))) +
+            block_size - bloom_filter_size);
   }
 
   BloomFilter get_bloom_filter() {
@@ -371,8 +376,9 @@ class EdgeBlockHeader : public N2OBlockHeader {
       return BloomFilter();
     size_t block_size = get_block_size();
     size_t bloom_filter_size = block_size >> BLOOM_FILTER_PORTION;
-    return BloomFilter(get_order() - BLOOM_FILTER_PORTION,
-                       ((uint8_t*) this) + block_size - bloom_filter_size);
+    return BloomFilter(
+        get_order() - BLOOM_FILTER_PORTION,
+        (reinterpret_cast<uint8_t*>(this)) + block_size - bloom_filter_size);
   }
 
   void clear() {
@@ -502,12 +508,14 @@ class VegitoEdgeBlockHeader : public BlockHeader {
 
   const VegitoEdgeEntry* get_entries() const {
     size_t block_size = get_vegito_block_size();
-    return (VegitoEdgeEntry*) ((uint8_t*) this + block_size);
+    return reinterpret_cast<const VegitoEdgeEntry*>(
+        reinterpret_cast<const uint8_t*>(this) + block_size);
   }
 
   VegitoEdgeEntry* get_entries() {
     size_t block_size = get_vegito_block_size();
-    return (VegitoEdgeEntry*) ((uint8_t*) this + block_size);
+    return reinterpret_cast<VegitoEdgeEntry*>(reinterpret_cast<uint8_t*>(this) +
+                                              block_size);
   }
 
   bool has_space() const {
@@ -572,12 +580,14 @@ class EpochBlockHeader : public BlockHeader {
 
   const VegitoEpochEntry* get_entries() const {
     size_t block_size = get_block_size();
-    return (VegitoEpochEntry*) ((uint8_t*) this + block_size);
+    return reinterpret_cast<const VegitoEpochEntry*>(
+        reinterpret_cast<const uint8_t*>(this) + block_size);
   }
 
   VegitoEpochEntry* get_entries() {
     size_t block_size = get_block_size();
-    return (VegitoEpochEntry*) ((uint8_t*) this + block_size);
+    return reinterpret_cast<VegitoEpochEntry*>(
+        reinterpret_cast<uint8_t*>(this) + block_size);
   }
 
   bool has_space() const {
@@ -675,16 +685,16 @@ class VegitoSegmentHeader : public BlockHeader {
 
   const void* get_property(size_t offset, size_t edge_prop_size) {
     auto block_size = get_block_size();
-    void* data =
-        (void*) ((uintptr_t) this + block_size - (offset + 1) * edge_prop_size);
+    void* data = reinterpret_cast<void*>((uintptr_t) this + block_size -
+                                         (offset + 1) * edge_prop_size);
     return data;
   }
 
   void append_property(size_t offset, const void* edge_prop_value,
                        size_t edge_prop_size) {
     auto block_size = get_block_size();
-    void* data =
-        (void*) ((uintptr_t) this + block_size - (offset + 1) * edge_prop_size);
+    void* data = reinterpret_cast<void*>((uintptr_t) this + block_size -
+                                         (offset + 1) * edge_prop_size);
     memcpy(data, edge_prop_value, edge_prop_size);
   }
 

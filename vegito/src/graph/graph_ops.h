@@ -16,6 +16,8 @@
 #ifndef VEGITO_SRC_GRAPH_GRAPH_OPS_H_
 #define VEGITO_SRC_GRAPH_GRAPH_OPS_H_
 
+#include <string>
+
 #include "graph/graph_store.h"
 #include "graph/type_def.h"
 

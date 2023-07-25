@@ -15,7 +15,7 @@
 
 #include "graph/graph_ops.h"
 
-using namespace std;
+using std::string;
 
 namespace gart {
 namespace graph {
