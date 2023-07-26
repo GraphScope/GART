@@ -20,16 +20,17 @@ limitations under the License.
  * @param GRIN_GRAPH The graph
  * @param id The external id of int64
  * @return The vertex
-*/
-GRIN_VERTEX grin_get_vertex_by_external_id_of_int64(GRIN_GRAPH g, long long int id) {
-    auto _g = static_cast<GRIN_GRAPH_T*>(g);
-    auto gid = id; // In GART, external id equels to gid
-    _GRIN_VERTEX_T v;
-    bool res = _g->Gid2Vertex(gid, v);
-    if (res) {
-        return v.GetValue();
-    }
-    return GRIN_NULL_VERTEX;
+ */
+GRIN_VERTEX grin_get_vertex_by_external_id_of_int64(GRIN_GRAPH g,
+                                                    long long int id) {
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto gid = id;  // In GART, external id equels to gid
+  _GRIN_VERTEX_T v;
+  bool res = _g->Gid2Vertex(gid, v);
+  if (res) {
+    return v.GetValue();
+  }
+  return GRIN_NULL_VERTEX;
 }
 
 /**
@@ -37,11 +38,12 @@ GRIN_VERTEX grin_get_vertex_by_external_id_of_int64(GRIN_GRAPH g, long long int 
  * @param GRIN_GRAPH The graph
  * @param GRIN_VERTEX The vertex
  * @return The external id of int64 of the vertex
-*/
-long long int grin_get_vertex_external_id_of_int64(GRIN_GRAPH g, GRIN_VERTEX v) {
-    auto _g = static_cast<GRIN_GRAPH_T*>(g);
-    auto gid = _g->Vertex2Gid(_GRIN_VERTEX_T(v));
-    return gid;
+ */
+long long int grin_get_vertex_external_id_of_int64(GRIN_GRAPH g,
+                                                   GRIN_VERTEX v) {
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto gid = _g->Vertex2Gid(_GRIN_VERTEX_T(v));
+  return gid;
 }
 #endif
 
@@ -51,14 +53,15 @@ long long int grin_get_vertex_external_id_of_int64(GRIN_GRAPH g, GRIN_VERTEX v) 
  * @param GRIN_GRAPH The graph
  * @param id The external id of string
  * @return The vertex
-*/
-GRIN_VERTEX grin_get_vertex_by_external_id_of_string(GRIN_GRAPH, const char* id);
+ */
+GRIN_VERTEX grin_get_vertex_by_external_id_of_string(GRIN_GRAPH,
+                                                     const char* id);
 
 /**
  * @brief Get the external id of string of a vertex
  * @param GRIN_GRAPH The graph
  * @param GRIN_VERTEX The vertex
  * @return The external id of string of the vertex
-*/
+ */
 const char* grin_get_vertex_external_id_of_string(GRIN_GRAPH, GRIN_VERTEX);
 #endif

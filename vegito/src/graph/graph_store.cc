@@ -39,7 +39,7 @@ struct PropDef {
         "BYTES",                                                  // 9
         "INT_LIST",    "LONG_LIST", "FLOAT_LIST", "DOUBLE_LIST",  // 13
         "STRING_LIST", "DATE",      "DATETIME",   "TIME",         // 17
-        "TIMESTAMP"  // 18
+        "TIMESTAMP"                                               // 18
     };
     res["data_type"] = type_str[dtype];
     res["id"] = id;
@@ -176,8 +176,8 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 
   // vertex_table
   {
-    auto alloc = allocator_traits<decltype(array_allocator)>::rebind_alloc<
-        seggraph::vertex_t>(array_allocator);
+    auto alloc = allocator_traits<decltype(
+        array_allocator)>::rebind_alloc<seggraph::vertex_t>(array_allocator);
 
     vineyard::ObjectID oid;
     uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +

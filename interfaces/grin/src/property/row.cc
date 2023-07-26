@@ -16,7 +16,6 @@ limitations under the License.
 #include "grin/include/include/property/propertylist.h"
 #include "grin/include/include/property/row.h"
 
-
 #ifdef GRIN_ENABLE_ROW
 void grin_destroy_row(GRIN_GRAPH g, GRIN_ROW r) {
   auto _r = static_cast<GRIN_ROW_T*>(r);

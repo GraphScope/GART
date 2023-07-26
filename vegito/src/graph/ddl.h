@@ -16,13 +16,13 @@
 #ifndef VEGITO_SRC_GRAPH_DDL_H_
 #define VEGITO_SRC_GRAPH_DDL_H_
 
-#include <tbb/concurrent_unordered_map.h>
-
 #include <cassert>
 #include <map>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include "tbb/concurrent_unordered_map.h"
 
 #define USE_TBB_MAP 1
 

@@ -14,7 +14,7 @@
  */
 
 #include <cassert>
-#include <string>
+
 #include "graph/graph_ops.h"
 #include "graph/type_def.h"
 

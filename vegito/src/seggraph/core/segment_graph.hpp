@@ -24,15 +24,14 @@
 
 #pragma once
 
-#include <tbb/concurrent_queue.h>
-
 #include <algorithm>
 #include <tuple>
 #include <vector>
 
+#include "tbb/concurrent_queue.h"
+
 #include "fragment/shared_storage.h"
 #include "graph/ddl.h"
-
 #include "seggraph/core/allocator.hpp"
 #include "seggraph/core/block_manager.hpp"
 #include "seggraph/core/futex.hpp"
@@ -76,8 +75,8 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     seg_mutexes = shared_mutex_allocater.allocate(max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<
-        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    auto pointer_allocater = std::allocator_traits<decltype(
+        array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
     vertex_ptrs = pointer_allocater.allocate(max_vertex_id);
 
     edge_label_ptrs =
@@ -108,8 +107,8 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     shared_mutex_allocater.deallocate(seg_mutexes, max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<
-        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    auto pointer_allocater = std::allocator_traits<decltype(
+        array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
 
     pointer_allocater.deallocate(vertex_ptrs, max_vertex_id);
 

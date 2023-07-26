@@ -114,7 +114,6 @@ GRIN_ADJACENT_LIST grin_get_adjacent_list_select_partition_neighbor(
 #if defined(GRIN_TRAIT_SELECT_NEIGHBOR_PARTITION_FOR_ADJACENT_LIST) && \
     defined(GRIN_WITH_VERTEX_PROPERTY)
 GRIN_ADJACENT_LIST
-    grin_get_adjacent_list_by_edge_type_select_partition_neighbor(
-        GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_EDGE_TYPE,
-        GRIN_PARTITION);
+grin_get_adjacent_list_by_edge_type_select_partition_neighbor(
+    GRIN_GRAPH, GRIN_DIRECTION, GRIN_VERTEX, GRIN_EDGE_TYPE, GRIN_PARTITION);
 #endif

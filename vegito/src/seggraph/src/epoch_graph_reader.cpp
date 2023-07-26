@@ -14,7 +14,6 @@
  */
 
 #include "seggraph/core/epoch_graph_reader.hpp"
-
 #include "seggraph/core/edge_iterator.hpp"
 
 using VegitoSegmentHeader = seggraph::VegitoSegmentHeader;

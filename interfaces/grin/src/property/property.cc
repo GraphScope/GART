@@ -172,8 +172,9 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
                                                      GRIN_VERTEX v,
                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->template GetData<std::string>(_GRIN_VERTEX_T(v),
-                                           _grin_get_prop_from_property(vp))
+  return _g
+      ->template GetData<std::string>(_GRIN_VERTEX_T(v),
+                                      _grin_get_prop_from_property(vp))
       .c_str();
 }
 
