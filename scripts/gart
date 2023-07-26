@@ -130,7 +130,7 @@ while [ : ]; do
 done
 
 # set default port
-if $set_port && [ "$db_type" == "postgresql" ]; then
+if [ !$set_port ] && [ "$db_type" == "postgresql" ]; then
     db_port=5432
 fi
 
