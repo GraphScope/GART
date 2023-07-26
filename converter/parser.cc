@@ -56,8 +56,22 @@ inline void append_str<string>(string& base, const string& append,
 
 namespace converter {
 
+LogEntry LogEntry::bulk_load_end() {
+  LogEntry entry;
+  entry.valid = true;
+  entry.epoch = 1;  // epoch 1 means bulk load end
+  entry.op_type = OpType::BULKLOAD_END;
+  return entry;
+}
+
 string LogEntry::to_string() const {
   string base;
+  if (op_type == OpType::BULKLOAD_END) {
+    base = "bulkload_end";
+    append_str(base, epoch);
+    return base;
+  }
+
   base = op_type == OpType::INSERT   ? "add"
          : op_type == OpType::UPDATE ? "update"
          : op_type == OpType::DELETE ? "delete"
@@ -67,6 +81,7 @@ string LogEntry::to_string() const {
   } else {
     append_str(base, string("edge"), '_');
   }
+
   append_str(base, epoch);
 
   if (entity_type == EntityType::VERTEX) {
@@ -237,14 +252,6 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   }
 
   fill_prop(out, log);
-
-  out.bulkload_ended = true;
-#ifdef USE_DEBEZIUM
-  // TODO(wanglei): currently only debezium support bulkload
-  if (type == "r") {
-    out.bulkload_ended = false;
-  }
-#endif
 
   out.valid = true;
   return;

@@ -392,6 +392,12 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
     latest_epoch_ = cur_epoch;
   }
 
+  if (op == "bulkload_end") {
+    cout << "Completion of bulkload and transition to epoch " << cur_epoch
+         << endl;
+    return;
+  }
+
   sv_vec.erase(sv_vec.begin(), sv_vec.begin() + 1);
 
   if (op == "add_vertex") {

@@ -29,13 +29,12 @@ namespace converter {
 
 struct LogEntry {
   enum class EntityType { VERTEX, EDGE };
-  enum class OpType { INSERT, UPDATE, DELETE, UNKNOWN };
+  enum class OpType { INSERT, UPDATE, DELETE, BULKLOAD_END, UNKNOWN };
 
   std::string to_string() const;
 
   // log status
   bool valid;
-  bool bulkload_ended;  // true: bulkload has been done
   bool update_has_finish_delete;
 
   // log content
@@ -53,6 +52,8 @@ struct LogEntry {
     } edge;
   };
   std::vector<std::string> properties;
+
+  static LogEntry bulk_load_end();
 };
 
 class TxnLogParser {

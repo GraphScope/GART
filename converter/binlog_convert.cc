@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <fstream>
+
 #include "converter/flags.h"
 #include "converter/kafka_helper.h"
 #include "converter/parser.h"
@@ -23,6 +25,7 @@ using converter::KafkaProducer;
 using converter::LogEntry;
 using converter::TxnLogParser;
 
+using std::ifstream;
 using std::shared_ptr;
 using std::string;
 
@@ -30,6 +33,41 @@ using std::cout;
 using std::endl;
 using std::flush;
 using std::make_shared;
+
+#ifdef USE_DEBEZIUM
+namespace {
+inline bool check_snapshot_complete() {
+  const string KAFKA_HOME(std::getenv("KAFKA_HOME"));
+  if (KAFKA_HOME.empty()) {
+    LOG(ERROR) << "KAFKA_HOME is not set";
+    return false;
+  }
+
+  const string LOG_PATH(KAFKA_HOME + "/logs/connect.log");
+  ifstream file(LOG_PATH.c_str());
+  if (!file) {
+    LOG(ERROR) << "Failed to open file: " << LOG_PATH;
+    return false;
+  }
+
+  bool found = false;
+  string line;
+
+  while (std::getline(file, line)) {
+    if (line.find("worker initializing") != string::npos) {
+      found = false;  // start a new round
+    }
+
+    // same flags: "snapshotCompleted=true" (only for MySQL),
+    if (line.find("Snapshot completed") != string::npos) {
+      found = true;
+    }
+  }
+
+  return found;
+}
+}  // namespace
+#endif  // USE_DEBEZIUM
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
@@ -44,6 +82,7 @@ int main(int argc, char** argv) {
   TxnLogParser parser(FLAGS_rg_mapping_file_path, FLAGS_subgraph_num);
 
   int log_count = 0;
+  bool is_timeout = false;
 
 #ifdef USE_DEBEZIUM
   // bulk load data
@@ -51,10 +90,20 @@ int main(int argc, char** argv) {
     cout << "Bulk load data start" << endl;
     int init_logs = 0;
     while (1) {
-      RdKafka::Message* msg = consumer->consume();
-      // skip empty message to avoid JSON parser error
-      if (msg->len() == 0) {
-        continue;
+      RdKafka::Message* msg = consumer->consume(&is_timeout);
+
+      if (is_timeout) {
+        // check snapshot complete
+        if (init_logs > 0 && check_snapshot_complete()) {
+          cout << "Bulk load data finished: " << init_logs << " logs" << endl;
+          log_count = FLAGS_logs_per_epoch;  // for the first epoch
+          ostream << LogEntry::bulk_load_end().to_string() << flush;
+          break;
+        } else {
+          // skip empty message to avoid JSON parser error
+          cout << "Waiting for snapshot complete" << endl;
+          continue;
+        }
       }
 
       string line(static_cast<const char*>(msg->payload()), msg->len());
@@ -67,24 +116,17 @@ int main(int argc, char** argv) {
       if (init_logs % 100000 == 0 && init_logs) {
         cout << "Bulk load data: " << init_logs << " logs" << endl;
       }
-      if (log_entry.bulkload_ended) {
-        log_entry.epoch = 1;
-        log_count = FLAGS_logs_per_epoch + 1;
-        ostream << log_entry.to_string() << flush;
-        break;
-      }
 
       ostream << log_entry.to_string() << flush;
     }
-    cout << "Bulk load data finished: " << init_logs << " logs" << endl;
   }
 #endif
 
   while (1) {
-    RdKafka::Message* msg = consumer->consume();
+    RdKafka::Message* msg = consumer->consume(&is_timeout);
 
     // skip empty message to avoid JSON parser error
-    if (msg->len() == 0) {
+    if (is_timeout) {
       continue;
     }
 

@@ -180,12 +180,38 @@ class KafkaConsumer {
     }
   }
 
-  RdKafka::Message* consume(int timeout_ms = 1000) const {
+  RdKafka::Message* consume(bool* is_timeout = nullptr,
+                            int timeout_ms = 1000) const {
     RdKafka::Message* msg =
         consumer_->consume(topic_ptr_, partition_, timeout_ms);
     if (msg == nullptr) {
       LOG(ERROR) << "Failed to consume message";
     }
+
+    if (msg->err() == RdKafka::ERR__PARTITION_EOF) {
+      LOG(ERROR) << "Reached the end of the queue";
+      return nullptr;
+    } else if (msg->err() != RdKafka::ERR__TIMED_OUT &&
+               msg->err() != RdKafka::ERR_NO_ERROR) {
+      LOG(ERROR) << "Failed to consume message: "
+                 << RdKafka::err2str(msg->err());
+      return nullptr;
+    }
+
+    if (msg->err() == RdKafka::ERR_NO_ERROR && msg->len() == 0) {
+      LOG(ERROR) << "Received message (" << msg->len() << " bytes)";
+      return nullptr;
+    }
+
+    if (msg->err() == RdKafka::ERR__TIMED_OUT) {
+      LOG(INFO) << "Timed out";
+      if (is_timeout)
+        *is_timeout = true;
+    } else {
+      if (is_timeout)
+        *is_timeout = false;
+    }
+
     return msg;
   }
 
