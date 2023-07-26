@@ -64,8 +64,8 @@ enum PropertyStoreDataType {
   STRING_LIST = 14,
   DATE = 15,
   DATETIME = 16,
-  LONGSTRING = 17,
-  TEXT = 18
+  TIME = 17,
+  TIMESTAMP = 18
 };
 
 // multi-version store
@@ -221,10 +221,16 @@ class Property {  // NOLINT(build/class)
         assign(prop_ptr, stoull(std::string(val)));
         break;
       case DATE:
-        assign_inline_str<gart::graph::ldbc::Date>(prop_ptr, val);
+        assign(prop_ptr, stoi(std::string(val)));
         break;
       case DATETIME:
-        assign_inline_str<gart::graph::ldbc::DateTime>(prop_ptr, val);
+        assign(prop_ptr, stoll(std::string(val)));
+        break;
+      case TIME:
+        assign(prop_ptr, stoll(std::string(val)));
+        break;
+      case TIMESTAMP:
+        assign_inline_str<gart::graph::ldbc::TimeStamp>(prop_ptr, val);
         break;
       default:
         LOG(ERROR) << "Unsupported data type: " << data_type;

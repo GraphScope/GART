@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include "framework/bench_runner.h"
-
 #include <fstream>
 #include <string>
 #include <utility>
@@ -23,6 +21,7 @@
 #include "librdkafka/rdkafkacpp.h"
 #include "yaml-cpp/yaml.h"
 
+#include "framework/bench_runner.h"
 #include "graph/graph_ops.h"
 
 using std::ifstream;
@@ -202,6 +201,23 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
                      prop_dtype_str == "character varying" ||
                      prop_dtype_str == "text") {
             prop_dtype = "STRING";
+          } else if (prop_dtype_str == "timestamp" ||
+                     prop_dtype_str.rfind("timestamp(", 0) == 0 ||
+                     prop_dtype_str == "timestamp with time zone") {
+            prop_dtype = "TIMESTAMP";
+          } else if (prop_dtype_str == "timestamp without time zone") {
+            prop_dtype = "TIMESTAMP";
+          } else if (prop_dtype_str == "date") {
+            prop_dtype = "DATE";
+          } else if (prop_dtype_str == "time" ||
+                     prop_dtype_str.rfind("time(", 0) == 0 ||
+                     prop_dtype_str == "time without time zone") {
+            prop_dtype = "TIME";
+          } else if (prop_dtype_str == "time with time zone") {
+            prop_dtype = "TIME";
+          } else if (prop_dtype_str == "datetime" ||  // PostgreSQL does not support datetime
+                     prop_dtype_str.rfind("datetime(", 0) == 0) {
+            prop_dtype = "DATETIME";
           } else {
             assert(false);
           }
@@ -318,6 +334,30 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
                                                      edge_prop_prefix_bytes);
           edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::DateTime);
         }
+      } else if (prop_dtype == "TIME") {
+        graph_schema.dtype_map[{id, prop_id}] = TIME;
+        if (is_vertex) {
+          col.vtype = TIME;
+          col.vlen = sizeof(gart::graph::ldbc::Time);
+          prop_schema.cols.push_back(col);
+        } else {
+          graph_store->insert_edge_property_dtypes(id, prop_id, TIME);
+          graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
+                                                     edge_prop_prefix_bytes);
+          edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::Time);
+        }
+      } else if (prop_dtype == "TIMESTAMP") {
+          graph_schema.dtype_map[{id, prop_id}] = TIMESTAMP;
+          if (is_vertex) {
+            col.vtype = TIMESTAMP;
+            col.vlen = sizeof(gart::graph::ldbc::TimeStamp);
+            prop_schema.cols.push_back(col);
+          } else {
+            graph_store->insert_edge_property_dtypes(id, prop_id, TIMESTAMP);
+            graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
+                                                      edge_prop_prefix_bytes);
+            edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::TimeStamp);
+          }
       } else {
         assert(false);
       }

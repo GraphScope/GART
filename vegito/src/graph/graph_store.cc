@@ -38,8 +38,8 @@ struct PropDef {
         "LONG",        "FLOAT",     "DOUBLE",     "STRING",
         "BYTES",                                                  // 9
         "INT_LIST",    "LONG_LIST", "FLOAT_LIST", "DOUBLE_LIST",  // 13
-        "STRING_LIST", "DATE",      "DATETIME",   "LONGSTRING",
-        "TEXT"  // 18
+        "STRING_LIST", "DATE",      "DATETIME",   "TIME",         // 17
+        "TIMESTAMP"  // 18
     };
     res["data_type"] = type_str[dtype];
     res["id"] = id;

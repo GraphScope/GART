@@ -180,6 +180,12 @@ class GartFragment {
         } else if (dtype == "DATETIME") {
           edge_prop_offset.push_back(accum_offset + sizeof(gart::DateTime));
           edge_prop_dtype.push_back(DATETIME);
+        } else if (dtype == "TIME") {
+          edge_prop_offset.push_back(accum_offset + sizeof(gart::Time));
+          edge_prop_dtype.push_back(TIME);
+        } else if (dtype == "TIMESTAMP") {
+          edge_prop_offset.push_back(accum_offset + sizeof(gart::TimeStamp));
+          edge_prop_dtype.push_back(TIMESTAMP);
         } else {
           LOG(FATAL) << "Unsupported data type: " << dtype;
           assert(false);

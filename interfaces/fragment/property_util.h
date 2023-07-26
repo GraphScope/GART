@@ -23,10 +23,11 @@ namespace gart {
 
 using obj_id_t = vineyard::ObjectID;
 
-typedef inline_str_fixed<10> Date;  // yyyy-mm-dd
-typedef inline_str_fixed<28>
-    DateTime;  // yyyy-mm-ddTHH:MM:ss.sss+0000
-               // specificiation is yyyy-mm-ddTHH:MM:ss.sss+00:00
+typedef int Date;
+typedef int64_t DateTime;
+typedef int64_t Time;
+typedef inline_str_fixed<22> TimeStamp;
+// format for debezium: 2010-12-30T17:15:00.0Z
 
 struct VertexPropMeta {
   int prop_id;

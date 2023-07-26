@@ -14,7 +14,9 @@
  */
 
 #include <cassert>
+#include <string>
 #include "graph/graph_ops.h"
+#include "graph/type_def.h"
 
 using std::string;
 
@@ -65,10 +67,16 @@ void assign_prop(int data_type, void* prop_ptr, graph::GraphStore* graph_store,
       break;
     }
     case DATE:
-      assign(prop_ptr, ldbc::Date(val));
+      assign(prop_ptr, std::stoi(val));
       break;
     case DATETIME:
-      assign(prop_ptr, ldbc::DateTime(val));
+      assign(prop_ptr, std::stoll(val));
+      break;
+    case TIME:
+      assign(prop_ptr, std::stoll(val));
+      break;
+    case TIMESTAMP:
+      assign(prop_ptr, ldbc::TimeStamp(val));
       break;
     default:
       LOG(ERROR) << "Unsupported data type: " << data_type;

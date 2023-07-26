@@ -34,7 +34,7 @@ std::string GetDataTypeName(GRIN_DATATYPE type) {
     return "double";
   case GRIN_DATATYPE::String:
     return "string";
-  // TODO(wanglei): support date types
+  // TODO(wanglei): support timestamp
   default:
     return "undefined";
   }
@@ -48,13 +48,15 @@ GRIN_DATATYPE StringToDataType(std::string dtype_str) {
   } else if (dtype_str == "FLOAT") {
     return GRIN_DATATYPE::Float;
   } else if (dtype_str == "LONG") {
-    return GRIN_DATATYPE::UInt64;
+    return GRIN_DATATYPE::Int64;
   } else if (dtype_str == "STRING") {
     return GRIN_DATATYPE::String;
   } else if (dtype_str == "DATE") {
-    return GRIN_DATATYPE::String;
+    return GRIN_DATATYPE::Int32;
   } else if (dtype_str == "DATETIME") {
-    return GRIN_DATATYPE::String;
+    return GRIN_DATATYPE::Int64;
+  } else if (dtype_str == "TIME") {
+    return GRIN_DATATYPE::Int64;  // TODO(wanglei): support timestamp
   } else {
     GRIN_DATATYPE::Undefined;
   }

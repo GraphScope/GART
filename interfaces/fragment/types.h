@@ -46,8 +46,8 @@ enum PropertyType {
   STRING_LIST = 14,
   DATE = 15,
   DATETIME = 16,
-  LONGSTRING = 17,
-  TEXT = 18
+  TIME = 17,
+  TIMESTAMP = 18
 };
 
 #define VERTEX_PER_SEG 4096
