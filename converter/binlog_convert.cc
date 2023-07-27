@@ -34,41 +34,6 @@ using std::endl;
 using std::flush;
 using std::make_shared;
 
-#ifdef USE_DEBEZIUM
-namespace {
-inline bool check_snapshot_complete() {
-  const string KAFKA_HOME(std::getenv("KAFKA_HOME"));
-  if (KAFKA_HOME.empty()) {
-    LOG(ERROR) << "KAFKA_HOME is not set";
-    return false;
-  }
-
-  const string LOG_PATH(KAFKA_HOME + "/logs/connect.log");
-  ifstream file(LOG_PATH.c_str());
-  if (!file) {
-    LOG(ERROR) << "Failed to open file: " << LOG_PATH;
-    return false;
-  }
-
-  bool found = false;
-  string line;
-
-  while (std::getline(file, line)) {
-    if (line.find("worker initializing") != string::npos) {
-      found = false;  // start a new round
-    }
-
-    // same flags: "snapshotCompleted=true" (only for MySQL),
-    if (line.find("Snapshot completed") != string::npos) {
-      found = true;
-    }
-  }
-
-  return found;
-}
-}  // namespace
-#endif  // USE_DEBEZIUM
-
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -93,28 +58,27 @@ int main(int argc, char** argv) {
       RdKafka::Message* msg = consumer->consume(&is_timeout);
 
       if (is_timeout) {
-        // check snapshot complete
-        if (init_logs > 0 && check_snapshot_complete()) {
-          cout << "Bulk load data finished: " << init_logs << " logs" << endl;
-          log_count = FLAGS_logs_per_epoch;  // for the first epoch
-          ostream << LogEntry::bulk_load_end().to_string() << flush;
-          break;
-        } else {
-          // skip empty message to avoid JSON parser error
-          cout << "Waiting for snapshot complete" << endl;
-          continue;
-        }
+        // skip empty message to avoid JSON parser error
+        cout << "Waiting for snapshot complete" << endl;
+        continue;
       }
 
       string line(static_cast<const char*>(msg->payload()), msg->len());
       LogEntry log_entry;
       parser.parse(log_entry, line, 0);
       ++init_logs;
-      if (!log_entry.valid) {
+      if (!log_entry.valid()) {
         continue;
       }
       if (init_logs % 100000 == 0 && init_logs) {
         cout << "Bulk load data: " << init_logs << " logs" << endl;
+      }
+
+      if (log_entry.last_snapshot()) {
+        cout << "Bulk load data finished: " << init_logs << " logs" << endl;
+        log_count = FLAGS_logs_per_epoch;  // for the first epoch
+        ostream << LogEntry::bulk_load_end().to_string() << flush;
+        break;
       }
 
       ostream << log_entry.to_string() << flush;
@@ -136,7 +100,7 @@ int main(int argc, char** argv) {
     LogEntry log_entry;
     log_entry.update_has_finish_delete = false;
     parser.parse(log_entry, line, epoch);
-    if (!log_entry.valid) {
+    if (!log_entry.valid()) {
       continue;
     }
 

@@ -27,15 +27,22 @@
 
 namespace converter {
 
-struct LogEntry {
-  enum class EntityType { VERTEX, EDGE };
-  enum class OpType { INSERT, UPDATE, DELETE, BULKLOAD_END, UNKNOWN };
+class LogEntry {
+ public:
+  static LogEntry bulk_load_end();
 
   std::string to_string() const;
 
-  // log status
-  bool valid;
+  bool valid() const { return valid_; }
+
+  bool last_snapshot() const { return snapshot == Snapshot::LAST; }
+
   bool update_has_finish_delete;
+
+ private:
+  enum class EntityType { VERTEX, EDGE };
+  enum class OpType { INSERT, UPDATE, DELETE, BULKLOAD_END, UNKNOWN };
+  enum class Snapshot { FALSE, TRUE, LAST, OTHER };
 
   // log content
   EntityType entity_type;
@@ -53,7 +60,11 @@ struct LogEntry {
   };
   std::vector<std::string> properties;
 
-  static LogEntry bulk_load_end();
+  // log status (meta-data)
+  bool valid_;
+  Snapshot snapshot;
+
+  friend class TxnLogParser;
 };
 
 class TxnLogParser {

@@ -58,7 +58,7 @@ namespace converter {
 
 LogEntry LogEntry::bulk_load_end() {
   LogEntry entry;
-  entry.valid = true;
+  entry.valid_ = true;
   entry.epoch = 1;  // epoch 1 means bulk load end
   entry.op_type = OpType::BULKLOAD_END;
   return entry;
@@ -180,7 +180,7 @@ void TxnLogParser::init(const string& rgmapping_file, int subgraph_num) {
 
 void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   out.properties.clear();
-  out.valid = false;
+  out.valid_ = false;
   out.epoch = epoch;
 
   // parse JSON
@@ -192,22 +192,23 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     return;
   }
 
-// skip unused tables
+  string table_name, type;
 #ifndef USE_DEBEZIUM
-  string table_name = log["table"].get<string>();
+  table_name = log["table"].get<string>();
 #else
-  string table_name = log["source"]["table"].get<string>();
+  table_name = log["source"]["table"].get<string>();
 #endif
   auto table2vlabel_it = table2vlabel_.find(table_name);
   auto table2elabel_it = table2elabel_.find(table_name);
   if (table2vlabel_it == table2vlabel_.end() &&
       table2elabel_it == table2elabel_.end()) {
+    // skip unused tables
     return;
   }
 #ifndef USE_DEBEZIUM
-  string type = log["type"].get<string>();
+  type = log["type"].get<string>();
 #else
-  string type = log["op"].get<string>();
+  type = log["op"].get<string>();
 #endif
   if (table2elabel_it != table2elabel_.end()) {
     if (table2vlabel_it != table2vlabel_.end()) {
@@ -224,12 +225,34 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
                 : type == "update" ? LogEntry::OpType::UPDATE
                 : type == "delete" ? LogEntry::OpType::DELETE
                                    : LogEntry::OpType::UNKNOWN;
+  out.snapshot = LogEntry::Snapshot::FALSE;
 #else
   out.op_type = type == "c"   ? LogEntry::OpType::INSERT
                 : type == "u" ? LogEntry::OpType::UPDATE
                 : type == "d" ? LogEntry::OpType::DELETE
                 : type == "r" ? LogEntry::OpType::INSERT
                               : LogEntry::OpType::UNKNOWN;
+
+  // Special snapshot status during snapshot:
+  // first: firstRecordInTable && firstTable
+  // last: lastRecordInTable && lastTable
+  // first_in_data_collection: firstRecordInTable
+  // last_in_data_collection: lastRecordInTable
+  string snapshot = log["source"]["snapshot"].get<string>();
+  out.snapshot = snapshot == "last"    ? LogEntry::Snapshot::LAST
+                 : snapshot == "true"  ? LogEntry::Snapshot::TRUE
+                 : snapshot == "false" ? LogEntry::Snapshot::FALSE
+                                       : LogEntry::Snapshot::OTHER;
+
+  if (type == "r" && snapshot == "false") {
+    LOG(ERROR) << "Invalid operation type " << type
+               << ", when snapshot status is " << snapshot;
+    return;
+  }
+
+  if (out.snapshot == LogEntry::Snapshot::OTHER) {
+    LOG(INFO) << "Other snapshot status: " << snapshot;
+  }
 #endif
   if (out.op_type == LogEntry::OpType::UNKNOWN) {
     LOG(ERROR) << "Unknown operation type: " << type;
@@ -253,7 +276,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
 
   fill_prop(out, log);
 
-  out.valid = true;
+  out.valid_ = true;
   return;
 }
 
