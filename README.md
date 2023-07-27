@@ -242,10 +242,9 @@ You can stop GART by:
 - Lanch GART
     ```
     export KAFKA_HOME=/path/to/kafka
-    export MAXWELL_HOME=/path/to/maxwell
 
     cd build
-    ./gart --user maxwell --password 123456 --db-name ldbc --v6d-sock ldbc.sock --etcd_endpoint 127.0.0.1:23760
+    ./gart --user maxwell --password 123456 --db-name ldbc --v6d-sock ldbc.sock --etcd-endpoint 127.0.0.1:23760
     ```
 
 - Start transactional data insertion
@@ -260,7 +259,7 @@ You can stop GART by:
 
 ## License
 
-GART is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Please note that third-party libraries may not have the same license as GraphScope.
+GART is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Please note that third-party libraries may not have the same license as GART.
 
 
 ## Publications
