@@ -29,6 +29,8 @@ namespace converter {
 
 class LogEntry {
  public:
+  LogEntry() : valid_(false), update_has_finish_delete(false) {}
+
   static LogEntry bulk_load_end();
 
   std::string to_string() const;
@@ -37,7 +39,9 @@ class LogEntry {
 
   bool last_snapshot() const { return snapshot == Snapshot::LAST; }
 
-  bool update_has_finish_delete;
+  // One log may produce multiple log entries
+  // Now it is only used for update (delete + insert)
+  bool more_entires() const { return update_has_finish_delete; }
 
  private:
   enum class EntityType { VERTEX, EDGE };
@@ -62,6 +66,7 @@ class LogEntry {
 
   // log status (meta-data)
   bool valid_;
+  bool update_has_finish_delete;
   Snapshot snapshot;
 
   friend class TxnLogParser;

@@ -264,6 +264,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
       out.update_has_finish_delete = true;
       out.op_type = LogEntry::OpType::DELETE;
     } else {
+      out.update_has_finish_delete = false;
       out.op_type = LogEntry::OpType::INSERT;
     }
   }
