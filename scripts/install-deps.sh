@@ -141,7 +141,6 @@ EOT
 
 #write connect-debezium-mysql.properties
 cat << EOT >> $KAFKA_CONFIG/connect-debezium-mysql.properties
-
 name=test-connector
 connector.class=io.debezium.connector.mysql.MySqlConnector
 database.hostname=<mysql host>
@@ -152,7 +151,7 @@ database.include.list=<which databse is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
 database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
-snapshot.mode=<if enable buldload, set as `initial`, otherwise set as `never`>
+snapshot.mode=<if enable buldload, set as "initial", otherwise set as "never">
 
 $COMM_CONFIG
 
@@ -160,7 +159,6 @@ EOT
 
 #write connect-debezium-postgresql.properties
 cat << EOT >> $KAFKA_CONFIG/connect-debezium-postgresql.properties
-
 name=test-connector
 connector.class=io.debezium.connector.postgresql.PostgresConnector
 database.hostname=<postgresql host>
@@ -171,7 +169,7 @@ database.dbname=<which databse is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
 database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
-snapshot.mode=<if enable buldload, set as `initial`, otherwise set as `never`>
+snapshot.mode=<if enable buldload, set as "initial", otherwise set as "never">
 
 plugin.name=pgoutput
 publication.autocreate.mode=filtered
