@@ -32,61 +32,6 @@ inline void assign(void* ptr, T val) {
 namespace gart {
 namespace graph {
 
-void assign_prop(int data_type, void* prop_ptr, graph::GraphStore* graph_store,
-                 const std::string& val) {
-  try {
-    switch (data_type) {
-    case CHAR:
-      assign(prop_ptr, val.at(0));
-      break;
-    case SHORT:
-      assign(prop_ptr, int16_t(std::stoi(val)));
-      break;
-    case INT:
-      assign(prop_ptr, std::stoi(val));
-      break;
-    case LONG:
-      assign(prop_ptr, std::stoll(val));
-      break;
-    case FLOAT:
-      assign(prop_ptr, std::stof(val));
-      break;
-    case DOUBLE:
-      assign(prop_ptr, std::stod(val));
-      break;
-    case STRING: {
-      auto str_len = val.length();
-      size_t old_offset = graph_store->get_string_buffer_offset();
-      char* string_buffer = graph_store->get_string_buffer();
-      size_t new_offset = old_offset + str_len;
-      assert(new_offset < graph_store->get_string_buffer_size());
-      memcpy(string_buffer + old_offset, val.c_str(), str_len);
-      graph_store->set_string_buffer_offset(new_offset);
-      size_t value = (old_offset << 16) | str_len;
-      assign(prop_ptr, value);
-      break;
-    }
-    case DATE:
-      assign(prop_ptr, std::stoi(val));
-      break;
-    case DATETIME:
-      assign(prop_ptr, std::stoll(val));
-      break;
-    case TIME:
-      assign(prop_ptr, std::stoll(val));
-      break;
-    case TIMESTAMP:
-      assign(prop_ptr, ldbc::TimeStamp(val));
-      break;
-    default:
-      LOG(ERROR) << "Unsupported data type: " << data_type;
-    }
-  } catch (std::exception& e) {
-    LOG(ERROR) << "Failed to assign property: " << e.what()
-               << ", data type: " << data_type << ", value: " << val;
-  }
-}
-
 void process_add_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store) {
   int write_epoch = stoi(string(cmd[0]));
