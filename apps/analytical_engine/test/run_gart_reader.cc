@@ -13,31 +13,9 @@
  * limitations under the License.
  */
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
+#include "etcd/Client.hpp"
 
-#include "gflags/gflags.h"
-#include "glog/logging.h"
-
-#include <etcd/Client.hpp>
-#include <etcd/Response.hpp>
-#include "grape/grape.h"
-#include "grape/util.h"
-#include "vineyard/client/client.h"
-#include "vineyard/common/util/json.h"
-#include "vineyard/graph/fragment/arrow_fragment.h"
-
-#include "core/context/i_context.h"
-#include "core/context/labeled_vertex_property_context.h"
-#include "core/loader/arrow_fragment_loader.h"
-#include "core/utils/transform_utils.h"
-#include "flags.h"
+#include "flags.h"  // NOLINT(build/include_subdir)
 #include "interfaces/fragment/gart_fragment.h"
 
 using GraphType = gart::GartFragment<uint64_t, uint64_t>;
@@ -71,12 +49,13 @@ uint64_t get_latest_epoch(const grape::CommSpec& comm_spec,
 }
 
 int main(int argc, char** argv) {
+  google::InitGoogleLogging(argv[0]);
+
   grape::InitMPIComm();
   {
     grape::CommSpec comm_spec;
     comm_spec.Init(MPI_COMM_WORLD);
 
-    // vineyard::ObjectID fragment_id;
     std::shared_ptr<GraphType> fragment(
         new gart::GartFragment<uint64_t, uint64_t>());
     grape::gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -129,10 +108,8 @@ int main(int argc, char** argv) {
         inner_vertices_iter.next();
       }
     }
-
     MPI_Barrier(comm_spec.comm());
   }
-
   grape::FinalizeMPIComm();
 
   return 0;

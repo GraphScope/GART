@@ -25,6 +25,7 @@
 
 #include "grape/communication/communicator.h"
 #include "grape/communication/sync_comm.h"
+#include "grape/fragment/fragment_base.h"
 #include "grape/parallel/default_message_manager.h"
 #include "grape/parallel/parallel_engine.h"
 #include "grape/util.h"

@@ -13,22 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_GART_PROPERTY_SSSP_H_
-#define ANALYTICAL_ENGINE_APPS_GART_PROPERTY_SSSP_H_
+#ifndef APPS_ANALYTICAL_ENGINE_APPS_GART_PROPERTY_SSSP_H_
+#define APPS_ANALYTICAL_ENGINE_APPS_GART_PROPERTY_SSSP_H_
 
-#include <grape/utils/atomic_ops.h>
-#include <cstdint>
-#include <iomanip>
-#include <iostream>
+#include <algorithm>
 #include <limits>
-#include <memory>
 #include <vector>
-
-#include "grape/grape.h"
 
 #include "core/app/app_base.h"
 #include "core/context/gart_vertex_data_context.h"
-#include "core/parallel/gart_parallel.h"
 #include "core/utils/gart_vertex_array.h"
 
 namespace gs {
@@ -66,14 +59,12 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     auto v_label_num = frag.vertex_label_num();
-    std::ofstream out("output_frag_sssp_" + std::to_string(frag.fid()) +
-                      ".txt");
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto vertices_iter = frag.InnerVertices(v_label);
       while (vertices_iter.valid()) {
         auto v = vertices_iter.vertex();
         auto v_data = result[v_label][v];
-        out << frag.GetId(v) << " " << v_data << std::endl;
+        os << frag.GetId(v) << " " << v_data << std::endl;
         vertices_iter.next();
       }
     }
@@ -184,4 +175,4 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
 
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_APPS_GART_PROPERTY_SSSP_H_
+#endif  // APPS_ANALYTICAL_ENGINE_APPS_GART_PROPERTY_SSSP_H_
