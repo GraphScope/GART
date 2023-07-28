@@ -22,7 +22,7 @@ bool grin_equal_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1,
 }
 
 GRIN_VERTEX_TYPE grin_get_vertex_type(GRIN_GRAPH g, GRIN_VERTEX v) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   return _g->vertex_label(_GRIN_VERTEX_T(v));
 }
 
@@ -30,7 +30,7 @@ void grin_destroy_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {}
 
 // Vertex type list
 GRIN_VERTEX_TYPE_LIST grin_get_vertex_type_list(GRIN_GRAPH g) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
   auto vertex_label_num = _g->vertex_label_num();
   for (auto idx = 0; idx < vertex_label_num; ++idx) {
@@ -71,7 +71,7 @@ GRIN_VERTEX_TYPE grin_get_vertex_type_from_list(GRIN_GRAPH g,
 
 #ifdef GRIN_WITH_VERTEX_TYPE_NAME
 const char* grin_get_vertex_type_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   std::string type_name = _g->GetVertexLabelName(vt);
   auto len = type_name.length() + 1;
   char* out = new char[len];
@@ -80,7 +80,7 @@ const char* grin_get_vertex_type_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
 }
 
 GRIN_VERTEX_TYPE grin_get_vertex_type_by_name(GRIN_GRAPH g, const char* name) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   std::string type_name(name);
   auto type = _g->GetVertexLabelId(type_name);
   if (type == -1) {
@@ -116,7 +116,7 @@ void grin_destroy_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
 
 // Edge type list
 GRIN_EDGE_TYPE_LIST grin_get_edge_type_list(GRIN_GRAPH g) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   auto etl = new GRIN_EDGE_TYPE_LIST_T();
   auto edge_label_num = _g->edge_label_num();
   for (auto idx = 0; idx < edge_label_num; ++idx) {
@@ -157,7 +157,7 @@ GRIN_EDGE_TYPE grin_get_edge_type_from_list(GRIN_GRAPH g,
 
 #ifdef GRIN_WITH_EDGE_TYPE_NAME
 const char* grin_get_edge_type_name(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   std::string type_name = _g->GetEdgeLabelName(et);
   auto len = type_name.length() + 1;
   char* out = new char[len];
@@ -166,7 +166,7 @@ const char* grin_get_edge_type_name(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
 }
 
 GRIN_EDGE_TYPE grin_get_edge_type_by_name(GRIN_GRAPH g, const char* name) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   std::string type_name(name);
   auto type = _g->GetEdgeLabelId(type_name);
   if (type == -1) {
@@ -190,7 +190,7 @@ GRIN_EDGE_TYPE grin_get_edge_type_by_id(GRIN_GRAPH g, GRIN_EDGE_TYPE_ID etid) {
 /** @brief  the src vertex type list */
 GRIN_VERTEX_TYPE_LIST grin_get_src_types_by_edge_type(GRIN_GRAPH g,
                                                       GRIN_EDGE_TYPE et) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
   vtl->push_back(
       _g->edge2vertex_map.find((et) + _g->vertex_label_num())->second.first);
@@ -200,7 +200,7 @@ GRIN_VERTEX_TYPE_LIST grin_get_src_types_by_edge_type(GRIN_GRAPH g,
 /** @brief get the dst vertex type list */
 GRIN_VERTEX_TYPE_LIST grin_get_dst_types_by_edge_type(GRIN_GRAPH g,
                                                       GRIN_EDGE_TYPE et) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
   vtl->push_back(
       _g->edge2vertex_map.find((et) + _g->vertex_label_num())->second.second);
@@ -210,7 +210,7 @@ GRIN_VERTEX_TYPE_LIST grin_get_dst_types_by_edge_type(GRIN_GRAPH g,
 /** @brief get the edge type list related to a given pair of vertex types */
 GRIN_EDGE_TYPE_LIST grin_get_edge_types_by_vertex_type_pair(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1, GRIN_VERTEX_TYPE vt2) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   auto etl = new GRIN_EDGE_TYPE_LIST_T();
   auto etype = _g->vertex2edge_map.find(std::make_pair(vt1, vt2))->second -
                _g->vertex_label_num();

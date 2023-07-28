@@ -59,7 +59,7 @@ long long int grin_get_vertex_internal_id_lower_bound(GRIN_GRAPH);
 long long int grin_get_vertex_internal_id_by_type(GRIN_GRAPH g,
                                                   GRIN_VERTEX_TYPE vt,
                                                   GRIN_VERTEX v) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   _GRIN_VERTEX_T _v(v);
   if (_g->IsInnerVertex(_v)) {
     return _g->GetOffset(_v);
@@ -78,7 +78,7 @@ long long int grin_get_vertex_internal_id_by_type(GRIN_GRAPH g,
 GRIN_VERTEX grin_get_vertex_by_internal_id_by_type(GRIN_GRAPH g,
                                                    GRIN_VERTEX_TYPE vt,
                                                    long long int id) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   if (id < _g->GetMaxInnerVerticesNum(vt)) {
     return _g->vid_parser.GenerateId(0, vt, id);
   } else {
@@ -96,7 +96,7 @@ GRIN_VERTEX grin_get_vertex_by_internal_id_by_type(GRIN_GRAPH g,
  */
 long long int grin_get_vertex_internal_id_upper_bound_by_type(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   return _g->GetMaxInnerVerticesNum(vt) + _g->GetMaxOuterVerticesNum(vt);
 }
 

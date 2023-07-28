@@ -17,7 +17,7 @@ limitations under the License.
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_property_list_by_type(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   auto vpl = new GRIN_VERTEX_PROPERTY_LIST_T();
   auto vertex_prop_num = _g->vertex_property_num(vt);
   for (auto idx = 0; idx < vertex_prop_num; idx++) {
@@ -61,7 +61,7 @@ bool grin_insert_vertex_property_to_list(GRIN_GRAPH g,
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_VERTEX_PROPERTY
 GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_id(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt, GRIN_VERTEX_PROPERTY_ID pid) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   if (pid >= _g->vertex_property_num(vt)) {
     return GRIN_NULL_VERTEX_PROPERTY;
   }
@@ -81,7 +81,7 @@ GRIN_VERTEX_PROPERTY_ID grin_get_vertex_property_id(GRIN_GRAPH g,
 #ifdef GRIN_WITH_EDGE_PROPERTY
 GRIN_EDGE_PROPERTY_LIST grin_get_edge_property_list_by_type(GRIN_GRAPH g,
                                                             GRIN_EDGE_TYPE et) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   auto epl = new GRIN_EDGE_PROPERTY_LIST_T();
   auto edge_prop_num = _g->edge_property_num(et);
   for (auto idx = 0; idx < edge_prop_num; idx++) {
@@ -126,7 +126,7 @@ bool grin_insert_edge_property_to_list(GRIN_GRAPH g,
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_EDGE_PROPERTY
 GRIN_EDGE_PROPERTY grin_get_edge_property_by_id(GRIN_GRAPH g, GRIN_EDGE_TYPE et,
                                                 GRIN_EDGE_PROPERTY_ID pid) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
   if (pid >= _g->edge_property_num(et)) {
     return GRIN_NULL_EDGE_PROPERTY;
   }
