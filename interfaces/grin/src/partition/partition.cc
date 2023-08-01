@@ -43,17 +43,6 @@ GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(
   }
   pg->read_epoch = std::stoi(params["read_epoch"]);
   pg->meta_prefix = params["meta_prefix"];
-  /*
-  pg->etcd_endpoint = argv[0];
-  pg->total_partition_num = std::stoul(argv[1]);
-  auto start_partition_id = std::stoul(argv[2]);
-  auto local_partition_num = std::stoul(argv[3]);
-  for (auto idx = 0; idx < local_partition_num; ++idx) {
-    pg->local_partition_list.push_back(start_partition_id + idx);
-  }
-  pg->read_epoch = std::stoi(argv[4]);
-  pg->meta_prefix = argv[5];
-  */
   return pg;
 }
 
