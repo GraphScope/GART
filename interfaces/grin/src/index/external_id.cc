@@ -23,7 +23,7 @@ limitations under the License.
  */
 GRIN_VERTEX grin_get_vertex_by_external_id_of_int64(GRIN_GRAPH g,
                                                     long long int id) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto gid = id;  // In GART, external id equels to gid
   _GRIN_VERTEX_T v;
   bool res = _g->Gid2Vertex(gid, v);
@@ -41,7 +41,7 @@ GRIN_VERTEX grin_get_vertex_by_external_id_of_int64(GRIN_GRAPH g,
  */
 long long int grin_get_vertex_external_id_of_int64(GRIN_GRAPH g,
                                                    GRIN_VERTEX v) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto gid = _g->Vertex2Gid(_GRIN_VERTEX_T(v));
   return gid;
 }

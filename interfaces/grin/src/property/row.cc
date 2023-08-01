@@ -54,7 +54,7 @@ double grin_get_double_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
 }
 
 const char* grin_get_string_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _r = static_cast<GRIN_ROW_T*>(r);
   int64_t fake_edata = *static_cast<const int64_t*>((*_r)[idx]);
   auto edata_offset = fake_edata >> 16;
@@ -186,7 +186,7 @@ const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt,
 
 #if defined(GRIN_WITH_VERTEX_PROPERTY) && defined(GRIN_ENABLE_ROW)
 GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   _GRIN_VERTEX_T _v(v);
   auto v_type = _g->vertex_label(_v);
   auto prop_size = _g->vertex_property_num(v_type);
@@ -213,7 +213,7 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
 
 #if defined(GRIN_WITH_EDGE_PROPERTY) && defined(GRIN_ENABLE_ROW)
 GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto e_type = e.etype;
   auto prop_size = _g->edge_property_num(e_type);
   auto r = new GRIN_ROW_T();

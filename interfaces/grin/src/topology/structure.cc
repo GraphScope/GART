@@ -28,7 +28,7 @@ void grin_destroy_graph(GRIN_GRAPH g) {
 #if defined(GRIN_ASSUME_HAS_DIRECTED_GRAPH) && \
     defined(GRIN_ASSUME_HAS_UNDIRECTED_GRAPH)
 bool grin_is_directed(GRIN_GRAPH g) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   return _g->directed();
 }
 #endif
@@ -39,14 +39,14 @@ bool grin_is_multigraph(GRIN_GRAPH g) { return true; }
 
 #if !defined(GRIN_WITH_VERTEX_PROPERTY)
 size_t grin_get_vertex_num(GRIN_GRAPH g) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   return _g->GetVerticesNum();
 }
 #endif
 
 #if !defined(GRIN_WITH_EDGE_PROPERTY)
 size_t grin_get_edge_num(GRIN_GRAPH g) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g)->fragment;
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   return _g->GetEdgeNum();
 }
 #endif

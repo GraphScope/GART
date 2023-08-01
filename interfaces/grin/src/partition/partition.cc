@@ -43,6 +43,17 @@ GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(
   }
   pg->read_epoch = std::stoi(params["read_epoch"]);
   pg->meta_prefix = params["meta_prefix"];
+  /*
+  pg->etcd_endpoint = argv[0];
+  pg->total_partition_num = std::stoul(argv[1]);
+  auto start_partition_id = std::stoul(argv[2]);
+  auto local_partition_num = std::stoul(argv[3]);
+  for (auto idx = 0; idx < local_partition_num; ++idx) {
+    pg->local_partition_list.push_back(start_partition_id + idx);
+  }
+  pg->read_epoch = std::stoi(argv[4]);
+  pg->meta_prefix = argv[5];
+  */
   return pg;
 }
 
@@ -111,7 +122,7 @@ const void* grin_get_partition_info(GRIN_PARTITIONED_GRAPH pg,
 GRIN_GRAPH grin_get_local_graph_by_partition(GRIN_PARTITIONED_GRAPH pg,
                                              GRIN_PARTITION p) {
   auto _pg = static_cast<GRIN_PARTITIONED_GRAPH_T*>(pg);
-  FRAGMENT_T* fragment = new FRAGMENT_T();
+  GRIN_GRAPH_T* fragment = new GRIN_GRAPH_T();
   std::shared_ptr<etcd::Client> etcd_client =
       std::make_shared<etcd::Client>(_pg->etcd_endpoint);
   std::string schema_key =
@@ -133,13 +144,7 @@ GRIN_GRAPH grin_get_local_graph_by_partition(GRIN_PARTITIONED_GRAPH pg,
 
   fragment->Init(graph_blob_config, graph_schema_config);
 
-  auto grin_graph = new GRIN_GRAPH_T();
-  grin_graph->fragment = fragment;
-  #ifdef GLE
-  _prepare_cache(grin_graph);
-  #endif
-
-  return grin_graph;
+  return reinterpret_cast<GRIN_GRAPH>(fragment);
 }
 #endif
 
