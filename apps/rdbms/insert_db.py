@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+import time
+import subprocess
 import sys
+import os
+
 from sqlalchemy import create_engine
 
 
@@ -20,14 +24,17 @@ def get_parser():
         "--db_type", default="mysql", help="Which database to use, mysql or postgresql"
     )
     parser.add_argument("--data_dir", help="LDBC dataset directory (dynamic)")
+    parser.add_argument(
+        "--init", type=bool, default=False, help="Initialize the database"
+    )
 
     return parser
 
 
 arg_parser = get_parser()
 args = arg_parser.parse_args()
-
 unset = False
+
 if not isinstance(args.data_dir, str) or len(args.data_dir) == 0:
     print("Please specify the LDBC dataset directory with --data_dir")
     unset = True
@@ -44,6 +51,29 @@ if unset:
     sys.exit(1)
 
 print("Args: ", args)
+
+if args.init:
+    current_file_path = os.path.abspath(__file__)
+    current_directory = os.path.dirname(current_file_path)
+    init_path = os.path.join(current_directory, "init_schema.py")
+
+    init_args = [
+        "--host",
+        args.host,
+        "--port",
+        str(args.port),
+        "--user",
+        args.user,
+        "--password",
+        args.password,
+        "--db",
+        args.db,
+        "--db_type",
+        args.db_type,
+    ]
+    command = ["python", init_path] + init_args
+    subprocess.run(command, check=True)
+
 
 if args.db_type == "mysql":
     connection_string = "mysql+pymysql://%s:%s@%s:%s/%s" % (
@@ -67,192 +97,80 @@ else:
     print("We now only support mysql and postgresql")
     exit(1)
 
+
+class Timer:
+    def __init__(self):
+        self.start_time = None
+        self.end_time = None
+        self.duration = None
+        self.total_time = 0.0
+
+    def start(self):
+        self.start_time = time.time()
+
+    def end(self):
+        if self.start_time is None:
+            print("Please call the start() method to record the start time first.")
+        else:
+            self.end_time = time.time()
+            self.duration = self.end_time - self.start_time
+            self.total_time += self.duration
+
+    def interval(self):
+        if self.start_time is None or self.end_time is None:
+            print(
+                "Please call the start() and end() methods to record the time interval first."
+            )
+        else:
+            return self.duration
+
+    def total(self):
+        return self.total_time
+
+    def unit(self):
+        return "seconds"
+
+    def print(self):
+        if self.start_time is None or self.end_time is None:
+            print(
+                "Please call the start() and end() methods to record the time interval first."
+            )
+        else:
+            duration = self.end_time - self.start_time
+            print("Time interval: ：{:.2f} second".format(duration))
+
+
+timer = Timer()
 conn = engine.raw_connection()
 cursor = conn.cursor()
-
 base_dir = args.data_dir
 
-print("01. Inserting organisation table...")
-file_name = base_dir + "/organisation_0_0.csv"
-with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()  # skip the header
-    line = f.readline()
-    num_lines = 0
-    while line:
-        org_id, org_type, org_name, org_url = line.strip().split("|")
-        org_name = org_name.replace("'", "")
-        org_url = org_url.replace("'", "")
-        cursor.execute(
-            f"insert into organisation values('{org_id}',"
-            f"'{org_type}', '{org_name}', '{org_url}')"
-        )
+
+# `process_line_func`: func(line) -> sql
+def insert_vertices(prefix, csv_file, table_name, process_line_func):
+    # print(f"{prefix}. Inserting {table_name} table...")
+    timer.start()
+    file = base_dir + csv_file
+    with open(file, "r", encoding="UTF-8") as f:
+        f.readline()  # skip the header
         line = f.readline()
-        num_lines += 1
-conn.commit()
-print(f"01. Insert {num_lines} rows into organisation table")
-
-print("02. Inserting place table...")
-file_name = base_dir + "/place_0_0.csv"
-with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()  # skip the header
-    line = f.readline()
-    num_lines = 0
-    while line:
-        pla_id, pla_name, pla_url, pla_type = line.strip().split("|")
-        pla_name = pla_name.replace("'", "")
-        pla_url = pla_url.replace("'", "")
-        cursor.execute(
-            f"insert into place values('{pla_id}',"
-            f"'{pla_name}', '{pla_url}', '{pla_type}')"
-        )
-        line = f.readline()
-        num_lines += 1
-conn.commit()
-print(f"02. Insert {num_lines} rows into place table")
-
-print("03. Inserting tag table...")
-file_name = base_dir + "/tag_0_0.csv"
-with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()  # skip the header
-    line = f.readline()
-    num_lines = 0
-    while line:
-        tag_id, tag_name, tag_url = line.strip().split("|")
-        tag_url = tag_url.replace("'", "")
-        cursor.execute(f"insert into tag values('{tag_id}', '{tag_name}', '{tag_url}')")
-        line = f.readline()
-        num_lines += 1
-conn.commit()
-print(f"03. Insert {num_lines} rows into tag table")
-
-print("04. Inserting tagclass table...")
-file_name = base_dir + "/tagclass_0_0.csv"
-with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()  # skip the header
-    line = f.readline()
-    num_lines = 0
-    while line:
-        tagc_id, tagc_name, tagc_url = line.strip().split("|")
-        tagc_url = tagc_url.replace("'", "")
-        cursor.execute(
-            f"insert into tagclass values('{tagc_id}', '{tagc_name}', '{tagc_url}')"
-        )
-        line = f.readline()
-        num_lines += 1
-conn.commit()
-print(f"04. Insert {num_lines} rows into tagclass table")
-
-print("05. Inserting person table...")
-file_name = base_dir + "/person_0_0.csv"
-with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()  # skip the header
-    line = f.readline()
-    num_lines = 0
-    while line:
-        (
-            p_id,
-            p_first_name,
-            p_last_name,
-            p_gender,
-            p_birthday,
-            p_creation_date,
-            p_location_ip,
-            p_browser_used,
-        ) = line.strip().split("|")
-        cursor.execute(
-            f"insert into person values('{p_id}', "
-            f"'{p_first_name}', '{p_last_name}', '{p_gender}', "
-            f"'{p_birthday}', '{p_creation_date}', "
-            f"'{p_location_ip}', '{p_browser_used}')"
-        )
-        line = f.readline()
-        num_lines += 1
-conn.commit()
-print(f"05. Insert {num_lines} rows into person table")
-
-print("06. Inserting comment table...")
-file_name = base_dir + "/comment_0_0.csv"
-with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()  # skip the header
-    line = f.readline()
-    num_lines = 0
-    while line:
-        (
-            co_id,
-            co_creation_date,
-            co_location_ip,
-            co_browser_used,
-            co_content,
-            co_length,
-        ) = line.strip().split("|")
-        co_content = co_content.replace("'", "")
-        cursor.execute(
-            f"insert into comment values('{co_id}', "
-            f"'{co_creation_date}', '{co_location_ip}', "
-            f"'{co_browser_used}', '{co_content}', {co_length})"
-        )
-        line = f.readline()
-        num_lines += 1
-conn.commit()
-print(f"06. Insert {num_lines} rows into comment table")
-
-print("07. Inserting post table...")
-file_name = base_dir + "/post_0_0.csv"
-with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()  # skip the header
-    line = f.readline()
-    num_lines = 0
-    while line:
-        (
-            po_id,
-            po_image_file,
-            po_creation_date,
-            po_location_ip,
-            po_browser_used,
-            po_language,
-            po_content,
-            po_length,
-        ) = line.strip().split("|")
-        po_content = po_content.replace("'", "")
-        cursor.execute(
-            f"insert into post values('{po_id}', "
-            f"'{po_image_file}', '{po_creation_date}', "
-            f"'{po_location_ip}', '{po_browser_used}', "
-            f"'{po_language}', '{po_content}', {po_length})"
-        )
-        line = f.readline()
-        num_lines += 1
-conn.commit()
-print(f"07. Insert {num_lines} rows into post table")
-
-print("08. Inserting forum table...")
-file_name = base_dir + "/forum_0_0.csv"
-with open(file_name, "r", encoding="UTF-8") as f:
-    header = f.readline()  # skip the header
-    line = f.readline()
-    num_lines = 0
-    while line:
-        fo_id, fo_title, fo_creation_date = line.strip().split("|")
-        fo_title = fo_title.replace("'", "")
-        cursor.execute(
-            f"insert into forum values('{fo_id}', "
-            f"'{fo_title}', '{fo_creation_date}')"
-        )
-        line = f.readline()
-        num_lines += 1
-conn.commit()
-print(f"08. Insert {num_lines} rows into forum table")
-
-# for bulkload test
-# print("Input any key to insert edge tables...")
-# content = sys.stdin.readline()
-# print("Inserting edge tables...", content)
-
-# insert edge tables
+        num_lines = 0
+        while line:
+            sql = process_line_func(line)
+            cursor.execute(sql)
+            line = f.readline()
+            num_lines += 1
+    conn.commit()
+    timer.end()
+    formatted_interval = "{:.2f}".format(timer.interval())
+    print(
+        f"{prefix}. Insert {num_lines} rows into {table_name} table, time: {formatted_interval} {timer.unit()}"
+    )
 
 
 def insert_simple_edges(prefix, csv_file, table_name):
-    print(f"{prefix}. Inserting {table_name} table...")
+    # print(f"{prefix}. Inserting {table_name} table...")
+    timer.start()
     file = base_dir + csv_file
     with open(file, "r", encoding="UTF-8") as f:
         header = f.readline()  # skip the header
@@ -264,7 +182,174 @@ def insert_simple_edges(prefix, csv_file, table_name):
             line = f.readline()
             num_lines += 1
     conn.commit()
-    print(f"{prefix}. Insert {num_lines} rows into {table_name} table")
+    timer.end()
+    formatted_interval = "{:.2f}".format(timer.interval())
+    print(
+        f"{prefix}. Insert {num_lines} rows into {table_name} table, time: {formatted_interval} {timer.unit()}"
+    )
+
+
+def insert_prop_edges(prefix, csv_file, table_name):
+    # print(f"{prefix}. Inserting {table_name} table...")
+    timer.start()
+    file = base_dir + csv_file
+    with open(file, "r", encoding="UTF-8") as f:
+        header = f.readline()  # skip the header
+        line = f.readline()
+        num_lines = 0
+        while line:
+            src, dst, prop = line.strip().split("|")
+            cursor.execute(
+                f"insert into {table_name} values('{src}', '{dst}', '{prop}')"
+            )
+            line = f.readline()
+            num_lines += 1
+    conn.commit()
+    timer.end()
+    formatted_interval = "{:.2f}".format(timer.interval())
+    print(
+        f"{prefix}. Insert {num_lines} rows into {table_name} table, time: {formatted_interval} {timer.unit()}"
+    )
+
+
+# Insert vertex tables
+
+
+# 01. organisation
+def process_organisation(line):
+    org_id, org_type, org_name, org_url = line.strip().split("|")
+    org_name = org_name.replace("'", "")
+    org_url = org_url.replace("'", "")
+    sql = (
+        f"insert into organisation values('{org_id}',"
+        f"'{org_type}', '{org_name}', '{org_url}')"
+    )
+    return sql
+
+
+insert_vertices("01", "/organisation_0_0.csv", "organisation", process_organisation)
+
+
+# 02. place
+def process_place(line):
+    pla_id, pla_name, pla_url, pla_type = line.strip().split("|")
+    pla_name = pla_name.replace("'", "")
+    pla_url = pla_url.replace("'", "")
+    sql = (
+        f"insert into place values('{pla_id}',"
+        f"'{pla_name}', '{pla_url}', '{pla_type}')"
+    )
+    return sql
+
+
+insert_vertices("02", "/place_0_0.csv", "place", process_place)
+
+
+# 03. tag
+def process_tag(line):
+    tag_id, tag_name, tag_url = line.strip().split("|")
+    tag_url = tag_url.replace("'", "")
+    sql = f"insert into tag values('{tag_id}', '{tag_name}', '{tag_url}')"
+    return sql
+
+
+insert_vertices("03", "/tag_0_0.csv", "tag", process_tag)
+
+
+# 04. tagclass
+def process_tagclass(line):
+    tagc_id, tagc_name, tagc_url = line.strip().split("|")
+    tagc_url = tagc_url.replace("'", "")
+    sql = f"insert into tagclass values('{tagc_id}', '{tagc_name}', '{tagc_url}')"
+    return sql
+
+
+insert_vertices("04", "/tagclass_0_0.csv", "tagclass", process_tagclass)
+
+
+# 05. person
+def process_person(line):
+    (
+        p_id,
+        p_first_name,
+        p_last_name,
+        p_gender,
+        p_birthday,
+        p_creation_date,
+        p_location_ip,
+        p_browser_used,
+    ) = line.strip().split("|")
+    sql = (
+        f"insert into person values('{p_id}', "
+        f"'{p_first_name}', '{p_last_name}', '{p_gender}', "
+        f"'{p_birthday}', '{p_creation_date}', "
+        f"'{p_location_ip}', '{p_browser_used}')"
+    )
+    return sql
+
+
+insert_vertices("05", "/person_0_0.csv", "person", process_person)
+
+
+# 06. comment
+def process_comment(line):
+    (
+        co_id,
+        co_creation_date,
+        co_location_ip,
+        co_browser_used,
+        co_content,
+        co_length,
+    ) = line.strip().split("|")
+    co_content = co_content.replace("'", "")
+    sql = (
+        f"insert into comment values('{co_id}', "
+        f"'{co_creation_date}', '{co_location_ip}', "
+        f"'{co_browser_used}', '{co_content}', {co_length})"
+    )
+    return sql
+
+
+insert_vertices("06", "/comment_0_0.csv", "comment", process_comment)
+
+
+# 07. post
+def process_post(line):
+    (
+        po_id,
+        po_image_file,
+        po_creation_date,
+        po_location_ip,
+        po_browser_used,
+        po_language,
+        po_content,
+        po_length,
+    ) = line.strip().split("|")
+    po_content = po_content.replace("'", "")
+    sql = (
+        f"insert into post values('{po_id}', "
+        f"'{po_image_file}', '{po_creation_date}', "
+        f"'{po_location_ip}', '{po_browser_used}', "
+        f"'{po_language}', '{po_content}', {po_length})"
+    )
+    return sql
+
+
+insert_vertices("07", "/post_0_0.csv", "post", process_post)
+
+
+# 08. forum
+def process_forum(line):
+    fo_id, fo_title, fo_creation_date = line.strip().split("|")
+    fo_title = fo_title.replace("'", "")
+    sql = f"insert into forum values('{fo_id}', " f"'{fo_title}', '{fo_creation_date}')"
+    return sql
+
+
+insert_vertices("08", "/forum_0_0.csv", "forum", process_forum)
+
+
+# insert edge tables
 
 
 insert_simple_edges("09", "/organisation_isLocatedIn_place_0_0.csv", "org_islocationin")
@@ -304,24 +389,6 @@ insert_simple_edges("25", "/person_isLocatedIn_place_0_0.csv", "person_islocatio
 # insert edge tables with additional properties
 
 
-def insert_prop_edges(prefix, csv_file, table_name):
-    print(f"{prefix}. Inserting {table_name} table...")
-    file = base_dir + csv_file
-    with open(file, "r", encoding="UTF-8") as f:
-        header = f.readline()  # skip the header
-        line = f.readline()
-        num_lines = 0
-        while line:
-            src, dst, prop = line.strip().split("|")
-            cursor.execute(
-                f"insert into {table_name} values('{src}', '{dst}', '{prop}')"
-            )
-            line = f.readline()
-            num_lines += 1
-    conn.commit()
-    print(f"{prefix}. Insert {num_lines} rows into {table_name} table")
-
-
 insert_prop_edges("26", "/forum_hasMember_person_0_0.csv", "forum_hasmember")
 
 insert_prop_edges("27", "/person_knows_person_0_0.csv", "knows")
@@ -335,3 +402,5 @@ insert_prop_edges("30", "/person_studyAt_organisation_0_0.csv", "studyat")
 insert_prop_edges("31", "/person_workAt_organisation_0_0.csv", "workat")
 
 conn.close()
+
+print("Total time: {:.2f} {}".format(timer.total(), timer.unit()))

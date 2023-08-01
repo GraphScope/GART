@@ -59,7 +59,8 @@ int main(int argc, char** argv) {
 
       if (is_timeout) {
         // skip empty message to avoid JSON parser error
-        cout << "Waiting for snapshot complete" << endl;
+        cout << "Waiting for snapshot complete, maybe the database is empty"
+             << endl;
         continue;
       }
 

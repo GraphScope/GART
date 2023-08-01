@@ -383,12 +383,24 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
   auto sv_vec = splitString(log, '|');
   string_view op(sv_vec[0]);
   int cur_epoch = stoi(string(sv_vec[1]));
+
+  static auto startTime = std::chrono::high_resolution_clock::now();
+
   if (cur_epoch > latest_epoch_) {
     graph_stores_[p_id]->update_blob(latest_epoch_);
     graph_stores_[p_id]->insert_blob_schema(latest_epoch_);
     // put schema to etcd
     graph_stores_[p_id]->put_blob_json_etcd(latest_epoch_);
-    cout << "update epoch " << latest_epoch_ << " frag = " << p_id << endl;
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        endTime - startTime)
+                        .count();
+
+    startTime = endTime;
+
+    cout << "update epoch " << latest_epoch_ << " frag = " << p_id
+         << " time = " << duration << " ms" << endl;
     latest_epoch_ = cur_epoch;
   }
 

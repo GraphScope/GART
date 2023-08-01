@@ -228,10 +228,10 @@ You can stop GART by:
     pip3 install pymysql cryptography
 
     cd gart
-    ./apps/rdbms/init_scehma.py --user [username] --password [password] --db ldbc
+    ./apps/rdbms/init_schema.py --user [username] --password [password] --db ldbc
     ```
 
-    If you have no such user, you can create the user (called `test`) before running `init_scehma.py` like:
+    If you have no such user, you can create the user (called `test`) before running `init_schema.py` like:
     ```
     CREATE USER test IDENTIFIED BY '123456';
     GRANT SELECT, CREATE, DROP, INSERT, DELETE ON ldbc.* TO test;

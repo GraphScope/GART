@@ -106,7 +106,7 @@ class PropertyPageRank
     auto v_label_num = frag.vertex_label_num();
     auto e_label_num = frag.edge_label_num();
 
-    int local_vertex_num = 0;
+    int local_vertex_num = 0, local_edge_num = 0;
 
     /*
     for (auto v_label = 0; v_label < 1; v_label++) {
@@ -133,9 +133,6 @@ class PropertyPageRank
 
     Sum(local_vertex_num, ctx.total_vertex_num);
 
-    std::cout << "total_vertex_num: " << ctx.total_vertex_num
-              << " local_vertex_num: " << local_vertex_num << std::endl;
-
     double p = 1.0 / ctx.total_vertex_num;
 
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
@@ -147,6 +144,7 @@ class PropertyPageRank
           auto edge_iter = frag.GetOutgoingAdjList(src, e_label);
           while (edge_iter.valid()) {
             edge_num++;
+            local_edge_num++;
             edge_iter.next();
           }
         }
@@ -154,6 +152,10 @@ class PropertyPageRank
         inner_vertices_iter.next();
       }
     }
+
+    std::cout << "total_vertex_num: " << ctx.total_vertex_num
+              << " local_vertex_num: " << local_vertex_num
+              << " local_edge_num: " << local_edge_num << std::endl;
 
     int dangling_vnum = 0;
 
