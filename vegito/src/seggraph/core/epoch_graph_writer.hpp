@@ -69,9 +69,15 @@ class EpochGraphWriter {
   const timestamp_t write_epoch_id;
 
   void check_vertex_id(vertex_t vertex_id) {
-    if (vertex_id >= graph.vertex_id.load(std::memory_order_relaxed))
+    if (vertex_id >= graph.vertex_id.load(std::memory_order_relaxed)) {
+      std::cerr << "[epoch_graph_writer] The vertex id " << vertex_id
+                << "is invalid (Exceeding the maximum value "
+                << graph.vertex_id.load(std::memory_order_relaxed) << " )."
+                << std::endl;
       throw std::invalid_argument(
-          "[epoch_graph_writer] The vertex id is invalid.");
+          "[epoch_graph_writer] The vertex id is invalid (Exceeding the "
+          "maximum value).");
+    }
   }
 
   void update_edge_label_block(vertex_t src, label_t label, dir_t dir,

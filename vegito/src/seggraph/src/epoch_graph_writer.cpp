@@ -21,6 +21,8 @@ using VegitoSegmentHeader = seggraph::VegitoSegmentHeader;
 
 vertex_t EpochGraphWriter::new_vertex(bool use_recycled_vertex) {
   vertex_t vertex_id = graph.vertex_id.fetch_add(1, std::memory_order_relaxed);
+  check_vertex_id(vertex_id);
+
   graph.vertex_futexes[vertex_id].clear();
   graph.vertex_ptrs[vertex_id] = graph.block_manager.NULLPOINTER;
 
