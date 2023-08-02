@@ -475,6 +475,7 @@ void Runner::start_kafka_to_process_(int p_id) {
     }
     string_view log(log_base, log_bytes);
     apply_log_to_store_(log, p_id);
+    delete msg;
   }
 }
 

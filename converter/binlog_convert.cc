@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <chrono>
 #include <fstream>
 
 #include "converter/flags.h"
@@ -54,6 +55,7 @@ int main(int argc, char** argv) {
   if (FLAGS_enable_bulkload) {
     cout << "Bulk load data start" << endl;
     int init_logs = 0;
+    auto startTime = std::chrono::high_resolution_clock::now();
     while (1) {
       RdKafka::Message* msg = consumer->consume(&is_timeout);
 
@@ -69,10 +71,8 @@ int main(int argc, char** argv) {
       parser.parse(log_entry, line, 0);
       ++init_logs;
       if (!log_entry.valid()) {
+        consumer->delete_message(msg);
         continue;
-      }
-      if (init_logs % 100000 == 0 && init_logs) {
-        cout << "Bulk load data: " << init_logs << " logs" << endl;
       }
 
       if (log_entry.last_snapshot()) {
@@ -83,6 +83,19 @@ int main(int argc, char** argv) {
       }
 
       ostream << log_entry.to_string() << flush;
+      consumer->delete_message(msg);
+
+      if (init_logs % 100000 == 0 && init_logs) {
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            endTime - startTime)
+                            .count();
+
+        startTime = endTime;
+
+        cout << "Bulk load data: " << init_logs << " logs"
+             << " time: " << duration << " ms" << endl;
+      }
     }
   }
 #endif
@@ -115,6 +128,8 @@ int main(int argc, char** argv) {
     }
 
     ostream << log_entry.to_string() << flush;
+    consumer->delete_message(msg);
+
     log_count++;
   }
 }

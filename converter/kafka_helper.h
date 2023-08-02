@@ -215,6 +215,12 @@ class KafkaConsumer {
     return msg;
   }
 
+  inline void delete_message(RdKafka::Message* msg) const {
+    if (msg) {
+      delete msg;
+    }
+  }
+
   ~KafkaConsumer() = default;
 
  private:
