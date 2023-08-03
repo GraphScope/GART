@@ -138,8 +138,6 @@ uint64_t get_latest_epoch(const grape::CommSpec& comm_spec,
     MPI_Recv(&write_epoch, 1, MPI_UNSIGNED_LONG, 0, 0, MPI_COMM_WORLD,
              MPI_STATUS_IGNORE);
   }
-  std::cout << "read_epoch " << write_epoch << " fid " << comm_spec.fid()
-            << std::endl;
 
   MPI_Barrier(comm_spec.comm());
   return write_epoch;
@@ -164,36 +162,43 @@ int main(int argc, char** argv) {
     assert(response.is_ok());
     std::string edge_config_str = response.value().as_string();
     uint64_t write_epoch = get_latest_epoch(comm_spec, etcd_client);
-    schema_key = FLAGS_meta_prefix + "gart_blob_m" + std::to_string(0) + "_p" +
-                 std::to_string(comm_spec.fid()) + "_e" +
-                 std::to_string(write_epoch);
-    response = etcd_client->get(schema_key).get();
-    assert(response.is_ok());
-    std::string config_str = response.value().as_string();
-    json config = json::parse(config_str);
-    json edge_config = json::parse(edge_config_str);
+    if (write_epoch == std::numeric_limits<uint64_t>::max()) {
+      std::cout << "No valid epoch to process" << std::endl;
+      MPI_Barrier(comm_spec.comm());
+    } else {
+      std::cout << "read_epoch " << write_epoch << " fid " << comm_spec.fid()
+                << std::endl;
+      schema_key = FLAGS_meta_prefix + "gart_blob_m" + std::to_string(0) +
+                   "_p" + std::to_string(comm_spec.fid()) + "_e" +
+                   std::to_string(write_epoch);
+      response = etcd_client->get(schema_key).get();
+      assert(response.is_ok());
+      std::string config_str = response.value().as_string();
+      json config = json::parse(config_str);
+      json edge_config = json::parse(edge_config_str);
 
-    fragment->Init(config, edge_config);
+      fragment->Init(config, edge_config);
 
-    MPI_Barrier(comm_spec.comm());
+      MPI_Barrier(comm_spec.comm());
 
-    std::cout << "start to run sssp " << std::endl;
+      std::cout << "start to run sssp " << std::endl;
 
-    RunPropertySSSP(fragment, comm_spec, "./output_property_sssp");
+      RunPropertySSSP(fragment, comm_spec, "./output_property_sssp");
 
-    MPI_Barrier(comm_spec.comm());
+      MPI_Barrier(comm_spec.comm());
 
-    std::cout << "start to run wcc " << std::endl;
+      std::cout << "start to run wcc " << std::endl;
 
-    RunPropertyWCC(fragment, comm_spec, "./output_property_wcc");
+      RunPropertyWCC(fragment, comm_spec, "./output_property_wcc");
 
-    MPI_Barrier(comm_spec.comm());
+      MPI_Barrier(comm_spec.comm());
 
-    std::cout << "start to run pagereank " << std::endl;
+      std::cout << "start to run pagereank " << std::endl;
 
-    RunPropertyPageRank(fragment, comm_spec, "./output_property_pr");
+      RunPropertyPageRank(fragment, comm_spec, "./output_property_pr");
 
-    MPI_Barrier(comm_spec.comm());
+      MPI_Barrier(comm_spec.comm());
+    }
   }
   grape::FinalizeMPIComm();
 
