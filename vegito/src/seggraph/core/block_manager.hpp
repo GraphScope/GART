@@ -30,6 +30,8 @@
 #include <string>
 #include <vector>
 
+#include "common/util/likely.h"
+#include "glog/logging.h"
 #include "tbb/enumerable_thread_specific.h"
 #include "vineyard/client/client.h"
 #include "vineyard/client/ds/blob.h"
@@ -118,6 +120,12 @@ class BlockManager {
     if (pointer == NULLPOINTER) {
       size_t block_size = 1ul << order;
       pointer = used_size.fetch_add(block_size);
+
+      if (unlikely(getUsedMemory() > capacity)) {
+        LOG(ERROR) << "BlockManager: out of memory."
+                   << " Capacity: " << capacity << " Used: " << getUsedMemory()
+                   << " Order: " << int(order);
+      }
 
       if (pointer + block_size >= file_size) {
         auto new_file_size =

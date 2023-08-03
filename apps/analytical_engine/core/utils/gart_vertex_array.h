@@ -99,12 +99,22 @@ class GartVertexArray {
     if (frag_->IsOuterVertex(loc)) {
       offset = offset + inner_size_;
     }
+
+    if (unlikely(offset >= data_.size())) {
+      LOG(ERROR) << "offset: " << offset << " data size: " << data_.size()
+                 << "loc: " << loc.GetValue();
+    }
     return data_[offset];
   }
   inline const T& operator[](const grape::Vertex<VID_T>& loc) const {
     auto offset = frag_->GetOffset(loc);
     if (frag_->IsOuterVertex(loc)) {
       offset = offset + inner_size_;
+    }
+
+    if (unlikely(offset >= data_.size())) {
+      LOG(ERROR) << "offset: " << offset << " data size: " << data_.size()
+                 << "loc: " << loc.GetValue();
     }
     return data_[offset];
   }
