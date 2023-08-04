@@ -27,7 +27,6 @@ GRIN_VERTEX_LIST grin_get_vertex_list_select_mirror(GRIN_GRAPH);
     defined(GRIN_WITH_VERTEX_PROPERTY)
 GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_master(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vl = new GRIN_VERTEX_LIST_T();
   vl->all_master_mirror = 1;
   vl->vtype = vt;
@@ -36,7 +35,6 @@ GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_master(
 
 GRIN_VERTEX_LIST grin_get_vertex_list_by_type_select_mirror(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vl = new GRIN_VERTEX_LIST_T();
   vl->all_master_mirror = 2;
   vl->vtype = vt;

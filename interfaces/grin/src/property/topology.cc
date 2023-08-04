@@ -31,7 +31,6 @@ size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
 #if defined(GRIN_ENABLE_VERTEX_LIST) && defined(GRIN_WITH_VERTEX_PROPERTY)
 GRIN_VERTEX_LIST grin_get_vertex_list_by_type(GRIN_GRAPH g,
                                               GRIN_VERTEX_TYPE vt) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vl = new GRIN_VERTEX_LIST_T();
   vl->vtype = vt;
   vl->all_master_mirror = 0;
@@ -48,7 +47,6 @@ GRIN_ADJACENT_LIST grin_get_adjacent_list_by_edge_type(GRIN_GRAPH g,
                                                        GRIN_DIRECTION dir,
                                                        GRIN_VERTEX v,
                                                        GRIN_EDGE_TYPE et) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   GRIN_ADJACENT_LIST adj_list;
   adj_list.v = v;
   adj_list.dir = dir;

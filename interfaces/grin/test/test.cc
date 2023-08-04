@@ -23,6 +23,36 @@
 #include "../include/include/topology/edgelist.h"
 #include "../include/include/topology/structure.h"
 #include "../include/include/topology/vertexlist.h"
+#include "../include/extension/include/indexed_adjacent_list_iterator.h"
+
+void test_extension(char* uri) {
+  GRIN_PARTITIONED_GRAPH pg = grin_get_partitioned_graph_from_storage(uri);
+  GRIN_PARTITION_LIST local_partitions = grin_get_local_partition_list(pg);
+  GRIN_PARTITION partition =
+      grin_get_partition_from_list(pg, local_partitions, 0);
+  GRIN_GRAPH g = grin_get_local_graph_by_partition(pg, partition);
+  grin_destroy_partition(pg, partition);
+  grin_destroy_partition_list(pg, local_partitions);
+  grin_destroy_partitioned_graph(pg);
+  auto vertex_list = grin_get_vertex_list_by_type(g, 0);
+  auto vertex_iter = grin_get_vertex_list_begin(g, vertex_list);
+  while (!grin_is_vertex_list_end(g, vertex_iter)) {
+    auto v = grin_get_vertex_from_iter(g, vertex_iter);
+    GRIN_EDGE_TYPE_LIST etl = grin_get_edge_type_list(g);
+    size_t etl_size = grin_get_edge_type_list_size(g, etl);
+    for (size_t etl_i = 0; etl_i < etl_size; ++etl_i) {
+      auto indexed_iter = grin_get_vertex_indexed_adjacent_list_iterator_by_edge_type(g, OUT, v, etl_i);
+      auto iter_size = grin_get_indexed_adjacent_list_iterator_size(g, indexed_iter);
+      for (auto idx = 0; idx < iter_size; idx++) {
+        auto dst = grin_get_neighbor_from_indexed_adjacent_list_iterator(g, indexed_iter, idx);
+        std::cout <<v << " "<< dst << std::endl;
+      }
+    }
+    
+    grin_destroy_vertex(g, v);
+    grin_get_next_vertex_list_iter(g, vertex_iter);
+  }
+}
 
 #define FOR_VERTEX_BEGIN(g, vl, v)                                     \
   GRIN_VERTEX_LIST_ITERATOR __vli = grin_get_vertex_list_begin(g, vl); \
@@ -1018,33 +1048,22 @@ int main() {
   std::string etcd_endpoint = "http://127.0.0.1:23799";
   std::string meta_prefix = "";
   int fragment_per_machine = 1;
-  char** argv_new = new char*[6];
-  argv_new[0] = new char[etcd_endpoint.length() + 1];
-  argv_new[1] = new char[std::to_string(comm_spec.fnum()).length() + 1];
-  argv_new[2] = new char[std::to_string(comm_spec.fid()).length() + 1];
-  argv_new[3] = new char[std::to_string(fragment_per_machine).length() + 1];
-  argv_new[4] = new char[std::to_string(read_epoch).length() + 1];
-  argv_new[5] = new char[meta_prefix.length() + 1];
 
-  strcpy(argv_new[0], etcd_endpoint.c_str());
-  strcpy(argv_new[1], std::to_string(comm_spec.fnum()).c_str());
-  strcpy(argv_new[2], std::to_string(comm_spec.fid()).c_str());
-  strcpy(argv_new[3], std::to_string(fragment_per_machine).c_str());
-  strcpy(argv_new[4], std::to_string(read_epoch).c_str());
-  strcpy(argv_new[5], meta_prefix.c_str());
-
-  std::string uri_str =
+  std::string uri_str = "gart://127.0.0.1:23760?read_epoch=0&total_partition_num=1&local_partition_num=1&start_partition_id=0&meta_prefix=gart_meta_";
+  /*
       "gart://"
       "127.0.0.1:23799?read_epoch=4&total_partition_num=2&local_partition_num="
       "1&start_partition_id=" +
       std::to_string(comm_spec.fid()) + "&meta_prefix=";
-
+  */
   char* uri = const_cast<char*>(uri_str.c_str());
-
+#if false
   test_index(uri);
   test_property(uri);
   test_partition(uri);
   test_topology(uri);
   test_perf(uri);
+#endif
+  test_extension(uri);
   return 0;
 }

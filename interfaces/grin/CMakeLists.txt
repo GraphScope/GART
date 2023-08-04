@@ -59,7 +59,7 @@ add_custom_target(grin_clformat
         COMMENT "Running clang-format."
         VERBATIM)
 
-file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/partition/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc")
+file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/partition/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "include/extension/src/*.cc")
 add_library(gart_grin SHARED ${SOURCES})
 target_link_libraries(gart_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
