@@ -279,12 +279,6 @@ echo "    start-slot: $start_slot"
 echo "    my-slot: $slot"
 echo "    master-hostname: $master_hostname"
 
-################### Bulk Load Initialize ######################
-if [ "$use_debezium" == 1 ] && $enable_bulkload; then
-    rm /tmp/connect.offsets
-    echo "Remove /tmp/connect.offsets for bulk load"
-fi
-
 ##################### Stop Previous GART ######################
 echo "Stop previous GART"
 ./stop-gart --kill-v6d-sock $v6d_sock
@@ -292,10 +286,22 @@ echo "Stop previous GART"
 ####################### Extract Schema #######################
 if [ $is_master == true ]; then
     echo "Start extracting schema"
+    num_row=$(
     ./scripts/extract_table_schema.py \
         --host $db_host --port $db_port --db $db_name \
         --user $user --password $password --db_type $db_type\
         --rgmapping_file $rgmapping_file --output $table_schema_file
+    )
+    if [ $num_row -eq 0 ] && $enable_bulkload; then
+        echo "No tuples found in the database, skip bulk load"
+        enable_bulkload=false
+    fi
+fi
+
+################### Bulk Load Initialize ######################
+if [ "$use_debezium" == 1 ] && $enable_bulkload; then
+    rm /tmp/connect.offsets
+    echo "Remove /tmp/connect.offsets for bulk load"
 fi
 
 ####################### Vineyard #######################

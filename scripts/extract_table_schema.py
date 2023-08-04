@@ -49,6 +49,7 @@ def exetract_schema(cursor, rgmapping_file, database, output):
     tables = (
         config["vertexMappings"]["vertex_types"] + config["edgeMappings"]["edge_types"]
     )
+    sum_row = 0
     schema = {}
     for table in tables:
         table_name = table["dataSourceName"]
@@ -65,10 +66,15 @@ def exetract_schema(cursor, rgmapping_file, database, output):
         cursor.execute(sql)
         results = cursor.fetchall()
         schema[table_name] = results
+
+        sql = f"""SELECT COUNT(*) FROM {table_name}"""
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        sum_row += results[0][0]
     with open(output, "w", encoding="UTF-8") as f:
         json.dump(schema, f, indent=4)
 
-    return schema
+    return schema, sum_row
 
 
 def produce_graph_schema(schema, rgmapping_file, output_yaml):
@@ -210,7 +216,9 @@ if __name__ == "__main__":
     conn = engine.raw_connection()
     cursor = conn.cursor()
 
-    schema = exetract_schema(cursor, args.rgmapping_file, args.db, args.output)
+    schema, sum_row = exetract_schema(cursor, args.rgmapping_file, args.db, args.output)
     conn.close()
 
     produce_graph_schema(schema, args.rgmapping_file, args.output_yaml)
+
+    print(sum_row)
