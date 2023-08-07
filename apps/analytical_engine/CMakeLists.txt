@@ -41,8 +41,7 @@ if (NETWORKX)
 endif ()
 
 if (WITH_GAE_FOR_GART)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../..)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../vegito/src)
+    include_directories(/usr/local/include/gart)
 endif ()
 
 set(DEFAULT_BUILD_TYPE "Release")

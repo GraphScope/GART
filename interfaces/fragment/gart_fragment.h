@@ -21,9 +21,9 @@
 #include "grape/fragment/fragment_base.h"
 #include "vineyard/basic/ds/hashmap_mvcc.h"
 
+#include "fragment/id_parser.h"
 #include "interfaces/fragment/iterator.h"
 #include "interfaces/fragment/property_util.h"
-#include "vegito/src/fragment/id_parser.h"
 
 namespace gart {
 

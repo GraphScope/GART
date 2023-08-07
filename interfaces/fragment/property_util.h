@@ -16,7 +16,7 @@
 #ifndef INTERFACES_FRAGMENT_PROPERTY_UTIL_H_
 #define INTERFACES_FRAGMENT_PROPERTY_UTIL_H_
 
-#include "vegito/src/util/inline_str.h"
+#include "util/inline_str.h"
 #include "vineyard/client/ds/blob.h"
 
 namespace gart {
