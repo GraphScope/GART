@@ -23,7 +23,7 @@
 #include "../include/include/topology/edgelist.h"
 #include "../include/include/topology/structure.h"
 #include "../include/include/topology/vertexlist.h"
-#include "../include/extension/include/indexed_adjacent_list_iterator.h"
+#include "../include/extension/include/indexed_adjacent_list.h"
 
 void test_extension(char* uri) {
   GRIN_PARTITIONED_GRAPH pg = grin_get_partitioned_graph_from_storage(uri);
@@ -47,6 +47,8 @@ void test_extension(char* uri) {
       for (auto idx = 0; idx < indexed_adj_list_size; ++idx) {
         auto dst_vertex = grin_get_neighbor_from_indexed_adjacent_list(g, indexed_adj_list, idx);
         std::cout << " src vertex " << v << " dst vertex " << dst_vertex << std::endl;
+        auto edge = grin_get_edge_from_indexed_adjacent_list(g, indexed_adj_list, idx);
+        std::cout << " edge src = " << grin_get_src_vertex_from_edge(g, edge) << " dst = " << grin_get_dst_vertex_from_edge(g, edge) << std::endl;
         grin_destroy_vertex(g, dst_vertex);
       }
       grin_destroy_adjacent_list(g, adj_list);
