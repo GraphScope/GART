@@ -25,8 +25,8 @@ of
 * SOFTWARE.
  */
 
-#ifndef VEGITO_SRC_UTIL_INLINE_STR_H_
-#define VEGITO_SRC_UTIL_INLINE_STR_H_
+#ifndef VEGITO_INCLUDE_UTIL_INLINE_STR_H_
+#define VEGITO_INCLUDE_UTIL_INLINE_STR_H_
 
 #include <cstring>
 #include <string>
@@ -302,4 +302,4 @@ struct serializer<inline_str_base<IntSizeType, N>, Compress> {
   }
 };
 
-#endif  // VEGITO_SRC_UTIL_INLINE_STR_H_
+#endif  // VEGITO_INCLUDE_UTIL_INLINE_STR_H_

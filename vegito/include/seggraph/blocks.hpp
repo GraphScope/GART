@@ -1,6 +1,6 @@
 /*
  *
- * The file seggraph/core/blocks.hpp is referred and derived from project
+ * The file seggraph/blocks.hpp is referred and derived from project
  * livegraph,
  *
  *    https://github.com/thu-pacman/LiveGraph
@@ -27,8 +27,8 @@
 #include <cassert>
 #include <utility>
 
-#include "seggraph/core/bloom_filter.hpp"
-#include "seggraph/core/utils.hpp"
+#include "seggraph/bloom_filter.hpp"
+#include "seggraph/utils.hpp"
 
 namespace seggraph {
 // direction of the edge

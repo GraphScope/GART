@@ -27,7 +27,7 @@ file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py scripts/ext
 set(CMAKE_INSTALL_INCLUDEDIR "/usr/local/include")
 
 file(GLOB FRAGMENT_HEADER_FILES
-          "vegito/src/fragment/id_parser.h"
+          "vegito/include/fragment/id_parser.h"
           )
 
 add_library(frag_header INTERFACE)
@@ -42,7 +42,7 @@ install(TARGETS frag_header
 )
 
 file(GLOB SEGGRAPH_HEADER_FILES
-          "vegito/src/seggraph/core/*.hpp"
+          "vegito/include/seggraph/*.hpp"
           )
 
 add_library(seggraph_header INTERFACE)
@@ -52,7 +52,7 @@ set_target_properties(seggraph_header PROPERTIES
 )
 
 install(TARGETS seggraph_header
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gart/seggraph/core
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gart/seggraph
 )
 
 file(GLOB INTERFACE_HEADER_FILES
@@ -70,7 +70,7 @@ install(TARGETS interface_header
 )
 
 file(GLOB UTIL_HEADER_FILES
-          "vegito/src/util/*.h"
+          "vegito/include/util/*.h"
           )
 
 add_library(util_header INTERFACE)

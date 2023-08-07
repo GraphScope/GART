@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "seggraph/core/epoch_graph_writer.hpp"
+#include "seggraph/epoch_graph_writer.hpp"
 
 using vertex_t = seggraph::vertex_t;
 using EpochGraphWriter = seggraph::EpochGraphWriter;

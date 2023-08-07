@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef VEGITO_SRC_FRAGMENT_ID_PARSER_H_
-#define VEGITO_SRC_FRAGMENT_ID_PARSER_H_
+#ifndef VEGITO_INCLUDE_FRAGMENT_ID_PARSER_H_
+#define VEGITO_INCLUDE_FRAGMENT_ID_PARSER_H_
 
 #include <cassert>
 #include <cstdlib>
@@ -111,4 +111,4 @@ class IdParser {
 
 }  // namespace gart
 
-#endif  // VEGITO_SRC_FRAGMENT_ID_PARSER_H_
+#endif  // VEGITO_INCLUDE_FRAGMENT_ID_PARSER_H_

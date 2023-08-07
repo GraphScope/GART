@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "seggraph/core/epoch_graph_reader.hpp"
-#include "seggraph/core/edge_iterator.hpp"
+#include "seggraph/epoch_graph_reader.hpp"
+#include "seggraph/edge_iterator.hpp"
 
 using VegitoSegmentHeader = seggraph::VegitoSegmentHeader;
 using EpochEdgeIterator = seggraph::EpochEdgeIterator;

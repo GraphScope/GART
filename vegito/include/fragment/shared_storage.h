@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
-#define VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
+#ifndef VEGITO_INCLUDE_FRAGMENT_SHARED_STORAGE_H_
+#define VEGITO_INCLUDE_FRAGMENT_SHARED_STORAGE_H_
 
 #include <algorithm>
 #include <vector>
@@ -22,7 +22,7 @@
 #include "vineyard/common/util/json.h"
 #include "vineyard/common/util/uuid.h"
 
-#include "seggraph/core/blocks.hpp"
+#include "seggraph/blocks.hpp"
 
 namespace gart {
 
@@ -292,4 +292,4 @@ class BlobSchema {
 
 }  // namespace gart
 
-#endif  // VEGITO_SRC_FRAGMENT_SHARED_STORAGE_H_
+#endif  // VEGITO_INCLUDE_FRAGMENT_SHARED_STORAGE_H_

@@ -17,7 +17,7 @@
 
 #include <utility>
 
-#include "seggraph/core/segment_graph.hpp"
+#include "seggraph/segment_graph.hpp"
 
 namespace seggraph {
 class EpochGraphReader {

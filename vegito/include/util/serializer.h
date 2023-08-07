@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef VEGITO_SRC_UTIL_SERIALIZER_H_
-#define VEGITO_SRC_UTIL_SERIALIZER_H_
+#ifndef VEGITO_INCLUDE_UTIL_SERIALIZER_H_
+#define VEGITO_INCLUDE_UTIL_SERIALIZER_H_
 
 #include "util/varint.h"
 
@@ -206,4 +206,4 @@ struct serializer<int32_t, true> {
   }
 };
 
-#endif  // VEGITO_SRC_UTIL_SERIALIZER_H_
+#endif  // VEGITO_INCLUDE_UTIL_SERIALIZER_H_

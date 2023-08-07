@@ -15,9 +15,9 @@
 
 #pragma once
 
-#include "seggraph/core/blocks.hpp"
-#include "seggraph/core/edge_iterator.hpp"
-#include "seggraph/core/epoch_graph_reader.hpp"
-#include "seggraph/core/epoch_graph_writer.hpp"
-#include "seggraph/core/segment_graph.hpp"
-#include "seggraph/core/segment_transaction.hpp"
+#include "seggraph/blocks.hpp"
+#include "seggraph/edge_iterator.hpp"
+#include "seggraph/epoch_graph_reader.hpp"
+#include "seggraph/epoch_graph_writer.hpp"
+#include "seggraph/segment_graph.hpp"
+#include "seggraph/segment_transaction.hpp"

@@ -36,7 +36,7 @@
 
 #include "fragment/shared_storage.h"
 #include "graph/type_def.h"
-#include "seggraph/core/allocator.hpp"
+#include "seggraph/allocator.hpp"
 #include "util/util.h"
 
 typedef std::vector<std::string_view> StringViewList;

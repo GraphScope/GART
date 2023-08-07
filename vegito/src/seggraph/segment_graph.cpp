@@ -22,10 +22,10 @@
  * limitations under the License.
  */
 
-#include "seggraph/core/segment_graph.hpp"
-#include "seggraph/core/epoch_graph_reader.hpp"
-#include "seggraph/core/epoch_graph_writer.hpp"
-#include "seggraph/core/segment_transaction.hpp"
+#include "seggraph/segment_graph.hpp"
+#include "seggraph/epoch_graph_reader.hpp"
+#include "seggraph/epoch_graph_writer.hpp"
+#include "seggraph/segment_transaction.hpp"
 
 using SegTransaction = seggraph::SegTransaction;
 using EpochGraphReader = seggraph::EpochGraphReader;

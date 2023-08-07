@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef VEGITO_SRC_UTIL_MACROS_H_
-#define VEGITO_SRC_UTIL_MACROS_H_
+#ifndef VEGITO_INCLUDE_UTIL_MACROS_H_
+#define VEGITO_INCLUDE_UTIL_MACROS_H_
 
 #include <cassert>
 #include <stdexcept>
@@ -138,4 +138,4 @@
 // number of nanoseconds in 1 second (1e9)
 #define ONE_SECOND_NS 1000000000
 
-#endif  // VEGITO_SRC_UTIL_MACROS_H_
+#endif  // VEGITO_INCLUDE_UTIL_MACROS_H_

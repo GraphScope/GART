@@ -15,13 +15,13 @@
 
 #pragma once
 
-#include "seggraph/core/types.hpp"
+#include "seggraph/types.hpp"
 
 namespace seggraph {
 inline void compiler_fence() { asm volatile("" ::: "memory"); }
 
 inline order_t size_to_order(size_t size) {
-  order_t order = (order_t)((size & (size - 1)) != 0);
+  order_t order = (order_t) ((size & (size - 1)) != 0);
   while (size > 1) {
     order += 1;
     size >>= 1;

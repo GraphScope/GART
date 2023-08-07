@@ -1,6 +1,6 @@
 /*
  *
- * The file seggraph/core/segment_transaction.hpp is referred and derived from
+ * The file seggraph/segment_transaction.hpp is referred and derived from
  * project livegraph,
  *
  *    https://github.com/thu-pacman/LiveGraph
@@ -32,7 +32,7 @@
 #include <utility>
 #include <vector>
 
-#include "seggraph/core/segment_graph.hpp"
+#include "seggraph/segment_graph.hpp"
 
 namespace seggraph {
 class SegTransaction {

@@ -32,7 +32,7 @@
 #include "fragment/id_parser.h"
 #include "property/property_col_array.h"
 #include "property/property_col_paged.h"
-#include "seggraph/core/seggraph.hpp"
+#include "seggraph/seggraph.hpp"
 #include "system_flags.h"  // NOLINT(build/include_subdir)
 
 namespace gart {

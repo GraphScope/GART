@@ -1,6 +1,6 @@
 /*
  *
- * The file seggraph/core/segment_graph.hpp is referred and derived from project
+ * The file seggraph/segment_graph.hpp is referred and derived from project
  * livegraph,
  *
  *    https://github.com/thu-pacman/LiveGraph
@@ -32,9 +32,9 @@
 
 #include "fragment/shared_storage.h"
 #include "graph/ddl.h"
-#include "seggraph/core/allocator.hpp"
-#include "seggraph/core/block_manager.hpp"
-#include "seggraph/core/futex.hpp"
+#include "seggraph/allocator.hpp"
+#include "seggraph/block_manager.hpp"
+#include "seggraph/futex.hpp"
 
 namespace seggraph {
 class SegEdgeIterator;

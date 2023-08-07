@@ -86,6 +86,7 @@ link_libraries(${YAML_CPP_LIBRARIES})
 
 #### Headers ####
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 ### add main files ###
@@ -93,7 +94,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 file(GLOB SOURCES
           "src/system_flags.cc" "src/framework/*.cc"
           "src/graph/*.cc" "src/graph/graph_ops/*.cc"
-          "src/property/*.cc" "src/seggraph/src/*.cpp"
+          "src/property/*.cc" "src/seggraph/*.cpp"
           )
 
 file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h" "*.cpp" "*.hpp")

@@ -25,8 +25,8 @@ of
 * SOFTWARE.
  */
 
-#ifndef VEGITO_SRC_UTIL_VARINT_H_
-#define VEGITO_SRC_UTIL_VARINT_H_
+#ifndef VEGITO_INCLUDE_UTIL_VARINT_H_
+#define VEGITO_INCLUDE_UTIL_VARINT_H_
 
 #include "util/macros.h"
 
@@ -240,4 +240,4 @@ inline size_t size_uvint32(uint32_t value) {
   return 5;
 }
 
-#endif  // VEGITO_SRC_UTIL_VARINT_H_
+#endif  // VEGITO_INCLUDE_UTIL_VARINT_H_

@@ -1,6 +1,6 @@
 /*
  *
- * The file seggraph/core/block_manager.hpp is referred and derived from project
+ * The file seggraph/block_manager.hpp is referred and derived from project
  * livegraph,
  *
  *    https://github.com/thu-pacman/LiveGraph
@@ -37,7 +37,7 @@
 #include "vineyard/client/ds/blob.h"
 
 #include "framework/config.h"  // NOLINT(build/include_subdir)
-#include "seggraph/core/types.hpp"
+#include "seggraph/types.hpp"
 
 namespace seggraph {
 class BlockManager {

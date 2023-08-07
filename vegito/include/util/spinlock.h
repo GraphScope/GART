@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef VEGITO_SRC_UTIL_SPINLOCK_H_
-#define VEGITO_SRC_UTIL_SPINLOCK_H_
+#ifndef VEGITO_INCLUDE_UTIL_SPINLOCK_H_
+#define VEGITO_INCLUDE_UTIL_SPINLOCK_H_
 
 #include "atomic.h"  // NOLINT(build/include_subdir)
 
@@ -67,4 +67,4 @@ class SpinLock {
   inline uint16_t IsLocked() { return lock; }
 };
 
-#endif  // VEGITO_SRC_UTIL_SPINLOCK_H_
+#endif  // VEGITO_INCLUDE_UTIL_SPINLOCK_H_

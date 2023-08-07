@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef VEGITO_SRC_UTIL_UTIL_H_
-#define VEGITO_SRC_UTIL_UTIL_H_
+#ifndef VEGITO_INCLUDE_UTIL_UTIL_H_
+#define VEGITO_INCLUDE_UTIL_UTIL_H_
 
 #include <cstdint>
 
@@ -72,4 +72,4 @@ inline void unlock32(uint32_t* lock_ptr) { *lock_ptr = 0; }
 }  // namespace util
 }  // namespace gart
 
-#endif  // VEGITO_SRC_UTIL_UTIL_H_
+#endif  // VEGITO_INCLUDE_UTIL_UTIL_H_

@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#include "seggraph/core/segment_transaction.hpp"
+#include "seggraph/segment_transaction.hpp"
 
 using SegTransaction = seggraph::SegTransaction;
 using EdgeBlockHeader = seggraph::EdgeBlockHeader;

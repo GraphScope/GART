@@ -18,7 +18,7 @@
 
 #include <cstdint>
 #include "interfaces/fragment/types.h"
-#include "seggraph/core/blocks.hpp"
+#include "seggraph/blocks.hpp"
 
 namespace gart {
 template <typename VID_T, typename VDATA_T>

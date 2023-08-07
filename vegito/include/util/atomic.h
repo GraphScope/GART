@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef VEGITO_SRC_UTIL_ATOMIC_H_
-#define VEGITO_SRC_UTIL_ATOMIC_H_
+#ifndef VEGITO_INCLUDE_UTIL_ATOMIC_H_
+#define VEGITO_INCLUDE_UTIL_ATOMIC_H_
 
 #include <cstdint>
 
@@ -102,4 +102,4 @@ static __inline__ uint8_t atomic_cmpxchg8b(uint32_t* memp, uint32_t old0,
 #define DATA_BITS 64
 #include "atomic-template.h"  // NOLINT
 
-#endif  // VEGITO_SRC_UTIL_ATOMIC_H_
+#endif  // VEGITO_INCLUDE_UTIL_ATOMIC_H_
