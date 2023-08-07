@@ -41,12 +41,16 @@ void test_extension(char* uri) {
     GRIN_EDGE_TYPE_LIST etl = grin_get_edge_type_list(g);
     size_t etl_size = grin_get_edge_type_list_size(g, etl);
     for (size_t etl_i = 0; etl_i < etl_size; ++etl_i) {
-      auto indexed_iter = grin_get_vertex_indexed_adjacent_list_iterator_by_edge_type(g, OUT, v, etl_i);
-      auto iter_size = grin_get_indexed_adjacent_list_iterator_size(g, indexed_iter);
-      for (auto idx = 0; idx < iter_size; idx++) {
-        auto dst = grin_get_neighbor_from_indexed_adjacent_list_iterator(g, indexed_iter, idx);
-        std::cout <<v << " "<< dst << std::endl;
+      auto adj_list = grin_get_adjacent_list_by_edge_type(g, GRIN_DIRECTION::OUT, v, etl_i);
+      auto indexed_adj_list = grin_get_indexed_adjacent_list(g, adj_list);
+      size_t indexed_adj_list_size = grin_get_indexed_adjacent_list_size(g, indexed_adj_list);
+      for (auto idx = 0; idx < indexed_adj_list_size; ++idx) {
+        auto dst_vertex = grin_get_neighbor_from_indexed_adjacent_list(g, indexed_adj_list, idx);
+        std::cout << " src vertex " << v << " dst vertex " << dst_vertex << std::endl;
+        grin_destroy_vertex(g, dst_vertex);
       }
+      grin_destroy_adjacent_list(g, adj_list);
+      grin_destroy_indexed_adjacent_list(g, indexed_adj_list);
     }
     
     grin_destroy_vertex(g, v);

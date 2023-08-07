@@ -24,6 +24,10 @@ GRIN_ADJACENT_LIST grin_get_adjacent_list(GRIN_GRAPH, GRIN_DIRECTION,
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST
 void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {}
+
+GRIN_VERTEX grin_get_src_vertex_from_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
+  return adj_list.v;
+}
 #endif
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
