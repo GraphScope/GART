@@ -97,7 +97,7 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 git clone https://github.com/GraphScope/GART.git gart
 cd gart
 
-mkdir build; cd build
+mkdir -p build; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j
 ```
@@ -197,7 +197,7 @@ If we use Debezium as the log capture, we also need to set up a configuration of
 You can launch GART by the `gart` script under the `build` directory, like:
 ```
 export KAFKA_HOME=/path/to/kafka
-export MAXWELL_HOME=/path/to/maxwell
+export MAXWELL_HOME=/path/to/maxwell (if you use Maxwell as log capturer)
 ./gart --user maxwell --password 123456
 ```
 

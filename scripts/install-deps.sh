@@ -20,14 +20,14 @@ sudo apt-get install -y libgrpc-dev \
         protobuf-compiler-grpc
 git clone https://github.com/microsoft/cpprestsdk.git
 cd cpprestsdk
-mkdir build && cd build
+mkdir -p build && cd build
 cmake .. -DCPPREST_EXCLUDE_WEBSOCKETS=ON
 make -j && make install
 cd ../..
 
 git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git
 cd etcd-cpp-apiv3
-mkdir build && cd build
+mkdir -p build && cd build
 cmake ..
 make -j && make install
 cd ../..
@@ -35,7 +35,7 @@ cd ../..
 # TBB
 git clone https://github.com/oneapi-src/oneTBB.git
 cd oneTBB
-mkdir build && cd build
+mkdir -p build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DTBB_TEST=OFF
 make -j && sudo make install
 cd ../..
@@ -43,7 +43,7 @@ cd ../..
 # yaml-cpp
 git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
-mkdir build && cd build
+mkdir -p build && cd build
 cmake -D BUILD_SHARED_LIBS=ON ..
 make -j && sudo make install
 cd ../..
@@ -80,7 +80,7 @@ pip3 install libclang
 git clone https://github.com/v6d-io/v6d
 cd v6d
 git submodule update --init
-mkdir build && cd build
+mkdir -p build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF
 make -j && sudo make install
 cd ../..
@@ -104,7 +104,7 @@ export MAXWELL_HOME=`pwd`/maxwell
 
 # Debezium
 # we need to mkdir connect plugins for kafka
-mkdir $KAFKA_PLUGIN
+mkdir -p $KAFKA_PLUGIN
 # mysql connector
 wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/2.3.0.Final/debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
 tar zxvf debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
