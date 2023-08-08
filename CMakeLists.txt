@@ -42,7 +42,11 @@ install(TARGETS frag_header
 )
 
 file(GLOB SEGGRAPH_HEADER_FILES
-          "vegito/include/seggraph/*.hpp"
+          "vegito/include/seggraph/blocks.hpp"
+          "vegito/include/seggraph/bloom_filter.hpp"
+          "vegito/include/seggraph/epoch_graph_reader.hpp"
+          "vegito/include/seggraph/types.hpp"
+          "vegito/include/seggraph/utils.hpp"
           )
 
 add_library(seggraph_header INTERFACE)
@@ -70,7 +74,10 @@ install(TARGETS interface_header
 )
 
 file(GLOB UTIL_HEADER_FILES
-          "vegito/include/util/*.h"
+          "vegito/include/util/inline_str.h"
+          "vegito/include/util/macros.h"
+          "vegito/include/util/serializer.h"
+          "vegito/include/util/varint.h"
           )
 
 add_library(util_header INTERFACE)
