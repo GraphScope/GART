@@ -197,7 +197,7 @@ If we use Debezium as the log capture, we also need to set up a configuration of
 You can launch GART by the `gart` script under the `build` directory, like:
 ```
 export KAFKA_HOME=/path/to/kafka
-export MAXWELL_HOME=/path/to/maxwell (if you use Maxwell as log capturer)
+export MAXWELL_HOME=/path/to/maxwell # if you use Maxwell as log capturer
 ./gart --user maxwell --password 123456
 ```
 

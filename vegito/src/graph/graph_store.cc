@@ -176,8 +176,8 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 
   // vertex_table
   {
-    auto alloc = allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<seggraph::vertex_t>(array_allocator);
+    auto alloc = allocator_traits<decltype(array_allocator)>::rebind_alloc<
+        seggraph::vertex_t>(array_allocator);
 
     vineyard::ObjectID oid;
     uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
@@ -395,11 +395,13 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
     if (dtype == STRING) {
       auto str_len = vprop[idx].length();
       size_t old_offset = get_string_buffer_offset();
-      char* string_buffer = get_string_buffer();
-      size_t new_offset = old_offset + str_len;
-      assert(new_offset < get_string_buffer_size());
-      memcpy(string_buffer + old_offset, vprop[idx].data(), str_len);
-      set_string_buffer_offset(new_offset);
+      if (str_len) {
+        char* string_buffer = get_string_buffer();
+        size_t new_offset = old_offset + str_len;
+        assert(new_offset < get_string_buffer_size());
+        memcpy(string_buffer + old_offset, vprop[idx].data(), str_len);
+        set_string_buffer_offset(new_offset);
+      }
       uint64_t value = (old_offset << 16) | str_len;
       tmp_str[idx] = to_string(value);
       vprop[idx] = tmp_str[idx];

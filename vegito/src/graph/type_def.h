@@ -20,7 +20,8 @@
 
 namespace gart {
 namespace graph {
-namespace ldbc {
+
+// data types from LDBC SNB
 
 typedef uint64_t ID;
 typedef uint32_t Uint;
@@ -31,7 +32,6 @@ typedef int64_t Time;
 typedef inline_str_fixed<22> TimeStamp;
 // format for debezium: 2010-12-30T17:15:00.0Z
 
-}  // namespace ldbc
 }  // namespace graph
 }  // namespace gart
 

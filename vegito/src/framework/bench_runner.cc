@@ -314,49 +314,49 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
         graph_schema.dtype_map[{id, prop_id}] = DATE;
         if (is_vertex) {
           col.vtype = DATE;
-          col.vlen = sizeof(gart::graph::ldbc::Date);
+          col.vlen = sizeof(gart::graph::Date);
           prop_schema.cols.push_back(col);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, DATE);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
                                                      edge_prop_prefix_bytes);
-          edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::Date);
+          edge_prop_prefix_bytes += sizeof(gart::graph::Date);
         }
       } else if (prop_dtype == "DATETIME") {
         graph_schema.dtype_map[{id, prop_id}] = DATETIME;
         if (is_vertex) {
           col.vtype = DATETIME;
-          col.vlen = sizeof(gart::graph::ldbc::DateTime);
+          col.vlen = sizeof(gart::graph::DateTime);
           prop_schema.cols.push_back(col);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, DATETIME);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
                                                      edge_prop_prefix_bytes);
-          edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::DateTime);
+          edge_prop_prefix_bytes += sizeof(gart::graph::DateTime);
         }
       } else if (prop_dtype == "TIME") {
         graph_schema.dtype_map[{id, prop_id}] = TIME;
         if (is_vertex) {
           col.vtype = TIME;
-          col.vlen = sizeof(gart::graph::ldbc::Time);
+          col.vlen = sizeof(gart::graph::Time);
           prop_schema.cols.push_back(col);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, TIME);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
                                                      edge_prop_prefix_bytes);
-          edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::Time);
+          edge_prop_prefix_bytes += sizeof(gart::graph::Time);
         }
       } else if (prop_dtype == "TIMESTAMP") {
         graph_schema.dtype_map[{id, prop_id}] = TIMESTAMP;
         if (is_vertex) {
           col.vtype = TIMESTAMP;
-          col.vlen = sizeof(gart::graph::ldbc::TimeStamp);
+          col.vlen = sizeof(gart::graph::TimeStamp);
           prop_schema.cols.push_back(col);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, TIMESTAMP);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
                                                      edge_prop_prefix_bytes);
-          edge_prop_prefix_bytes += sizeof(gart::graph::ldbc::TimeStamp);
+          edge_prop_prefix_bytes += sizeof(gart::graph::TimeStamp);
         }
       } else {
         assert(false);

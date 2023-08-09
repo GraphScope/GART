@@ -194,6 +194,11 @@ class Property {  // NOLINT(build/class)
 
   static inline void assign_prop(int data_type, void* prop_ptr,
                                  const std::string_view& val) {
+    if (val.size() == 0) {
+      // TODO(SSJ): add NULL mark
+      return;
+    }
+
     try {
       switch (data_type) {
       case CHAR:
@@ -214,9 +219,7 @@ class Property {  // NOLINT(build/class)
       case DOUBLE:
         assign(prop_ptr, stod(std::string(val)));
         break;
-      // FIXME: coupled with LDBC?
       case STRING:
-        // assign_inline_str<gart::graph::ldbc::String>(prop_ptr, val);
         // use string id (str_offset << 16 | str_len) instead of itself
         assign(prop_ptr, stoull(std::string(val)));
         break;
@@ -230,7 +233,7 @@ class Property {  // NOLINT(build/class)
         assign(prop_ptr, stoll(std::string(val)));
         break;
       case TIMESTAMP:
-        assign_inline_str<gart::graph::ldbc::TimeStamp>(prop_ptr, val);
+        assign_inline_str<gart::graph::TimeStamp>(prop_ptr, val);
         break;
       default:
         LOG(ERROR) << "Unsupported data type: " << data_type;
