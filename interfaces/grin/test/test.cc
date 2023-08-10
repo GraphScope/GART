@@ -25,6 +25,38 @@
 #include "../include/include/topology/vertexlist.h"
 #include "../include/extension/include/indexed_adjacent_list.h"
 
+void test_string_storage(char* uri) {
+  GRIN_PARTITIONED_GRAPH pg = grin_get_partitioned_graph_from_storage(uri);
+  GRIN_PARTITION_LIST local_partitions = grin_get_local_partition_list(pg);
+  GRIN_PARTITION partition =
+      grin_get_partition_from_list(pg, local_partitions, 0);
+  GRIN_GRAPH g = grin_get_local_graph_by_partition(pg, partition);
+  grin_destroy_partition(pg, partition);
+  grin_destroy_partition_list(pg, local_partitions);
+  grin_destroy_partitioned_graph(pg);
+  auto vertex_list = grin_get_vertex_list_by_type(g, 0);
+  auto vpl = grin_get_vertex_property_list_by_type(g, 0);
+  auto vpl_size = grin_get_vertex_property_list_size(g, vpl);
+  auto vertex_iter = grin_get_vertex_list_begin(g, vertex_list);
+  while (!grin_is_vertex_list_end(g, vertex_iter)) {
+    auto v = grin_get_vertex_from_iter(g, vertex_iter);
+    
+    for (auto prop_id = 0; prop_id < 1; prop_id++) {
+     auto v_prop = grin_get_vertex_property_by_id(g, 0, prop_id);
+     auto v_dtype = grin_get_vertex_property_datatype(g, v_prop);
+     if (v_dtype == String) {
+      const char* pv = grin_get_vertex_property_value_of_string(g, v, v_prop);
+      std::cout << "string prop value = " << pv << std::endl;
+      grin_destroy_string_value(g, pv);
+     }
+     grin_destroy_vertex_property(g, v_prop);
+    }
+    
+    grin_destroy_vertex(g, v);
+    grin_get_next_vertex_list_iter(g, vertex_iter);
+  }
+}
+
 void test_extension(char* uri) {
   GRIN_PARTITIONED_GRAPH pg = grin_get_partitioned_graph_from_storage(uri);
   GRIN_PARTITION_LIST local_partitions = grin_get_local_partition_list(pg);
@@ -1070,6 +1102,7 @@ int main() {
   test_topology(uri);
   test_perf(uri);
 #endif
-  test_extension(uri);
+  // test_extension(uri);
+  test_string_storage(uri);
   return 0;
 }

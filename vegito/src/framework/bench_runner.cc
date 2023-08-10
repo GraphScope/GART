@@ -114,7 +114,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
 
   // alloc string buffer
   // TODO(wanglei): hard code
-  graph_store->add_string_buffer((1ul << 30) * 5);  // 5GB
+  graph_store->add_string_buffer((1ul << 30) * 10);  // 10GB
 
   // Parse vertex
   for (int idx = 0; idx < vlabel_num; ++idx) {
@@ -502,6 +502,7 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
   init_graph_schema(FLAGS_schema_file_path, FLAGS_table_schema_file_path,
                     graph_stores_[p_id], rg_maps_[p_id]);
   graph_stores_[p_id]->put_schema();
+  graph_stores_[p_id]->put_schema4gie();
   int v_label_num = graph_stores_[p_id]->get_total_vertex_label_num();
   graph_stores_[p_id]->init_ovg2ls(v_label_num);
 #ifndef WITH_TEST

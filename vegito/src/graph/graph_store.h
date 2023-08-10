@@ -55,6 +55,8 @@ struct SchemaImpl {
   int elabel_offset;
   std::string get_json(int pid);
 
+  std::string get_json4gie(int pid);
+
  private:
   void fill_json(void* ptr) const;
 };
@@ -144,6 +146,8 @@ class GraphStore {
   void put_blob_json_etcd(uint64_t write_epoch) const;
 
   void put_schema();
+
+  void put_schema4gie();
 
   seggraph::SegGraph* get_ov_graph(uint64_t vlabel) {
     return ov_seg_graphs_[vlabel];

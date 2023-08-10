@@ -17,7 +17,9 @@ limitations under the License.
 
 #include "util/inline_str.h"
 
-void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {}
+void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {
+  free(const_cast<char*>(value));
+}
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY_NAME
 const char* grin_get_vertex_property_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vtype,
@@ -172,10 +174,12 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
                                                      GRIN_VERTEX v,
                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g
-      ->template GetData<std::string>(_GRIN_VERTEX_T(v),
-                                      _grin_get_prop_from_property(vp))
-      .c_str();
+  auto tmp_str = _g->template GetData<std::string>(_GRIN_VERTEX_T(v),
+                                                   _grin_get_prop_from_property(vp));
+  char* out = (char*)malloc(tmp_str.size() + 1);
+  memcpy(out, tmp_str.c_str(), tmp_str.size());
+  out[tmp_str.size()] = '\0';
+  return out;
 }
 
 int grin_get_vertex_property_value_of_date32(GRIN_GRAPH g, GRIN_VERTEX v,
@@ -347,7 +351,10 @@ const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e,
   int64_t edata_offset = fake_edata >> 16;
   int64_t edata_len = fake_edata & 0xffff;
   std::string tmp_str(_g->GetStringBuffer() + edata_offset, edata_len);
-  return tmp_str.c_str();
+  char* out = (char*)malloc(tmp_str.size() + 1);
+  memcpy(out, tmp_str.c_str(), tmp_str.size());
+  out[tmp_str.size()] = '\0';
+  return out;
 }
 
 int grin_get_edge_property_value_of_date32(GRIN_GRAPH g, GRIN_EDGE e,

@@ -14,6 +14,7 @@
  */
 
 #include "graph/graph_store.h"
+#include <fstream>
 
 using std::allocator_traits;
 using std::map;
@@ -46,6 +47,30 @@ struct PropDef {
     res["name"] = name;
     return res;
   }
+
+  vineyard::json json4gie() const {
+    using json = vineyard::json;
+    json res;
+    res["key"]["id"] = id;
+    res["key"]["name"] = name;
+    int dtype_index = 0;
+    if (dtype == PropertyStoreDataType::BOOL) {
+      dtype_index = 0;
+    } else if (dtype == PropertyStoreDataType::INT) {
+      dtype_index = 1;
+    } else if (dtype == PropertyStoreDataType::LONG) {
+      dtype_index = 2;
+    } else if (dtype == PropertyStoreDataType::DOUBLE) {
+      dtype_index = 3;
+    } else if (dtype == PropertyStoreDataType::STRING) {
+      dtype_index = 4;
+    } else {
+      assert(false);
+    }
+    res["data_type"] = dtype_index;
+    res["is_primary_key"] = false;
+    return res;
+  }
 };
 
 const string VERTEX = "VERTEX";  // NOLINT(runtime/string)
@@ -59,6 +84,10 @@ struct TypeDef {
   string src_vlabel;  // for edge
   string dst_vlabel;  // for edge
   string type;        // "VERTEX" or "EDGE"
+
+  int vertex_label_num;  // TODO(wanglei): for gie, remove later
+  int src_vlabel_id;
+  int dst_vlabel_id;
 
   vineyard::json json() const {
     using json = vineyard::json;
@@ -87,6 +116,37 @@ struct TypeDef {
 
     res["type"] = type;
 
+    return res;
+  }
+
+  vineyard::json json4gie() const{
+    using json = vineyard::json;
+    json res;
+    if (type == VERTEX) {
+      res["label"]["id"] = id;
+      res["label"]["name"] = label;
+      json props_array = json::array();
+      for (const auto& prop : propertyDefList) {
+        props_array.push_back(prop.json4gie());
+      }
+      res["columns"] = props_array;
+    } else {
+      res["label"]["id"] = id - vertex_label_num;
+      res["label"]["name"] = label;
+      json relation_array = json::array();
+      json relation_content;
+      relation_content["src"]["id"] = src_vlabel_id;
+      relation_content["src"]["name"] = src_vlabel;
+      relation_content["dst"]["id"] = dst_vlabel_id;
+      relation_content["dst"]["name"] = dst_vlabel;
+      relation_array.push_back(relation_content);
+      res["entity_pairs"] = relation_array;
+      json props_array = json::array();
+      for (const auto& prop : propertyDefList) {
+        props_array.push_back(prop.json4gie());
+      }
+      res["columns"] = props_array;
+    }
     return res;
   }
 
@@ -149,6 +209,14 @@ void GraphStore::put_schema() {
           ->put(latest_epoch, to_string(numeric_limits<uint64_t>::max()))
           .get();
   assert(response_task.is_ok());
+}
+
+void GraphStore::put_schema4gie() {
+  auto schema = get_schema();
+  string schema_str = schema.get_json4gie(get_local_pid());
+  std::ofstream fout("./schema/gie_schema_p" + to_string(get_local_pid()) + ".json");
+  fout << schema_str << std::endl;
+  fout.close();
 }
 
 void GraphStore::add_string_buffer(size_t size) {
@@ -284,6 +352,13 @@ void SchemaImpl::fill_json(void* ptr) const {
     type.id = label_id;
     type.label = label;
 
+    //TODO(wanglei): for gie, remove later
+    type.vertex_label_num = label_id_map.size() - edge_relation.size();
+    if (!is_v) {
+      type.src_vlabel_id = edge_relation.at(label_id).first;
+      type.dst_vlabel_id = edge_relation.at(label_id).second;
+    }
+
     int pid_begin = -1, pid_end = -1;
     if (label2prop_offset.find(label_id) != label2prop_offset.end()) {
       pid_begin = label2prop_offset.at(label_id);
@@ -325,6 +400,31 @@ string SchemaImpl::get_json(int pid) {
     props_array.push_back(type.json());
   }
   graph_schema["types"] = props_array;
+
+  return graph_schema.dump();
+}
+
+string SchemaImpl::get_json4gie(int pid) {
+  using json = vineyard::json;
+  SchemaJson sj;
+  // fill
+  fill_json(&sj);
+
+  json graph_schema;
+  
+  json vertex_array = json::array();
+  json edge_array = json::array();
+  for (const auto& type : sj.types) {
+    if (type.type == VERTEX) {
+      vertex_array.push_back(type.json4gie());
+    } else {
+      edge_array.push_back(type.json4gie());
+    }
+  }
+  graph_schema["entities"] = vertex_array;
+  graph_schema["relations"] = edge_array;
+  graph_schema["is_table_id"] = true;
+  graph_schema["is_column_id"] = false;
 
   return graph_schema.dump();
 }
