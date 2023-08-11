@@ -44,6 +44,7 @@ class GartFragment {
   using EdgeLabelBlockHeader = seggraph::EdgeLabelBlockHeader;
   using dir_t = seggraph::dir_t;
   using hashmap_t = vineyard::HashmapMVCC<int64_t, int64_t>;
+  using bitmap_t = uint16_t;
 
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
@@ -99,6 +100,7 @@ class GartFragment {
     vertex_prop_blob_ptrs_.resize(vertex_label_num_);
 
     vertex_prop_nums_.resize(vertex_label_num_);
+    vertex_prop_row_bitmap_.resize(vertex_label_num_);
     vertex_prop_id_sum.resize(vertex_label_num_, 0);
 
     vid_parser.Init(fnum_, vertex_label_num_);
@@ -308,6 +310,13 @@ class GartFragment {
       prop_cols_meta[vlabel].resize(vertex_prop_nums_[vlabel]);
       vertex_prop_blob_ptrs_[vlabel].resize(vertex_prop_nums_[vlabel]);
 
+      uint64_t vprop_row_meta_oid =
+          blob_info[i]["vprop_row_meta_oid"].get<uint64_t>();
+      std::shared_ptr<vineyard::Blob> row_meta_blob;
+      VINEYARD_CHECK_OK(
+          client_.GetBlob(vprop_row_meta_oid, true, row_meta_blob));
+      vertex_prop_row_bitmap_[vlabel] = (bitmap_t*) row_meta_blob->data();
+
       for (uint64_t idx = 0; idx < vertex_prop_config.size(); idx++) {
         auto prop_id = vertex_prop_config[idx]["prop_id"].get<int>();
         auto v_prop_obj_id =
@@ -366,6 +375,10 @@ class GartFragment {
 
   prop_id_t vertex_property_num(label_id_t label) const {
     return vertex_prop_nums_[label];
+  }
+
+  bitmap_t* GetVertexPropRowBitmap(label_id_t label) {
+    return vertex_prop_row_bitmap_[label];
   }
 
   prop_id_t edge_property_num(label_id_t label) const {
@@ -1149,11 +1162,13 @@ class GartFragment {
   std::vector<std::vector<std::vector<fid_t>>> idst_, odst_, iodst_;
   std::vector<std::vector<std::vector<fid_t*>>> idoffset_, odoffset_,
       iodoffset_;
+
   // for edge property
   std::vector<int> edge_prop_nums_;
+
   // for vertex property
   std::vector<int> vertex_prop_nums_;
-
+  std::vector<bitmap_t*> vertex_prop_row_bitmap_;  // NULL bitmap
   std::vector<std::vector<char*>> vertex_prop_blob_ptrs_;
 
   fid_t fid_, fnum_;
