@@ -33,6 +33,8 @@
 #include <vector>
 
 #include "glog/logging.h"
+#include "util/macros.h"
+#include "vineyard/common/util/uuid.h"
 
 #include "fragment/shared_storage.h"
 #include "graph/type_def.h"
@@ -149,6 +151,9 @@ class Property {  // NOLINT(build/class)
     return blob_metas_;
   }
 
+  // return the oid for meta data of each row (now is the NULL bitmap)
+  vineyard::ObjectID get_row_meta_oid() const { return row_meta_oid_; }
+
   // schema
   std::vector<size_t> val_lens_;
   std::vector<size_t> val_off_;
@@ -194,9 +199,8 @@ class Property {  // NOLINT(build/class)
 
   static inline void assign_prop(int data_type, void* prop_ptr,
                                  const std::string_view& val) {
-    if (val.size() == 0) {
-      // TODO(SSJ): add NULL mark
-      return;
+    if (unlikely(val.size() == 0)) {
+      LOG(ERROR) << "Empty value for data type: " << data_type;
     }
 
     try {
@@ -276,6 +280,10 @@ class Property {  // NOLINT(build/class)
   const uint64_t max_items_;
 
   std::vector<gart::VPropMeta> blob_metas_;
+
+  // oid for meta data of each row (now is the NULL bitmap)
+  vineyard::ObjectID row_meta_oid_;
+
   seggraph::SparseArrayAllocator<char> array_allocator;
 
 #if 1  // cache for performance!

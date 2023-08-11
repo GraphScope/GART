@@ -113,6 +113,8 @@ class PropertyColPaged : public Property {
     std::vector<Page*> old_pages;  // tailer (oldest)
   };
 
+  typedef uint16_t ColBitMap;
+
   Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev);
 
   Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev,
@@ -136,6 +138,9 @@ class PropertyColPaged : public Property {
   std::vector<char*> fixCols_;
   std::vector<FlexCol> flexCols_;
 
+  // indicate null properties for each row
+  ColBitMap* null_bitmaps_;
+
   // stored in Blob
   struct FlexColHeader {
     int num_row_per_page;
@@ -154,7 +159,9 @@ class PropertyColPaged : public Property {
   };
 
   std::vector<FlexBuf> flex_bufs_;
-  std::vector<vineyard::ObjectID> col_ids_;
+
+  // object id for each property
+  std::vector<vineyard::ObjectID> col_oids_;
 
   Page* findPage(int col_id, uint64_t page_num, uint64_t version,
                  uint64_t* walk_cnt = nullptr);

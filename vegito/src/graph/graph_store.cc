@@ -119,7 +119,7 @@ struct TypeDef {
     return res;
   }
 
-  vineyard::json json4gie() const{
+  vineyard::json json4gie() const {
     using json = vineyard::json;
     json res;
     if (type == VERTEX) {
@@ -214,7 +214,8 @@ void GraphStore::put_schema() {
 void GraphStore::put_schema4gie() {
   auto schema = get_schema();
   string schema_str = schema.get_json4gie(get_local_pid());
-  std::ofstream fout("./schema/gie_schema_p" + to_string(get_local_pid()) + ".json");
+  std::ofstream fout("./schema/gie_schema_p" + to_string(get_local_pid()) +
+                     ".json");
   fout << schema_str << std::endl;
   fout.close();
 }
@@ -290,7 +291,7 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
     assert(blob_schemas_.find(vlabel) != blob_schemas_.end());
     auto& blob_schema = blob_schemas_[vlabel];
     auto p = property_stores_[vlabel];
-    blob_schema.set_prop_meta(p->get_blob_metas());
+    blob_schema.set_prop_meta(p->get_row_meta_oid(), p->get_blob_metas());
     break;
   }
   case PROP_COLUMN2: {
@@ -352,7 +353,7 @@ void SchemaImpl::fill_json(void* ptr) const {
     type.id = label_id;
     type.label = label;
 
-    //TODO(wanglei): for gie, remove later
+    // TODO(wanglei): for gie, remove later
     type.vertex_label_num = label_id_map.size() - edge_relation.size();
     if (!is_v) {
       type.src_vlabel_id = edge_relation.at(label_id).first;
@@ -411,7 +412,7 @@ string SchemaImpl::get_json4gie(int pid) {
   fill_json(&sj);
 
   json graph_schema;
-  
+
   json vertex_array = json::array();
   json edge_array = json::array();
   for (const auto& type : sj.types) {

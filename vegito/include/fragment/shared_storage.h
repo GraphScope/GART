@@ -180,7 +180,7 @@ struct VPropMeta {
     this->type = type;
   }
 
-  void init_obj(oid_t object_id, uintptr_t header) {
+  void set_oid(oid_t object_id, uintptr_t header) {
     this->object_id = object_id;
     this->header = header;
   }
@@ -234,7 +234,10 @@ class BlobSchema {
     vertex_table.set_loc(loc_inner, loc_outer);
   }
 
-  void set_prop_meta(const std::vector<VPropMeta>& meta) { vprops = meta; }
+  void set_prop_meta(oid_t row_meta, const std::vector<VPropMeta>& meta) {
+    row_meta_oid = row_meta;
+    vprops = meta;
+  }
 
   void set_ovg2l_oid(oid_t oid) { ov_g2l_blob_oid = oid; }
 
@@ -255,6 +258,8 @@ class BlobSchema {
     single_blob_schema["elabel2seg"] = elabel2seg.json();
     single_blob_schema["num_vprops"] = vprops.size();
     single_blob_schema["ovg2l_blob"] = ov_g2l_blob_oid;
+
+    single_blob_schema["vprop_row_meta_oid"] = row_meta_oid;
 
     json vprop_schema = json::array();
 
@@ -279,6 +284,7 @@ class BlobSchema {
   oid_t ov_g2l_blob_oid;
 
   // uint64_t num_vprops;
+  oid_t row_meta_oid;
   std::vector<VPropMeta> vprops;
 
   oid_t ov_block_oid;

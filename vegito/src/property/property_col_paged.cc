@@ -25,6 +25,7 @@
  */
 
 #include "property/property_col_paged.h"
+
 #include "graph/graph_store.h"
 
 #define LAZY_PAGE_ALLOC 1
@@ -122,10 +123,15 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
     : Property(max_items),
       table_id_(s.table_id),
       cols_(s.cols),
-      col_ids_(s.cols.size()),
+      col_oids_(s.cols.size()),
       flex_bufs_(s.cols.size()),
       fixCols_(s.cols.size(), nullptr),
       flexCols_(s.cols.size()) {
+  if (cols_.size() > sizeof(ColBitMap) * CHAR_BIT || cols_.size() > MAX_COLS) {
+    LOG(ERROR) << "Too many columns: " << cols_.size();
+    exit(-1);
+  }
+
   // each column
   val_len_ = 0;
   for (int i = 0; i < cols_.size(); i++) {
@@ -164,6 +170,9 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
   }
   assert(pcols_.size() == cols_.size());
 
+  null_bitmaps_ = reinterpret_cast<ColBitMap*>(
+      mem_alloc(sizeof(ColBitMap) * max_items_, &row_meta_oid_));
+
   for (int i = 0; i < cols_.size(); ++i) {
     size_t vlen = val_lens_[i];
     // divided into 2 types according to "updatable"
@@ -185,7 +194,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       //     "malloc %lf GB\n",
       //     table_id_, i, page_sz, vlen, page_num,
       //     FlexColHeader::size(page_num), total_sz / 1024.0 / 1024 / 1024);
-      char* buf = mem_alloc(total_sz, &col_ids_[i]);
+      char* buf = mem_alloc(total_sz, &col_oids_[i]);
       FlexColHeader* header = reinterpret_cast<FlexColHeader*>(buf);
       flex_bufs_[i].total_sz = total_sz;
       flex_bufs_[i].buf = buf;
@@ -204,7 +213,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
         flexCols_[i].pages[p] = page;
       }
     } else {
-      fixCols_[i] = mem_alloc(vlen * max_items_, &col_ids_[i]);
+      fixCols_[i] = mem_alloc(vlen * max_items_, &col_oids_[i]);
       printf("Vlabel %d column %d (fixed), malloc %lf GB\n", table_id_, i,
              vlen * max_items_ / 1024.0 / 1024 / 1024);
     }
@@ -214,7 +223,8 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
   for (int i = 0; i < cols_.size(); ++i) {
     gart::VPropMeta& meta = blob_metas_[i];
     meta.init(i, val_lens_[i], cols_[i].updatable, cols_[i].vtype);
-    meta.init_obj(col_ids_[i], 0);  // TODO(wanglei): hard code of header
+
+    meta.set_oid(col_oids_[i], 0);  // TODO(wanglei): hard code of header
   }
 }
 
@@ -302,9 +312,12 @@ inline PropertyColPaged::Page* PropertyColPaged::findPage(int colID,
 }
 
 void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
-  assert(off < max_items_);
+  if (unlikely(off > max_items_)) {
+    LOG(ERROR) << "off " << off << " > max_items_ " << max_items_;
+    assert(false);
+  }
 
-  // assert(k != 0);  // for LDBC
+  null_bitmaps_[off] = 0;
 
   for (int i = 0; i < cols_.size(); ++i) {
     const Property::Column& col = cols_[i];
@@ -331,8 +344,14 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
 
 void PropertyColPaged::insert(uint64_t off, uint64_t k,
                               const StringViewList& v_list, uint64_t ver) {
-  assert(off < max_items_);
+  if (unlikely(off > max_items_)) {
+    LOG(ERROR) << "off " << off << " > max_items_ " << max_items_;
+    assert(false);
+  }
+
   assert(v_list.size() == cols_.size());
+
+  null_bitmaps_[off] = 0;
 
   for (int i = 0; i < cols_.size(); ++i) {
     const Property::Column& col = cols_[i];
@@ -348,7 +367,12 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
     } else {
       dst = fixCols_[i] + off * vlen;
     }
-    assign_prop(col.vtype, dst, v_list[i]);
+
+    if (v_list[i].size() == 0) {
+      null_bitmaps_[off] |= (1 << i);
+    } else {
+      assign_prop(col.vtype, dst, v_list[i]);
+    }
 
 #if UPDATE_STAT
     ++stat_.num_update;
