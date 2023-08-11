@@ -18,10 +18,11 @@
 
 #include <cassert>
 #include <cstdint>
+#include <string_view>
 #include "grape/fragment/fragment_base.h"
 #include "vineyard/basic/ds/hashmap_mvcc.h"
 
-#include "fragment/id_parser.h"
+#include "vegito/include/fragment/id_parser.h"
 #include "interfaces/fragment/iterator.h"
 #include "interfaces/fragment/property_util.h"
 
@@ -639,7 +640,7 @@ class GartFragment {
     }
   }
 
-  char* GetDataAddrImpl(std::string& t, const vertex_t& v,
+  char* GetDataAddrImpl(std::string_view& t, const vertex_t& v,
                         prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
@@ -713,7 +714,7 @@ class GartFragment {
     assert(false);
   }
 
-  void GetDataImpl(std::string& t, const vertex_t& v, prop_id_t prop_id) const {
+  void GetDataImpl(std::string_view& t, const vertex_t& v, prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
@@ -735,7 +736,7 @@ class GartFragment {
           int64_t value = *(((int64_t*) data) + page_idx);
           int64_t str_offset = value >> 16;
           int64_t str_len = value & 0xffff;
-          t = std::string(string_buffer_ + str_offset, str_len);
+          t = std::string_view(string_buffer_ + str_offset, str_len);
           return;
         }
       }
@@ -745,7 +746,7 @@ class GartFragment {
       int64_t value = *(((int64_t*) data) + v_offset);
       int64_t str_offset = value >> 16;
       int64_t str_len = value & 0xffff;
-      t = std::string(string_buffer_ + str_offset, str_len);
+      t = std::string_view(string_buffer_ + str_offset, str_len);
     }
   }
 

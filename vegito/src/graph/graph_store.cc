@@ -496,13 +496,13 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
     if (dtype == STRING) {
       auto str_len = vprop[idx].length();
       size_t old_offset = get_string_buffer_offset();
-      if (str_len) {
-        char* string_buffer = get_string_buffer();
-        size_t new_offset = old_offset + str_len;
-        assert(new_offset < get_string_buffer_size());
-        memcpy(string_buffer + old_offset, vprop[idx].data(), str_len);
-        set_string_buffer_offset(new_offset);
-      }
+      char* string_buffer = get_string_buffer();
+      // each string is ended with '\0'
+      size_t new_offset = old_offset + str_len + 1;
+      assert(new_offset < get_string_buffer_size());
+      memcpy(string_buffer + old_offset, vprop[idx].data(), str_len);
+      string_buffer[new_offset - 1] = '\0';
+      set_string_buffer_offset(new_offset);
       uint64_t value = (old_offset << 16) | str_len;
       tmp_str[idx] = to_string(value);
       vprop[idx] = tmp_str[idx];
@@ -533,9 +533,10 @@ void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
       auto str_len = eprop[idx].length();
       size_t old_offset = get_string_buffer_offset();
       char* string_buffer = get_string_buffer();
-      size_t new_offset = old_offset + str_len;
+      size_t new_offset = old_offset + str_len + 1;
       assert(new_offset < get_string_buffer_size());
       memcpy(string_buffer + old_offset, eprop[idx].data(), str_len);
+      string_buffer[new_offset - 1] = '\0';
       set_string_buffer_offset(new_offset);
       uint64_t value = (old_offset << 16) | str_len;
       tmp_str[idx] = to_string(value);

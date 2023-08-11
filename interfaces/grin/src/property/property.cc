@@ -17,10 +17,8 @@ limitations under the License.
 
 #include "util/inline_str.h"
 
-void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {
-  free(const_cast<char*>(value));
-}
-
+void grin_destroy_string_value(GRIN_GRAPH g, const char* value) { }
+  
 #ifdef GRIN_WITH_VERTEX_PROPERTY_NAME
 const char* grin_get_vertex_property_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vtype,
                                           GRIN_VERTEX_PROPERTY vp) {
@@ -174,12 +172,8 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
                                                      GRIN_VERTEX v,
                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto tmp_str = _g->template GetData<std::string>(_GRIN_VERTEX_T(v),
-                                                   _grin_get_prop_from_property(vp));
-  char* out = (char*)malloc(tmp_str.size() + 1);
-  memcpy(out, tmp_str.c_str(), tmp_str.size());
-  out[tmp_str.size()] = '\0';
-  return out;
+  return _g->template GetDataAddr<std::string_view>(_GRIN_VERTEX_T(v),
+                                                        _grin_get_prop_from_property(vp));
 }
 
 int grin_get_vertex_property_value_of_date32(GRIN_GRAPH g, GRIN_VERTEX v,
@@ -226,7 +220,7 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
   } else if (dtype_str == "DOUBLE") {
     _value = _g->template GetDataAddr<double>(_GRIN_VERTEX_T(v), prop_id);
   } else if (dtype_str == "STRING") {
-    _value = _g->template GetDataAddr<std::string>(_GRIN_VERTEX_T(v), prop_id);
+    _value = _g->template GetDataAddr<std::string_view>(_GRIN_VERTEX_T(v), prop_id);
   } else {
     grin_error_code = GRIN_ERROR_CODE::UNKNOWN_DATATYPE;
     _value = NULL;
@@ -349,12 +343,7 @@ const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e,
     fake_edata = *reinterpret_cast<int64_t*>(base_addr + offset);
   }
   int64_t edata_offset = fake_edata >> 16;
-  int64_t edata_len = fake_edata & 0xffff;
-  std::string tmp_str(_g->GetStringBuffer() + edata_offset, edata_len);
-  char* out = (char*)malloc(tmp_str.size() + 1);
-  memcpy(out, tmp_str.c_str(), tmp_str.size());
-  out[tmp_str.size()] = '\0';
-  return out;
+  return _g->GetStringBuffer() + edata_offset;
 }
 
 int grin_get_edge_property_value_of_date32(GRIN_GRAPH g, GRIN_EDGE e,
@@ -419,9 +408,7 @@ const void* grin_get_edge_property_value(GRIN_GRAPH g, GRIN_EDGE e,
     } else {
       int64_t fake_edata = *reinterpret_cast<int64_t*>(base_addr);
       int64_t edata_offset = fake_edata >> 16;
-      int64_t edata_len = fake_edata & 0xffff;
-      std::string tmp_str(_g->GetStringBuffer() + edata_offset, edata_len);
-      return tmp_str.c_str();
+      return _g->GetStringBuffer() + edata_offset;
     }
   } else {
     auto offset = _g->edge_prop_offsets[e_type_id][prop_id - 1];
@@ -430,9 +417,7 @@ const void* grin_get_edge_property_value(GRIN_GRAPH g, GRIN_EDGE e,
     } else {
       int64_t fake_edata = *reinterpret_cast<int64_t*>(base_addr + offset);
       int64_t edata_offset = fake_edata >> 16;
-      int64_t edata_len = fake_edata & 0xffff;
-      std::string tmp_str(_g->GetStringBuffer() + edata_offset, edata_len);
-      return tmp_str.c_str();
+      return _g->GetStringBuffer() + edata_offset;
     }
   }
 }

@@ -56,12 +56,7 @@ double grin_get_double_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
 const char* grin_get_string_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _r = static_cast<GRIN_ROW_T*>(r);
-  int64_t fake_edata = *static_cast<const int64_t*>((*_r)[idx]);
-  auto edata_offset = fake_edata >> 16;
-  int64_t len = (fake_edata & 0xffff) + 1;
-  char* out = new char[len];
-  snprintf(out, len, "%s", _g->GetStringBuffer() + edata_offset);
-  return out;
+  return static_cast<const char*>((*_r)[idx]);
 }
 
 int grin_get_date32_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
@@ -167,8 +162,9 @@ const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt,
   case GRIN_DATATYPE::Double:
     return static_cast<const double*>((*_r)[idx]);
   case GRIN_DATATYPE::String: {
-    auto s = static_cast<const std::string*>((*_r)[idx]);
-    return s->c_str();
+    return static_cast<const char*>((*_r)[idx]);
+    // auto s = static_cast<const std::string*>((*_r)[idx]);
+    // return s->c_str();
   }
   case GRIN_DATATYPE::Date32:
     return static_cast<const int32_t*>((*_r)[idx]);
@@ -202,7 +198,7 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
     } else if (dtype_str == "DOUBLE") {
       r->push_back(_g->template GetDataAddr<double>(_v, prop_id));
     } else if (dtype_str == "STRING") {
-      r->push_back(_g->template GetDataAddr<std::string>(_v, prop_id));
+      r->push_back(_g->template GetDataAddr<std::string_view>(_v, prop_id));
     } else {
       r->push_back(NULL);
     }

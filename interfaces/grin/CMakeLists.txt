@@ -49,7 +49,7 @@ link_libraries(${ETCD_CPP_LIBRARIES})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../..)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../vegito/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../vegito/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc")
