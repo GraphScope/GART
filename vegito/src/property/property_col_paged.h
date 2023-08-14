@@ -113,8 +113,6 @@ class PropertyColPaged : public Property {
     std::vector<Page*> old_pages;  // tailer (oldest)
   };
 
-  using ColBitMap = uint16_t;
-
   Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev);
 
   Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev,

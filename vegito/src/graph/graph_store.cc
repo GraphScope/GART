@@ -518,17 +518,30 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
 void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
                                  std::string& out) {
   out.clear();
-  out.resize(get_edge_prop_total_bytes(elabel + total_vertex_label_num_));
-  uint64_t edge_prop_bytes =
-      get_edge_prop_total_bytes(elabel + total_vertex_label_num_);
+  out.resize(get_edge_prop_total_bytes(elabel + total_vertex_label_num_) +
+             sizeof(Property::ColBitMap));
   char* prop_buffer = out.data();
-  vector<string> tmp_str(eprop.size());  // for store string_view
+
+  // null bitmap
+  Property::ColBitMap* bitmap =
+      reinterpret_cast<Property::ColBitMap*>(prop_buffer);
+  *bitmap = 0;
+
+  string tmp_str;  // for store string_view
   for (size_t idx = 0; idx < eprop.size(); idx++) {
+    if (eprop[idx].size() == 0) {
+      *bitmap |= (1 << idx);
+    }
+
     auto dtype =
         get_edge_property_dtypes(elabel + total_vertex_label_num_, idx);
     uint64_t property_offset =
         get_edge_prop_prefix_bytes(elabel + total_vertex_label_num_, idx);
-    void* prop_ptr = prop_buffer + property_offset;
+
+    // bitmap allocated before properties
+    void* prop_ptr =
+        prop_buffer + sizeof(Property::ColBitMap) + property_offset;
+    std::string_view sv = eprop[idx];
     if (dtype == STRING) {
       auto str_len = eprop[idx].length();
       size_t old_offset = get_string_buffer_offset();
@@ -539,10 +552,13 @@ void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
       string_buffer[new_offset - 1] = '\0';
       set_string_buffer_offset(new_offset);
       uint64_t value = (old_offset << 16) | str_len;
-      tmp_str[idx] = to_string(value);
-      Property::assign_prop(dtype, prop_ptr, tmp_str[idx]);
-    } else {
-      Property::assign_prop(dtype, prop_ptr, eprop[idx]);
+      tmp_str = to_string(value);
+
+      sv = tmp_str;
+    }
+
+    if (eprop[idx].size() != 0) {
+      Property::assign_prop(dtype, prop_ptr, sv);
     }
   }
 }
