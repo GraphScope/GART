@@ -22,7 +22,7 @@
 #include "grape/fragment/fragment_base.h"
 #include "vineyard/basic/ds/hashmap_mvcc.h"
 
-#include "vegito/include/fragment/id_parser.h"
+#include "fragment/id_parser.h"
 #include "interfaces/fragment/iterator.h"
 #include "interfaces/fragment/property_util.h"
 
@@ -604,6 +604,19 @@ class GartFragment {
     return edge_prop2dtype_.find(std::make_pair(label_id, prop_id))->second;
   }
 
+  bool VertexPropValueIsValid (const vertex_t& v, prop_id_t prop_id) const {
+    assert(IsInnerVertex(v));
+    label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    auto v_offset = GetOffset(v);
+    bitmap_t null_bitset = *(vertex_prop_row_bitmap_[label_id] + v_offset);
+    bitmap_t flag = (null_bitset >> prop_id) & 1;
+    if (flag == 1) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   template <typename T>
   char* GetDataAddr(const vertex_t& v, prop_id_t prop_id) const {
     T t{};
@@ -851,7 +864,7 @@ class GartFragment {
     int* prop_offsets = nullptr;
     int prop_bytes = 0;
     if (prop_num > 0) {
-      prop_bytes = edge_prop_offsets[e_label][prop_num - 1];
+      prop_bytes = edge_prop_offsets[e_label][prop_num - 1] + sizeof(bitmap_t);
       prop_offsets = (int*) edge_prop_offsets[e_label].data();
     }
     return get_edges_in_seg_(segment, v, prop_bytes, prop_offsets);
@@ -866,7 +879,7 @@ class GartFragment {
     int* prop_offsets = nullptr;
     int prop_bytes = 0;
     if (prop_num > 0) {
-      prop_bytes = edge_prop_offsets[e_label][prop_num - 1];
+      prop_bytes = edge_prop_offsets[e_label][prop_num - 1] + sizeof(bitmap_t);
       prop_offsets = (int*) edge_prop_offsets[e_label].data();
     }
     return get_edges_in_seg_(segment, v, prop_bytes, prop_offsets);

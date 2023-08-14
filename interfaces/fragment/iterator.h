@@ -17,6 +17,7 @@
 #define INTERFACES_FRAGMENT_ITERATOR_H_
 
 #include <cstdint>
+#include <string_view>
 #include "interfaces/fragment/types.h"
 #include "seggraph/blocks.hpp"
 
@@ -215,6 +216,7 @@ class EdgeIterator {
   using VegitoSegmentHeader = seggraph::VegitoSegmentHeader;
   using EdgeLabelBlockHeader = seggraph::EdgeLabelBlockHeader;
   using VegitoEdgeEntry = seggraph::VegitoEdgeEntry;
+  using ColBitMap = uint16_t;
 
   EdgeIterator(VegitoSegmentHeader* seg_header,
                VegitoEdgeBlockHeader* edge_block_header,
@@ -303,10 +305,24 @@ class EdgeIterator {
     return v;
   }
 
+  bool get_data_is_valid(int prop_id) {
+    char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
+                          (edge_prop_offset_ + entries_ - entries_cursor_) *
+                              edge_prop_size_);
+    ColBitMap bitmap = *(ColBitMap*) data;
+    ColBitMap flag = (bitmap >> prop_id) & 1;
+    if (flag == 1) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   char* get_data() {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
+    data += sizeof(ColBitMap);
     return data;
   }
 
@@ -322,6 +338,7 @@ class EdgeIterator {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
+    data += sizeof(ColBitMap);
     if (prop_id == 0) {
       t = *(EDATA_T*) (data);
       return t;
@@ -331,10 +348,12 @@ class EdgeIterator {
     return t;
   }
 
-  std::string get_data_impl(std::string& t, int prop_id) {
+  std::string_view get_data_impl(std::string_view& t, int prop_id) {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
+    std::cout << "edge_prop_size_ = " << edge_prop_size_ << std::endl;
+    data += sizeof(ColBitMap);
     int64_t value;
     if (prop_id == 0) {
       value = *(int64_t*) (data);
@@ -343,7 +362,9 @@ class EdgeIterator {
     }
     int64_t str_offset = value >> 16;
     int64_t str_len = value & 0xffff;
-    return std::string(string_buffer_ + str_offset, str_len);
+    std::cout << "str_offset: " << str_offset << " str_len: " << str_len
+              << std::endl;
+    return std::string_view(string_buffer_ + str_offset, str_len);
   }
 
   uintptr_t get_edge_property_offset() {

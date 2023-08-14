@@ -553,7 +553,6 @@ void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
       set_string_buffer_offset(new_offset);
       uint64_t value = (old_offset << 16) | str_len;
       tmp_str = to_string(value);
-
       sv = tmp_str;
     }
 
