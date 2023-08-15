@@ -100,6 +100,7 @@ cd gart
 mkdir -p build; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j
+sudo make install
 ```
 
 The dependencies can be installed by [scripts/install-deps.sh](scripts/install-deps.sh) in a proper directory.
@@ -254,7 +255,12 @@ You can stop GART by:
 
 - Start graph analysis
     ```
-    ./apps/run_gart_app --etcd_endpoint 127.0.0.1:23760
+    cd /path_to_gart/apps/analytical_engine/
+    mkdir -p build
+    cd build
+    cmake ..
+    make -j
+    .run_gart_app --etcd_endpoint 127.0.0.1:23760
     ```
 
 ## License

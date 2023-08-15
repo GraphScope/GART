@@ -108,32 +108,6 @@ class PropertyPageRank
 
     int local_vertex_num = 0, local_edge_num = 0;
 
-    for (auto v_label = 4; v_label < 5; v_label++) {
-      auto inner_vertices_iter = frag.InnerVertices(v_label);
-      while (inner_vertices_iter.valid()) {
-        auto v = inner_vertices_iter.vertex();
-        std::string_view v_data = frag.template GetData<std::string_view>(v, 2);
-        bool value_is_valid = frag.VertexPropValueIsValid(v, 2);
-        if (frag.fid() == 0) {
-          std::cout << "v_ofset " << frag.GetOffset(v) << " p_last_name: " << v_data
-    << " v_data is valid " << value_is_valid << std::endl;
-        for (auto e_label = 20; e_label < 21; e_label++) {
-          auto edge_iter = frag.GetOutgoingAdjList(v, e_label);
-          while (edge_iter.valid()) {
-            auto dst = edge_iter.neighbor();
-            std::string_view dst_data = frag.template GetData<std::string_view>(dst, 2);
-            auto e_data = edge_iter.template get_data<std::string_view>(0);
-            bool e_data_is_valid = edge_iter.get_data_is_valid(0);
-            std::cout << "dst data = " << dst_data 
-                 << " e_data = " << e_data << " e_data is valid " << e_data_is_valid << std::endl;
-            edge_iter.next();
-          }
-        }
-        }
-        inner_vertices_iter.next();
-      }
-    }
-
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto inner_vertices_iter = frag.InnerVertices(v_label);
       while (inner_vertices_iter.valid()) {
