@@ -245,8 +245,8 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 
   // vertex_table
   {
-    auto alloc = allocator_traits<decltype(array_allocator)>::rebind_alloc<
-        seggraph::vertex_t>(array_allocator);
+    auto alloc = allocator_traits<decltype(
+        array_allocator)>::rebind_alloc<seggraph::vertex_t>(array_allocator);
 
     vineyard::ObjectID oid;
     uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
@@ -544,6 +544,9 @@ void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
     std::string_view sv = eprop[idx];
     if (dtype == STRING) {
       auto str_len = eprop[idx].length();
+      if (str_len == 0) {
+        *bitmap |= (1 << idx);
+      }
       size_t old_offset = get_string_buffer_offset();
       char* string_buffer = get_string_buffer();
       size_t new_offset = old_offset + str_len + 1;

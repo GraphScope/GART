@@ -411,9 +411,10 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
       prop_str = to_string(prop_value.get<int>());
     } else if (prop_value.is_number_float()) {
       prop_str = to_string(prop_value.get<float>());
+    } else if (prop_value.is_null()) {
+      prop_str = "";
     } else {
-      LOG(ERROR) << "Unsupported "
-                    "property type: "
+      LOG(ERROR) << "Unsupported property type: "
                  << prop_value.type_name();
       assert(false);
       continue;

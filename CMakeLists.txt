@@ -11,7 +11,7 @@ endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 
 add_subdirectory(converter)
 add_subdirectory(vegito)
-add_subdirectory(apps/analytical_engine apps)
+# add_subdirectory(apps/analytical_engine apps)
 
 ### Copy test schema ###
 file(COPY ${CMAKE_SOURCE_DIR}/vegito/test/schema DESTINATION ${CMAKE_BINARY_DIR})
@@ -24,7 +24,7 @@ file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py scripts/ext
 
 ### install headers ###
 
-set(CMAKE_INSTALL_INCLUDEDIR "/usr/local/include")
+set(CMAKE_INSTALL_INCLUDE_DIR "/usr/local/include")
 
 file(GLOB FRAGMENT_HEADER_FILES
           "vegito/include/fragment/id_parser.h"
@@ -38,7 +38,7 @@ set_target_properties(frag_header PROPERTIES
 
 install(TARGETS frag_header
     # RUNTIME DESTINATION /usr/local/bin
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gart/fragment
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDE_DIR}/gart/fragment
 )
 
 file(GLOB SEGGRAPH_HEADER_FILES
@@ -56,7 +56,7 @@ set_target_properties(seggraph_header PROPERTIES
 )
 
 install(TARGETS seggraph_header
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gart/seggraph
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDE_DIR}/gart/seggraph
 )
 
 file(GLOB INTERFACE_HEADER_FILES
@@ -70,7 +70,7 @@ set_target_properties(interface_header PROPERTIES
 )
 
 install(TARGETS interface_header
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gart/interfaces/fragment
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDE_DIR}/gart/interfaces/fragment
 )
 
 file(GLOB UTIL_HEADER_FILES
@@ -87,7 +87,7 @@ set_target_properties(util_header PROPERTIES
 )
 
 install(TARGETS util_header
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gart/util
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDE_DIR}/gart/util
 )
 
 ### check format ###

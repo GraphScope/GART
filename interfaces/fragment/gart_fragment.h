@@ -604,7 +604,7 @@ class GartFragment {
     return edge_prop2dtype_.find(std::make_pair(label_id, prop_id))->second;
   }
 
-  bool VertexPropValueIsValid (const vertex_t& v, prop_id_t prop_id) const {
+  bool VertexPropValueIsValid(const vertex_t& v, prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
@@ -727,7 +727,8 @@ class GartFragment {
     assert(false);
   }
 
-  void GetDataImpl(std::string_view& t, const vertex_t& v, prop_id_t prop_id) const {
+  void GetDataImpl(std::string_view& t, const vertex_t& v,
+                   prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);

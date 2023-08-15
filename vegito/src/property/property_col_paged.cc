@@ -25,6 +25,7 @@
  */
 
 #include "property/property_col_paged.h"
+#include <string>
 
 #include "graph/graph_store.h"
 
@@ -369,6 +370,9 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
     }
 
     if (v_list[i].size() == 0) {
+      null_bitmaps_[off] |= (1 << i);
+    } else if (col.vtype == STRING &&
+               (std::stoll(std::string(v_list[i])) & 0xffff) == 0) {
       null_bitmaps_[off] |= (1 << i);
     } else {
       assign_prop(col.vtype, dst, v_list[i]);

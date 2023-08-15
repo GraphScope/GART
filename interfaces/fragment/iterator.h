@@ -334,25 +334,24 @@ class EdgeIterator {
   }
 
   template <typename EDATA_T>
-  EDATA_T get_data_impl(EDATA_T& t, int prop_id) {
+  void get_data_impl(EDATA_T& t, int prop_id) {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
     data += sizeof(ColBitMap);
     if (prop_id == 0) {
       t = *(EDATA_T*) (data);
-      return t;
+      return;
     }
 
     t = *(EDATA_T*) (data + prop_offsets_[prop_id - 1]);
-    return t;
+    return;
   }
 
-  std::string_view get_data_impl(std::string_view& t, int prop_id) {
+  void get_data_impl(std::string_view& t, int prop_id) {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
-    std::cout << "edge_prop_size_ = " << edge_prop_size_ << std::endl;
     data += sizeof(ColBitMap);
     int64_t value;
     if (prop_id == 0) {
@@ -362,9 +361,7 @@ class EdgeIterator {
     }
     int64_t str_offset = value >> 16;
     int64_t str_len = value & 0xffff;
-    std::cout << "str_offset: " << str_offset << " str_len: " << str_len
-              << std::endl;
-    return std::string_view(string_buffer_ + str_offset, str_len);
+    t = std::string_view(string_buffer_ + str_offset, str_len);
   }
 
   uintptr_t get_edge_property_offset() {

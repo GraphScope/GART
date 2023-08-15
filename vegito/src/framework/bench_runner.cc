@@ -48,8 +48,9 @@ inline vector<string_view> splitString(const string_view& str, char delimiter) {
   if (startPos < str.length()) {
     result.push_back(
         string_view(str.data() + startPos, str.length() - startPos));
+  } else if (startPos == str.length()) {
+    result.push_back(string_view(""));
   }
-
   return result;
 }
 }  // anonymous namespace
