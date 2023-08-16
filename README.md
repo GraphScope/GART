@@ -245,7 +245,7 @@ You can stop GART by:
     export KAFKA_HOME=/path/to/kafka
 
     cd build
-    ./gart --user maxwell --password 123456 --db-name ldbc --v6d-sock ldbc.sock --etcd-endpoint 127.0.0.1:23760
+    ./gart --user maxwell --password 123456 --db-name ldbc --v6d-sock /tmp/ldbc.sock --etcd-endpoint 127.0.0.1:23760
     ```
 
 - Start transactional data insertion

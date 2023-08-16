@@ -385,7 +385,7 @@ if [ "$use_debezium" == 1 ]; then
         echo "Start Debezium"
         if [ "$db_type" == "mysql" ]; then
             echo "    Start Debezium connector for MySQL"
-            #$KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-mysql.properties > /dev/null 2>&1 &
+            $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-mysql.properties > /dev/null 2>&1 &
         elif [ "$db_type" == "postgresql" ]; then
             echo "    Start Debezium connector for PostgreSQL"
             $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-postgresql.properties > /dev/null 2>&1 &
