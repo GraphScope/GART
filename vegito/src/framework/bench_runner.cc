@@ -98,6 +98,9 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   graph::SchemaImpl graph_schema;
   map<string, int> vertex_name_id_map;
 
+  graph_store->set_enable_row_store_for_vertex_property(
+      config["loadingConfig"]["enableRowStore"].as<bool>());
+
   YAML::Node vdef = config["vertexMappings"]["vertex_types"];
   YAML::Node edef = config["edgeMappings"]["edge_types"];
   assert(vdef.IsSequence() && edef.IsSequence());
@@ -367,6 +370,17 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
           prop_offset;
       prop_offset++;
     }
+
+    if (is_vertex && graph_store->get_enable_row_store_for_vertex_property()) {
+      col.vtype = BYTES;
+      size_t data_size = 0;
+      for (auto col_id = 0; col_id < prop_schema.cols.size(); col_id++) {
+        data_size += prop_schema.cols[col_id].vlen;
+      }
+      col.vlen = data_size + sizeof(Property::ColBitMap);
+      prop_schema.cols.push_back(col);
+    }
+
     if (is_vertex) {
       graph_store->add_vprop(id, prop_schema);
       prop_schema.cols.clear();

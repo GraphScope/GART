@@ -440,6 +440,8 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
   blob_schema["epoch"] = write_epoch;
   blob_schema["vertex_label_num"] = blob_schemas_.size();
   blob_schema["string_buffer_object_id"] = string_buffer_object_id_;
+  blob_schema["enable_row_store_for_vertex_property"] =
+      enable_row_store_for_vertex_property_;
   auto blob_schemas = fetch_blob_schema(write_epoch);
   json blob_array = json::array();
   for (const auto& pair : blob_schemas) {

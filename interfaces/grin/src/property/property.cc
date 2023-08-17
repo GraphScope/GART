@@ -18,6 +18,8 @@ limitations under the License.
 #include "util/inline_str.h"
 
 void grin_destroy_string_value(GRIN_GRAPH g, const char* value) { }
+
+void grin_destroy_float_array_value(GRIN_GRAPH g, const float* value) { }
   
 #ifdef GRIN_WITH_VERTEX_PROPERTY_NAME
 const char* grin_get_vertex_property_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vtype,
@@ -195,6 +197,11 @@ long long int grin_get_vertex_property_value_of_timestamp64(
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   return _g->template GetData<uint64_t>(_GRIN_VERTEX_T(v),
                                         _grin_get_prop_from_property(vp));
+}
+
+const float* grin_get_vertex_property_value_of_float_array(GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  return reinterpret_cast<const float*>(_g->GetRowDataAddr(_GRIN_VERTEX_T(v)));
 }
 
 GRIN_VERTEX_TYPE grin_get_vertex_type_from_property(GRIN_GRAPH g,
@@ -386,6 +393,10 @@ long long int grin_get_edge_property_value_of_timestamp64(
     auto offset = _g->edge_prop_offsets[e_type_id][prop_id - 1];
     return *reinterpret_cast<int64_t*>(base_addr + offset);
   }
+}
+
+const float* grin_get_edge_property_value_of_float_array(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
+  return nullptr;
 }
 
 GRIN_EDGE_TYPE grin_get_edge_type_from_property(GRIN_GRAPH g,

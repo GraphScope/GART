@@ -19,12 +19,14 @@
 #include <cassert>
 #include <cstdint>
 #include <string_view>
+
 #include "grape/fragment/fragment_base.h"
 #include "vineyard/basic/ds/hashmap_mvcc.h"
 
 #include "fragment/id_parser.h"
 #include "interfaces/fragment/iterator.h"
 #include "interfaces/fragment/property_util.h"
+#include "types.h"
 
 namespace gart {
 
@@ -65,6 +67,8 @@ class GartFragment {
     fid_ = config["fid"].get<fid_t>();
     vertex_label_num_ = config["vertex_label_num"].get<int>();
     read_epoch_number_ = config["epoch"].get<size_t>();
+    enable_row_store_for_vertex_property_ =
+        config["enable_row_store_for_vertex_property"].get<bool>();
     auto string_buffer_object_id =
         config["string_buffer_object_id"].get<uint64_t>();
     std::shared_ptr<vineyard::Blob> string_buffer_blob;
@@ -102,7 +106,7 @@ class GartFragment {
 
     vertex_prop_nums_.resize(vertex_label_num_);
     vertex_prop_row_bitmap_.resize(vertex_label_num_);
-    vertex_prop_id_sum.resize(vertex_label_num_, 0);
+    vertex_prop_total_bytes_.resize(vertex_label_num_, 0);
 
     vid_parser.Init(fnum_, vertex_label_num_);
     max_outer_id_offset_ =
@@ -132,6 +136,30 @@ class GartFragment {
               vertex_prop_info[prop_id]["data_type"].get<std::string>();
           vertex_prop2dtype_.emplace(std::make_pair(v_label_id, prop_id),
                                      dtype);
+          if (dtype == "INT") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(int);
+          } else if (dtype == "FLOAT") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(float);
+          } else if (dtype == "DOUBLE") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(double);
+          } else if (dtype == "LONG") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(int64_t);
+          } else if (dtype == "CHAR") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(char);
+          } else if (dtype == "STRING") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(uint64_t);
+          } else if (dtype == "DATE") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(gart::Date);
+          } else if (dtype == "DATETIME") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(gart::DateTime);
+          } else if (dtype == "TIME") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(gart::Time);
+          } else if (dtype == "TIMESTAMP") {
+            vertex_prop_total_bytes_[v_label_id] += sizeof(gart::TimeStamp);
+          } else {
+            LOG(FATAL) << "Unsupported data type: " << dtype;
+            assert(false);
+          }
         }
         continue;
       }
@@ -336,20 +364,6 @@ class GartFragment {
         prop_cols_meta[vlabel][prop_id] = prop_meta;
       }
     }
-
-    // required for GIE
-
-    for (int idx = 1; idx < vertex_label_num_; idx++) {
-      vertex_prop_id_sum[idx] =
-          vertex_prop_id_sum[idx - 1] + vertex_prop_nums_[idx - 1];
-    }
-    edge_prop_id_sum.resize(edge_label_num_);
-    edge_prop_id_sum[0] = vertex_prop_id_sum[vertex_label_num_ - 1] +
-                          vertex_prop_nums_[vertex_label_num_ - 1];
-    for (int idx = 1; idx < edge_label_num_; idx++) {
-      edge_prop_id_sum[idx] =
-          edge_prop_id_sum[idx - 1] + edge_prop_nums_[idx - 1];
-    }
   }
 
   bool directed() const { return directed_; }
@@ -375,7 +389,11 @@ class GartFragment {
   label_id_t edge_label_num() const { return edge_label_num_; }
 
   prop_id_t vertex_property_num(label_id_t label) const {
-    return vertex_prop_nums_[label];
+    if (enable_row_store_for_vertex_property_ == false) {
+      return vertex_prop_nums_[label];
+    } else {
+      return vertex_prop_nums_[label] - 1;
+    }
   }
 
   bitmap_t* GetVertexPropRowBitmap(label_id_t label) {
@@ -685,6 +703,39 @@ class GartFragment {
       int64_t str_offset = value >> 16;
       return string_buffer_ + str_offset;
     }
+  }
+
+  char* GetRowDataAddr(const vertex_t& v) const {
+    assert(IsInnerVertex(v));
+    assert(enable_row_store_for_vertex_property_ == true);
+    label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    auto v_offset = GetOffset(v);
+    auto prop_id = vertex_prop_nums_[label_id] - 1;
+    auto buffer_size = vertex_prop_total_bytes_[label_id] + sizeof(bitmap_t);
+    auto header_offset = prop_cols_meta[label_id][prop_id].header;
+    if (prop_cols_meta[label_id][prop_id].updatable == true) {
+      FlexColBlobHeader* header =
+          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+                                header_offset);
+      int vertex_per_page = header->get_num_row_per_page();
+      int page_id = v_offset / vertex_per_page;
+      PageHeader* page_header =
+          header->get_page_header_ptr((uintptr_t) header, page_id);
+      int page_idx = v_offset % vertex_per_page;
+
+      for (; page_header;
+           page_header = page_header->get_prev((uintptr_t) header)) {
+        if (page_header->get_epoch() <= (int) read_epoch_number_) {
+          char* data = page_header->get_data();
+          return data + buffer_size * page_idx;
+        }
+      }
+    } else {
+      char* data =
+          (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
+      return data + buffer_size * v_offset;
+    }
+    return nullptr;
   }
 
   template <typename T>
@@ -1192,6 +1243,7 @@ class GartFragment {
   int edge_label_num_;
   bool vertex_mata_known_ = false;
   bool edge_mata_known_ = false;
+  bool enable_row_store_for_vertex_property_ = false;
 
   std::map<label_id_t, std::string> vertex_label2name_;
   std::map<std::string, label_id_t> vertex_name2label_;
@@ -1205,14 +1257,14 @@ class GartFragment {
   std::map<std::pair<label_id_t, prop_id_t>, std::string> vertex_prop2dtype_;
   std::map<std::pair<label_id_t, prop_id_t>, std::string> edge_prop2dtype_;
 
+  std::vector<size_t> vertex_prop_total_bytes_;
+
   std::string oid_type, vid_type;
 
  public:
   gart::IdParser<vid_t> vid_parser;
-  std::vector<int> vertex_prop_id_sum;
   std::vector<std::vector<VertexPropMeta>> prop_cols_meta;
   std::vector<std::vector<int>> edge_prop_offsets;
-  std::vector<int> edge_prop_id_sum;
   std::map<std::pair<label_id_t, label_id_t>, label_id_t> vertex2edge_map;
   std::map<label_id_t, std::pair<label_id_t, label_id_t>> edge2vertex_map;
   std::vector<std::vector<int>> edge_prop_dtypes;

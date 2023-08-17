@@ -350,9 +350,17 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
     assert(false);
   }
 
-  assert(v_list.size() == cols_.size());
+  assert(v_list.size() == cols_.size() || (v_list.size() + 1 == cols_.size()));
 
   null_bitmaps_[off] = 0;
+
+  char* prop_buffer;
+  bool enable_row = false;
+  size_t buffer_offset = sizeof(ColBitMap);
+  if (v_list.size() + 1 == cols_.size()) {
+    prop_buffer = (char*) malloc(cols_[cols_.size() - 1].vlen);
+    enable_row = true;
+  }
 
   for (int i = 0; i < cols_.size(); ++i) {
     const Property::Column& col = cols_[i];
@@ -369,13 +377,22 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
       dst = fixCols_[i] + off * vlen;
     }
 
-    if (v_list[i].size() == 0) {
+    if (i < v_list.size() && v_list[i].size() == 0) {
       null_bitmaps_[off] |= (1 << i);
-    } else if (col.vtype == STRING &&
+    } else if (i < v_list.size() && col.vtype == STRING &&
                (std::stoll(std::string(v_list[i])) & 0xffff) == 0) {
       null_bitmaps_[off] |= (1 << i);
-    } else {
+    } else if (i < v_list.size()) {
       assign_prop(col.vtype, dst, v_list[i]);
+      if (enable_row) {
+        assign_prop(col.vtype, prop_buffer + buffer_offset, v_list[i]);
+        buffer_offset += vlen;
+      }
+    } else {
+      assert(col.vtype == BYTES);
+      memcpy(prop_buffer, null_bitmaps_ + off, sizeof(ColBitMap));
+      memcpy(dst, prop_buffer, vlen);
+      free(prop_buffer);
     }
 
 #if UPDATE_STAT

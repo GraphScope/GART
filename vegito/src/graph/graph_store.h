@@ -350,6 +350,14 @@ class GraphStore {
 
   size_t get_string_buffer_size() const { return string_buffer_size_; }
 
+  void set_enable_row_store_for_vertex_property(bool enable) {
+    enable_row_store_for_vertex_property_ = enable;
+  }
+
+  bool get_enable_row_store_for_vertex_property() const {
+    return enable_row_store_for_vertex_property_;
+  }
+
   static const int MAX_COLS = 10;
   static const int MAX_TABLES = 128;
 
@@ -363,6 +371,8 @@ class GraphStore {
   const int local_pnum_;        // number of partitions in the machine
   const int total_partitions_;  // total number of partitions
   int total_vertex_label_num_;
+
+  bool enable_row_store_for_vertex_property_ = false;
 
   // graph store schema
   SchemaImpl schema_;

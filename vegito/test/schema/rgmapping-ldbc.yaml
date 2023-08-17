@@ -4,6 +4,7 @@ loadingConfig:
   dataSource: mysql
   database: ldbc
   method: append
+  enableRowStore: false
 vertexMappings:
   vertex_types:
     - type_name: organisation
