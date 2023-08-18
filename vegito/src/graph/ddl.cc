@@ -13,42 +13,44 @@
  * limitations under the License.
  */
 
-#include <cassert>
-
 #include "graph/ddl.h"
+#include "common/util/likely.h"
 
 namespace gart {
 namespace graph {
 
-RGMapping::RGMapping(int p_id) : edges_(MAX_ELABELS), p_id_(p_id) {
-  for (int i = 0; i < MAX_TABLES; ++i) {
-    table2graph[i] = NO_EXIST;
-    key2vids_lock_[i] = 0;
-  }
-  for (int i = 0; i < MAX_VLABELS; ++i) {
-    graph2table[i] = NO_EXIST;
-  }
-
-  for (int i = 0; i < MAX_TABLES; ++i) {
-    for (int j = 0; j < MAX_COLS; ++j) {
-      col2vprop_[i][j] = NO_EXIST;
-    }
-  }
-
+RGMapping::RGMapping(int p_id)
+    : p_id_(p_id),
+      table2vlabel(INIT_VEC_SZ, NO_EXIST),
+      vlabel2table(INIT_VEC_SZ, NO_EXIST),
+      key2vids_(INIT_VEC_SZ),
+      vid2keys_(INIT_VEC_SZ),
+      key2vids_lock_(INIT_VEC_SZ),
+      edges_(INIT_VEC_SZ) {
   for (EdgeMeta& meta : edges_) {
     meta.src_vlabel = meta.dst_vlabel = NO_EXIST;
   }
 }
 
 void RGMapping::define_vertex(int vertex_label, int table_id) {
-  assert(vertex_label < MAX_TABLES);
-  table2graph[table_id] = vertex_label;
-  graph2table[vertex_label] = table_id;
+  if (unlikely(table_id >= table2vlabel.size())) {
+    const int default_ele = NO_EXIST;
+    table2vlabel.resize(2 * table_id, default_ele);
+
+    key2vids_.resize(2 * table_id);
+    vid2keys_.resize(2 * table_id);
+    key2vids_lock_.resize(2 * table_id);
+  }
+  table2vlabel[table_id] = vertex_label;
+
+  if (unlikely(vertex_label >= vlabel2table.size())) {
+    const int default_ele = NO_EXIST;
+    vlabel2table.resize(2 * vertex_label, default_ele);
+  }
+  vlabel2table[vertex_label] = table_id;
 }
 
 void RGMapping::add_vprop_mapping(int vertex_label, int vprop_id, int col_id) {
-  assert(col_id < MAX_COLS);
-
   col2vprop_[vertex_label][col_id] = vprop_id;
   vprop2col_[vertex_label][vprop_id] = col_id;
 }
@@ -57,7 +59,7 @@ int RGMapping::get_vprop2col(int vertex_label, int vprop_id) {
   if (vprop2col_[vertex_label].count(vprop_id)) {
     return vprop2col_[vertex_label][vprop_id];
   } else {
-    return -1;
+    return NO_EXIST;
   }
 }
 
@@ -65,7 +67,11 @@ int RGMapping::get_vprop2col(int vertex_label, int vprop_id) {
 void RGMapping::define_1n_edge(int edge_label, int src_vlabel, int dst_vlabel,
                                int fk_col, bool undirected,
                                size_t edge_prop_size) {
-  assert(edge_label < MAX_ELABELS);
+  while (edges_.size() <= edge_label) {
+    edges_.emplace_back();
+    EdgeMeta& meta = edges_.back();
+    meta.src_vlabel = meta.dst_vlabel = NO_EXIST;
+  }
 
   EdgeMeta& meta = edges_[edge_label];
   meta.src_vlabel = src_vlabel;
@@ -81,7 +87,11 @@ void RGMapping::define_1n_edge(int edge_label, int src_vlabel, int dst_vlabel,
 void RGMapping::define_nn_edge(int edge_label, int src_vlabel, int dst_vlabel,
                                int src_fk_col, int dst_fk_col, bool undirected,
                                size_t edge_prop_size) {
-  assert(edge_label < MAX_ELABELS);
+  while (edges_.size() <= edge_label) {
+    edges_.emplace_back();
+    EdgeMeta& meta = edges_.back();
+    meta.src_vlabel = meta.dst_vlabel = NO_EXIST;
+  }
 
   EdgeMeta& meta = edges_[edge_label];
   meta.src_vlabel = src_vlabel;

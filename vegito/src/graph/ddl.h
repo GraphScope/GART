@@ -22,9 +22,13 @@
 #include <utility>
 #include <vector>
 
-#include "tbb/concurrent_unordered_map.h"
-
 #define USE_TBB_MAP 1
+
+#if USE_TBB_MAP
+#include "tbb/concurrent_unordered_map.h"
+#else
+#include "util/util.h"
+#endif
 
 namespace gart {
 namespace graph {
@@ -69,9 +73,9 @@ class RGMapping {
   inline int getPID() const { return p_id_; }
 
   // get vertex mapping
-  inline int get_vlabel(int table_id) const { return table2graph[table_id]; }
+  inline int get_vlabel(int table_id) const { return table2vlabel[table_id]; }
 
-  inline int get_table(int vlabel) const { return graph2table[vlabel]; }
+  inline int get_table(int vlabel) const { return vlabel2table[vlabel]; }
 
   inline const std::vector<EdgeMeta>& get_edge_metas() const { return edges_; }
 
@@ -80,7 +84,7 @@ class RGMapping {
   }
 
   inline const EdgeMeta& get_edge_meta(int elabel) const {
-    assert(elabel < MAX_ELABELS);
+    assert(elabel < edges_.size());
     return edges_[elabel];
   }
 
@@ -97,8 +101,8 @@ class RGMapping {
   }
 
 #if USE_TBB_MAP
-  inline void set_key2vid(int table_id, uint64_t key, uint64_t vid) {
-    assert(table_id < MAX_TABLES);
+  inline void set_key_and_vid(int table_id, uint64_t key, uint64_t vid) {
+    assert(table_id < key2vids_.size());
     key2vids_[table_id].insert({key, vid});
     vid2keys_[table_id].insert({vid, key});
   }
@@ -106,7 +110,6 @@ class RGMapping {
   inline uint64_t get_key2vid(int table_id, uint64_t key) const {
     uint64_t ret;
     auto got = key2vids_[table_id].find(key);
-    // assert(got != key2vids_[table_id].end());
     if (got != key2vids_[table_id].end()) {
       ret = got->second;
       return ret;
@@ -125,53 +128,50 @@ class RGMapping {
     return ret;
   }
 #else
-  inline void set_key2vid(int table_id, uint64_t key, uint64_t vid) {
-    assert(table_id < MAX_TABLES);
-    lock32(&key2vids_lock_[table_id]);
+  inline void set_key_and_vid(int table_id, uint64_t key, uint64_t vid) {
+    assert(table_id < key2vids_.size());
+    util::lock32(&key2vids_lock_[table_id]);
     key2vids_[table_id][key] = vid;
     vid2keys_[table_id][vid] = key;
-    unlock32(&key2vids_lock_[table_id]);
+    util::unlock32(&key2vids_lock_[table_id]);
   }
 
   inline uint64_t get_key2vid(int table_id, uint64_t key) const {
     uint64_t ret;
-    lock32(&key2vids_lock_[table_id]);
+    uint32_t* lp = const_cast<uint32_t*>(&key2vids_lock_[table_id]);
+    util::lock32(lp);
     std::unordered_map<uint64_t, uint64_t>::const_iterator got =
         key2vids_[table_id].find(key);
     assert(got != key2vids_[table_id].end());
     ret = got->second;
-    unlock32(&key2vids_lock_[table_id]);
+    util::unlock32(lp);
     return ret;
   }
 
   inline uint64_t get_vid2key(int table_id, uint64_t vid) const {
     uint64_t ret;
-    lock32(&key2vids_lock_[table_id]);
+    uint32_t* lp = const_cast<uint32_t*>(&key2vids_lock_[table_id]);
+    util::lock32(lp);
     std::unordered_map<uint64_t, uint64_t>::const_iterator got =
         vid2keys_[table_id].find(vid);
     if (got == vid2keys_[table_id].end())
       ret = 0;
     else
       ret = got->second;
-    unlock32(&key2vids_lock_[table_id]);
+    util::unlock32(lp);
     return ret;
   }
 #endif
 
  private:
   static const int NO_EXIST = -1;
-
-  static const int MAX_COLS = 10;
-  static const int MAX_TABLES = 128;
-  static const int MAX_VPROPS = MAX_COLS;
-  static const int MAX_VLABELS = MAX_TABLES;
-  static const int MAX_ELABELS = MAX_VLABELS + 30;
+  static const int INIT_VEC_SZ = 128;
 
  private:
   const int p_id_;
 
-  int table2graph[MAX_TABLES];
-  int graph2table[MAX_VLABELS];
+  std::vector<int> table2vlabel;  // table id -> vertex label
+  std::vector<int> vlabel2table;  // vertex label -> table id
 
   // <vlabel> -> [<vprop id> -> <tp col>]
   std::unordered_map<int, std::unordered_map<int, int>> vprop2col_;
@@ -183,16 +183,15 @@ class RGMapping {
   // <src_vlabel, dst_vlabel> -> elabel
   std::map<std::pair<int, int>, int> vlabel2elabel_;
 
-  // TODO(sijie): this is tmp, since the vid is not corresponding to offset now
-  mutable uint32_t key2vids_lock_[MAX_TABLES];
-
 #if USE_TBB_MAP
-  tbb::concurrent_unordered_map<uint64_t, uint64_t> key2vids_[MAX_TABLES];
-  tbb::concurrent_unordered_map<uint64_t, uint64_t> vid2keys_[MAX_TABLES];
+  using map_t = tbb::concurrent_unordered_map<uint64_t, uint64_t>;
 #else
-  std::unordered_map<uint64_t, uint64_t> key2vids_[MAX_TABLES];
-  std::unordered_map<uint64_t, uint64_t> vid2keys_[MAX_TABLES];
+  using map_t = std::unordered_map<uint64_t, uint64_t>;
 #endif
+  std::vector<uint32_t> key2vids_lock_;  // only used when USE_TBB_MAP is false
+
+  std::vector<map_t> key2vids_;  // table_id -> <key, vid>
+  std::vector<map_t> vid2keys_;  // table_id -> <vid, key>
 };
 
 }  // namespace graph

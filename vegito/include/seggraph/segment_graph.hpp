@@ -46,8 +46,8 @@ class EpochGraphReader;
 class SegGraph {
  public:
   SegGraph(gart::graph::RGMapping* rg_map,
-           size_t _max_block_size = 1 * (1ul << 30),
-           vertex_t _max_vertex_id = 1 * (1ul << 20))
+           size_t _max_block_size = 1 * (1ul << 30),   // 35 for large graph
+           vertex_t _max_vertex_id = 1 * (1ul << 20))  // 25 for large graph
       : epoch_id(0),
         transaction_id(0),
         vertex_id(0),
@@ -75,8 +75,8 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     seg_mutexes = shared_mutex_allocater.allocate(max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    auto pointer_allocater = std::allocator_traits<
+        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
     vertex_ptrs = pointer_allocater.allocate(max_vertex_id);
 
     edge_label_ptrs =
@@ -107,8 +107,8 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     shared_mutex_allocater.deallocate(seg_mutexes, max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    auto pointer_allocater = std::allocator_traits<
+        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
 
     pointer_allocater.deallocate(vertex_ptrs, max_vertex_id);
 
