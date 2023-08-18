@@ -79,6 +79,9 @@ class GraphStore {
         mid_(mid),
         local_pnum_(total_partitions),
         total_partitions_(total_partitions),
+        key_pid_map_(INIT_VEC_SZ),
+        key_off_map_(INIT_VEC_SZ),
+        pid_off_map_(INIT_VEC_SZ),
         total_vertex_label_num_(0),
         string_buffer_(nullptr),
         string_buffer_size_(0),
@@ -242,8 +245,10 @@ class GraphStore {
   }
 
   void add_global_off(uint64_t vlabel, uint64_t key, int pid) {
-    if (vlabel >= MAX_VLABELS) {
-      assert(false);
+    if (vlabel >= key_pid_map_.size()) {
+      key_pid_map_.resize(vlabel + 1);
+      key_off_map_.resize(vlabel + 1);
+      pid_off_map_.resize(vlabel + 1);
     }
     key_pid_map_[vlabel][key] = pid;
 
@@ -256,16 +261,28 @@ class GraphStore {
 
   // global offset
   void get_pid_off(uint64_t vlabel, uint64_t key, int& pid, int& off) const {
+    if (vlabel >= key_pid_map_.size() || vlabel >= key_off_map_.size() ||
+        key_pid_map_[vlabel].find(key) == key_pid_map_[vlabel].end() ||
+        key_off_map_[vlabel].find(key) == key_off_map_[vlabel].end()) {
+      pid = -1;
+      off = -1;
+      return;
+    }
+
     pid = key_pid_map_[vlabel].at(key);
     off = key_off_map_[vlabel].at(key);
   }
 
   void set_lid(uint64_t vlabel, uint64_t key, uint64_t off) {
+    if (vlabel >= key_lid_map_.size()) {
+      key_lid_map_.resize(vlabel + 1);
+    }
     key_lid_map_[vlabel][key] = off;
   }
 
   uint64_t get_lid(uint64_t vlabel, uint64_t key) const {
-    if (key_lid_map_[vlabel].find(key) == key_lid_map_[vlabel].end()) {
+    if (vlabel >= key_lid_map_.size() ||
+        key_lid_map_[vlabel].find(key) == key_lid_map_[vlabel].end()) {
       return uint64_t(-1);
     }
     return key_lid_map_[vlabel].at(key);
@@ -358,12 +375,8 @@ class GraphStore {
     return enable_row_store_for_vertex_property_;
   }
 
-  static const int MAX_COLS = 10;
-  static const int MAX_TABLES = 128;
-
  private:
-  static const int MAX_VPROPS = MAX_COLS;
-  static const int MAX_VLABELS = MAX_TABLES;
+  static const int INIT_VEC_SZ = 128;
 
   const int local_pid_;         // from 0 in each machine
   const int mid_;               // machine id
@@ -406,19 +419,21 @@ class GraphStore {
 
   // key is vid in SegCSR
   // global id (gid)
-  std::unordered_map<uint64_t, int>
-      key_pid_map_[MAX_VLABELS];  // key -> partition
-  std::unordered_map<uint64_t, int>
-      key_off_map_[MAX_VLABELS];  // key -> partition
-  std::unordered_map<int, int>
-      pid_off_map_[MAX_VLABELS];  // fid -> global offset header
+  std::vector<std::unordered_map<uint64_t, int>>
+      key_pid_map_;  // vlabel -> <key, partition>
+
+  std::vector<std::unordered_map<uint64_t, int>>
+      key_off_map_;  // vlabel -> <key, offset>
+
+  std::vector<std::unordered_map<int, int>>
+      pid_off_map_;  // vlabel -> <fid, global offset header>
 
   // local id (lid)
-  std::unordered_map<uint64_t, uint64_t>
-      key_lid_map_[MAX_VLABELS];  // key -> local id
+  std::vector<std::unordered_map<uint64_t, uint64_t>>
+      key_lid_map_;  // vlabel -> <key, local id>
 
   // for string buffer
-  // TODO(ssj): now a global string buffer, need to refine for each column
+  // TODO(ssj): now a global string buffer, maybe need to refine for each column
   char* string_buffer_;
   size_t string_buffer_size_;
   size_t string_buffer_offset_;

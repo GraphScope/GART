@@ -28,24 +28,22 @@
 #include <string>
 
 #include "graph/graph_store.h"
+#include "util/macros.h"
 
 #define LAZY_PAGE_ALLOC 1
 
-using gart::graph::GraphStore;
 using std::vector;
 
 namespace {
-constexpr uint32_t MAX_POOL = 1;
-thread_local uint32_t pool_off = MAX_POOL - 1;
-thread_local char* pool = nullptr;
+constexpr uint32_t MAX_CACHED_TABLES = 128;
+constexpr uint32_t MAX_CACHED_COLS = 128;
 
-constexpr uint32_t MAX_TABLES = GraphStore::MAX_TABLES;
-constexpr uint32_t MAX_COLS = GraphStore::MAX_COLS;
-
-thread_local uint64_t cached_ver[MAX_TABLES];  // table id (MAX_TABLES)
-// table id (MAX_TABLES), column id (MAX_COLS)
-thread_local uint32_t cached_page_num[MAX_TABLES][MAX_COLS];
-thread_local void* cached_page[MAX_TABLES][MAX_COLS] = {{nullptr}};
+// table id (MAX_CACHED_TABLES)
+thread_local uint64_t cached_ver[MAX_CACHED_TABLES];
+// table id (MAX_CACHED_TABLES), column id (MAX_CACHED_COLS)
+thread_local uint32_t cached_page_num[MAX_CACHED_TABLES][MAX_CACHED_COLS];
+thread_local void* cached_page[MAX_CACHED_TABLES][MAX_CACHED_COLS] = {
+    {nullptr}};
 
 }  // namespace
 
@@ -128,7 +126,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       flex_bufs_(s.cols.size()),
       fixCols_(s.cols.size(), nullptr),
       flexCols_(s.cols.size()) {
-  if (cols_.size() > sizeof(ColBitMap) * CHAR_BIT || cols_.size() > MAX_COLS) {
+  if (cols_.size() > sizeof(ColBitMap) * CHAR_BIT) {
     LOG(ERROR) << "Too many columns: " << cols_.size();
     exit(-1);
   }
@@ -512,15 +510,19 @@ char* PropertyColPaged::getByOffset(uint64_t offset, int col_id,
   if (col.updatable) {
     uint64_t pg_num = offset / col.page_size;
 #if 1
-    if (cached_page[table_id_][col_id] != nullptr &&
-        cached_ver[table_id_] == version &&
-        cached_page_num[table_id_][col_id] == pg_num) {
-      page = reinterpret_cast<Page*>(cached_page[table_id_][col_id]);
-    } else {
-      cached_ver[table_id_] = version;
+    if (unlikely(table_id_ >= MAX_CACHED_TABLES && col_id >= MAX_CACHED_COLS)) {
       page = findPage(col_id, pg_num, version, walk_cnt);
-      cached_page[table_id_][col_id] = page;
-      cached_page_num[table_id_][col_id] = pg_num;
+    } else {
+      if (cached_page[table_id_][col_id] != nullptr &&
+          cached_ver[table_id_] == version &&
+          cached_page_num[table_id_][col_id] == pg_num) {
+        page = reinterpret_cast<Page*>(cached_page[table_id_][col_id]);
+      } else {
+        cached_ver[table_id_] = version;
+        page = findPage(col_id, pg_num, version, walk_cnt);
+        cached_page[table_id_][col_id] = page;
+        cached_page_num[table_id_][col_id] = pg_num;
+      }
     }
 #else
     page = findPage(col_id, pg_num, version, walk_cnt);
