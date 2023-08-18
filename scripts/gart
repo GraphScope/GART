@@ -405,7 +405,7 @@ if [ $is_master == true ]; then
         echo "    Use Debezium converter"
         $CONVENTER_HOME/binlog_convert_debezium \
             --rg_mapping_file_path $rgmapping_file \
-            --subgraph_num $subgraph_num --logs_per_epoch 10000 \
+            --subgraph_num $subgraph_num --logs_per_epoch 100 \
             --enable_bulkload=$enable_bulkload &
     else
         echo "    Use Maxwell converter"

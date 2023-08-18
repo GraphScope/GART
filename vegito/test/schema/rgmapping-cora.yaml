@@ -1,0 +1,41 @@
+---
+graph: Cora
+loadingConfig:
+  dataSource: mysql
+  database: cora
+  method: append
+  enableRowStore: true
+vertexMappings:
+  vertex_types:
+    - type_name: paper
+      dataSourceName: paper
+      idFieldName: paper_id
+      mappings:
+        - property: paper_feat_0
+          dataField:
+            name: paper_feat_0
+        - property: paper_feat_1
+          dataField:
+            name: paper_feat_1
+        - property: paper_feat_2
+          dataField:
+            name: paper_feat_2
+        - property: paper_feat_3
+          dataField:
+            name: paper_feat_3
+edgeMappings:
+  edge_types:
+    - type_pair:
+        edge: paper_cites_paper
+        source_vertex: paper
+        destination_vertex: paper
+      dataSourceName: paper_cites_paper
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+...

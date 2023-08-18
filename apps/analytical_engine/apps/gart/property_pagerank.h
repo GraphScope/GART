@@ -108,6 +108,19 @@ class PropertyPageRank
 
     int local_vertex_num = 0, local_edge_num = 0;
 
+    auto paper_vertices_iter = frag.InnerVertices(0);
+    auto paper_prop_size = frag.vertex_property_num(0);
+    while (paper_vertices_iter.valid()) {
+      auto paper_vertex = paper_vertices_iter.vertex();
+      std::cout << "vertex offset " << frag.GetOffset(paper_vertex) << std::endl;
+      char* v_data = frag.GetRowDataAddr(paper_vertex);
+      float* v_data_float = reinterpret_cast<float*>(v_data);
+      for (auto idx = 0; idx < paper_prop_size; idx++) {
+        std::cout << "prop idx " << idx << " row prop data = " << v_data_float[idx] << std::endl; 
+      }
+      paper_vertices_iter.next();
+    }
+
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto inner_vertices_iter = frag.InnerVertices(v_label);
       while (inner_vertices_iter.valid()) {
