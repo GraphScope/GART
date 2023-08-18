@@ -396,7 +396,8 @@ long long int grin_get_edge_property_value_of_timestamp64(
 }
 
 const float* grin_get_edge_property_value_of_float_array(GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
-  return nullptr;
+  char* e_data = e.edata;
+  return reinterpret_cast<float*>(e_data);
 }
 
 GRIN_EDGE_TYPE grin_get_edge_type_from_property(GRIN_GRAPH g,
