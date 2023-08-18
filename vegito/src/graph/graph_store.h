@@ -364,7 +364,6 @@ class GraphStore {
  private:
   static const int MAX_VPROPS = MAX_COLS;
   static const int MAX_VLABELS = MAX_TABLES;
-  static const int MAX_ELABELS = 30;
 
   const int local_pid_;         // from 0 in each machine
   const int mid_;               // machine id

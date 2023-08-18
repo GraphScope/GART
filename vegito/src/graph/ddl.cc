@@ -15,6 +15,7 @@
 
 #include "graph/ddl.h"
 #include "common/util/likely.h"
+#include "util/util.h"
 
 namespace gart {
 namespace graph {
@@ -33,21 +34,15 @@ RGMapping::RGMapping(int p_id)
 }
 
 void RGMapping::define_vertex(int vertex_label, int table_id) {
-  if (unlikely(table_id >= table2vlabel.size())) {
-    const int default_ele = NO_EXIST;
-    table2vlabel.resize(2 * table_id, default_ele);
-
-    key2vids_.resize(2 * table_id);
-    vid2keys_.resize(2 * table_id);
-    key2vids_lock_.resize(2 * table_id);
+  bool expand =
+      util::insert_vec(table2vlabel, table_id, vertex_label, (int) NO_EXIST);
+  if (expand) {
+    key2vids_.resize(table2vlabel.size());
+    vid2keys_.resize(table2vlabel.size());
+    key2vids_lock_.resize(table2vlabel.size());
   }
-  table2vlabel[table_id] = vertex_label;
 
-  if (unlikely(vertex_label >= vlabel2table.size())) {
-    const int default_ele = NO_EXIST;
-    vlabel2table.resize(2 * vertex_label, default_ele);
-  }
-  vlabel2table[vertex_label] = table_id;
+  util::insert_vec(vlabel2table, vertex_label, table_id, (int) NO_EXIST);
 }
 
 void RGMapping::add_vprop_mapping(int vertex_label, int vprop_id, int col_id) {

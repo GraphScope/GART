@@ -28,6 +28,7 @@
 #define VEGITO_INCLUDE_UTIL_UTIL_H_
 
 #include <cstdint>
+#include <vector>
 
 #define ALWAYS_INLINE __attribute__((always_inline))
 inline ALWAYS_INLINE uint64_t rdtsc(void) {
@@ -39,10 +40,9 @@ inline ALWAYS_INLINE uint64_t rdtsc(void) {
 namespace gart {
 namespace util {
 
+// Round "a" according to "b"
 template <class Num>
-inline ALWAYS_INLINE  // Round "a" according to "b"
-    Num
-    Round(Num a, Num b) {
+inline ALWAYS_INLINE Num Round(Num a, Num b) {
   return (a + b - a % b);
 }
 
@@ -68,6 +68,20 @@ inline void lock32(uint32_t* lock_ptr) {
 }
 
 inline void unlock32(uint32_t* lock_ptr) { *lock_ptr = 0; }
+
+// insert a value into a vector at a given index (expand the vector if needed)
+// return true if the vector is expanded
+template <class T>
+inline bool insert_vec(std::vector<T>& vec, int idx, const T& val,
+                       const T& default_val) {
+  bool expand = false;
+  if (unlikely(idx >= vec.size())) {
+    vec.resize(idx + 1, default_val);
+    expand = true;
+  }
+  vec[idx] = val;
+  return expand;
+}
 
 }  // namespace util
 }  // namespace gart
