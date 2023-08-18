@@ -727,13 +727,13 @@ class GartFragment {
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
           char* data = page_header->get_data();
-          return data + buffer_size * page_idx;
+          return data + buffer_size * page_idx + sizeof(bitmap_t);
         }
       }
     } else {
       char* data =
           (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
-      return data + buffer_size * v_offset;
+      return data + buffer_size * v_offset + sizeof(bitmap_t);
     }
     return nullptr;
   }
