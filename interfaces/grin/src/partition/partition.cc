@@ -38,7 +38,7 @@ GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(
   pg->total_partition_num = std::stoul(params["total_partition_num"]);
   auto start_partition_id = std::stoul(params["start_partition_id"]);
   auto local_partition_num = std::stoul(params["local_partition_num"]);
-  for (auto idx = 0; idx < local_partition_num; ++idx) {
+  for (uint32_t idx = 0; idx < local_partition_num; ++idx) {
     pg->local_partition_list.push_back(start_partition_id + idx);
   }
   pg->read_epoch = std::stoi(params["read_epoch"]);

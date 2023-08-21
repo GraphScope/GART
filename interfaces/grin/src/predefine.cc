@@ -58,8 +58,9 @@ GRIN_DATATYPE StringToDataType(std::string dtype_str) {
   } else if (dtype_str == "TIME") {
     return GRIN_DATATYPE::Int64;  // TODO(wanglei): support timestamp
   } else {
-    GRIN_DATATYPE::Undefined;
+    return GRIN_DATATYPE::Undefined;
   }
+    return GRIN_DATATYPE::Undefined;
 }
 
 unsigned _grin_get_type_from_property(unsigned long long int prop) {

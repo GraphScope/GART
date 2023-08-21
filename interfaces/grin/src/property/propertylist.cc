@@ -62,7 +62,7 @@ bool grin_insert_vertex_property_to_list(GRIN_GRAPH g,
 GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_id(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt, GRIN_VERTEX_PROPERTY_ID pid) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  if (pid >= _g->vertex_property_num(vt)) {
+  if ((int) pid >= _g->vertex_property_num(vt)) {
     return GRIN_NULL_VERTEX_PROPERTY;
   }
   return _grin_create_property(vt, pid);
@@ -127,7 +127,7 @@ bool grin_insert_edge_property_to_list(GRIN_GRAPH g,
 GRIN_EDGE_PROPERTY grin_get_edge_property_by_id(GRIN_GRAPH g, GRIN_EDGE_TYPE et,
                                                 GRIN_EDGE_PROPERTY_ID pid) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  if (pid >= _g->edge_property_num(et)) {
+  if ((int) pid >= _g->edge_property_num(et)) {
     return GRIN_NULL_EDGE_PROPERTY;
   }
   return _grin_create_property(et, pid);

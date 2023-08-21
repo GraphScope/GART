@@ -54,7 +54,6 @@ double grin_get_double_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
 }
 
 const char* grin_get_string_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _r = static_cast<GRIN_ROW_T*>(r);
   return static_cast<const char*>((*_r)[idx]);
 }

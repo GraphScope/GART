@@ -1102,7 +1102,7 @@ int main() {
   test_topology(uri);
   test_perf(uri);
 #endif
-  // test_extension(uri);
-  test_string_storage(uri);
+  test_extension(uri);
+  // test_string_storage(uri);
   return 0;
 }

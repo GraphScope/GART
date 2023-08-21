@@ -17,6 +17,7 @@
 #define INTERFACES_FRAGMENT_GART_FRAGMENT_H_
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <string_view>
 
@@ -669,6 +670,7 @@ class GartFragment {
           (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
       return data + sizeof(T) * v_offset;
     }
+    return nullptr;
   }
 
   char* GetDataAddrImpl(std::string_view& t, const vertex_t& v,
@@ -703,6 +705,7 @@ class GartFragment {
       int64_t str_offset = value >> 16;
       return string_buffer_ + str_offset;
     }
+    return nullptr;
   }
 
   char* GetRowDataAddr(const vertex_t& v) const {
