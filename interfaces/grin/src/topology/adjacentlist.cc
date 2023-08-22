@@ -29,7 +29,7 @@ void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {}
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
   auto iter = new GRIN_ADJACENT_LIST_ITERATOR_T();
   iter->v = adj_list.v;
   iter->etype = adj_list.etype;

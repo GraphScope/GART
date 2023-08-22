@@ -82,6 +82,7 @@ void test_extension(char* uri) {
         auto edge = grin_get_edge_from_indexed_adjacent_list(g, indexed_adj_list, idx);
         std::cout << " edge src = " << grin_get_src_vertex_from_edge(g, edge) << " dst = " << grin_get_dst_vertex_from_edge(g, edge) << std::endl;
         grin_destroy_vertex(g, dst_vertex);
+        grin_destroy_edge(g, edge);
       }
       grin_destroy_adjacent_list(g, adj_list);
       grin_destroy_indexed_adjacent_list(g, indexed_adj_list);
@@ -90,6 +91,36 @@ void test_extension(char* uri) {
     grin_destroy_vertex(g, v);
     grin_get_next_vertex_list_iter(g, vertex_iter);
   }
+
+  auto vtl = grin_get_vertex_type_list(g);
+  auto vtl_size = grin_get_vertex_type_list_size(g, vtl);
+  for (auto v_id = 0; v_id < vtl_size; v_id++) {
+    std::cout << "vertex type name = " << grin_get_vertex_type_name(g, v_id) << std::endl;
+    auto prop_list = grin_get_vertex_property_list_by_type(g, v_id);
+    auto prop_list_size = grin_get_vertex_property_list_size(g, prop_list);
+    for (auto prop_id = 0; prop_id < prop_list_size; prop_id++) {
+      auto prop = grin_get_vertex_property_by_id(g, v_id, prop_id);
+      auto prop_name = grin_get_vertex_property_name(g, v_id, prop);
+      std::cout << "prop name = " << prop_name << " prop_id = " << prop_id << std::endl;
+      grin_destroy_vertex_property(g, prop);
+    }
+  }
+
+  auto etl_1 = grin_get_edge_type_list(g);
+  auto etl_size_1 = grin_get_edge_type_list_size(g, etl_1);
+  for (auto e_id = 0; e_id < etl_size_1; e_id++) {
+    std::cout << "edge type name = " << grin_get_edge_type_name(g, e_id) << std::endl;
+    auto prop_list = grin_get_edge_property_list_by_type(g, e_id);
+    auto prop_list_size = grin_get_edge_property_list_size(g, prop_list);
+    for (auto prop_id = 0; prop_id < prop_list_size; prop_id++) {
+      auto prop = grin_get_edge_property_by_id(g, e_id, prop_id);
+      auto prop_name = grin_get_edge_property_name(g, e_id, prop);
+      std::cout << "prop name = " << prop_name << " prop_id = " << prop_id << std::endl;
+      grin_destroy_edge_property(g, prop);
+    }
+  }
+
+  grin_destroy_graph(g);
 }
 
 #define FOR_VERTEX_BEGIN(g, vl, v)                                     \
@@ -1087,7 +1118,7 @@ int main() {
   std::string meta_prefix = "";
   int fragment_per_machine = 1;
 
-  std::string uri_str = "gart://127.0.0.1:23760?read_epoch=0&total_partition_num=1&local_partition_num=1&start_partition_id=0&meta_prefix=gart_meta_";
+  std::string uri_str = "gart://127.0.0.1:23760?read_epoch=179&total_partition_num=1&local_partition_num=1&start_partition_id=0&meta_prefix=gart_meta_";
   /*
       "gart://"
       "127.0.0.1:23799?read_epoch=4&total_partition_num=2&local_partition_num="

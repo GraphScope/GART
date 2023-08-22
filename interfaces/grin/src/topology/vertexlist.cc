@@ -31,7 +31,7 @@ void grin_destroy_vertex_list(GRIN_GRAPH g, GRIN_VERTEX_LIST vl) {
 #ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR
 GRIN_VERTEX_LIST_ITERATOR grin_get_vertex_list_begin(GRIN_GRAPH g,
                                                      GRIN_VERTEX_LIST vl) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
   auto _vl = static_cast<GRIN_VERTEX_LIST_T*>(vl);
   auto iter = new GRIN_VERTEX_LIST_ITERATOR_T();
   if (_vl->all_master_mirror == 0) {

@@ -82,11 +82,22 @@ unsigned long long int _grin_create_property(unsigned, unsigned);
 #define GRIN_OID_T int64_t
 #define GRIN_VID_T uint64_t
 
-typedef gart::GartFragment<GRIN_OID_T, GRIN_VID_T> GRIN_GRAPH_T;
-typedef GRIN_GRAPH_T::vertex_t _GRIN_VERTEX_T;
+typedef gart::GartFragment<GRIN_OID_T, GRIN_VID_T> GRIN_FRAGMENT_T;
+typedef std::map<GRIN_FRAGMENT_T::label_id_t, std::string> GRIN_LABEL_NAME_MAP_T;
+typedef std::map<std::pair<GRIN_FRAGMENT_T::label_id_t, unsigned>, std::string> GRIN_PROPERTY_NAME_MAP_T;
+
+struct GRIN_GRAPH_T {
+  GRIN_FRAGMENT_T* frag;
+  GRIN_LABEL_NAME_MAP_T* vertex_label2name_map;
+  GRIN_LABEL_NAME_MAP_T* edge_label2name_map;
+  GRIN_PROPERTY_NAME_MAP_T* vertex_property2name_map;
+  GRIN_PROPERTY_NAME_MAP_T* edge_property2name_map;
+};
+
+typedef GRIN_FRAGMENT_T::vertex_t _GRIN_VERTEX_T;
 
 #ifdef GRIN_WITH_VERTEX_ORIGINAL_ID
-typedef GRIN_GRAPH_T::oid_t GRIN_VERTEX_ORIGINAL_ID_T;
+typedef GRIN_FRAGMENT_T::oid_t GRIN_VERTEX_ORIGINAL_ID_T;
 #endif
 
 #ifdef GRIN_ENABLE_VERTEX_LIST
@@ -122,13 +133,13 @@ typedef std::vector<size_t> GRIN_PARTITION_LIST_T;
 #endif
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
-typedef std::vector<GRIN_GRAPH_T::label_id_t> GRIN_VERTEX_TYPE_LIST_T;
+typedef std::vector<GRIN_FRAGMENT_T::label_id_t> GRIN_VERTEX_TYPE_LIST_T;
 typedef std::vector<GRIN_VERTEX_PROPERTY> GRIN_VERTEX_PROPERTY_LIST_T;
 #endif
 
 #ifdef GRIN_WITH_EDGE_PROPERTY
-typedef GRIN_GRAPH_T::label_id_t GRIN_EDGE_TYPE_T;
-typedef std::vector<GRIN_GRAPH_T::label_id_t> GRIN_EDGE_TYPE_LIST_T;
+typedef GRIN_FRAGMENT_T::label_id_t GRIN_EDGE_TYPE_T;
+typedef std::vector<GRIN_FRAGMENT_T::label_id_t> GRIN_EDGE_TYPE_LIST_T;
 typedef std::vector<GRIN_EDGE_PROPERTY> GRIN_EDGE_PROPERTY_LIST_T;
 #endif
 

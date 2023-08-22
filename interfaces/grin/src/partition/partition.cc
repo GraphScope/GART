@@ -111,7 +111,7 @@ const void* grin_get_partition_info(GRIN_PARTITIONED_GRAPH pg,
 GRIN_GRAPH grin_get_local_graph_by_partition(GRIN_PARTITIONED_GRAPH pg,
                                              GRIN_PARTITION p) {
   auto _pg = static_cast<GRIN_PARTITIONED_GRAPH_T*>(pg);
-  GRIN_GRAPH_T* fragment = new GRIN_GRAPH_T();
+  GRIN_FRAGMENT_T* fragment = new GRIN_FRAGMENT_T();
   std::shared_ptr<etcd::Client> etcd_client =
       std::make_shared<etcd::Client>(_pg->etcd_endpoint);
   std::string schema_key =
@@ -133,7 +133,53 @@ GRIN_GRAPH grin_get_local_graph_by_partition(GRIN_PARTITIONED_GRAPH pg,
 
   fragment->Init(graph_blob_config, graph_schema_config);
 
-  return reinterpret_cast<GRIN_GRAPH>(fragment);
+  GRIN_GRAPH_T* grin_graph = new GRIN_GRAPH_T();
+  grin_graph->frag = fragment;
+
+  GRIN_LABEL_NAME_MAP_T* vertex_label_name_map = new GRIN_LABEL_NAME_MAP_T();
+
+  for (auto idx = 0; idx < fragment->vertex_label_num(); idx++) {
+    vertex_label_name_map->emplace(idx, fragment->GetVertexLabelName(idx));
+  }
+
+  grin_graph->vertex_label2name_map = vertex_label_name_map;
+
+  GRIN_LABEL_NAME_MAP_T* edge_label_name_map = new GRIN_LABEL_NAME_MAP_T();
+
+  for (auto idx = 0; idx < fragment->edge_label_num(); idx++) {
+    edge_label_name_map->emplace(idx, fragment->GetEdgeLabelName(idx));
+  }
+
+  grin_graph->edge_label2name_map = edge_label_name_map;
+
+  GRIN_PROPERTY_NAME_MAP_T* vertex_property_name_map =
+      new GRIN_PROPERTY_NAME_MAP_T();
+
+  for (auto idx = 0; idx < fragment->vertex_label_num(); idx++) {
+    auto prop_size = fragment->vertex_property_num(idx);
+    for (auto prop_id = 0; prop_id < prop_size; prop_id++) {
+      vertex_property_name_map->emplace(
+          std::make_pair(idx, prop_id),
+          fragment->GetVertexPropName(idx, prop_id));
+    }
+  }
+
+  grin_graph->vertex_property2name_map = vertex_property_name_map;
+
+  GRIN_PROPERTY_NAME_MAP_T* edge_property_name_map =
+      new GRIN_PROPERTY_NAME_MAP_T();
+
+  for (auto idx = 0; idx < fragment->edge_label_num(); idx++) {
+    auto prop_size = fragment->edge_property_num(idx);
+    for (auto prop_id = 0; prop_id < prop_size; prop_id++) {
+      edge_property_name_map->emplace(std::make_pair(idx, prop_id),
+                                      fragment->GetEdgePropName(idx, prop_id));
+    }
+  }
+
+  grin_graph->edge_property2name_map = edge_property_name_map;
+
+  return grin_graph;
 }
 #endif
 

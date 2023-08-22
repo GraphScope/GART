@@ -16,14 +16,14 @@ limitations under the License.
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 size_t grin_get_vertex_num_by_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
   return _g->GetVerticesNum(vt);
 }
 #endif
 
 #ifdef GRIN_WITH_EDGE_PROPERTY
 size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
   return _g->GetEdgeNum(et);
 }
 #endif
