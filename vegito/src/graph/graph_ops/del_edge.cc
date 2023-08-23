@@ -36,7 +36,7 @@ void process_del_edge(const StringViewList& cmd,
   uint64_t edge_prop_bytes =
       graph_store->get_edge_prop_total_bytes(
           elabel + graph_store->get_total_vertex_label_num()) +
-      sizeof(Property::ColBitMap);
+      sizeof(graph_store->get_edge_bitmap_size(elabel));
   char* prop_buffer = reinterpret_cast<char*>(malloc(edge_prop_bytes));
   memset(prop_buffer, 0, edge_prop_bytes);
   std::string buf(prop_buffer, edge_prop_bytes);

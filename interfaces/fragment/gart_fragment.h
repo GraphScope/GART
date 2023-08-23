@@ -28,6 +28,7 @@
 #include "interfaces/fragment/iterator.h"
 #include "interfaces/fragment/property_util.h"
 #include "types.h"
+#include "util/bitset.h"
 
 namespace gart {
 
@@ -48,7 +49,6 @@ class GartFragment {
   using EdgeLabelBlockHeader = seggraph::EdgeLabelBlockHeader;
   using dir_t = seggraph::dir_t;
   using hashmap_t = vineyard::HashmapMVCC<int64_t, int64_t>;
-  using bitmap_t = uint16_t;
 
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
@@ -109,6 +109,8 @@ class GartFragment {
     vertex_prop_row_bitmap_.resize(vertex_label_num_);
     vertex_prop_total_bytes_.resize(vertex_label_num_, 0);
 
+    vertex_bitmap_size_.resize(vertex_label_num_, 0);
+
     vid_parser.Init(fnum_, vertex_label_num_);
     max_outer_id_offset_ =
         (((vid_t) 1) << vid_parser.GetOffsetWidth()) - (vid_t) 1;
@@ -127,6 +129,7 @@ class GartFragment {
         vertex_label2name_.emplace(v_label_id, name);
         auto vertex_prop_info = edge_info[idx]["propertyDefList"];
         auto vertex_prop_num = vertex_prop_info.size();
+        vertex_bitmap_size_[v_label_id] = BYTE_SIZE(vertex_prop_num);
         for (size_t prop_id = 0; prop_id < vertex_prop_num; prop_id++) {
           auto prop_name = vertex_prop_info[prop_id]["name"].get<std::string>();
           vertex_prop2name_.emplace(std::make_pair(v_label_id, prop_id),
@@ -170,6 +173,7 @@ class GartFragment {
       edge_name2label_.emplace(e_name, e_label_id - vertex_label_num_);
       auto edge_prop_info = edge_info[idx]["propertyDefList"];
       edge_prop_nums_.push_back(edge_prop_info.size());
+      edge_bitmap_size_.push_back(BYTE_SIZE(edge_prop_info.size()));
       std::vector<int> edge_prop_offset;
       std::vector<int> edge_prop_dtype;
       for (uint64_t prop_idx = 0; prop_idx < edge_prop_info.size();
@@ -345,7 +349,7 @@ class GartFragment {
       std::shared_ptr<vineyard::Blob> row_meta_blob;
       VINEYARD_CHECK_OK(
           client_.GetBlob(vprop_row_meta_oid, true, row_meta_blob));
-      vertex_prop_row_bitmap_[vlabel] = (bitmap_t*) row_meta_blob->data();
+      vertex_prop_row_bitmap_[vlabel] = (uint8_t*) row_meta_blob->data();
 
       for (uint64_t idx = 0; idx < vertex_prop_config.size(); idx++) {
         auto prop_id = vertex_prop_config[idx]["prop_id"].get<int>();
@@ -395,10 +399,6 @@ class GartFragment {
     } else {
       return vertex_prop_nums_[label] - 1;
     }
-  }
-
-  bitmap_t* GetVertexPropRowBitmap(label_id_t label) {
-    return vertex_prop_row_bitmap_[label];
   }
 
   prop_id_t edge_property_num(label_id_t label) const {
@@ -627,13 +627,9 @@ class GartFragment {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
-    bitmap_t null_bitset = *(vertex_prop_row_bitmap_[label_id] + v_offset);
-    bitmap_t flag = (null_bitset >> prop_id) & 1;
-    if (flag == 1) {
-      return false;
-    } else {
-      return true;
-    }
+    uint8_t* null_bitset = vertex_prop_row_bitmap_[label_id] +
+                           v_offset * vertex_bitmap_size_[label_id];
+    return get_bit(null_bitset, prop_id) == false;
   }
 
   template <typename T>
@@ -714,7 +710,8 @@ class GartFragment {
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
     auto prop_id = vertex_prop_nums_[label_id] - 1;
-    auto buffer_size = vertex_prop_total_bytes_[label_id] + sizeof(bitmap_t);
+    auto buffer_size =
+        vertex_prop_total_bytes_[label_id] + vertex_bitmap_size_[label_id];
     auto header_offset = prop_cols_meta[label_id][prop_id].header;
     if (prop_cols_meta[label_id][prop_id].updatable == true) {
       FlexColBlobHeader* header =
@@ -730,13 +727,13 @@ class GartFragment {
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
           char* data = page_header->get_data();
-          return data + buffer_size * page_idx + sizeof(bitmap_t);
+          return data + buffer_size * page_idx + vertex_bitmap_size_[label_id];
         }
       }
     } else {
       char* data =
           (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
-      return data + buffer_size * v_offset + sizeof(bitmap_t);
+      return data + buffer_size * v_offset + vertex_bitmap_size_[label_id];
     }
     return nullptr;
   }
@@ -919,10 +916,12 @@ class GartFragment {
     int* prop_offsets = nullptr;
     int prop_bytes = 0;
     if (prop_num > 0) {
-      prop_bytes = edge_prop_offsets[e_label][prop_num - 1] + sizeof(bitmap_t);
+      prop_bytes =
+          edge_prop_offsets[e_label][prop_num - 1] + edge_bitmap_size_[e_label];
       prop_offsets = (int*) edge_prop_offsets[e_label].data();
     }
-    return get_edges_in_seg_(segment, v, prop_bytes, prop_offsets);
+    return get_edges_in_seg_(segment, v, prop_bytes, prop_offsets,
+                             edge_bitmap_size_[e_label]);
   }
 
   inline gart::EdgeIterator GetOutgoingAdjList(const vertex_t& v,
@@ -934,10 +933,12 @@ class GartFragment {
     int* prop_offsets = nullptr;
     int prop_bytes = 0;
     if (prop_num > 0) {
-      prop_bytes = edge_prop_offsets[e_label][prop_num - 1] + sizeof(bitmap_t);
+      prop_bytes =
+          edge_prop_offsets[e_label][prop_num - 1] + edge_bitmap_size_[e_label];
       prop_offsets = (int*) edge_prop_offsets[e_label].data();
     }
-    return get_edges_in_seg_(segment, v, prop_bytes, prop_offsets);
+    return get_edges_in_seg_(segment, v, prop_bytes, prop_offsets,
+                             edge_bitmap_size_[e_label]);
   }
 
   inline grape::DestList IEDests(const vertex_t& v, label_id_t e_label) const {
@@ -1062,10 +1063,12 @@ class GartFragment {
   inline gart::EdgeIterator get_edges_in_seg_(VegitoSegmentHeader* segment,
                                               const vertex_t& v,
                                               size_t edge_prop_size,
-                                              int* prop_offsets) const {
+                                              int* prop_offsets,
+                                              size_t bitmap_size) const {
     if (!segment) {
       return gart::EdgeIterator(nullptr, nullptr, nullptr, nullptr, 0, 0,
-                                read_epoch_number_, nullptr, string_buffer_);
+                                read_epoch_number_, nullptr, string_buffer_,
+                                bitmap_size);
     }
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     char* edge_blob_ptr = nullptr;
@@ -1088,18 +1091,20 @@ class GartFragment {
     if (!epoch_table || !edge_block || epoch_table_offset == 0 ||
         edge_block_offset == 0) {
       return gart::EdgeIterator(nullptr, nullptr, nullptr, nullptr, 0, 0,
-                                read_epoch_number_, nullptr, string_buffer_);
+                                read_epoch_number_, nullptr, string_buffer_,
+                                bitmap_size);
     }
 
     auto num_entries = edge_block->get_num_entries();
     if (num_entries == 0) {  // no edges to read
       return gart::EdgeIterator(nullptr, nullptr, nullptr, nullptr, 0, 0,
-                                read_epoch_number_, nullptr, string_buffer_);
+                                read_epoch_number_, nullptr, string_buffer_,
+                                bitmap_size);
     }
 
     return gart::EdgeIterator(segment, edge_block, epoch_table, edge_blob_ptr,
                               num_entries, edge_prop_size, read_epoch_number_,
-                              prop_offsets, string_buffer_);
+                              prop_offsets, string_buffer_, bitmap_size);
   }
 
   void initDestFidList(
@@ -1237,7 +1242,7 @@ class GartFragment {
 
   // for vertex property
   std::vector<int> vertex_prop_nums_;
-  std::vector<bitmap_t*> vertex_prop_row_bitmap_;  // NULL bitmap
+  std::vector<uint8_t*> vertex_prop_row_bitmap_;  // NULL bitmap
   std::vector<std::vector<char*>> vertex_prop_blob_ptrs_;
 
   fid_t fid_, fnum_;
@@ -1261,6 +1266,9 @@ class GartFragment {
   std::map<std::pair<label_id_t, prop_id_t>, std::string> edge_prop2dtype_;
 
   std::vector<size_t> vertex_prop_total_bytes_;
+
+  std::vector<size_t> vertex_bitmap_size_;
+  std::vector<size_t> edge_bitmap_size_;
 
   std::string oid_type, vid_type;
 

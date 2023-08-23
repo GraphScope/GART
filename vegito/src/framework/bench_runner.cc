@@ -23,6 +23,7 @@
 
 #include "framework/bench_runner.h"
 #include "graph/graph_ops.h"
+#include "util/bitset.h"
 
 using std::ifstream;
 using std::map;
@@ -133,6 +134,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     prop_schema.klen = sizeof(uint64_t);
   }
 
+  graph_store->init_vertex_bitmap_size(vlabel_num);
+
   // Parse edge
   for (int idx = 0; idx < elabel_num; ++idx) {
     int id = idx + vlabel_num;
@@ -154,6 +157,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
                            edef[idx]["dataFieldMappings"].size());
   }
 
+  graph_store->init_edge_bitmap_size(elabel_num);
+
   for (int idx = 0; idx < vlabel_num + elabel_num; ++idx) {
     int id = idx;
     string table_name;
@@ -168,6 +173,14 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     }
     if (prop_info.size() != 0) {
       graph_schema.label2prop_offset[id] = prop_offset;
+    }
+
+    if (is_vertex) {
+      auto bitmap_size = BYTE_SIZE(prop_info.size());
+      graph_store->set_vertex_bitmap_size(id, bitmap_size);
+    } else {
+      auto bitmap_size = BYTE_SIZE(prop_info.size());
+      graph_store->set_edge_bitmap_size(id - vlabel_num, bitmap_size);
     }
 
     uint64_t edge_prop_prefix_bytes = 0;
@@ -377,7 +390,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       for (auto col_id = 0; col_id < prop_schema.cols.size(); col_id++) {
         data_size += prop_schema.cols[col_id].vlen;
       }
-      col.vlen = data_size + sizeof(Property::ColBitMap);
+      col.vlen = data_size + graph_store->get_vertex_bitmap_size(id);
       prop_schema.cols.push_back(col);
     }
 

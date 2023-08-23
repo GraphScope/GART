@@ -16,6 +16,7 @@
 #ifndef VEGITO_SRC_GRAPH_GRAPH_STORE_H_
 #define VEGITO_SRC_GRAPH_GRAPH_STORE_H_
 
+#include <cstddef>
 #include <limits>
 #include <map>
 #include <memory>
@@ -375,6 +376,30 @@ class GraphStore {
     return enable_row_store_for_vertex_property_;
   }
 
+  void init_vertex_bitmap_size(uint64_t vlabel_num) {
+    vertex_bitmap_size_.resize(vlabel_num);
+  }
+
+  void init_edge_bitmap_size(uint64_t elabel_num) {
+    edge_bitmap_size_.resize(elabel_num);
+  }
+
+  size_t get_vertex_bitmap_size(uint64_t vlabel) const {
+    return vertex_bitmap_size_[vlabel];
+  }
+
+  size_t get_edge_bitmap_size(uint64_t elabel) const {
+    return edge_bitmap_size_[elabel];
+  }
+
+  void set_vertex_bitmap_size(uint64_t vlabel, size_t size) {
+    vertex_bitmap_size_[vlabel] = size;
+  }
+
+  void set_edge_bitmap_size(uint64_t elabel, size_t size) {
+    edge_bitmap_size_[elabel] = size;
+  }
+
  private:
   static const int INIT_VEC_SZ = 128;
 
@@ -438,6 +463,10 @@ class GraphStore {
   size_t string_buffer_size_;
   size_t string_buffer_offset_;
   vineyard::ObjectID string_buffer_object_id_;
+
+  // for bitmap
+  std::vector<size_t> vertex_bitmap_size_;
+  std::vector<size_t> edge_bitmap_size_;
 
   // vlabel -> vertex blob schemas
   std::map<uint64_t, gart::BlobSchema> blob_schemas_;

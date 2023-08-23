@@ -73,8 +73,6 @@ enum PropertyStoreDataType {
 // multi-version store
 class Property {  // NOLINT(build/class)
  public:
-  using ColBitMap = uint16_t;
-
   struct Column {
     size_t vlen;
     bool updatable;

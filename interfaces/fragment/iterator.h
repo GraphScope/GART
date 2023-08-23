@@ -18,8 +18,10 @@
 
 #include <cstdint>
 #include <string_view>
+
 #include "interfaces/fragment/types.h"
 #include "seggraph/blocks.hpp"
+#include "util/bitset.h"
 
 namespace gart {
 template <typename VID_T, typename VDATA_T>
@@ -216,14 +218,13 @@ class EdgeIterator {
   using VegitoSegmentHeader = seggraph::VegitoSegmentHeader;
   using EdgeLabelBlockHeader = seggraph::EdgeLabelBlockHeader;
   using VegitoEdgeEntry = seggraph::VegitoEdgeEntry;
-  using ColBitMap = uint16_t;
 
   EdgeIterator(VegitoSegmentHeader* seg_header,
                VegitoEdgeBlockHeader* edge_block_header,
                EpochBlockHeader* epoch_table_header, char* edge_blob_ptr,
                size_t num_entries, size_t edge_prop_size,
-               size_t read_epoch_number, int* prop_offsets,
-               char* string_buffer) {
+               size_t read_epoch_number, int* prop_offsets, char* string_buffer,
+               size_t bitmap_size) {
     prop_offsets_ = prop_offsets;
     seg_header_ = seg_header;
     edge_block_header_ = edge_block_header;
@@ -233,6 +234,7 @@ class EdgeIterator {
     read_epoch_number_ = read_epoch_number;
     string_buffer_ = string_buffer;
     edge_blob_ptr_ = edge_blob_ptr;
+    bitmap_size_ = bitmap_size;
     if (edge_block_header && epoch_table_header) {
       init();
       find_next_valid_cursor();
@@ -309,20 +311,15 @@ class EdgeIterator {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
-    ColBitMap bitmap = *(ColBitMap*) data;
-    ColBitMap flag = (bitmap >> prop_id) & 1;
-    if (flag == 1) {
-      return false;
-    } else {
-      return true;
-    }
+    uint8_t* bitmap = (uint8_t*) data;
+    return get_bit(bitmap, prop_id) == false;
   }
 
   char* get_data() {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
-    data += sizeof(ColBitMap);
+    data += bitmap_size_;
     return data;
   }
 
@@ -338,7 +335,7 @@ class EdgeIterator {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
-    data += sizeof(ColBitMap);
+    data += bitmap_size_;
     if (prop_id == 0) {
       t = *(EDATA_T*) (data);
       return;
@@ -352,7 +349,7 @@ class EdgeIterator {
     char* data = (char*) ((uintptr_t) seg_header_ + seg_block_size_ -
                           (edge_prop_offset_ + entries_ - entries_cursor_) *
                               edge_prop_size_);
-    data += sizeof(ColBitMap);
+    data += bitmap_size_;
     int64_t value;
     if (prop_id == 0) {
       value = *(int64_t*) (data);
@@ -449,6 +446,7 @@ class EdgeIterator {
   size_t edge_prop_offset_;
   int* prop_offsets_;
   char* string_buffer_;
+  size_t bitmap_size_;
 };
 }  // namespace gart
 

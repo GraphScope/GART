@@ -16,6 +16,8 @@
 #include "graph/graph_store.h"
 #include <fstream>
 
+#include "util/bitset.h"
+
 using std::allocator_traits;
 using std::map;
 using std::numeric_limits;
@@ -287,7 +289,8 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
 
   switch (schema.store_type) {
   case PROP_COLUMN: {
-    property_stores_[vlabel] = new PropertyColPaged(schema, v_capacity);
+    property_stores_[vlabel] =
+        new PropertyColPaged(schema, v_capacity, vertex_bitmap_size_[vlabel]);
     assert(blob_schemas_.find(vlabel) != blob_schemas_.end());
     auto& blob_schema = blob_schemas_[vlabel];
     auto p = property_stores_[vlabel];
@@ -521,18 +524,17 @@ void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
                                  std::string& out) {
   out.clear();
   out.resize(get_edge_prop_total_bytes(elabel + total_vertex_label_num_) +
-             sizeof(Property::ColBitMap));
+             edge_bitmap_size_[elabel]);
   char* prop_buffer = out.data();
 
   // null bitmap
-  Property::ColBitMap* bitmap =
-      reinterpret_cast<Property::ColBitMap*>(prop_buffer);
-  *bitmap = 0;
+  uint8_t* bitmap = reinterpret_cast<uint8_t*>(prop_buffer);
+  memset(bitmap, 0, edge_bitmap_size_[elabel]);
 
   string tmp_str;  // for store string_view
   for (size_t idx = 0; idx < eprop.size(); idx++) {
     if (eprop[idx].size() == 0) {
-      *bitmap |= (1 << idx);
+      set_bit(bitmap, idx);
     }
 
     auto dtype =
@@ -541,13 +543,12 @@ void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
         get_edge_prop_prefix_bytes(elabel + total_vertex_label_num_, idx);
 
     // bitmap allocated before properties
-    void* prop_ptr =
-        prop_buffer + sizeof(Property::ColBitMap) + property_offset;
+    void* prop_ptr = prop_buffer + edge_bitmap_size_[elabel] + property_offset;
     std::string_view sv = eprop[idx];
     if (dtype == STRING) {
       auto str_len = eprop[idx].length();
       if (str_len == 0) {
-        *bitmap |= (1 << idx);
+        set_bit(bitmap, idx);
       }
       size_t old_offset = get_string_buffer_offset();
       char* string_buffer = get_string_buffer();

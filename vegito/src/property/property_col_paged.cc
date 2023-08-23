@@ -25,9 +25,11 @@
  */
 
 #include "property/property_col_paged.h"
+#include <cstdint>
 #include <string>
 
 #include "graph/graph_store.h"
+#include "util/bitset.h"
 #include "util/macros.h"
 
 #define LAZY_PAGE_ALLOC 1
@@ -118,6 +120,7 @@ inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(uint64_t page_sz,
 }
 
 PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
+                                   size_t bitmap_size,
                                    const vector<uint32_t>* split)
     : Property(max_items),
       table_id_(s.table_id),
@@ -125,12 +128,8 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       col_oids_(s.cols.size()),
       flex_bufs_(s.cols.size()),
       fixCols_(s.cols.size(), nullptr),
-      flexCols_(s.cols.size()) {
-  if (cols_.size() > sizeof(ColBitMap) * CHAR_BIT) {
-    LOG(ERROR) << "Too many columns: " << cols_.size();
-    exit(-1);
-  }
-
+      flexCols_(s.cols.size()),
+      null_bitmap_size_(bitmap_size) {
   // each column
   val_len_ = 0;
   for (int i = 0; i < cols_.size(); i++) {
@@ -169,8 +168,10 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
   }
   assert(pcols_.size() == cols_.size());
 
-  null_bitmaps_ = reinterpret_cast<ColBitMap*>(
-      mem_alloc(sizeof(ColBitMap) * max_items_, &row_meta_oid_));
+  null_bitmaps_ = reinterpret_cast<uint8_t*>(
+      mem_alloc(null_bitmap_size_ * max_items_, &row_meta_oid_));
+
+  memset(null_bitmaps_, 0, null_bitmap_size_ * max_items_);
 
   for (int i = 0; i < cols_.size(); ++i) {
     size_t vlen = val_lens_[i];
@@ -316,8 +317,6 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
     assert(false);
   }
 
-  null_bitmaps_[off] = 0;
-
   for (int i = 0; i < cols_.size(); ++i) {
     const Property::Column& col = cols_[i];
 
@@ -350,11 +349,9 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
 
   assert(v_list.size() == cols_.size() || (v_list.size() + 1 == cols_.size()));
 
-  null_bitmaps_[off] = 0;
-
   char* prop_buffer;
   bool enable_row = false;
-  size_t buffer_offset = sizeof(ColBitMap);
+  size_t buffer_offset = null_bitmap_size_;
   if (v_list.size() + 1 == cols_.size()) {
     prop_buffer = (char*) malloc(cols_[cols_.size() - 1].vlen);
     enable_row = true;
@@ -376,10 +373,10 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
     }
 
     if (i < v_list.size() && v_list[i].size() == 0) {
-      null_bitmaps_[off] |= (1 << i);
+      set_bit(null_bitmaps_ + null_bitmap_size_ * off, i);
     } else if (i < v_list.size() && col.vtype == STRING &&
                (std::stoll(std::string(v_list[i])) & 0xffff) == 0) {
-      null_bitmaps_[off] |= (1 << i);
+      set_bit(null_bitmaps_ + null_bitmap_size_ * off, i);
     } else if (i < v_list.size()) {
       assign_prop(col.vtype, dst, v_list[i]);
       if (enable_row) {
@@ -388,7 +385,8 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
       }
     } else {
       assert(col.vtype == BYTES);
-      memcpy(prop_buffer, null_bitmaps_ + off, sizeof(ColBitMap));
+      memcpy(prop_buffer, null_bitmaps_ + null_bitmap_size_ * off,
+             null_bitmap_size_);
       memcpy(dst, prop_buffer, vlen);
       free(prop_buffer);
     }
