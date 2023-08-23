@@ -114,10 +114,10 @@ class EdgeType {
         for (VertexTable vertexTable : vertexTables) {
             String vtable = vertexTable.getTableName().getName();
             String vlabel = vertexTable.getLabels().get(0).getName();
-            if (vtable == sourceTable) {
+            if (vtable.equals(sourceTable)) {
                 sourceVertex = vlabel;
             }
-            if (vtable == destinationTable) {
+            if (vtable.equals(destinationTable)) {
                 destinationVertex = vlabel;
             }
         }
