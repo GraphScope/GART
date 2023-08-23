@@ -41,6 +41,7 @@ public class Main {
                     + "    Trans KEY (t_id)"
                     + "      SOURCE KEY (P_ID1) REFERENCES Person (p_id)"
                     + "      DESTINATION KEY (P_ID2) REFERENCES Person (p_id)"
+                    + "      LABEL Transfer PROPERTIES (t_data AS data)"
                     + "  )";
             PgqlResult result3 = pgql.parse(ddlString);
 

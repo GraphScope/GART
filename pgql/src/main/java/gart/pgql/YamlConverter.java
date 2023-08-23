@@ -25,6 +25,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.representer.Representer;
 
 import oracle.pgql.lang.ddl.propertygraph.CreatePropertyGraph;
+import oracle.pgql.lang.ddl.propertygraph.EdgeTable;
 import oracle.pgql.lang.ddl.propertygraph.Label;
 import oracle.pgql.lang.ddl.propertygraph.VertexTable;
 
@@ -54,11 +55,9 @@ class LoadingConfig {
 }
 
 class VertexMappings {
-
     class VertexType {
         VertexType(VertexTable vertexTable) {
-            // Now we only support one label and one key column for each vertex
-            // table
+            // Now we only support one label and one key column for each table
             this.dataSourceName = vertexTable.getTableName().getName();
             this.idFieldName = vertexTable.getKey().getColumnNames().get(0);
 
@@ -90,27 +89,72 @@ class VertexMappings {
 }
 
 class EdgeMappings {
-    class DataField {
-        public String name;
-    }
-
-    class Mapping {
-        public String property;
-        public DataField dataField = new DataField();
-    }
-
     class TypePair {
         public String edge;
         public String source_vertex;
         public String destination_vertex;
+
+        TypePair(String edge, String source_vertex, String destination_vertex) {
+            this.edge = edge;
+            this.source_vertex = source_vertex;
+            this.destination_vertex = destination_vertex;
+        }
     }
 
     class EdgeType {
-        public TypePair type_pair = new TypePair();
+        EdgeType(EdgeTable edgeTable, List<VertexTable> vertexTables) {
+            // Now we only support one label and one key column for each table
+            Label label = edgeTable.getLabels().get(0);
+            String edge = label.getName();
+            String sourceTable = edgeTable.getSourceVertexTable().getTableName().getName();
+            String destinationTable = edgeTable.getDestinationVertexTable().getTableName().getName();
+            String sourceVertex = "", destinationVertex = "";
+
+            for (VertexTable vertexTable : vertexTables) {
+                String vtable = vertexTable.getTableName().getName();
+                String vlabel = vertexTable.getLabels().get(0).getName();
+                if (vtable == sourceTable) {
+                    sourceVertex = vlabel;
+                }
+                if (vtable == destinationTable) {
+                    destinationVertex = vlabel;
+                }
+            }
+            this.type_pair = new TypePair(edge, sourceVertex, destinationVertex);
+
+            this.dataSourceName = edgeTable.getTableName().getName();
+
+            this.sourceVertexMappings = new DataField[1];
+            this.sourceVertexMappings[0] = new DataField(edgeTable.getSourceVertexKey().getColumnNames().get(0));
+            this.destinationVertexMappings = new DataField[1];
+            this.destinationVertexMappings[0] = new DataField(
+                    edgeTable.getDestinationVertexKey().getColumnNames().get(0));
+
+            int numProperties = 0;
+            if (label.getProperties() != null) {
+                numProperties = label.getProperties().size();
+            }
+            this.dataFieldMappings = new Mapping[numProperties];
+            for (int i = 0; i < numProperties; ++i) {
+                String property = label.getProperties().get(i).getPropertyName();
+                String colName = label.getProperties().get(i).getColumnName();
+                this.dataFieldMappings[i] = new Mapping(property, colName);
+            }
+        }
+
+        public TypePair type_pair;
         public String dataSourceName;
         public DataField[] sourceVertexMappings;
         public DataField[] destinationVertexMappings;
         public Mapping[] dataFieldMappings;
+    }
+
+    EdgeMappings(List<EdgeTable> edgeTables, List<VertexTable> vertexTables) {
+        this.edgeTypes = new EdgeType[edgeTables.size()];
+        for (int i = 0; i < edgeTables.size(); ++i) {
+            EdgeTable edgeTable = edgeTables.get(i);
+            this.edgeTypes[i] = new EdgeType(edgeTable, vertexTables);
+        }
     }
 
     public EdgeType[] edgeTypes;
@@ -120,7 +164,7 @@ class GSchema {
     public String graph;
     public LoadingConfig loadingConfig = new LoadingConfig();
     public VertexMappings vertexMappings;
-    public EdgeMappings edgeMappings = new EdgeMappings();
+    public EdgeMappings edgeMappings;
 }
 
 public class YamlConverter {
@@ -144,8 +188,10 @@ public class YamlConverter {
         schema.loadingConfig.database = "ldbc";
 
         List<VertexTable> vertexTables = ddlStatement.getVertexTables();
+        List<EdgeTable> edgeTables = ddlStatement.getEdgeTables();
 
         schema.vertexMappings = new VertexMappings(vertexTables);
+        schema.edgeMappings = new EdgeMappings(edgeTables, vertexTables);
 
         // output yaml
         yaml.dump(schema, writer);
