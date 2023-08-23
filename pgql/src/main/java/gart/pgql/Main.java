@@ -1,9 +1,25 @@
-/*
- * Copyright (C) 2013 - 2023 Oracle and/or its affiliates. All rights reserved.
+/** Copyright 2020-2023 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package gart.pgql;
 
 import oracle.pgql.lang.PgqlException;
+
+import java.io.FileWriter;
+import java.io.IOException;
+
 import oracle.pgql.lang.Pgql;
 import oracle.pgql.lang.PgqlResult;
 import oracle.pgql.lang.ddl.propertygraph.CreatePropertyGraph;
@@ -14,20 +30,11 @@ public class Main {
 
         try (Pgql pgql = new Pgql()) {
 
-            // parse query and print graph query
-            PgqlResult result1 = pgql
-                    .parse("SELECT n FROM MATCH (n IS Person) -[e IS likes]-> (m IS Person) WHERE n.name = 'Dave'");
-            System.out.println(result1.getPgqlStatement());
-
-            // parse query with errors and print error messages
-            PgqlResult result2 = pgql.parse("SELECT x, y FROM MATCH (n) -[e]-> (m)");
-            System.out.println(result2.getErrorMessages());
-
             // parse DDL
             String ddlString = "CREATE PROPERTY GRAPH socialNetwork "
                     + "  VERTEX TABLES ("
                     + "    Person KEY (p_id)"
-                    + "      LABEL Person PROPERTIES (p_name AS name, p_age AS age)"
+                    + "      LABEL Person PROPERTIES (p_id AS id, p_name AS name, p_age AS age)"
                     + "      LABEL Person_age PROPERTIES (p_age)"
                     + "  )"
                     + "  EDGE TABLES ("
@@ -37,13 +44,26 @@ public class Main {
                     + "  )";
             PgqlResult result3 = pgql.parse(ddlString);
 
-            if (result3.isQueryValid()) {
-                CreatePropertyGraph createPropertyGraph = (CreatePropertyGraph) result3.getPgqlStatement();
-                System.out.println(createPropertyGraph.getVertexTables());
-            } else {
+            if (!result3.isQueryValid()) {
                 System.out.println(ddlString);
                 System.out.println(result3.getErrorMessages());
+
+                return;
             }
+
+            CreatePropertyGraph createPropertyGraph = (CreatePropertyGraph) result3.getPgqlStatement();
+            System.out.println(createPropertyGraph);
+
+            String filename = "file.yaml";
+            try {
+                FileWriter writer = new FileWriter(filename);
+                YamlConverter yamlConventer = new YamlConverter(writer, createPropertyGraph);
+                yamlConventer.convert();
+            } catch (IOException ie) {
+                System.out.println("Error: " + ie.getMessage());
+            }
+
         }
+
     }
 }
