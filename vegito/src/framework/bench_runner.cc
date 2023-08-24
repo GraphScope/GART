@@ -135,6 +135,9 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   }
 
   graph_store->init_vertex_bitmap_size(vlabel_num);
+  graph_store->init_external_id_location(vlabel_num);
+  graph_store->init_external_id_dtype(vlabel_num);
+  graph_store->init_external_id_store(vlabel_num);
 
   // Parse edge
   for (int idx = 0; idx < elabel_num; ++idx) {
@@ -162,11 +165,13 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   for (int idx = 0; idx < vlabel_num + elabel_num; ++idx) {
     int id = idx;
     string table_name;
+    string external_id_col_name;
     YAML::Node prop_info;
     bool is_vertex = (idx < vlabel_num);
     if (is_vertex) {
       prop_info = vdef[idx]["mappings"];
       table_name = vdef[idx]["dataSourceName"].as<string>();
+      external_id_col_name = vdef[idx]["idFieldName"].as<string>();
     } else {
       prop_info = edef[idx - vlabel_num]["dataFieldMappings"];
       table_name = edef[idx - vlabel_num]["dataSourceName"].as<string>();
@@ -184,13 +189,14 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     }
 
     uint64_t edge_prop_prefix_bytes = 0;
+    auto required_table_schema = table_schema[table_name];
+
     for (int prop_idx = 0; prop_idx < prop_info.size(); prop_idx++) {
       int prop_id = prop_idx;
       string prop_name = prop_info[prop_idx]["property"].as<string>();
       string prop_dtype = "";
       string prop_table_col_name =
           prop_info[prop_idx]["dataField"]["name"].as<string>();
-      auto required_table_schema = table_schema[table_name];
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx].size() != 2) {
           LOG(ERROR) << "Table schema file (" << table_schema_path
@@ -253,7 +259,17 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       if (is_vertex) {
         // col.updatable = prop_info[prop_idx]["updatable"].get<bool>();
         col.updatable = true;
+        if (external_id_col_name == prop_table_col_name) {
+          graph_store->set_external_id_location(id, prop_id);
+          // TODO(wanglei): we assume the external is must be string or long int type
+          if (prop_dtype == "STRING") {
+            graph_store->set_external_id_dtype(id, PropertyStoreDataType::STRING);
+          } else {
+            graph_store->set_external_id_dtype(id, PropertyStoreDataType::LONG);
+          }
+        }
       }
+
       if (prop_dtype == "INT") {
         graph_schema.dtype_map[{id, prop_id}] = INT;
         if (is_vertex) {
@@ -384,6 +400,25 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       prop_offset++;
     }
 
+    if (is_vertex && graph_store->get_external_id_location(id) == -1) {
+      // the external id is not in the property list
+      for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
+        if (required_table_schema[col_idx][0].get<string>() == external_id_col_name) {
+          string prop_dtype_str =
+              required_table_schema[col_idx][1].get<string>();
+          if (prop_dtype_str.rfind("varchar", 0) == 0 ||
+              prop_dtype_str == "character varying" ||
+              prop_dtype_str == "text") {
+            graph_store->set_external_id_dtype(id, PropertyStoreDataType::STRING);
+          }
+          else {
+            graph_store->set_external_id_dtype(id, PropertyStoreDataType::LONG);
+          }
+          break;
+        }          
+      }
+    }
+
     if (is_vertex && graph_store->get_enable_row_store_for_vertex_property()) {
       col.vtype = BYTES;
       size_t data_size = 0;
@@ -401,6 +436,10 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       graph_store->insert_edge_prop_total_bytes(id, edge_prop_prefix_bytes);
       edge_prop_prefix_bytes = 0;
     }
+  }
+
+  for (auto idx = 0; idx < vlabel_num; ++idx) {
+    graph_store->init_external_id_storage(idx);
   }
 
   graph_store->set_schema(graph_schema);

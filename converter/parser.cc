@@ -86,6 +86,7 @@ string LogEntry::to_string() const {
 
   if (entity_type == EntityType::VERTEX) {
     append_str(base, vertex.gid);
+    append_str(base, external_id);
   } else {
     append_str(base, edge.elabel);
     append_str(base, edge.src_gid);
@@ -182,6 +183,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   out.properties.clear();
   out.valid_ = false;
   out.epoch = epoch;
+  out.external_id = "";
 
   // parse JSON
   json log;
@@ -344,6 +346,16 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
 
     gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
     set_gid(data[vid_col], vertex_label_id, gid);
+    std::string enternal_id;
+    // TODO (wanglei): now only vertex has enternal id
+    if (data[vid_col].is_number_integer()) {
+      enternal_id = std::to_string(data[vid_col].get<int64_t>());
+    } else if (data[vid_col].is_string()) {
+      enternal_id = data[vid_col].get<string>();
+    } else {
+      LOG(ERROR) << "Unknown vertex id type: " << data[vid_col].type_name();
+    }
+    out.external_id = enternal_id;
   } else if (out.op_type == LogEntry::OpType::DELETE) {
     gid = get_gid(data[vid_col], vertex_label_id);
   }

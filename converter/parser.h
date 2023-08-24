@@ -62,6 +62,10 @@ class LogEntry {
       int64_t dst_gid;
     } edge;
   };
+
+  // vertex/edge id in original data source
+  std::string external_id; 
+
   std::vector<std::string> properties;
 
   // log status (meta-data)

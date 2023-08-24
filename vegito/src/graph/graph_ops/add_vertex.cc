@@ -36,8 +36,9 @@ void process_add_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store) {
   int write_epoch = stoi(string(cmd[0]));
   uint64_t vid = static_cast<uint64_t>(stoll(string(cmd[1])));
-  StringViewList props(cmd.begin() + 2, cmd.end());
-  graph_store->insert_inner_vertex(write_epoch, vid, props);
+  std::string external_id = string(cmd[2]);
+  StringViewList props(cmd.begin() + 3, cmd.end());
+  graph_store->insert_inner_vertex(write_epoch, vid, external_id,props);
 }
 
 }  // namespace graph

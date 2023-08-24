@@ -14,6 +14,7 @@
  */
 
 #include "graph/graph_store.h"
+#include <cstdint>
 #include <fstream>
 
 #include "util/bitset.h"
@@ -307,6 +308,19 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
   }
 }
 
+void GraphStore::init_external_id_storage(uint64_t vlabel) {
+  vineyard::ObjectID object_id = 0;
+  auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
+  if (external_id_location_[vlabel] == -1) {
+    uint64_t v_capacity = seg_graphs_[vlabel]->get_vertex_capacity();
+    auto alloc =
+        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
+            array_allocator);
+    external_id_stores_[vlabel] = alloc.allocate_v6d(v_capacity, object_id);
+  }
+  blob_schema.set_external_id_oid(object_id);
+}
+
 void GraphStore::update_blob(uint64_t blob_epoch) {
   for (auto& pair : blob_schemas_) {
     uint64_t vlabel = pair.first;
@@ -468,7 +482,7 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
   assert(response_task.is_ok());
 }
 
-bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
+bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid, std::string external_id,
                                      StringViewList& vprop) {
   // parse id
   IdParser<seggraph::vertex_t> parser;
@@ -491,6 +505,25 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   seggraph::vertex_t v = writer.new_vertex();
   auto off = property->getNewOffset();
   assert(v == off);
+
+  if (external_id_location_[vlabel] == -1) {
+    if (external_id_dtype_[vlabel] == PropertyStoreDataType::STRING) {
+      auto str_len = external_id.length();
+      size_t old_offset = get_string_buffer_offset();
+      char* string_buffer = get_string_buffer();
+      // each string is ended with '\0'
+      size_t new_offset = old_offset + str_len + 1;
+      assert(new_offset < get_string_buffer_size());
+      memcpy(string_buffer + old_offset, external_id.data(), str_len);
+      string_buffer[new_offset - 1] = '\0';
+      set_string_buffer_offset(new_offset);
+      int64_t value = (old_offset << 16) | str_len;
+      external_id_stores_[vlabel][v] = value;
+    } else {
+      external_id_stores_[vlabel][v] = std::stoull(external_id);
+    }
+  }
+
   add_inner(vlabel, lid);
 
   // deal with string

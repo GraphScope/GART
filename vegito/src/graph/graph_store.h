@@ -17,6 +17,7 @@
 #define VEGITO_SRC_GRAPH_GRAPH_STORE_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <map>
 #include <memory>
@@ -134,7 +135,7 @@ class GraphStore {
   }
 
   // return true if the vertex is in the local partition, else false
-  bool insert_inner_vertex(int epoch, uint64_t gid, StringViewList& vprop);
+  bool insert_inner_vertex(int epoch, uint64_t gid, std::string external_id, StringViewList& vprop);
 
   void construct_eprop(int elabel, const StringViewList& eprop,
                        std::string& out);
@@ -400,6 +401,40 @@ class GraphStore {
     edge_bitmap_size_[elabel] = size;
   }
 
+  void init_external_id_location(uint64_t vlabel_num) {
+    external_id_location_.resize(vlabel_num, -1);
+  }
+
+  void init_external_id_dtype(uint64_t vlabel_num) {
+    external_id_dtype_.resize(vlabel_num);
+  }
+
+  void init_external_id_store(uint64_t vlabel_num) {
+    external_id_stores_.resize(vlabel_num);
+  }
+
+  void set_external_id_location(uint64_t vlabel, int location) {
+    external_id_location_[vlabel] = location;
+  }
+
+  void set_external_id_dtype(uint64_t vlabel, int dtype) {
+    external_id_dtype_[vlabel] = dtype;
+  }
+
+  int get_external_id_location(uint64_t vlabel) const {
+    return external_id_location_[vlabel];
+  }
+
+  int get_external_id_dtype(uint64_t vlabel) const {
+    return external_id_dtype_[vlabel];
+  }
+
+  uint64_t* get_external_id_store(uint64_t vlabel) {
+    return external_id_stores_[vlabel];
+  }
+
+  void init_external_id_storage(uint64_t vlabel);
+
  private:
   static const int INIT_VEC_SZ = 128;
 
@@ -467,6 +502,11 @@ class GraphStore {
   // for bitmap
   std::vector<size_t> vertex_bitmap_size_;
   std::vector<size_t> edge_bitmap_size_;
+
+  // for external id
+  std::vector<int> external_id_location_;
+  std::vector<int> external_id_dtype_;
+  std::vector<uint64_t*> external_id_stores_;
 
   // vlabel -> vertex blob schemas
   std::map<uint64_t, gart::BlobSchema> blob_schemas_;

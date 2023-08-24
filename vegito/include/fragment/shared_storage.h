@@ -239,6 +239,8 @@ class BlobSchema {
     vprops = meta;
   }
 
+  void set_external_id_oid(oid_t oid) { external_id_oid = oid; }
+
   void set_ovg2l_oid(oid_t oid) { ov_g2l_blob_oid = oid; }
 
   oid_t get_block_oid() const { return block_oid; }
@@ -258,6 +260,7 @@ class BlobSchema {
     single_blob_schema["elabel2seg"] = elabel2seg.json();
     single_blob_schema["num_vprops"] = vprops.size();
     single_blob_schema["ovg2l_blob"] = ov_g2l_blob_oid;
+    single_blob_schema["external_id_oid"] = external_id_oid;
 
     single_blob_schema["vprop_row_meta_oid"] = row_meta_oid;
 
@@ -282,6 +285,9 @@ class BlobSchema {
   oid_t block_oid;       // Blob of blocks created by BlockManger
   ArrayMeta elabel2seg;  // indexed by vertex label
   oid_t ov_g2l_blob_oid;
+
+  // for vertex external id
+  oid_t external_id_oid;
 
   // uint64_t num_vprops;
   oid_t row_meta_oid;
