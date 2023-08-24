@@ -1,10 +1,16 @@
 package gart.pgql;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import oracle.pgql.lang.ddl.propertygraph.EdgeTable;
+import oracle.pgql.lang.ddl.propertygraph.Key;
 import oracle.pgql.lang.ddl.propertygraph.Label;
+import oracle.pgql.lang.ddl.propertygraph.Property;
 import oracle.pgql.lang.ddl.propertygraph.VertexTable;
+import oracle.pgql.lang.ir.ExpAsVar;
+import oracle.pgql.lang.ir.SchemaQualifiedName;
+import oracle.pgql.lang.ir.QueryExpression.VarRef;
 
 class DataField {
     DataField() {
@@ -61,6 +67,28 @@ class VertexType {
         }
     }
 
+    VertexTable convert() {
+        SchemaQualifiedName tableName = new SchemaQualifiedName("", this.dataSourceName);
+        List<String> keyColumns = new ArrayList<>();
+        keyColumns.add(this.idFieldName);
+        Key key = new Key(keyColumns);
+
+        List<Property> properties = new ArrayList<>();
+        for (Mapping mapping : this.mappings) {
+            String property = mapping.property;
+            String colName = mapping.dataField.name;
+            VarRef varRef = new VarRef(new ExpAsVar(null, colName, false));
+            Property prop = new Property(varRef, property);
+            properties.add(prop);
+        }
+
+        List<Label> labels = new ArrayList<>();
+        labels.add(new Label(this.type_name, properties));
+
+        VertexTable vertexTable = new VertexTable(tableName, key, labels);
+        return vertexTable;
+    }
+
     public String type_name;
     public String dataSourceName;
     public String idFieldName;
@@ -111,6 +139,7 @@ class EdgeType {
         String destinationTable = edgeTable.getDestinationVertexTable().getTableName().getName();
         String sourceVertex = "", destinationVertex = "";
 
+        // table name in PGQL, while label name in YAML
         for (VertexTable vertexTable : vertexTables) {
             String vtable = vertexTable.getTableName().getName();
             String vlabel = vertexTable.getLabels().get(0).getName();
@@ -126,10 +155,10 @@ class EdgeType {
         this.dataSourceName = edgeTable.getTableName().getName();
 
         this.sourceVertexMappings = new DataField[1];
-        this.sourceVertexMappings[0] = new DataField(edgeTable.getSourceVertexKey().getColumnNames().get(0));
+        this.sourceVertexMappings[0] = new DataField(edgeTable.getEdgeSourceKey().getColumnNames().get(0));
         this.destinationVertexMappings = new DataField[1];
         this.destinationVertexMappings[0] = new DataField(
-                edgeTable.getDestinationVertexKey().getColumnNames().get(0));
+                edgeTable.getEdgeDestinationKey().getColumnNames().get(0));
 
         int numProperties = 0;
         if (label.getProperties() != null) {
@@ -141,6 +170,46 @@ class EdgeType {
             String colName = label.getProperties().get(i).getColumnName();
             this.dataFieldMappings[i] = new Mapping(property, colName);
         }
+    }
+
+    EdgeTable convert(List<VertexTable> vertexTables) {
+        SchemaQualifiedName tableName = new SchemaQualifiedName("", this.dataSourceName);
+
+        List<String> srcKeyColumns = new ArrayList<>();
+        srcKeyColumns.add(this.sourceVertexMappings[0].name);
+        List<String> dstKeyColumns = new ArrayList<>();
+        dstKeyColumns.add(this.destinationVertexMappings[0].name);
+        Key srcKey = new Key(srcKeyColumns);
+        Key dstKey = new Key(dstKeyColumns);
+
+        VertexTable srcVertexTable = null;
+        VertexTable dstVertexTable = null;
+
+        for (VertexTable vertexTable : vertexTables) {
+            String vlabel = vertexTable.getLabels().get(0).getName();
+            if (vlabel.equals(this.type_pair.source_vertex)) {
+                srcVertexTable = vertexTable;
+            }
+            if (vlabel.equals(this.type_pair.destination_vertex)) {
+                dstVertexTable = vertexTable;
+            }
+        }
+
+        List<Property> properties = new ArrayList<>();
+        for (Mapping mapping : this.dataFieldMappings) {
+            String property = mapping.property;
+            String colName = mapping.dataField.name;
+            VarRef varRef = new VarRef(new ExpAsVar(null, colName, false));
+            Property prop = new Property(varRef, property);
+            properties.add(prop);
+        }
+
+        List<Label> labels = new ArrayList<>();
+        labels.add(new Label(this.type_pair.edge, properties));
+
+        EdgeTable edgeTable = new EdgeTable(tableName, srcVertexTable, srcKey, dstVertexTable, dstKey,
+                labels);
+        return edgeTable;
     }
 
     public TypePair type_pair;
@@ -168,6 +237,24 @@ class EdgeMappings {
 
 public class GSchema {
     GSchema() {
+    }
+
+    public List<VertexTable> getVertexTables() {
+        List<VertexTable> vertexTables = new ArrayList<>();
+        for (VertexType vertexType : this.vertexMappings.vertexTypes) {
+            VertexTable vertexTable = vertexType.convert();
+            vertexTables.add(vertexTable);
+        }
+        return vertexTables;
+    }
+
+    public List<EdgeTable> getEdgeTables(List<VertexTable> vertexTables) {
+        List<EdgeTable> edgeTables = new ArrayList<>();
+        for (EdgeType edgeType : this.edgeMappings.edgeTypes) {
+            EdgeTable edgeTable = edgeType.convert(vertexTables);
+            edgeTables.add(edgeTable);
+        }
+        return edgeTables;
     }
 
     public String graph;

@@ -17,12 +17,8 @@
 package gart.pgql;
 
 import java.util.List;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.io.InputStream;
 
-import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.representer.Representer;
@@ -31,6 +27,7 @@ import oracle.pgql.lang.ddl.propertygraph.CreatePropertyGraph;
 import oracle.pgql.lang.ddl.propertygraph.EdgeTable;
 import oracle.pgql.lang.ddl.propertygraph.VertexTable;
 
+// Converter PGQL DDL to YAML
 public class YamlConverter {
     public YamlConverter(FileWriter writer, CreatePropertyGraph ddlStatement) {
         this.writer = writer;
@@ -61,21 +58,11 @@ public class YamlConverter {
 
         // output yaml
         yaml.dump(schema, writer);
-        String str = yaml.dump(schema);
-        System.out.println(str);
-
-        // test input
-        try {
-            InputStream inputStream = new FileInputStream(new File("input.yaml"));
-            Yaml yaml = new Yaml(new Constructor(GSchema.class));
-            GSchema data = yaml.load(inputStream);
-            System.out.println(data);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+        // String str = yaml.dump(schema);
+        // System.out.println(str);
     }
 
-    private FileWriter writer;
-    private CreatePropertyGraph ddlStatement;
-    private Yaml yaml;
+    final private CreatePropertyGraph ddlStatement;
+    final private FileWriter writer;
+    final private Yaml yaml;
 }

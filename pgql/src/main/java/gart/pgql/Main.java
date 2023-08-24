@@ -17,6 +17,7 @@ package gart.pgql;
 
 import oracle.pgql.lang.PgqlException;
 
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -34,7 +35,7 @@ public class Main {
             String ddlString = "CREATE PROPERTY GRAPH socialNetwork "
                     + "  VERTEX TABLES ("
                     + "    Person KEY (p_id)"
-                    + "      LABEL Person PROPERTIES (p_id AS id, p_name AS name, p_age AS age)"
+                    + "      LABEL VPerson PROPERTIES (p_id AS id, p_name AS name, p_age AS age)"
                     + "      LABEL Person_age PROPERTIES (p_age)"
                     + "  )"
                     + "  EDGE TABLES ("
@@ -55,11 +56,21 @@ public class Main {
             CreatePropertyGraph createPropertyGraph = (CreatePropertyGraph) result3.getPgqlStatement();
             System.out.println(createPropertyGraph);
 
-            String filename = "file.yaml";
+            String output = "file.yaml";
             try {
-                FileWriter writer = new FileWriter(filename);
+                FileWriter writer = new FileWriter(output);
                 YamlConverter yamlConventer = new YamlConverter(writer, createPropertyGraph);
                 yamlConventer.convert();
+            } catch (IOException ie) {
+                System.out.println("Error: " + ie.getMessage());
+            }
+
+            String input = "file.yaml";
+            try {
+                FileReader reader = new FileReader(input);
+                PgqlConverter pgqlConverter = new PgqlConverter(reader);
+                CreatePropertyGraph ddl = pgqlConverter.convert();
+                System.out.println(ddl);
             } catch (IOException ie) {
                 System.out.println("Error: " + ie.getMessage());
             }
