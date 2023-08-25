@@ -65,7 +65,7 @@ public class Main {
                 System.out.println("Error: " + ie.getMessage());
             }
 
-            String input = "file.yaml";
+            String input = "vegito/test/schema/rgmapping-ldbc.yaml";
             try {
                 FileReader reader = new FileReader(input);
                 PgqlConverter pgqlConverter = new PgqlConverter(reader);

@@ -36,6 +36,17 @@ class Mapping {
     public DataField dataField;
 }
 
+class EdgeVertexMapping {
+    EdgeVertexMapping() {
+    }
+
+    EdgeVertexMapping(String columnName) {
+        this.dataField = new DataField(columnName);
+    }
+
+    public DataField dataField;
+}
+
 class LoadingConfig {
     LoadingConfig() {
         this.method = "append";
@@ -101,14 +112,14 @@ class VertexMappings {
     }
 
     VertexMappings(List<VertexTable> vertexTables) {
-        this.vertexTypes = new VertexType[vertexTables.size()];
+        this.vertex_types = new VertexType[vertexTables.size()];
         for (int i = 0; i < vertexTables.size(); ++i) {
             VertexTable vertexTable = vertexTables.get(i);
-            this.vertexTypes[i] = new VertexType(vertexTable);
+            this.vertex_types[i] = new VertexType(vertexTable);
         }
     }
 
-    public VertexType[] vertexTypes;
+    public VertexType[] vertex_types;
 }
 
 class TypePair {
@@ -154,10 +165,10 @@ class EdgeType {
 
         this.dataSourceName = edgeTable.getTableName().getName();
 
-        this.sourceVertexMappings = new DataField[1];
-        this.sourceVertexMappings[0] = new DataField(edgeTable.getEdgeSourceKey().getColumnNames().get(0));
-        this.destinationVertexMappings = new DataField[1];
-        this.destinationVertexMappings[0] = new DataField(
+        this.sourceVertexMappings = new EdgeVertexMapping[1];
+        this.sourceVertexMappings[0] = new EdgeVertexMapping(edgeTable.getEdgeSourceKey().getColumnNames().get(0));
+        this.destinationVertexMappings = new EdgeVertexMapping[1];
+        this.destinationVertexMappings[0] = new EdgeVertexMapping(
                 edgeTable.getEdgeDestinationKey().getColumnNames().get(0));
 
         int numProperties = 0;
@@ -176,9 +187,9 @@ class EdgeType {
         SchemaQualifiedName tableName = new SchemaQualifiedName("", this.dataSourceName);
 
         List<String> srcKeyColumns = new ArrayList<>();
-        srcKeyColumns.add(this.sourceVertexMappings[0].name);
+        srcKeyColumns.add(this.sourceVertexMappings[0].dataField.name);
         List<String> dstKeyColumns = new ArrayList<>();
-        dstKeyColumns.add(this.destinationVertexMappings[0].name);
+        dstKeyColumns.add(this.destinationVertexMappings[0].dataField.name);
         Key srcKey = new Key(srcKeyColumns);
         Key dstKey = new Key(dstKeyColumns);
 
@@ -214,8 +225,8 @@ class EdgeType {
 
     public TypePair type_pair;
     public String dataSourceName;
-    public DataField[] sourceVertexMappings;
-    public DataField[] destinationVertexMappings;
+    public EdgeVertexMapping[] sourceVertexMappings;
+    public EdgeVertexMapping[] destinationVertexMappings;
     public Mapping[] dataFieldMappings;
 }
 
@@ -225,14 +236,14 @@ class EdgeMappings {
     }
 
     EdgeMappings(List<EdgeTable> edgeTables, List<VertexTable> vertexTables) {
-        this.edgeTypes = new EdgeType[edgeTables.size()];
+        this.edge_types = new EdgeType[edgeTables.size()];
         for (int i = 0; i < edgeTables.size(); ++i) {
             EdgeTable edgeTable = edgeTables.get(i);
-            this.edgeTypes[i] = new EdgeType(edgeTable, vertexTables);
+            this.edge_types[i] = new EdgeType(edgeTable, vertexTables);
         }
     }
 
-    public EdgeType[] edgeTypes;
+    public EdgeType[] edge_types;
 }
 
 public class GSchema {
@@ -241,7 +252,7 @@ public class GSchema {
 
     public List<VertexTable> getVertexTables() {
         List<VertexTable> vertexTables = new ArrayList<>();
-        for (VertexType vertexType : this.vertexMappings.vertexTypes) {
+        for (VertexType vertexType : this.vertexMappings.vertex_types) {
             VertexTable vertexTable = vertexType.convert();
             vertexTables.add(vertexTable);
         }
@@ -250,7 +261,7 @@ public class GSchema {
 
     public List<EdgeTable> getEdgeTables(List<VertexTable> vertexTables) {
         List<EdgeTable> edgeTables = new ArrayList<>();
-        for (EdgeType edgeType : this.edgeMappings.edgeTypes) {
+        for (EdgeType edgeType : this.edgeMappings.edge_types) {
             EdgeTable edgeTable = edgeType.convert(vertexTables);
             edgeTables.add(edgeTable);
         }
