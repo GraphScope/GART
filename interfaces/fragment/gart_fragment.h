@@ -109,6 +109,10 @@ class GartFragment {
     vertex_prop_row_bitmap_.resize(vertex_label_num_);
     vertex_prop_total_bytes_.resize(vertex_label_num_, 0);
 
+    vertex_ext_id_ptrs_.resize(vertex_label_num_, nullptr);
+    vertex_ext_id_locations_.resize(vertex_label_num_, -1);
+    vertex_ext_id_dtypes_.resize(vertex_label_num_);
+
     vertex_bitmap_size_.resize(vertex_label_num_, 0);
 
     vid_parser.Init(fnum_, vertex_label_num_);
@@ -350,6 +354,21 @@ class GartFragment {
       VINEYARD_CHECK_OK(
           client_.GetBlob(vprop_row_meta_oid, true, row_meta_blob));
       vertex_prop_row_bitmap_[vlabel] = (uint8_t*) row_meta_blob->data();
+
+      uint64_t vertex_external_id_oid =
+          blob_info[i]["external_id_oid"].get<uint64_t>();
+      if (vertex_external_id_oid != 0) {
+        std::shared_ptr<vineyard::Blob> vertex_external_id_blob;
+        VINEYARD_CHECK_OK(client_.GetBlob(vertex_external_id_oid, true,
+                                          vertex_external_id_blob));
+        vertex_ext_id_ptrs_[vlabel] =
+            (int64_t*) vertex_external_id_blob->data();
+      }
+
+      vertex_ext_id_locations_[vlabel] =
+          blob_info[i]["external_id_location"].get<int>();
+      
+      vertex_ext_id_dtypes_[vlabel] = blob_info[i]["external_id_dtype"].get<std::string>();
 
       for (uint64_t idx = 0; idx < vertex_prop_config.size(); idx++) {
         auto prop_id = vertex_prop_config[idx]["prop_id"].get<int>();
@@ -815,6 +834,31 @@ class GartFragment {
     }
   }
 
+  int64_t GetExternalIdAsInt64(const vertex_t& v) const {
+    assert(IsInnerVertex(v));
+    auto label_id = vid_parser.GetLabelId(v.GetValue());
+    auto offset = vid_parser.GetOffset(v.GetValue());
+    auto prop_id = vertex_ext_id_locations_[label_id];
+    if (prop_id == -1) {
+      return vertex_ext_id_ptrs_[label_id][offset];
+    }
+    return GetData<int64_t>(v, prop_id);
+  }
+
+  std::string_view GetExternalIdAsString(const vertex_t& v) const {
+    assert(IsInnerVertex(v));
+    auto label_id = vid_parser.GetLabelId(v.GetValue());
+    auto offset = vid_parser.GetOffset(v.GetValue());
+    auto prop_id = vertex_ext_id_locations_[label_id];
+    if (prop_id == -1) {
+      int64_t faka_value = vertex_ext_id_ptrs_[label_id][offset];
+      int64_t str_offset = faka_value >> 16;
+      int64_t str_len = faka_value & 0xffff;
+      return std::string_view(string_buffer_ + str_offset, str_len);
+    }
+    return GetData<std::string_view>(v, prop_id);
+  }
+
   int GetLocalOutDegree(const vertex_t& v, label_id_t e_label) const {
     // TODO(wanglei):not implemented
     return 0;
@@ -1244,6 +1288,11 @@ class GartFragment {
   std::vector<int> vertex_prop_nums_;
   std::vector<uint8_t*> vertex_prop_row_bitmap_;  // NULL bitmap
   std::vector<std::vector<char*>> vertex_prop_blob_ptrs_;
+
+  // for vertex external id
+  std::vector<int64_t*> vertex_ext_id_ptrs_;
+  std::vector<int> vertex_ext_id_locations_;
+  std::vector<std::string> vertex_ext_id_dtypes_;
 
   fid_t fid_, fnum_;
   bool directed_;

@@ -401,6 +401,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     }
 
     if (is_vertex && graph_store->get_external_id_location(id) == -1) {
+      graph_store->set_external_id_location(id, -1);
       // the external id is not in the property list
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx][0].get<string>() == external_id_col_name) {

@@ -241,6 +241,10 @@ class BlobSchema {
 
   void set_external_id_oid(oid_t oid) { external_id_oid = oid; }
 
+  void set_external_id_location(int loc) { external_id_location = loc; }
+
+  void set_external_id_dtype(int dtype) { external_id_dtype = dtype; }
+
   void set_ovg2l_oid(oid_t oid) { ov_g2l_blob_oid = oid; }
 
   oid_t get_block_oid() const { return block_oid; }
@@ -261,6 +265,12 @@ class BlobSchema {
     single_blob_schema["num_vprops"] = vprops.size();
     single_blob_schema["ovg2l_blob"] = ov_g2l_blob_oid;
     single_blob_schema["external_id_oid"] = external_id_oid;
+    single_blob_schema["external_id_location"] = external_id_location;
+    if (external_id_dtype == 8) {
+      single_blob_schema["external_id_dtype"] = "STRING";
+    } else {
+      single_blob_schema["external_id_dtype"] = "INT64";
+    }
 
     single_blob_schema["vprop_row_meta_oid"] = row_meta_oid;
 
@@ -288,6 +298,8 @@ class BlobSchema {
 
   // for vertex external id
   oid_t external_id_oid;
+  int external_id_location;
+  int external_id_dtype;
 
   // uint64_t num_vprops;
   oid_t row_meta_oid;

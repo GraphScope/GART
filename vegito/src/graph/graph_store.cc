@@ -12,11 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "graph/graph_store.h"
 #include <cstdint>
 #include <fstream>
 
+#include "graph/graph_store.h"
 #include "util/bitset.h"
 
 using std::allocator_traits;
@@ -310,7 +309,6 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
 
 void GraphStore::init_external_id_storage(uint64_t vlabel) {
   vineyard::ObjectID object_id = 0;
-  auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
   if (external_id_location_[vlabel] == -1) {
     uint64_t v_capacity = seg_graphs_[vlabel]->get_vertex_capacity();
     auto alloc =
@@ -318,7 +316,9 @@ void GraphStore::init_external_id_storage(uint64_t vlabel) {
             array_allocator);
     external_id_stores_[vlabel] = alloc.allocate_v6d(v_capacity, object_id);
   }
-  blob_schema.set_external_id_oid(object_id);
+  blob_schemas_[vlabel].set_external_id_oid(object_id);
+  blob_schemas_[vlabel].set_external_id_location(external_id_location_[vlabel]);
+  blob_schemas_[vlabel].set_external_id_dtype(external_id_dtype_[vlabel]);
 }
 
 void GraphStore::update_blob(uint64_t blob_epoch) {
