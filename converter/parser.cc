@@ -91,6 +91,8 @@ string LogEntry::to_string() const {
     append_str(base, edge.elabel);
     append_str(base, edge.src_gid);
     append_str(base, edge.dst_gid);
+    append_str(base, src_external_id);
+    append_str(base, dst_external_id);
   }
 
   for (const string& str : properties) {
@@ -184,6 +186,8 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   out.valid_ = false;
   out.epoch = epoch;
   out.external_id = "";
+  out.src_external_id = "";
+  out.dst_external_id = "";
 
   // parse JSON
   json log;
@@ -387,6 +391,18 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
   int src_label_id = edge_label2src_dst_labels_[edge_label_id].first;
   int dst_label_id = edge_label2src_dst_labels_[edge_label_id].second;
 
+  if (data[src_name].is_number_integer()) {
+    out.src_external_id = std::to_string(data[src_name].get<int64_t>());
+  } else if (data[src_name].is_string()) {
+    out.src_external_id = data[src_name].get<std::string>();
+  }
+
+  if (data[dst_name].is_number_integer()) {
+    out.dst_external_id = std::to_string(data[dst_name].get<int64_t>());
+  } else if (data[dst_name].is_string()) {
+    out.dst_external_id = data[dst_name].get<std::string>();
+  }
+
   int64_t src_gid = get_gid(data[src_name], src_label_id);
   int64_t dst_gid = get_gid(data[dst_name], dst_label_id);
 
@@ -420,7 +436,7 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
     if (prop_value.is_string()) {
       prop_str = prop_value.get<string>();
     } else if (prop_value.is_number_integer()) {
-      prop_str = to_string(prop_value.get<int>());
+      prop_str = to_string(prop_value.get<int64_t>());
     } else if (prop_value.is_number_float()) {
       prop_str = to_string(prop_value.get<float>());
     } else if (prop_value.is_null()) {

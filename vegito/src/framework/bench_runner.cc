@@ -135,7 +135,6 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   }
 
   graph_store->init_vertex_bitmap_size(vlabel_num);
-  graph_store->init_external_id_location(vlabel_num);
   graph_store->init_external_id_dtype(vlabel_num);
   graph_store->init_external_id_store(vlabel_num);
 
@@ -259,15 +258,6 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       if (is_vertex) {
         // col.updatable = prop_info[prop_idx]["updatable"].get<bool>();
         col.updatable = true;
-        if (external_id_col_name == prop_table_col_name) {
-          graph_store->set_external_id_location(id, prop_id);
-          // TODO(wanglei): we assume the external is must be string or long int type
-          if (prop_dtype == "STRING") {
-            graph_store->set_external_id_dtype(id, PropertyStoreDataType::STRING);
-          } else {
-            graph_store->set_external_id_dtype(id, PropertyStoreDataType::LONG);
-          }
-        }
       }
 
       if (prop_dtype == "INT") {
@@ -400,23 +390,22 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       prop_offset++;
     }
 
-    if (is_vertex && graph_store->get_external_id_location(id) == -1) {
-      graph_store->set_external_id_location(id, -1);
-      // the external id is not in the property list
+    if (is_vertex) {
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
-        if (required_table_schema[col_idx][0].get<string>() == external_id_col_name) {
+        if (required_table_schema[col_idx][0].get<string>() ==
+            external_id_col_name) {
           string prop_dtype_str =
               required_table_schema[col_idx][1].get<string>();
           if (prop_dtype_str.rfind("varchar", 0) == 0 ||
               prop_dtype_str == "character varying" ||
               prop_dtype_str == "text") {
-            graph_store->set_external_id_dtype(id, PropertyStoreDataType::STRING);
-          }
-          else {
+            graph_store->set_external_id_dtype(id,
+                                               PropertyStoreDataType::STRING);
+          } else {
             graph_store->set_external_id_dtype(id, PropertyStoreDataType::LONG);
           }
           break;
-        }          
+        }
       }
     }
 
@@ -573,6 +562,7 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
   graph_stores_[p_id]->put_schema4gie();
   int v_label_num = graph_stores_[p_id]->get_total_vertex_label_num();
   graph_stores_[p_id]->init_ovg2ls(v_label_num);
+  graph_stores_[p_id]->init_vertex_maps(v_label_num);
 #ifndef WITH_TEST
   start_kafka_to_process_(p_id);
 #else

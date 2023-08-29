@@ -135,7 +135,8 @@ class GraphStore {
   }
 
   // return true if the vertex is in the local partition, else false
-  bool insert_inner_vertex(int epoch, uint64_t gid, std::string external_id, StringViewList& vprop);
+  bool insert_inner_vertex(int epoch, uint64_t gid, std::string external_id,
+                           StringViewList& vprop);
 
   void construct_eprop(int elabel, const StringViewList& eprop,
                        std::string& out);
@@ -243,6 +244,23 @@ class GraphStore {
     VINEYARD_CHECK_OK(ovg2ls_[v_label]->emplace(hmap, gid, lid));
     if (hmap != nullptr) {
       ovg2ls_[v_label] = hmap;
+    }
+  }
+
+  inline void init_vertex_maps(uint64_t vlabel_num) {
+    auto v6d_client = array_allocator.get_client();
+    for (auto idx = 0; idx < vlabel_num; idx++) {
+      std::shared_ptr<hashmap_t> hmap;
+      VINEYARD_CHECK_OK(hashmap_t::Make(*v6d_client, 1, hmap));
+      vertex_maps_.emplace_back(hmap);
+    }
+  }
+
+  inline void set_vertex_map(std::shared_ptr<hashmap_t>& hmap, uint64_t v_label,
+                             int64_t oid, int64_t gid) {
+    VINEYARD_CHECK_OK(vertex_maps_[v_label]->emplace(hmap, oid, gid));
+    if (hmap != nullptr) {
+      vertex_maps_[v_label] = hmap;
     }
   }
 
@@ -401,28 +419,17 @@ class GraphStore {
     edge_bitmap_size_[elabel] = size;
   }
 
-  void init_external_id_location(uint64_t vlabel_num) {
-    external_id_location_.resize(vlabel_num, -1);
-  }
-
   void init_external_id_dtype(uint64_t vlabel_num) {
     external_id_dtype_.resize(vlabel_num);
   }
 
   void init_external_id_store(uint64_t vlabel_num) {
     external_id_stores_.resize(vlabel_num);
-  }
-
-  void set_external_id_location(uint64_t vlabel, int location) {
-    external_id_location_[vlabel] = location;
+    outer_external_id_stores_.resize(vlabel_num);
   }
 
   void set_external_id_dtype(uint64_t vlabel, int dtype) {
     external_id_dtype_[vlabel] = dtype;
-  }
-
-  int get_external_id_location(uint64_t vlabel) const {
-    return external_id_location_[vlabel];
   }
 
   int get_external_id_dtype(uint64_t vlabel) const {
@@ -431,6 +438,10 @@ class GraphStore {
 
   uint64_t* get_external_id_store(uint64_t vlabel) {
     return external_id_stores_[vlabel];
+  }
+
+  uint64_t* get_outer_external_id_store(uint64_t vlabel) {
+    return outer_external_id_stores_[vlabel];
   }
 
   void init_external_id_storage(uint64_t vlabel);
@@ -504,9 +515,10 @@ class GraphStore {
   std::vector<size_t> edge_bitmap_size_;
 
   // for external id
-  std::vector<int> external_id_location_;
   std::vector<int> external_id_dtype_;
   std::vector<uint64_t*> external_id_stores_;
+  std::vector<uint64_t*> outer_external_id_stores_;
+  std::vector<std::shared_ptr<hashmap_t>> vertex_maps_;
 
   // vlabel -> vertex blob schemas
   std::map<uint64_t, gart::BlobSchema> blob_schemas_;

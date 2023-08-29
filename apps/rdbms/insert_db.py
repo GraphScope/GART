@@ -183,7 +183,7 @@ def insert_simple_edges(prefix, csv_file, table_name):
         num_lines = 0
         while line:
             src, dst = line.strip().split("|")
-            cursor.execute(f"insert into {table_name} values('{src}', '{dst}')")
+            cursor.execute(f"insert into {table_name} values({src}, {dst})")
             line = f.readline()
             num_lines += 1
     conn.commit()
@@ -205,7 +205,7 @@ def insert_prop_edges(prefix, csv_file, table_name):
         while line:
             src, dst, prop = line.strip().split("|")
             cursor.execute(
-                f"insert into {table_name} values('{src}', '{dst}', '{prop}')"
+                f"insert into {table_name} values({src}, {dst}, '{prop}')"
             )
             line = f.readline()
             num_lines += 1
@@ -226,7 +226,7 @@ def process_organisation(line):
     org_name = org_name.replace("'", "''")
     org_url = org_url.replace("'", "''")
     sql = (
-        f"insert into organisation values('{org_id}',"
+        f"insert into organisation values({org_id},"
         f"'{org_type}', '{org_name}', '{org_url}')"
     )
     return sql
@@ -241,7 +241,7 @@ def process_place(line):
     pla_name = pla_name.replace("'", "''")
     pla_url = pla_url.replace("'", "''")
     sql = (
-        f"insert into place values('{pla_id}',"
+        f"insert into place values({pla_id},"
         f"'{pla_name}', '{pla_url}', '{pla_type}')"
     )
     return sql
@@ -254,7 +254,7 @@ insert_vertices("02", "/place_0_0.csv", "place", process_place)
 def process_tag(line):
     tag_id, tag_name, tag_url = line.strip().split("|")
     tag_url = tag_url.replace("'", "''")
-    sql = f"insert into tag values('{tag_id}', '{tag_name}', '{tag_url}')"
+    sql = f"insert into tag values({tag_id}, '{tag_name}', '{tag_url}')"
     return sql
 
 
@@ -265,7 +265,7 @@ insert_vertices("03", "/tag_0_0.csv", "tag", process_tag)
 def process_tagclass(line):
     tagc_id, tagc_name, tagc_url = line.strip().split("|")
     tagc_url = tagc_url.replace("'", "''")
-    sql = f"insert into tagclass values('{tagc_id}', '{tagc_name}', '{tagc_url}')"
+    sql = f"insert into tagclass values({tagc_id}, '{tagc_name}', '{tagc_url}')"
     return sql
 
 
@@ -287,7 +287,7 @@ def process_person(line):
     p_first_name = p_first_name.replace("'", "''")
     p_last_name = p_last_name.replace("'", "''")
     sql = (
-        f"insert into person values('{p_id}', "
+        f"insert into person values({p_id}, "
         f"'{p_first_name}', '{p_last_name}', '{p_gender}', "
         f"'{p_birthday}', '{p_creation_date}', "
         f"'{p_location_ip}', '{p_browser_used}')"
@@ -296,7 +296,6 @@ def process_person(line):
 
 
 insert_vertices("05", "/person_0_0.csv", "person", process_person)
-
 
 # 06. comment
 def process_comment(line):
@@ -310,7 +309,7 @@ def process_comment(line):
     ) = line.strip().split("|")
     co_content = co_content.replace("'", "''")
     sql = (
-        f"insert into comment values('{co_id}', "
+        f"insert into comment values({co_id}, "
         f"'{co_creation_date}', '{co_location_ip}', "
         f"'{co_browser_used}', '{co_content}', {co_length})"
     )
@@ -334,7 +333,7 @@ def process_post(line):
     ) = line.strip().split("|")
     po_content = po_content.replace("'", "''")
     sql = (
-        f"insert into post values('{po_id}', "
+        f"insert into post values({po_id}, "
         f"'{po_image_file}', '{po_creation_date}', "
         f"'{po_location_ip}', '{po_browser_used}', "
         f"'{po_language}', '{po_content}', {po_length})"
@@ -349,7 +348,7 @@ insert_vertices("07", "/post_0_0.csv", "post", process_post)
 def process_forum(line):
     fo_id, fo_title, fo_creation_date = line.strip().split("|")
     fo_title = fo_title.replace("'", "''")
-    sql = f"insert into forum values('{fo_id}', " f"'{fo_title}', '{fo_creation_date}')"
+    sql = f"insert into forum values({fo_id}, " f"'{fo_title}', '{fo_creation_date}')"
     return sql
 
 

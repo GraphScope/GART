@@ -56,8 +56,9 @@ void process_add_edge(const StringViewList& cmd,
 
   // process edge properties
 
-  // remove first 4 elements (epoch, elabel, src_vid, dst_vid)
-  StringViewList eprop(cmd.begin() + 4, cmd.end());
+  // remove first 6 elements (epoch, elabel, src_vid, dst_vid, src_external_id,
+  // dst_external_id)
+  StringViewList eprop(cmd.begin() + 6, cmd.end());
   string buf;
   graph_store->construct_eprop(elabel, eprop, buf);
   string_view edge_data(buf);
@@ -76,6 +77,27 @@ void process_add_edge(const StringViewList& cmd,
       graph_store->set_ovg2l(hmap, dst_label, dst_vid, dst_lid);
       graph_store->add_outer(dst_label, dst_lid);
       graph_store->set_ovl2g(dst_label, ov, dst_vid);
+
+      uint64_t* outer_external_id_store_addr =
+          graph_store->get_outer_external_id_store(dst_label);
+      if (graph_store->get_external_id_dtype(dst_label) ==
+          PropertyStoreDataType::STRING) {
+        std::string dst_external_id = string(cmd[5]);
+        auto str_len = dst_external_id.length();
+        size_t old_offset = graph_store->get_string_buffer_offset();
+        char* string_buffer = graph_store->get_string_buffer();
+        // each string is ended with '\0'
+        size_t new_offset = old_offset + str_len + 1;
+        assert(new_offset < graph_store->get_string_buffer_size());
+        memcpy(string_buffer + old_offset, dst_external_id.data(), str_len);
+        string_buffer[new_offset - 1] = '\0';
+        graph_store->set_string_buffer_offset(new_offset);
+        int64_t value = (old_offset << 16) | str_len;
+        outer_external_id_store_addr[ov] = value;
+      } else {
+        int64_t dst_external_id = stoll(string(cmd[5]));
+        outer_external_id_store_addr[ov] = dst_external_id;
+      }
     }
     auto src_offset = parser.GetOffset(src_vid);
     auto src_lid = parser.GenerateId(0, src_label, src_offset);
@@ -95,6 +117,27 @@ void process_add_edge(const StringViewList& cmd,
       graph_store->set_ovg2l(hmap, src_label, src_vid, src_lid);
       graph_store->add_outer(src_label, src_lid);
       graph_store->set_ovl2g(src_label, ov, src_vid);
+
+      uint64_t* outer_external_id_store_addr =
+          graph_store->get_outer_external_id_store(src_label);
+      if (graph_store->get_external_id_dtype(src_label) ==
+          PropertyStoreDataType::STRING) {
+        std::string src_external_id = string(cmd[4]);
+        auto str_len = src_external_id.length();
+        size_t old_offset = graph_store->get_string_buffer_offset();
+        char* string_buffer = graph_store->get_string_buffer();
+        // each string is ended with '\0'
+        size_t new_offset = old_offset + str_len + 1;
+        assert(new_offset < graph_store->get_string_buffer_size());
+        memcpy(string_buffer + old_offset, src_external_id.data(), str_len);
+        string_buffer[new_offset - 1] = '\0';
+        graph_store->set_string_buffer_offset(new_offset);
+        int64_t value = (old_offset << 16) | str_len;
+        outer_external_id_store_addr[ov] = value;
+      } else {
+        int64_t src_external_id = stoll(string(cmd[4]));
+        outer_external_id_store_addr[ov] = src_external_id;
+      }
     }
     auto dst_offset = parser.GetOffset(dst_vid);
     auto src_lid = parser.GenerateId(0, src_label, max_outer_id_offset - ov);

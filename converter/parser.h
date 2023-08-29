@@ -64,7 +64,9 @@ class LogEntry {
   };
 
   // vertex/edge id in original data source
-  std::string external_id; 
+  std::string external_id;
+  std::string src_external_id;
+  std::string dst_external_id;
 
   std::vector<std::string> properties;
 

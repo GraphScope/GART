@@ -309,16 +309,21 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
 
 void GraphStore::init_external_id_storage(uint64_t vlabel) {
   vineyard::ObjectID object_id = 0;
-  if (external_id_location_[vlabel] == -1) {
-    uint64_t v_capacity = seg_graphs_[vlabel]->get_vertex_capacity();
-    auto alloc =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
-            array_allocator);
-    external_id_stores_[vlabel] = alloc.allocate_v6d(v_capacity, object_id);
-  }
+  uint64_t v_capacity = seg_graphs_[vlabel]->get_vertex_capacity();
+  auto alloc =
+      std::allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
+          array_allocator);
+  external_id_stores_[vlabel] = alloc.allocate_v6d(v_capacity, object_id);
   blob_schemas_[vlabel].set_external_id_oid(object_id);
-  blob_schemas_[vlabel].set_external_id_location(external_id_location_[vlabel]);
   blob_schemas_[vlabel].set_external_id_dtype(external_id_dtype_[vlabel]);
+
+  uint64_t outer_v_capacity = ov_seg_graphs_[vlabel]->get_vertex_capacity();
+  auto outer_alloc =
+      std::allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
+          array_allocator);
+  outer_external_id_stores_[vlabel] =
+      outer_alloc.allocate_v6d(outer_v_capacity, object_id);
+  blob_schemas_[vlabel].set_outer_external_id_oid(object_id);
 }
 
 void GraphStore::update_blob(uint64_t blob_epoch) {
@@ -333,6 +338,7 @@ void GraphStore::update_blob(uint64_t blob_epoch) {
         graph->get_max_vertex_id() + graph->get_deleted_inner_num(),
         ov_graph->get_max_vertex_id() + ov_graph->get_deleted_outer_num());
     schema.set_ovg2l_oid(ovg2ls_[vlabel]->id());
+    schema.set_vertex_map_oid(vertex_maps_[vlabel]->id());
   }
   blob_epoch_ = blob_epoch;
 }
@@ -482,17 +488,23 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
   assert(response_task.is_ok());
 }
 
-bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid, std::string external_id,
+bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
+                                     std::string external_id,
                                      StringViewList& vprop) {
   // parse id
   IdParser<seggraph::vertex_t> parser;
   parser.Init(total_partitions_, total_vertex_label_num_);
+  auto vlabel = parser.GetLabelId(gid);
+  if (external_id_dtype_[vlabel] == PropertyStoreDataType::LONG) {
+    std::shared_ptr<hashmap_t> hmap;
+    set_vertex_map(hmap, vlabel, std::stoll(external_id), (int64_t) gid);
+  }
+
   auto fid = parser.GetFid(gid);
   if (fid != local_pid_) {
     return false;  // not in this partition
   }
 
-  auto vlabel = parser.GetLabelId(gid);
   auto voffset = parser.GetOffset(gid);
   auto lid = parser.GenerateId(0, vlabel, voffset);
 
@@ -506,22 +518,20 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid, std::string extern
   auto off = property->getNewOffset();
   assert(v == off);
 
-  if (external_id_location_[vlabel] == -1) {
-    if (external_id_dtype_[vlabel] == PropertyStoreDataType::STRING) {
-      auto str_len = external_id.length();
-      size_t old_offset = get_string_buffer_offset();
-      char* string_buffer = get_string_buffer();
-      // each string is ended with '\0'
-      size_t new_offset = old_offset + str_len + 1;
-      assert(new_offset < get_string_buffer_size());
-      memcpy(string_buffer + old_offset, external_id.data(), str_len);
-      string_buffer[new_offset - 1] = '\0';
-      set_string_buffer_offset(new_offset);
-      int64_t value = (old_offset << 16) | str_len;
-      external_id_stores_[vlabel][v] = value;
-    } else {
-      external_id_stores_[vlabel][v] = std::stoull(external_id);
-    }
+  if (external_id_dtype_[vlabel] == PropertyStoreDataType::STRING) {
+    auto str_len = external_id.length();
+    size_t old_offset = get_string_buffer_offset();
+    char* string_buffer = get_string_buffer();
+    // each string is ended with '\0'
+    size_t new_offset = old_offset + str_len + 1;
+    assert(new_offset < get_string_buffer_size());
+    memcpy(string_buffer + old_offset, external_id.data(), str_len);
+    string_buffer[new_offset - 1] = '\0';
+    set_string_buffer_offset(new_offset);
+    int64_t value = (old_offset << 16) | str_len;
+    external_id_stores_[vlabel][v] = value;
+  } else {
+    external_id_stores_[vlabel][v] = std::stoll(external_id);
   }
 
   add_inner(vlabel, lid);

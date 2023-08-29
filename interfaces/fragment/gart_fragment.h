@@ -81,6 +81,7 @@ class GartFragment {
     ovl2g_.resize(vertex_label_num_);
     valid_ovl2g_element_.resize(vertex_label_num_);
     ovg2l_maps_.resize(vertex_label_num_);
+    vertex_maps_.resize(vertex_label_num_);
     inner_offsets_.resize(vertex_label_num_, -1);
     outer_offsets_.resize(vertex_label_num_, -1);
     max_inner_offsets_.resize(vertex_label_num_, -1);
@@ -110,7 +111,7 @@ class GartFragment {
     vertex_prop_total_bytes_.resize(vertex_label_num_, 0);
 
     vertex_ext_id_ptrs_.resize(vertex_label_num_, nullptr);
-    vertex_ext_id_locations_.resize(vertex_label_num_, -1);
+    outer_vertex_ext_id_ptrs_.resize(vertex_label_num_, nullptr);
     vertex_ext_id_dtypes_.resize(vertex_label_num_);
 
     vertex_bitmap_size_.resize(vertex_label_num_, 0);
@@ -273,6 +274,15 @@ class GartFragment {
       VINEYARD_CHECK_OK(hashmap_t::View(client_, ovg2l_blob, hmapview));
       ovg2l_maps_[vlabel] = hmapview;
 
+      auto vertex_map_blob_id = blob_info[i]["vertex_map_oid"].get<uint64_t>();
+      std::shared_ptr<vineyard::Blob> vertex_map_blob;
+      VINEYARD_CHECK_OK(
+          client_.GetBlob(vertex_map_blob_id, true, vertex_map_blob));
+      std::shared_ptr<const hashmap_t> vertex_map_hmapview;
+      VINEYARD_CHECK_OK(
+          hashmap_t::View(client_, vertex_map_blob, vertex_map_hmapview));
+      vertex_maps_[vlabel] = vertex_map_hmapview;
+
       for (int64_t j = inner_offsets_[vlabel]; j >= 0; j--) {
         vid_t v = vertex_tables_[vlabel][j];
         auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
@@ -357,18 +367,21 @@ class GartFragment {
 
       uint64_t vertex_external_id_oid =
           blob_info[i]["external_id_oid"].get<uint64_t>();
-      if (vertex_external_id_oid != 0) {
-        std::shared_ptr<vineyard::Blob> vertex_external_id_blob;
-        VINEYARD_CHECK_OK(client_.GetBlob(vertex_external_id_oid, true,
-                                          vertex_external_id_blob));
-        vertex_ext_id_ptrs_[vlabel] =
-            (int64_t*) vertex_external_id_blob->data();
-      }
+      std::shared_ptr<vineyard::Blob> vertex_external_id_blob;
+      VINEYARD_CHECK_OK(client_.GetBlob(vertex_external_id_oid, true,
+                                        vertex_external_id_blob));
+      vertex_ext_id_ptrs_[vlabel] = (int64_t*) vertex_external_id_blob->data();
 
-      vertex_ext_id_locations_[vlabel] =
-          blob_info[i]["external_id_location"].get<int>();
-      
-      vertex_ext_id_dtypes_[vlabel] = blob_info[i]["external_id_dtype"].get<std::string>();
+      uint64_t outer_vertex_external_id_oid =
+          blob_info[i]["outer_external_id_oid"].get<uint64_t>();
+      std::shared_ptr<vineyard::Blob> outer_vertex_external_id_blob;
+      VINEYARD_CHECK_OK(client_.GetBlob(outer_vertex_external_id_oid, true,
+                                        outer_vertex_external_id_blob));
+      outer_vertex_ext_id_ptrs_[vlabel] =
+          (int64_t*) outer_vertex_external_id_blob->data();
+
+      vertex_ext_id_dtypes_[vlabel] =
+          blob_info[i]["external_id_dtype"].get<std::string>();
 
       for (uint64_t idx = 0; idx < vertex_prop_config.size(); idx++) {
         auto prop_id = vertex_prop_config[idx]["prop_id"].get<int>();
@@ -500,21 +513,25 @@ class GartFragment {
   }
 
   bool GetVertex(label_id_t label, const oid_t& oid, vertex_t& v) const {
-    vid_t gid = oid;
+    auto vertex_map = vertex_maps_[label];
+    auto vertex_iter = vertex_map->find(oid);
+    vid_t gid;
+    if (vertex_iter != vertex_map->end()) {
+      gid = vertex_iter->second;
+    } else {
+      return false;
+    }
     return (vid_parser.GetFid(gid) == fid_) ? InnerVertexGid2Vertex(gid, v)
                                             : OuterVertexGid2Vertex(gid, v);
   }
 
   oid_t GetId(const vertex_t& v) const {
+    auto label_id = vid_parser.GetLabelId(v.GetValue());
+    auto offset = GetOffset(v);
     if (IsInnerVertex(v)) {
-      auto label_id = vid_parser.GetLabelId(v.GetValue());
-      auto offset = vid_parser.GetOffset(v.GetValue());
-      return vid_parser.GenerateId(fid_, label_id, offset);
-    } else {
-      auto v_offset = vid_parser.GetOffset(v.GetValue());
-      auto v_label = vid_parser.GetLabelId(v.GetValue());
-      return ovl2g_[v_label][max_outer_id_offset_ - v_offset];
+      return vertex_ext_id_ptrs_[label_id][offset];
     }
+    return outer_vertex_ext_id_ptrs_[label_id][offset];
   }
 
   fid_t GetFragId(const vertex_t& u) const {
@@ -835,28 +852,26 @@ class GartFragment {
   }
 
   int64_t GetExternalIdAsInt64(const vertex_t& v) const {
-    assert(IsInnerVertex(v));
     auto label_id = vid_parser.GetLabelId(v.GetValue());
-    auto offset = vid_parser.GetOffset(v.GetValue());
-    auto prop_id = vertex_ext_id_locations_[label_id];
-    if (prop_id == -1) {
+    auto offset = GetOffset(v);
+    if (IsInnerVertex(v)) {
       return vertex_ext_id_ptrs_[label_id][offset];
     }
-    return GetData<int64_t>(v, prop_id);
+    return outer_vertex_ext_id_ptrs_[label_id][offset];
   }
 
   std::string_view GetExternalIdAsString(const vertex_t& v) const {
-    assert(IsInnerVertex(v));
     auto label_id = vid_parser.GetLabelId(v.GetValue());
-    auto offset = vid_parser.GetOffset(v.GetValue());
-    auto prop_id = vertex_ext_id_locations_[label_id];
-    if (prop_id == -1) {
-      int64_t faka_value = vertex_ext_id_ptrs_[label_id][offset];
-      int64_t str_offset = faka_value >> 16;
-      int64_t str_len = faka_value & 0xffff;
-      return std::string_view(string_buffer_ + str_offset, str_len);
+    auto offset = GetOffset(v);
+    int64_t faka_value;
+    if (IsInnerVertex(v)) {
+      faka_value = vertex_ext_id_ptrs_[label_id][offset];
+    } else {
+      faka_value = outer_vertex_ext_id_ptrs_[label_id][offset];
     }
-    return GetData<std::string_view>(v, prop_id);
+    int64_t str_offset = faka_value >> 16;
+    int64_t str_len = faka_value & 0xffff;
+    return std::string_view(string_buffer_ + str_offset, str_len);
   }
 
   int GetLocalOutDegree(const vertex_t& v, label_id_t e_label) const {
@@ -899,26 +914,63 @@ class GartFragment {
   }
 
   bool GetInnerVertex(label_id_t label, const oid_t& oid, vertex_t& v) const {
-    auto gid = oid;
+    auto vertex_map = vertex_maps_[label];
+    auto vertex_iter = vertex_map->find(oid);
+    vid_t gid;
+    if (vertex_iter != vertex_map->end()) {
+      gid = vertex_iter->second;
+    } else {
+      return false;
+    }
     assert(vid_parser.GetLabelId(gid) == label);
     return InnerVertexGid2Vertex(gid, v);
   }
 
   bool GetOuterVertex(label_id_t label, const oid_t& oid, vertex_t& v) const {
-    auto gid = oid;
+    auto vertex_map = vertex_maps_[label];
+    auto vertex_iter = vertex_map->find(oid);
+    vid_t gid;
+    if (vertex_iter != vertex_map->end()) {
+      gid = vertex_iter->second;
+    } else {
+      return false;
+    }
     assert(vid_parser.GetLabelId(gid) == label);
     return OuterVertexGid2Vertex(gid, v);
   }
 
-  inline oid_t Gid2Oid(const vid_t& gid) const { return gid; }
+  inline oid_t Gid2Oid(const vid_t& gid) const {
+    auto v_label = vid_parser.GetLabelId(gid);
+    if (vid_parser.GetFid(gid) == fid_) {
+      auto v_offset = vid_parser.GetOffset(gid);
+      return vertex_ext_id_ptrs_[v_label][v_offset];
+    }
+    vertex_t v;
+    OuterVertexGid2Vertex(gid, v);
+    auto v_offset = GetOffset(v);
+    return outer_vertex_ext_id_ptrs_[v_label][v_offset];
+  }
 
   inline bool Oid2Gid(label_id_t label, const oid_t& oid, vid_t& gid) const {
-    gid = oid;
-    return true;
+    auto vertex_map = vertex_maps_[label];
+    auto vertex_iter = vertex_map->find(oid);
+    if (vertex_iter != vertex_map->end()) {
+      gid = vertex_iter->second;
+      return true;
+    } else {
+      return false;
+    }
   }
 
   inline bool Oid2Gid(label_id_t label, const oid_t& oid, vertex_t& v) const {
-    auto gid = oid;
+    auto vertex_map = vertex_maps_[label];
+    auto vertex_iter = vertex_map->find(oid);
+    vid_t gid;
+    if (vertex_iter != vertex_map->end()) {
+      gid = vertex_iter->second;
+    } else {
+      return false;
+    }
     return Gid2Vertex(gid, v);
   }
 
@@ -1291,8 +1343,9 @@ class GartFragment {
 
   // for vertex external id
   std::vector<int64_t*> vertex_ext_id_ptrs_;
-  std::vector<int> vertex_ext_id_locations_;
+  std::vector<int64_t*> outer_vertex_ext_id_ptrs_;
   std::vector<std::string> vertex_ext_id_dtypes_;
+  std::vector<std::shared_ptr<const hashmap_t>> vertex_maps_;
 
   fid_t fid_, fnum_;
   bool directed_;
