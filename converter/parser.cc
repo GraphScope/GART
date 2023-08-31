@@ -265,7 +265,8 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     return;
   }
 
-  if (out.op_type == LogEntry::OpType::UPDATE) {
+  if (out.op_type == LogEntry::OpType::UPDATE &&
+      out.entity_type == LogEntry::EntityType::EDGE) {
     if (out.update_has_finish_delete == false) {
       out.update_has_finish_delete = true;
       out.op_type = LogEntry::OpType::DELETE;
@@ -360,7 +361,8 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
       LOG(ERROR) << "Unknown vertex id type: " << data[vid_col].type_name();
     }
     out.external_id = enternal_id;
-  } else if (out.op_type == LogEntry::OpType::DELETE) {
+  } else if (out.op_type == LogEntry::OpType::DELETE ||
+             out.op_type == LogEntry::OpType::UPDATE) {
     gid = get_gid(data[vid_col], vertex_label_id);
   }
   out.vertex.gid = gid;
@@ -442,8 +444,7 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
     } else if (prop_value.is_null()) {
       prop_str = "";
     } else {
-      LOG(ERROR) << "Unsupported property type: "
-                 << prop_value.type_name();
+      LOG(ERROR) << "Unsupported property type: " << prop_value.type_name();
       assert(false);
       continue;
     }

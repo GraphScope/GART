@@ -538,7 +538,8 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
 
   // deal with string
   // allocate space for string
-  vector<string> tmp_str(vprop.size());  // for store string_view
+  vector<string> tmp_str(vprop.size());
+  ;  // for store string_view
   for (size_t idx = 0; idx < vprop.size(); ++idx) {
     auto dtype = get_property_schema(vlabel).cols[idx].vtype;
     if (dtype == STRING) {
@@ -560,6 +561,24 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   // insert properties
   property->insert(v, gid, vprop, epoch);
 
+  return true;
+}
+
+bool GraphStore::update_inner_vertex(int epoch, uint64_t gid,
+                                     StringViewList& vprop) {
+  // parse id
+  IdParser<seggraph::vertex_t> parser;
+  parser.Init(total_partitions_, total_vertex_label_num_);
+  auto fid = parser.GetFid(gid);
+  if (fid != local_pid_) {
+    return false;  // not in this partition
+  }
+
+  auto vlabel = parser.GetLabelId(gid);
+  auto voffset = parser.GetOffset(gid);
+  Property* property = get_property(vlabel);
+
+  property->update(voffset, gid, vprop, epoch, this);
   return true;
 }
 

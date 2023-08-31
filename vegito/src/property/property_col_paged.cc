@@ -24,11 +24,12 @@
  *
  */
 
-#include "property/property_col_paged.h"
+#include <cassert>
 #include <cstdint>
 #include <string>
 
 #include "graph/graph_store.h"
+#include "property/property_col_paged.h"
 #include "util/bitset.h"
 #include "util/macros.h"
 
@@ -394,6 +395,76 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
 #if UPDATE_STAT
     ++stat_.num_update;
 #endif
+  }
+}
+
+void PropertyColPaged::update(uint64_t off, uint64_t k,
+                              const StringViewList& v_list, uint64_t ver,
+                              gart::graph::GraphStore* graph_store) {
+  for (auto prop_idx = 0; prop_idx < v_list.size(); prop_idx++) {
+    const Property::Column& col = cols_[prop_idx];
+    assert(col.updatable);
+    size_t vlen = col.vlen;
+    int pg_num = off / col.page_size;
+    FlexCol& flex = flexCols_[prop_idx];
+    Page* page = flex.pages[pg_num];
+    char* dst = page->content + (off % col.page_size) * vlen;
+    char* buffer = (char*) malloc(vlen);
+    bool changed = false;
+    if (col.vtype == INT) {
+      int new_value = std::stoi(std::string(v_list[prop_idx]));
+      if (*((int*) dst) != new_value) {
+        changed = true;
+        *((int*) buffer) = new_value;
+      }
+    } else if (col.vtype == LONG) {
+      int64_t new_value = std::stoll(std::string(v_list[prop_idx]));
+      if (*((int64_t*) dst) != new_value) {
+        changed = true;
+        *((int64_t*) buffer) = new_value;
+      }
+    } else if (col.vtype == DOUBLE) {
+      double new_value = std::stod(std::string(v_list[prop_idx]));
+      if (*((double*) dst) != new_value) {
+        changed = true;
+        *((double*) buffer) = new_value;
+      }
+    } else if (col.vtype == FLOAT) {
+      float new_value = std::stof(std::string(v_list[prop_idx]));
+      if (*((float*) dst) != new_value) {
+        changed = true;
+        *((float*) buffer) = new_value;
+      }
+    } else if (col.vtype == STRING) {
+      int64_t fake_old_value = *(int64_t*) dst;
+      int64_t old_str_offset = fake_old_value >> 16;
+      int64_t old_str_len = fake_old_value & 0xffff;
+      char* string_buffer = graph_store->get_string_buffer();
+      std::string old_value(string_buffer + old_str_offset, old_str_len);
+      std::string new_value = std::string(v_list[prop_idx]);
+      if (old_value != new_value) {
+        changed = true;
+        size_t new_str_len = new_value.length();
+        size_t old_offset = graph_store->get_string_buffer_offset();
+        size_t new_str_offset = old_offset + new_str_len + 1;
+        assert(new_str_offset < graph_store->get_string_buffer_size());
+        memcpy(string_buffer + old_offset, new_value.c_str(), new_str_len);
+        string_buffer[new_str_offset - 1] = '\0';
+        uint64_t real_value = old_offset << 16 | new_str_len;
+        *((int64_t*) buffer) = real_value;
+        graph_store->set_string_buffer_offset(new_str_offset);
+      }
+    } else {
+      LOG(ERROR) << "Unsupported type " << col.vtype;
+    }
+
+    if (changed) {
+      Page* new_page = findWithInsertPage_(prop_idx, pg_num, ver);
+      assert(new_page && new_page->ver == ver);
+      char* new_dst = new_page->content + (off % col.page_size) * vlen;
+      memcpy(new_dst, buffer, vlen);
+    }
+    free(buffer);
   }
 }
 

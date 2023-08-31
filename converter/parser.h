@@ -40,7 +40,7 @@ class LogEntry {
   bool last_snapshot() const { return snapshot == Snapshot::LAST; }
 
   // One log may produce multiple log entries
-  // Now it is only used for update (delete + insert)
+  // Now it is only used for update edges (delete + insert)
   bool more_entires() const { return update_has_finish_delete; }
 
  private:

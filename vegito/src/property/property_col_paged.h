@@ -64,10 +64,13 @@ class PropertyColPaged : public Property {
     return fixCols_[col_id];
   }
 
-  void update(uint64_t off, const std::vector<int>& cids, char* v, uint64_t seq,
-              uint64_t ver);
+  void update(uint64_t off, uint64_t k, const StringViewList& v_list,
+              uint64_t ver, gart::graph::GraphStore* graph_store) override;
 
-  void update(uint64_t off, int cid, char* v, uint64_t ver);
+  void update(uint64_t off, const std::vector<int>& cids, char* v, uint64_t seq,
+              uint64_t ver) override;
+
+  void update(uint64_t off, int cid, char* v, uint64_t ver) override;
 
   const std::vector<uint64_t>& getKeyCol() const;
 

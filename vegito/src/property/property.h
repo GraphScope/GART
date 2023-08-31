@@ -28,6 +28,7 @@
 #define VEGITO_SRC_PROPERTY_PROPERTY_H_
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -70,6 +71,12 @@ enum PropertyStoreDataType {
   TIMESTAMP = 18
 };
 
+namespace gart {
+namespace graph {
+class GraphStore;
+}  // namespace graph
+}  // namespace gart
+
 // multi-version store
 class Property {  // NOLINT(build/class)
  public:
@@ -95,6 +102,20 @@ class Property {  // NOLINT(build/class)
 
   virtual void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
                       uint64_t ver) {
+    assert(false);
+  }
+
+  virtual void update(uint64_t off, uint64_t k, const StringViewList& v_list,
+                      uint64_t ver, gart::graph::GraphStore* graph_store) {
+    assert(false);
+  }
+
+  virtual void update(uint64_t off, const std::vector<int>& cids, char* v,
+                      uint64_t seq, uint64_t ver) {
+    assert(false);
+  }
+
+  virtual void update(uint64_t off, int cid, char* v, uint64_t ver) {
     assert(false);
   }
 

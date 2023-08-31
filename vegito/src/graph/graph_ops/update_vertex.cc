@@ -13,28 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef VEGITO_SRC_GRAPH_GRAPH_OPS_H_
-#define VEGITO_SRC_GRAPH_GRAPH_OPS_H_
+#include <cassert>
 
-#include <string>
-
-#include "graph/graph_store.h"
+#include "graph/graph_ops.h"
 #include "graph/type_def.h"
+
+using std::string;
 
 namespace gart {
 namespace graph {
 
-void process_add_vertex(const StringViewList& cmd,
-                        graph::GraphStore* graph_store);
-void process_add_edge(const StringViewList& cmd,
-                      graph::GraphStore* graph_store);
-void process_del_vertex(const StringViewList& cmd,
-                        graph::GraphStore* graph_store);
-void process_del_edge(const StringViewList& cmd,
-                      graph::GraphStore* graph_store);
 void process_update_vertex(const StringViewList& cmd,
-                           graph::GraphStore* graph_store);
+                           graph::GraphStore* graph_store) {
+  int write_epoch = stoi(string(cmd[0]));
+  uint64_t vid = static_cast<uint64_t>(stoll(string(cmd[1])));
+  StringViewList props(cmd.begin() + 3, cmd.end());
+  graph_store->update_inner_vertex(write_epoch, vid, props);
+}
+
 }  // namespace graph
 }  // namespace gart
-
-#endif  // VEGITO_SRC_GRAPH_GRAPH_OPS_H_

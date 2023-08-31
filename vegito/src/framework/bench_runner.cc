@@ -477,6 +477,8 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
     process_del_vertex(sv_vec, graph_stores_[p_id]);
   } else if (op == "delete_edge") {
     process_del_edge(sv_vec, graph_stores_[p_id]);
+  } else if (op == "update_vertex") {
+    process_update_vertex(sv_vec, graph_stores_[p_id]);
   } else {
     LOG(ERROR) << "Unsupported operator " << op;
   }

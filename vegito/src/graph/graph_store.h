@@ -138,6 +138,8 @@ class GraphStore {
   bool insert_inner_vertex(int epoch, uint64_t gid, std::string external_id,
                            StringViewList& vprop);
 
+  bool update_inner_vertex(int epoch, uint64_t gid, StringViewList& vprop);
+
   void construct_eprop(int elabel, const StringViewList& eprop,
                        std::string& out);
 
