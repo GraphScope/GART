@@ -172,9 +172,6 @@ class Property {  // NOLINT(build/class)
     return blob_metas_;
   }
 
-  // return the oid for meta data of each row (now is the NULL bitmap)
-  vineyard::ObjectID get_row_meta_oid() const { return row_meta_oid_; }
-
   // schema
   std::vector<size_t> val_lens_;
   std::vector<size_t> val_off_;
@@ -301,9 +298,6 @@ class Property {  // NOLINT(build/class)
   const uint64_t max_items_;
 
   std::vector<gart::VPropMeta> blob_metas_;
-
-  // oid for meta data of each row (now is the NULL bitmap)
-  vineyard::ObjectID row_meta_oid_;
 
   seggraph::SparseArrayAllocator<char> array_allocator;
 

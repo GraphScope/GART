@@ -35,7 +35,6 @@
 class PropertyColPaged : public Property {
  public:
   PropertyColPaged(Property::Schema schema, uint64_t max_items,
-                   size_t null_bitmap_size = 0,
                    const std::vector<uint32_t>* split = nullptr);
   ~PropertyColPaged();
 
@@ -106,8 +105,9 @@ class PropertyColPaged : public Property {
           next(nullptr),
           prev_ptr(0),
           min_ver(n ? n->min_ver : v) {
-      if (n)
+      if (n) {
         n->next = this;
+      }
     }
   };
 
@@ -139,10 +139,6 @@ class PropertyColPaged : public Property {
 
   std::vector<char*> fixCols_;
   std::vector<FlexCol> flexCols_;
-
-  // indicate null properties for each row
-  uint8_t* null_bitmaps_;
-  size_t null_bitmap_size_;
 
   // stored in Blob
   struct FlexColHeader {

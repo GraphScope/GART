@@ -289,12 +289,11 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
 
   switch (schema.store_type) {
   case PROP_COLUMN: {
-    property_stores_[vlabel] =
-        new PropertyColPaged(schema, v_capacity, vertex_bitmap_size_[vlabel]);
+    property_stores_[vlabel] = new PropertyColPaged(schema, v_capacity);
     assert(blob_schemas_.find(vlabel) != blob_schemas_.end());
     auto& blob_schema = blob_schemas_[vlabel];
     auto p = property_stores_[vlabel];
-    blob_schema.set_prop_meta(p->get_row_meta_oid(), p->get_blob_metas());
+    blob_schema.set_prop_meta(p->get_blob_metas());
     break;
   }
   case PROP_COLUMN2: {

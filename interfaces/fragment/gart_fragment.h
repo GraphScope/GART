@@ -107,14 +107,11 @@ class GartFragment {
     vertex_prop_blob_ptrs_.resize(vertex_label_num_);
 
     vertex_prop_nums_.resize(vertex_label_num_);
-    vertex_prop_row_bitmap_.resize(vertex_label_num_);
     vertex_prop_total_bytes_.resize(vertex_label_num_, 0);
 
     vertex_ext_id_ptrs_.resize(vertex_label_num_, nullptr);
     outer_vertex_ext_id_ptrs_.resize(vertex_label_num_, nullptr);
     vertex_ext_id_dtypes_.resize(vertex_label_num_);
-
-    vertex_bitmap_size_.resize(vertex_label_num_, 0);
 
     vid_parser.Init(fnum_, vertex_label_num_);
     max_outer_id_offset_ =
@@ -134,7 +131,6 @@ class GartFragment {
         vertex_label2name_.emplace(v_label_id, name);
         auto vertex_prop_info = edge_info[idx]["propertyDefList"];
         auto vertex_prop_num = vertex_prop_info.size();
-        vertex_bitmap_size_[v_label_id] = BYTE_SIZE(vertex_prop_num);
         for (size_t prop_id = 0; prop_id < vertex_prop_num; prop_id++) {
           auto prop_name = vertex_prop_info[prop_id]["name"].get<std::string>();
           vertex_prop2name_.emplace(std::make_pair(v_label_id, prop_id),
@@ -357,13 +353,6 @@ class GartFragment {
       auto vertex_prop_config = blob_info[i]["vprops"];
       prop_cols_meta[vlabel].resize(vertex_prop_nums_[vlabel]);
       vertex_prop_blob_ptrs_[vlabel].resize(vertex_prop_nums_[vlabel]);
-
-      uint64_t vprop_row_meta_oid =
-          blob_info[i]["vprop_row_meta_oid"].get<uint64_t>();
-      std::shared_ptr<vineyard::Blob> row_meta_blob;
-      VINEYARD_CHECK_OK(
-          client_.GetBlob(vprop_row_meta_oid, true, row_meta_blob));
-      vertex_prop_row_bitmap_[vlabel] = (uint8_t*) row_meta_blob->data();
 
       uint64_t vertex_external_id_oid =
           blob_info[i]["external_id_oid"].get<uint64_t>();
@@ -663,9 +652,27 @@ class GartFragment {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
-    uint8_t* null_bitset = vertex_prop_row_bitmap_[label_id] +
-                           v_offset * vertex_bitmap_size_[label_id];
-    return get_bit(null_bitset, prop_id) == false;
+    auto header_offset = prop_cols_meta[label_id][prop_id].header;
+
+    FlexColBlobHeader* header =
+        (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+                              header_offset);
+    int vertex_per_page = header->get_num_row_per_page();
+    int page_id = v_offset / vertex_per_page;
+    PageHeader* page_header =
+        header->get_page_header_ptr((uintptr_t) header, page_id);
+    int page_idx = v_offset % vertex_per_page;
+    char* data = nullptr;
+
+    for (; page_header;
+         page_header = page_header->get_prev((uintptr_t) header)) {
+      if (page_header->get_epoch() <= (int) read_epoch_number_) {
+        data = page_header->get_data();
+        break;
+      }
+    }
+
+    return get_bit((uint8_t*) data, page_idx) == false;
   }
 
   template <typename T>
@@ -693,7 +700,7 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data();
+          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
           return data + sizeof(T) * page_idx;
         }
       }
@@ -724,7 +731,7 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data();
+          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
           int64_t value = *(((int64_t*) data) + page_idx);
           int64_t str_offset = value >> 16;
           return string_buffer_ + str_offset;
@@ -746,8 +753,7 @@ class GartFragment {
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
     auto prop_id = vertex_prop_nums_[label_id] - 1;
-    auto buffer_size =
-        vertex_prop_total_bytes_[label_id] + vertex_bitmap_size_[label_id];
+    auto buffer_size = vertex_prop_total_bytes_[label_id];
     auto header_offset = prop_cols_meta[label_id][prop_id].header;
     if (prop_cols_meta[label_id][prop_id].updatable == true) {
       FlexColBlobHeader* header =
@@ -762,14 +768,14 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data();
-          return data + buffer_size * page_idx + vertex_bitmap_size_[label_id];
+          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
+          return data + buffer_size * page_idx;
         }
       }
     } else {
       char* data =
           (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
-      return data + buffer_size * v_offset + vertex_bitmap_size_[label_id];
+      return data + buffer_size * v_offset;
     }
     return nullptr;
   }
@@ -800,7 +806,7 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data();
+          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
           t = *(((T*) data) + page_idx);
           return;
         }
@@ -833,7 +839,7 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data();
+          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
           int64_t value = *(((int64_t*) data) + page_idx);
           int64_t str_offset = value >> 16;
           int64_t str_len = value & 0xffff;
@@ -1338,7 +1344,6 @@ class GartFragment {
 
   // for vertex property
   std::vector<int> vertex_prop_nums_;
-  std::vector<uint8_t*> vertex_prop_row_bitmap_;  // NULL bitmap
   std::vector<std::vector<char*>> vertex_prop_blob_ptrs_;
 
   // for vertex external id
@@ -1369,7 +1374,6 @@ class GartFragment {
 
   std::vector<size_t> vertex_prop_total_bytes_;
 
-  std::vector<size_t> vertex_bitmap_size_;
   std::vector<size_t> edge_bitmap_size_;
 
   std::string oid_type, vid_type;

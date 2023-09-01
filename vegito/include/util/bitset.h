@@ -31,4 +31,9 @@ inline void set_bit(uint8_t* data, uint64_t idx) {
   __sync_fetch_and_or(data + BYTE_INDEX(idx), ((uint8_t) 1) << BIT_OFFSET(idx));
 }
 
+inline void reset_bit(uint8_t* data, uint64_t idx) {
+  __sync_fetch_and_and(data + BYTE_INDEX(idx),
+                       ~(((uint8_t) 1) << BIT_OFFSET(idx)));
+}
+
 #endif  // VEGITO_INCLUDE_UTIL_BITSET_H_

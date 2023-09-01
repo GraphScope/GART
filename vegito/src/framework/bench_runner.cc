@@ -134,7 +134,6 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     prop_schema.klen = sizeof(uint64_t);
   }
 
-  graph_store->init_vertex_bitmap_size(vlabel_num);
   graph_store->init_external_id_dtype(vlabel_num);
   graph_store->init_external_id_store(vlabel_num);
 
@@ -179,10 +178,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       graph_schema.label2prop_offset[id] = prop_offset;
     }
 
-    if (is_vertex) {
-      auto bitmap_size = BYTE_SIZE(prop_info.size());
-      graph_store->set_vertex_bitmap_size(id, bitmap_size);
-    } else {
+    if (!is_vertex) {
       auto bitmap_size = BYTE_SIZE(prop_info.size());
       graph_store->set_edge_bitmap_size(id - vlabel_num, bitmap_size);
     }
@@ -415,7 +411,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       for (auto col_id = 0; col_id < prop_schema.cols.size(); col_id++) {
         data_size += prop_schema.cols[col_id].vlen;
       }
-      col.vlen = data_size + graph_store->get_vertex_bitmap_size(id);
+      col.vlen = data_size;
       prop_schema.cols.push_back(col);
     }
 

@@ -26,6 +26,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <string>
 
 #include "graph/graph_store.h"
@@ -56,16 +57,17 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(uint64_t page_sz,
                                                              uint64_t ver,
                                                              Page* prev) {
   char* buf = nullptr;
-  uint32_t pg_sz = sizeof(Page) + vlen * page_sz;
+  uint32_t pg_sz = sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz);
 
   buf = reinterpret_cast<char*>(malloc(pg_sz));
   Page* ret = new (buf) Page(ver, prev);
 
   if (page_sz != 1 && prev != nullptr) {
-    memcpy(ret->content, prev->content, page_sz * vlen);
+    memcpy(ret->content, prev->content, page_sz * vlen + BYTE_SIZE(page_sz));
 #if UPDATE_STAT
-    stat_.num_copy += vlen * page_sz;  // size
-                                       // ++stat_.num_copy;    // count
+    stat_.num_copy += BYTE_SIZE(page_sz);  // bitmap size
+    stat_.num_copy += vlen * page_sz;      // size
+                                           // ++stat_.num_copy;    // count
 #endif
   }
 
@@ -77,7 +79,7 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
     uint64_t pg_num) {
   FlexBuf& flex_buf = flex_bufs_[prop_id];
   char* buf = nullptr;
-  uint32_t pg_sz = sizeof(Page) + vlen * page_sz;
+  uint32_t pg_sz = sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz);
 
   buf = reinterpret_cast<char*>(&flex_buf.buf[flex_buf.allocated_sz]);
   uintptr_t cur_ptr = flex_buf.allocated_sz;
@@ -91,10 +93,11 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
   }
 
   if (page_sz != 1 && prev != nullptr) {
-    memcpy(ret->content, prev->content, page_sz * vlen);
+    memcpy(ret->content, prev->content, page_sz * vlen + BYTE_SIZE(page_sz));
 #if UPDATE_STAT
-    stat_.num_copy += vlen * page_sz;  // size
-                                       // ++stat_.num_copy;    // count
+    stat_.num_copy += BYTE_SIZE(page_sz);  // bitmap size
+    stat_.num_copy += vlen * page_sz;      // size
+                                           // ++stat_.num_copy;    // count
 #endif
   }
   flex_buf.header->page_ptr[pg_num] = cur_ptr;
@@ -107,7 +110,7 @@ inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(uint64_t page_sz,
                                                               uint64_t pg_num) {
   FlexBuf& flex_buf = flex_bufs_[prop_id];
   char* buf = nullptr;
-  uint32_t pg_sz = sizeof(Page) + vlen * page_sz;
+  uint32_t pg_sz = sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz);
 
   buf = reinterpret_cast<char*>(&flex_buf.buf[flex_buf.allocated_sz]);
   uintptr_t cur_ptr = flex_buf.allocated_sz;
@@ -121,7 +124,6 @@ inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(uint64_t page_sz,
 }
 
 PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
-                                   size_t bitmap_size,
                                    const vector<uint32_t>* split)
     : Property(max_items),
       table_id_(s.table_id),
@@ -129,8 +131,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       col_oids_(s.cols.size()),
       flex_bufs_(s.cols.size()),
       fixCols_(s.cols.size(), nullptr),
-      flexCols_(s.cols.size()),
-      null_bitmap_size_(bitmap_size) {
+      flexCols_(s.cols.size()) {
   // each column
   val_len_ = 0;
   for (int i = 0; i < cols_.size(); i++) {
@@ -169,11 +170,6 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
   }
   assert(pcols_.size() == cols_.size());
 
-  null_bitmaps_ = reinterpret_cast<uint8_t*>(
-      mem_alloc(null_bitmap_size_ * max_items_, &row_meta_oid_));
-
-  memset(null_bitmaps_, 0, null_bitmap_size_ * max_items_);
-
   for (int i = 0; i < cols_.size(); ++i) {
     size_t vlen = val_lens_[i];
     // divided into 2 types according to "updatable"
@@ -181,12 +177,14 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
     if (cols_[i].updatable) {
       size_t page_sz = cols_[i].page_size;
       int page_num = (max_items_ + page_sz - 1) / page_sz;
+      size_t null_bitmap_size = BYTE_SIZE(page_sz);
       assert(page_num != 0);
       flexCols_[i].locks.assign(page_num, 0);
       flexCols_[i].pages.assign(page_num, nullptr);
       flexCols_[i].old_pages.assign(page_num, nullptr);
-      size_t total_sz = FlexColHeader::size(page_num) +
-                        page_num * (sizeof(Page) + page_sz * vlen);
+      size_t total_sz =
+          FlexColHeader::size(page_num) +
+          page_num * (sizeof(Page) + page_sz * vlen + null_bitmap_size);
       // TODO(ssj): (hardcode) 1.5 is 1x init pages + 0.5x MVCC pages
       total_sz *= 1.5;
       // printf(
@@ -268,7 +266,6 @@ inline PropertyColPaged::Page* PropertyColPaged::findWithInsertPage_(
     page = flex.pages[pg_num];
 
     if (version > page->ver) {
-      // TODO(wanglei): update pages on vineyard
       Page* newPage =
           getNewPage_(col.page_size, col.vlen, version, page, colID, pg_num);
       flex.pages[pg_num] = newPage;
@@ -323,12 +320,13 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
 
     size_t vlen = col.vlen;
     char* dst = nullptr;
+    Page* page;
     if (col.updatable) {
       int pg_num = off / col.page_size;
-
-      Page* page = findWithInsertPage_(i, pg_num, ver);
+      page = findWithInsertPage_(i, pg_num, ver);
       assert(page && page->ver == ver);
-      dst = page->content + (off % col.page_size) * vlen;
+      dst = page->content + BYTE_SIZE(col.page_size) +
+            (off % col.page_size) * vlen;
     } else {
       dst = fixCols_[i] + off * vlen;
     }
@@ -352,7 +350,7 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
 
   char* prop_buffer;
   bool enable_row = false;
-  size_t buffer_offset = null_bitmap_size_;
+  size_t buffer_offset = 0;
   if (v_list.size() + 1 == cols_.size()) {
     prop_buffer = (char*) malloc(cols_[cols_.size() - 1].vlen);
     enable_row = true;
@@ -360,25 +358,26 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
 
   for (int i = 0; i < cols_.size(); ++i) {
     const Property::Column& col = cols_[i];
-
     size_t vlen = col.vlen;
     char* dst = nullptr;
+    Page* page;
     if (col.updatable) {
       int pg_num = off / col.page_size;
-
-      Page* page = findWithInsertPage_(i, pg_num, ver);
+      page = findWithInsertPage_(i, pg_num, ver);
       assert(page && page->ver == ver);
-      dst = page->content + (off % col.page_size) * vlen;
+      dst = page->content + BYTE_SIZE(col.page_size) +
+            (off % col.page_size) * vlen;
     } else {
       dst = fixCols_[i] + off * vlen;
     }
 
     if (i < v_list.size() && v_list[i].size() == 0) {
-      set_bit(null_bitmaps_ + null_bitmap_size_ * off, i);
+      set_bit((uint8_t*) (page->content), off % col.page_size);
     } else if (i < v_list.size() && col.vtype == STRING &&
                (std::stoll(std::string(v_list[i])) & 0xffff) == 0) {
-      set_bit(null_bitmaps_ + null_bitmap_size_ * off, i);
+      set_bit((uint8_t*) (page->content), off % col.page_size);
     } else if (i < v_list.size()) {
+      reset_bit((uint8_t*) (page->content), off % col.page_size);
       assign_prop(col.vtype, dst, v_list[i]);
       if (enable_row) {
         assign_prop(col.vtype, prop_buffer + buffer_offset, v_list[i]);
@@ -386,9 +385,8 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
       }
     } else {
       assert(col.vtype == BYTES);
-      memcpy(prop_buffer, null_bitmaps_ + null_bitmap_size_ * off,
-             null_bitmap_size_);
       memcpy(dst, prop_buffer, vlen);
+      reset_bit((uint8_t*) (page->content), off % col.page_size);
       free(prop_buffer);
     }
 
@@ -401,6 +399,14 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
 void PropertyColPaged::update(uint64_t off, uint64_t k,
                               const StringViewList& v_list, uint64_t ver,
                               gart::graph::GraphStore* graph_store) {
+  char* prop_buffer;
+  bool enable_row = false;
+  size_t buffer_offset = 0;
+  if (v_list.size() + 1 == cols_.size()) {
+    enable_row = true;
+    prop_buffer = (char*) malloc(cols_[cols_.size() - 1].vlen);
+  }
+
   for (auto prop_idx = 0; prop_idx < v_list.size(); prop_idx++) {
     const Property::Column& col = cols_[prop_idx];
     assert(col.updatable);
@@ -408,63 +414,119 @@ void PropertyColPaged::update(uint64_t off, uint64_t k,
     int pg_num = off / col.page_size;
     FlexCol& flex = flexCols_[prop_idx];
     Page* page = flex.pages[pg_num];
-    char* dst = page->content + (off % col.page_size) * vlen;
+    char* dst =
+        page->content + (off % col.page_size) * vlen + BYTE_SIZE(col.page_size);
     char* buffer = (char*) malloc(vlen);
     bool changed = false;
-    if (col.vtype == INT) {
-      int new_value = std::stoi(std::string(v_list[prop_idx]));
-      if (*((int*) dst) != new_value) {
+    bool is_null_value = false;
+    bool old_value_is_null = false;
+    if (v_list[prop_idx].size() == 0) {
+      is_null_value = true;
+      if (get_bit((uint8_t*) (page->content), off % col.page_size) == false) {
         changed = true;
-        *((int*) buffer) = new_value;
+      } else {
+        old_value_is_null = true;
       }
-    } else if (col.vtype == LONG) {
-      int64_t new_value = std::stoll(std::string(v_list[prop_idx]));
-      if (*((int64_t*) dst) != new_value) {
-        changed = true;
-        *((int64_t*) buffer) = new_value;
+    }
+
+    if (is_null_value == false) {
+      if (col.vtype == INT) {
+        int new_value = std::stoi(std::string(v_list[prop_idx]));
+        if (old_value_is_null || *((int*) dst) != new_value) {
+          changed = true;
+          *((int*) buffer) = new_value;
+        }
+        if (enable_row) {
+          *((int*) (prop_buffer + buffer_offset)) = new_value;
+          buffer_offset += vlen;
+        }
+      } else if (col.vtype == LONG) {
+        int64_t new_value = std::stoll(std::string(v_list[prop_idx]));
+        if (old_value_is_null || *((int64_t*) dst) != new_value) {
+          changed = true;
+          *((int64_t*) buffer) = new_value;
+        }
+        if (enable_row) {
+          *((int64_t*) (prop_buffer + buffer_offset)) = new_value;
+          buffer_offset += vlen;
+        }
+      } else if (col.vtype == DOUBLE) {
+        double new_value = std::stod(std::string(v_list[prop_idx]));
+        if (old_value_is_null || *((double*) dst) != new_value) {
+          changed = true;
+          *((double*) buffer) = new_value;
+        }
+        if (enable_row) {
+          *((double*) (prop_buffer + buffer_offset)) = new_value;
+          buffer_offset += vlen;
+        }
+      } else if (col.vtype == FLOAT) {
+        float new_value = std::stof(std::string(v_list[prop_idx]));
+        if (old_value_is_null || *((float*) dst) != new_value) {
+          changed = true;
+          *((float*) buffer) = new_value;
+        }
+        if (enable_row) {
+          *((float*) (prop_buffer + buffer_offset)) = new_value;
+          buffer_offset += vlen;
+        }
+      } else if (col.vtype == STRING) {
+        int64_t fake_old_value = *(int64_t*) dst;
+        int64_t old_str_offset = fake_old_value >> 16;
+        int64_t old_str_len = fake_old_value & 0xffff;
+        char* string_buffer = graph_store->get_string_buffer();
+        std::string old_value(string_buffer + old_str_offset, old_str_len);
+        std::string new_value = std::string(v_list[prop_idx]);
+        int64_t real_value = 0;
+        if (old_value_is_null || old_value != new_value) {
+          changed = true;
+          size_t old_offset = graph_store->get_string_buffer_offset();
+          size_t new_str_len = new_value.length();
+          size_t new_str_offset = old_offset + new_str_len + 1;
+          assert(new_str_offset < graph_store->get_string_buffer_size());
+          memcpy(string_buffer + old_offset, new_value.c_str(), new_str_len);
+          string_buffer[new_str_offset - 1] = '\0';
+          real_value = old_offset << 16 | new_str_len;
+          *((int64_t*) buffer) = real_value;
+          graph_store->set_string_buffer_offset(new_str_offset);
+        }
+        if (enable_row) {
+          if (!changed) {
+            *((int64_t*) (prop_buffer + buffer_offset)) = fake_old_value;
+          } else {
+            *((int64_t*) (prop_buffer + buffer_offset)) = real_value;
+          }
+          buffer_offset += vlen;
+        }
+      } else {
+        LOG(ERROR) << "Unsupported type " << col.vtype;
       }
-    } else if (col.vtype == DOUBLE) {
-      double new_value = std::stod(std::string(v_list[prop_idx]));
-      if (*((double*) dst) != new_value) {
-        changed = true;
-        *((double*) buffer) = new_value;
-      }
-    } else if (col.vtype == FLOAT) {
-      float new_value = std::stof(std::string(v_list[prop_idx]));
-      if (*((float*) dst) != new_value) {
-        changed = true;
-        *((float*) buffer) = new_value;
-      }
-    } else if (col.vtype == STRING) {
-      int64_t fake_old_value = *(int64_t*) dst;
-      int64_t old_str_offset = fake_old_value >> 16;
-      int64_t old_str_len = fake_old_value & 0xffff;
-      char* string_buffer = graph_store->get_string_buffer();
-      std::string old_value(string_buffer + old_str_offset, old_str_len);
-      std::string new_value = std::string(v_list[prop_idx]);
-      if (old_value != new_value) {
-        changed = true;
-        size_t new_str_len = new_value.length();
-        size_t old_offset = graph_store->get_string_buffer_offset();
-        size_t new_str_offset = old_offset + new_str_len + 1;
-        assert(new_str_offset < graph_store->get_string_buffer_size());
-        memcpy(string_buffer + old_offset, new_value.c_str(), new_str_len);
-        string_buffer[new_str_offset - 1] = '\0';
-        uint64_t real_value = old_offset << 16 | new_str_len;
-        *((int64_t*) buffer) = real_value;
-        graph_store->set_string_buffer_offset(new_str_offset);
-      }
-    } else {
-      LOG(ERROR) << "Unsupported type " << col.vtype;
     }
 
     if (changed) {
       Page* new_page = findWithInsertPage_(prop_idx, pg_num, ver);
       assert(new_page && new_page->ver == ver);
-      char* new_dst = new_page->content + (off % col.page_size) * vlen;
+      char* new_dst = new_page->content + (off % col.page_size) * vlen +
+                      BYTE_SIZE(col.page_size);
       memcpy(new_dst, buffer, vlen);
+      if (is_null_value) {
+        set_bit((uint8_t*) (new_page->content), off % col.page_size);
+      } else {
+        reset_bit((uint8_t*) (new_page->content), off % col.page_size);
+      }
     }
     free(buffer);
+  }
+
+  if (enable_row) {
+    auto col_page_size = cols_[cols_.size() - 1].page_size;
+    Page* new_page =
+        findWithInsertPage_(cols_.size() - 1, off / col_page_size, ver);
+    char* new_dst = new_page->content +
+                    (off % col_page_size) * cols_[cols_.size() - 1].vlen +
+                    BYTE_SIZE(col_page_size);
+    memcpy(new_dst, prop_buffer, cols_[cols_.size() - 1].vlen);
+    free(prop_buffer);
   }
 }
 
@@ -492,7 +554,8 @@ void PropertyColPaged::update(uint64_t off, const vector<int>& cids, char* v,
 
     Page* page = findWithInsertPage_(i, pg_num, ver);
     assert(page && page->ver == ver);
-    dst = page->content + (off % col.page_size) * vlen;
+    dst =
+        page->content + (off % col.page_size) * vlen + BYTE_SIZE(col.page_size);
     memcpy(dst, &v[voff], vlen);
 
 #if UPDATE_STAT
@@ -519,7 +582,7 @@ void PropertyColPaged::update(uint64_t off, int cid, char* v, uint64_t ver) {
 
   Page* page = findWithInsertPage_(cid, pg_num, ver);
   assert(page && page->ver == ver);
-  dst = page->content + (off % col.page_size) * vlen;
+  dst = page->content + (off % col.page_size) * vlen + BYTE_SIZE(col.page_size);
   memcpy(dst, v, vlen);
 
 #if UPDATE_STAT

@@ -234,10 +234,7 @@ class BlobSchema {
     vertex_table.set_loc(loc_inner, loc_outer);
   }
 
-  void set_prop_meta(oid_t row_meta, const std::vector<VPropMeta>& meta) {
-    row_meta_oid = row_meta;
-    vprops = meta;
-  }
+  void set_prop_meta(const std::vector<VPropMeta>& meta) { vprops = meta; }
 
   void set_external_id_oid(oid_t oid) { external_id_oid = oid; }
 
@@ -276,8 +273,6 @@ class BlobSchema {
     }
     single_blob_schema["vertex_map_oid"] = vertex_map_oid_;
 
-    single_blob_schema["vprop_row_meta_oid"] = row_meta_oid;
-
     json vprop_schema = json::array();
 
     for (const auto& vprop : vprops) {
@@ -308,7 +303,6 @@ class BlobSchema {
   oid_t vertex_map_oid_;
 
   // uint64_t num_vprops;
-  oid_t row_meta_oid;
   std::vector<VPropMeta> vprops;
 
   oid_t ov_block_oid;
