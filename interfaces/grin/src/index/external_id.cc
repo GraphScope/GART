@@ -24,11 +24,14 @@ limitations under the License.
 GRIN_VERTEX grin_get_vertex_by_external_id_of_int64(GRIN_GRAPH g,
                                                     long long int id) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
-  auto gid = id;  // In GART, external id equels to gid
+  GRIN_VID_T gid;
   _GRIN_VERTEX_T v;
-  bool res = _g->Gid2Vertex(gid, v);
-  if (res) {
-    return v.GetValue();
+  for (auto label_id = 0; label_id < _g->vertex_label_num(); label_id++) {
+    if (_g->Oid2Gid(label_id, id, gid)) {
+      if (_g->Gid2Vertex(gid, v)) {
+        return v.GetValue();
+      }
+    }
   }
   return GRIN_NULL_VERTEX;
 }
@@ -42,8 +45,7 @@ GRIN_VERTEX grin_get_vertex_by_external_id_of_int64(GRIN_GRAPH g,
 long long int grin_get_vertex_external_id_of_int64(GRIN_GRAPH g,
                                                    GRIN_VERTEX v) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
-  auto gid = _g->Vertex2Gid(_GRIN_VERTEX_T(v));
-  return gid;
+  return _g->GetId(_GRIN_VERTEX_T(v));
 }
 #endif
 

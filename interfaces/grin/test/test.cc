@@ -8,6 +8,7 @@
 
 #include "../include/include/common/error.h"
 #include "../include/include/index/internal_id.h"
+#include "../include/include/index/external_id.h"
 #include "../include/include/index/label.h"
 #include "../include/include/index/order.h"
 #include "../include/include/partition/partition.h"
@@ -41,16 +42,20 @@ void test_string_storage(char* uri) {
   while (!grin_is_vertex_list_end(g, vertex_iter)) {
     auto v = grin_get_vertex_from_iter(g, vertex_iter);
     
-    for (auto prop_id = 0; prop_id < 1; prop_id++) {
+    for (auto prop_id = 0; prop_id < 4; prop_id++) {
      auto v_prop = grin_get_vertex_property_by_id(g, 0, prop_id);
      auto v_dtype = grin_get_vertex_property_datatype(g, v_prop);
      if (v_dtype == String) {
       const char* pv = grin_get_vertex_property_value_of_string(g, v, v_prop);
-      std::cout << "string prop value = " << pv << std::endl;
+      std::cout << " " << pv;
       grin_destroy_string_value(g, pv);
+     } else {
+      auto pv = grin_get_vertex_property_value_of_int64(g, v, v_prop);
+      std::cout << " " << pv;
      }
      grin_destroy_vertex_property(g, v_prop);
     }
+    std::cout << std::endl;
     
     grin_destroy_vertex(g, v);
     grin_get_next_vertex_list_iter(g, vertex_iter);
@@ -70,6 +75,9 @@ void test_extension(char* uri) {
   auto vertex_iter = grin_get_vertex_list_begin(g, vertex_list);
   while (!grin_is_vertex_list_end(g, vertex_iter)) {
     auto v = grin_get_vertex_from_iter(g, vertex_iter);
+    auto v_oid = grin_get_vertex_external_id_of_int64(g, v);
+    auto v_via_oid = grin_get_vertex_by_external_id_of_int64(g, v_oid);
+    std::cout << "v_oid = " << v_oid << " v = " << v << " v_via_oid = " << v_via_oid << std::endl;
     GRIN_EDGE_TYPE_LIST etl = grin_get_edge_type_list(g);
     size_t etl_size = grin_get_edge_type_list_size(g, etl);
     for (size_t etl_i = 0; etl_i < etl_size; ++etl_i) {
@@ -1133,7 +1141,7 @@ int main() {
   test_topology(uri);
   test_perf(uri);
 #endif
-  test_extension(uri);
-  // test_string_storage(uri);
+  //test_extension(uri);
+  test_string_storage(uri);
   return 0;
 }
