@@ -24,13 +24,14 @@
  *
  */
 
+#include "property/property_col_paged.h"
+
 #include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <string>
 
 #include "graph/graph_store.h"
-#include "property/property_col_paged.h"
 #include "util/bitset.h"
 #include "util/macros.h"
 

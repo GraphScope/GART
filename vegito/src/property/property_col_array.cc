@@ -24,7 +24,7 @@
  *
  */
 
-#include "property_col_array.h"  // NOLINT(build/include_subdir)
+#include "property/property_col_array.h"
 
 #define COL_USE_EPOCH 1
 
