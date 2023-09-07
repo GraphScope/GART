@@ -38,7 +38,7 @@ public class YamlConverter {
         options.setIndent(2);
         options.setPrettyFlow(true);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        Representer representer = new CustomRepresenter();
+        Representer representer = new CustomRepresenter(options);
         this.yaml = new Yaml(representer, options);
     }
 

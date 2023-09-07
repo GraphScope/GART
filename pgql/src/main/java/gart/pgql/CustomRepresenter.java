@@ -20,14 +20,15 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.introspector.*;
 import org.yaml.snakeyaml.representer.Representer;
 
 // https://stackoverflow.com/questions/62956776/how-to-order-nodes-in-yaml-with-snakeyaml
 public class CustomRepresenter extends Representer {
 
-    public CustomRepresenter() {
-        super();
+    public CustomRepresenter(DumperOptions options) {
+        super(options);
         PropertyUtils propUtil = new PropertyUtils() {
             @Override
             protected Set<Property> createPropertySet(Class<? extends Object> type, BeanAccess bAccess) {

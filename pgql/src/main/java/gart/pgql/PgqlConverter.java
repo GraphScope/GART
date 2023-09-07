@@ -3,6 +3,7 @@ package gart.pgql;
 import java.io.FileReader;
 import java.util.List;
 
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -22,7 +23,8 @@ public class PgqlConverter {
         // test input
         GSchema data = null;
         try {
-            Yaml yaml = new Yaml(new Constructor(GSchema.class));
+            LoaderOptions loadingConfig = new LoaderOptions();
+            Yaml yaml = new Yaml(new Constructor(GSchema.class, loadingConfig));
             data = yaml.load(reader);
         } catch (Exception e) {
             System.out.println(e.getMessage());
