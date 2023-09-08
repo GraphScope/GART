@@ -42,7 +42,7 @@ class PropertyColPaged : public Property {
   void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
 
   void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
-              uint64_t ver) override;
+              uint64_t ver, gart::graph::GraphStore* graph_store) override;
 
   // get cursor
   std::unique_ptr<ColCursor> getColCursor(int col_id,
@@ -117,14 +117,16 @@ class PropertyColPaged : public Property {
     std::vector<Page*> old_pages;  // tailer (oldest)
   };
 
-  Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev);
+  Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t real_column_num,
+                    uint64_t ver, Page* prev);
 
-  Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t ver, Page* prev,
-                    uint64_t prop_id, uint64_t pg_num);
+  Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t real_column_num,
+                    uint64_t ver, Page* prev, uint64_t prop_id,
+                    uint64_t pg_num);
 
   // for the first page for a `pg_num`
-  Page* getInitPage_(uint64_t page_sz, uint64_t vlen, uint64_t prop_id,
-                     uint64_t pg_num);
+  Page* getInitPage_(uint64_t page_sz, uint64_t vlen, uint64_t real_column_num,
+                     uint64_t prop_id, uint64_t pg_num);
 
   Page* findWithInsertPage_(int col_id, uint64_t page_num, uint64_t version);
 

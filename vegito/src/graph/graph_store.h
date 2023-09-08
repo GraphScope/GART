@@ -51,6 +51,10 @@ struct SchemaImpl {
   std::unordered_map<std::string, int> label_id_map;
   // <label id, property idx> -> dtype
   std::map<std::pair<int, int>, PropertyStoreDataType> dtype_map;
+  // <label id, property idx> -> column_family
+  std::map<std::pair<int, int>, int> column_family;
+  // <label id, property idx> -> column_family_offset
+  std::map<std::pair<int, int>, int> column_family_offset;
   // edge label id -> <src_vlabel, dst_vlabel>
   std::unordered_map<int, std::pair<int, int>> edge_relation;
   // the first id of elabel
@@ -104,10 +108,6 @@ class GraphStore {
       return property_stores_snapshots_[{vlabel, version}];
     else
       return nullptr;
-  }
-
-  inline Property::Schema get_property_schema(uint64_t vlabel) {
-    return property_schemas_[vlabel];
   }
 
   inline void set_schema(SchemaImpl schema) { this->schema_ = schema; }
@@ -389,14 +389,6 @@ class GraphStore {
 
   size_t get_string_buffer_size() const { return string_buffer_size_; }
 
-  void set_enable_row_store_for_vertex_property(bool enable) {
-    enable_row_store_for_vertex_property_ = enable;
-  }
-
-  bool get_enable_row_store_for_vertex_property() const {
-    return enable_row_store_for_vertex_property_;
-  }
-
   void init_edge_bitmap_size(uint64_t elabel_num) {
     edge_bitmap_size_.resize(elabel_num);
   }
@@ -407,6 +399,46 @@ class GraphStore {
 
   void set_edge_bitmap_size(uint64_t elabel, size_t size) {
     edge_bitmap_size_[elabel] = size;
+  }
+
+  void init_vertex_prop_column_family_map(uint64_t vlabel_num) {
+    vertex_prop_column_family_map_.resize(vlabel_num);
+  }
+
+  void set_vertex_prop_column_family_map(uint64_t vlabel, uint64_t idx,
+                                         size_t cf) {
+    vertex_prop_column_family_map_[vlabel].push_back(cf);
+  }
+
+  size_t get_vertex_prop_column_family_map(uint64_t vlabel, uint64_t idx) {
+    return vertex_prop_column_family_map_[vlabel][idx];
+  }
+
+  void init_vertex_prop_offset_in_column_family(uint64_t vlabel_num) {
+    vertex_prop_offset_in_column_family_.resize(vlabel_num);
+  }
+
+  void set_vertex_prop_offset_in_column_family(uint64_t vlabel, uint64_t idx,
+                                               size_t offset) {
+    vertex_prop_offset_in_column_family_[vlabel].push_back(offset);
+  }
+
+  size_t get_vertex_prop_offset_in_column_family(uint64_t vlabel,
+                                                 uint64_t idx) {
+    return vertex_prop_offset_in_column_family_[vlabel][idx];
+  }
+
+  void init_vertex_prop_id_in_column_family(uint64_t vlabel_num) {
+    vertex_prop_id_in_column_family_.resize(vlabel_num);
+  }
+
+  void set_vertex_prop_id_in_column_family(uint64_t vlabel, uint64_t idx,
+                                           size_t id) {
+    vertex_prop_id_in_column_family_[vlabel].push_back(id);
+  }
+
+  size_t get_vertex_prop_id_in_column_family(uint64_t vlabel, uint64_t idx) {
+    return vertex_prop_id_in_column_family_[vlabel][idx];
   }
 
   void init_external_id_dtype(uint64_t vlabel_num) {
@@ -444,8 +476,6 @@ class GraphStore {
   const int local_pnum_;        // number of partitions in the machine
   const int total_partitions_;  // total number of partitions
   int total_vertex_label_num_;
-
-  bool enable_row_store_for_vertex_property_ = false;
 
   // graph store schema
   SchemaImpl schema_;
@@ -502,6 +532,11 @@ class GraphStore {
 
   // for bitmap
   std::vector<size_t> edge_bitmap_size_;
+
+  // for vertex flexible property
+  std::vector<std::vector<size_t>> vertex_prop_column_family_map_;
+  std::vector<std::vector<size_t>> vertex_prop_offset_in_column_family_;
+  std::vector<std::vector<size_t>> vertex_prop_id_in_column_family_;
 
   // for external id
   std::vector<int> external_id_dtype_;

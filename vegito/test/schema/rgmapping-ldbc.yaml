@@ -4,7 +4,6 @@ loadingConfig:
   dataSource: mysql
   database: ldbc
   method: append
-  enableRowStore: false
 vertexMappings:
   vertex_types:
     - type_name: organisation
@@ -14,15 +13,19 @@ vertexMappings:
         - property: org_id
           dataField:
             name: org_id
+            columnFamily: 0
         - property: org_type
           dataField:
             name: org_type
+            columnFamily: 1
         - property: org_name
           dataField:
             name: org_name
+            columnFamily: 1
         - property: org_url
           dataField:
             name: org_url
+            columnFamily: 1
     - type_name: place
       dataSourceName: place
       idFieldName: pla_id
@@ -100,21 +103,27 @@ vertexMappings:
         - property: co_id
           dataField:
             name: co_id
+            columnFamily: 0
         - property: co_creation_date
           dataField:
             name: co_creation_date
+            columnFamily: 1
         - property: co_location_ip
           dataField:
             name: co_location_ip
+            columnFamily: 1
         - property: co_browser_used
           dataField:
             name: co_browser_used
+            columnFamily: 2
         - property: co_content
           dataField:
             name: co_content
+            columnFamily: 2
         - property: co_length
           dataField:
             name: co_length
+            columnFamily: 3
     - type_name: post
       dataSourceName: post
       idFieldName: po_id

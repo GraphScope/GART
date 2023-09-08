@@ -68,8 +68,6 @@ class GartFragment {
     fid_ = config["fid"].get<fid_t>();
     vertex_label_num_ = config["vertex_label_num"].get<int>();
     read_epoch_number_ = config["epoch"].get<size_t>();
-    enable_row_store_for_vertex_property_ =
-        config["enable_row_store_for_vertex_property"].get<bool>();
     auto string_buffer_object_id =
         config["string_buffer_object_id"].get<uint64_t>();
     std::shared_ptr<vineyard::Blob> string_buffer_blob;
@@ -105,9 +103,13 @@ class GartFragment {
 
     prop_cols_meta.resize(vertex_label_num_);
     vertex_prop_blob_ptrs_.resize(vertex_label_num_);
+    vertex_prop_column_family_id_.resize(vertex_label_num_);
+    vertex_prop_column_family_offset_.resize(vertex_label_num_);
+    vertex_prop_num_per_column_family_.resize(vertex_label_num_);
+    column_family_data_length_.resize(vertex_label_num_);
+    vertex_prop_id_in_column_family_.resize(vertex_label_num_);
 
     vertex_prop_nums_.resize(vertex_label_num_);
-    vertex_prop_total_bytes_.resize(vertex_label_num_, 0);
 
     vertex_ext_id_ptrs_.resize(vertex_label_num_, nullptr);
     outer_vertex_ext_id_ptrs_.resize(vertex_label_num_, nullptr);
@@ -130,37 +132,64 @@ class GartFragment {
         vertex_name2label_.emplace(name, v_label_id);
         vertex_label2name_.emplace(v_label_id, name);
         auto vertex_prop_info = edge_info[idx]["propertyDefList"];
+        vertex_prop_nums_[v_label_id] = vertex_prop_info.size();
         auto vertex_prop_num = vertex_prop_info.size();
+        vertex_prop_column_family_id_[v_label_id].resize(vertex_prop_num);
+        vertex_prop_column_family_offset_[v_label_id].resize(vertex_prop_num);
+        vertex_prop_num_per_column_family_[v_label_id].resize(vertex_prop_num,
+                                                              0);
+        column_family_data_length_[v_label_id].resize(vertex_prop_num, 0);
+        vertex_prop_id_in_column_family_[v_label_id].resize(vertex_prop_num, 0);
         for (size_t prop_id = 0; prop_id < vertex_prop_num; prop_id++) {
           auto prop_name = vertex_prop_info[prop_id]["name"].get<std::string>();
           vertex_prop2name_.emplace(std::make_pair(v_label_id, prop_id),
                                     prop_name);
           vertex_name2prop_.emplace(std::make_pair(v_label_id, prop_name),
                                     prop_id);
+          int column_family_id =
+              vertex_prop_info[prop_id]["column_family_id"].get<int>();
+          vertex_prop_column_family_id_[v_label_id][prop_id] = column_family_id;
+          int column_family_offset =
+              vertex_prop_info[prop_id]["column_family_offset"].get<int>();
+          vertex_prop_column_family_offset_[v_label_id][prop_id] =
+              column_family_offset;
+          vertex_prop_id_in_column_family_[v_label_id][prop_id] =
+              vertex_prop_num_per_column_family_[v_label_id][column_family_id];
+          vertex_prop_num_per_column_family_[v_label_id][column_family_id]++;
           auto dtype =
               vertex_prop_info[prop_id]["data_type"].get<std::string>();
           vertex_prop2dtype_.emplace(std::make_pair(v_label_id, prop_id),
                                      dtype);
           if (dtype == "INT") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(int);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(int);
           } else if (dtype == "FLOAT") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(float);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(float);
           } else if (dtype == "DOUBLE") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(double);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(double);
           } else if (dtype == "LONG") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(int64_t);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(int64_t);
           } else if (dtype == "CHAR") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(char);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(char);
           } else if (dtype == "STRING") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(uint64_t);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(uint64_t);
           } else if (dtype == "DATE") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(gart::Date);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(gart::Date);
           } else if (dtype == "DATETIME") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(gart::DateTime);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(gart::DateTime);
           } else if (dtype == "TIME") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(gart::Time);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(gart::Time);
           } else if (dtype == "TIMESTAMP") {
-            vertex_prop_total_bytes_[v_label_id] += sizeof(gart::TimeStamp);
+            column_family_data_length_[v_label_id][column_family_id] +=
+                sizeof(gart::TimeStamp);
           } else {
             LOG(FATAL) << "Unsupported data type: " << dtype;
             assert(false);
@@ -349,10 +378,10 @@ class GartFragment {
       iodoffset_[vlabel].resize(edge_label_num_);
 
       // init vertex property
-      vertex_prop_nums_[vlabel] = blob_info[i]["num_vprops"].get<int>();
+      int vertex_prop_column_family_num = blob_info[i]["num_vprops"].get<int>();
       auto vertex_prop_config = blob_info[i]["vprops"];
-      prop_cols_meta[vlabel].resize(vertex_prop_nums_[vlabel]);
-      vertex_prop_blob_ptrs_[vlabel].resize(vertex_prop_nums_[vlabel]);
+      prop_cols_meta[vlabel].resize(vertex_prop_column_family_num);
+      vertex_prop_blob_ptrs_[vlabel].resize(vertex_prop_column_family_num);
 
       uint64_t vertex_external_id_oid =
           blob_info[i]["external_id_oid"].get<uint64_t>();
@@ -415,11 +444,7 @@ class GartFragment {
   label_id_t edge_label_num() const { return edge_label_num_; }
 
   prop_id_t vertex_property_num(label_id_t label) const {
-    if (enable_row_store_for_vertex_property_ == false) {
-      return vertex_prop_nums_[label];
-    } else {
-      return vertex_prop_nums_[label] - 1;
-    }
+    return vertex_prop_nums_[label];
   }
 
   prop_id_t edge_property_num(label_id_t label) const {
@@ -651,11 +676,13 @@ class GartFragment {
   bool VertexPropValueIsValid(const vertex_t& v, prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    int column_family_id = vertex_prop_column_family_id_[label_id][prop_id];
     auto v_offset = GetOffset(v);
-    auto header_offset = prop_cols_meta[label_id][prop_id].header;
+    auto header_offset = prop_cols_meta[label_id][column_family_id].header;
 
     FlexColBlobHeader* header =
-        (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+        (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
+                                                    [column_family_id] +
                               header_offset);
     int vertex_per_page = header->get_num_row_per_page();
     int page_id = v_offset / vertex_per_page;
@@ -672,7 +699,12 @@ class GartFragment {
       }
     }
 
-    return get_bit((uint8_t*) data, page_idx) == false;
+    return get_bit(
+               (uint8_t*) data,
+               page_idx * vertex_prop_num_per_column_family_[label_id]
+                                                            [column_family_id] +
+                   vertex_prop_id_in_column_family_[label_id][prop_id]) ==
+           false;
   }
 
   template <typename T>
@@ -685,11 +717,15 @@ class GartFragment {
   char* GetDataAddrImpl(T& t, const vertex_t& v, prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    int column_family_id = vertex_prop_column_family_id_[label_id][prop_id];
+    int column_family_offset =
+        vertex_prop_column_family_offset_[label_id][prop_id];
     auto v_offset = GetOffset(v);
-    auto header_offset = prop_cols_meta[label_id][prop_id].header;
-    if (prop_cols_meta[label_id][prop_id].updatable == true) {
+    auto header_offset = prop_cols_meta[label_id][column_family_id].header;
+    if (prop_cols_meta[label_id][column_family_id].updatable == true) {
       FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
+                                                      [column_family_id] +
                                 header_offset);
       int vertex_per_page = header->get_num_row_per_page();
       int page_id = v_offset / vertex_per_page;
@@ -700,8 +736,15 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
-          return data + sizeof(T) * page_idx;
+          char* data =
+              page_header->get_data() +
+              BYTE_SIZE(vertex_per_page *
+                        vertex_prop_num_per_column_family_[label_id]
+                                                          [column_family_id]);
+          return data +
+                 page_idx *
+                     column_family_data_length_[label_id][column_family_id] +
+                 column_family_offset;
         }
       }
     } else {
@@ -716,11 +759,15 @@ class GartFragment {
                         prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    int column_family_id = vertex_prop_column_family_id_[label_id][prop_id];
+    int column_family_offset =
+        vertex_prop_column_family_offset_[label_id][prop_id];
     auto v_offset = GetOffset(v);
-    auto header_offset = prop_cols_meta[label_id][prop_id].header;
-    if (prop_cols_meta[label_id][prop_id].updatable == true) {
+    auto header_offset = prop_cols_meta[label_id][column_family_id].header;
+    if (prop_cols_meta[label_id][column_family_id].updatable == true) {
       FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
+                                                      [column_family_id] +
                                 header_offset);
       int vertex_per_page = header->get_num_row_per_page();
       int page_id = v_offset / vertex_per_page;
@@ -731,8 +778,17 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
-          int64_t value = *(((int64_t*) data) + page_idx);
+          char* data =
+              page_header->get_data() +
+              BYTE_SIZE(vertex_per_page *
+                        vertex_prop_num_per_column_family_[label_id]
+                                                          [column_family_id]);
+          int64_t value =
+              *((int64_t*) (data +
+                            page_idx *
+                                column_family_data_length_[label_id]
+                                                          [column_family_id] +
+                            column_family_offset));
           int64_t str_offset = value >> 16;
           return string_buffer_ + str_offset;
         }
@@ -747,38 +803,7 @@ class GartFragment {
     return nullptr;
   }
 
-  char* GetRowDataAddr(const vertex_t& v) const {
-    assert(IsInnerVertex(v));
-    assert(enable_row_store_for_vertex_property_ == true);
-    label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
-    auto v_offset = GetOffset(v);
-    auto prop_id = vertex_prop_nums_[label_id] - 1;
-    auto buffer_size = vertex_prop_total_bytes_[label_id];
-    auto header_offset = prop_cols_meta[label_id][prop_id].header;
-    if (prop_cols_meta[label_id][prop_id].updatable == true) {
-      FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
-                                header_offset);
-      int vertex_per_page = header->get_num_row_per_page();
-      int page_id = v_offset / vertex_per_page;
-      PageHeader* page_header =
-          header->get_page_header_ptr((uintptr_t) header, page_id);
-      int page_idx = v_offset % vertex_per_page;
-
-      for (; page_header;
-           page_header = page_header->get_prev((uintptr_t) header)) {
-        if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
-          return data + buffer_size * page_idx;
-        }
-      }
-    } else {
-      char* data =
-          (char*) (vertex_prop_blob_ptrs_[label_id][prop_id] + header_offset);
-      return data + buffer_size * v_offset;
-    }
-    return nullptr;
-  }
+  char* GetRowDataAddr(const vertex_t& v) const { return nullptr; }
 
   template <typename T>
   T GetData(const vertex_t& v, prop_id_t prop_id) const {
@@ -791,11 +816,15 @@ class GartFragment {
   void GetDataImpl(T& t, const vertex_t& v, prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    int column_family_id = vertex_prop_column_family_id_[label_id][prop_id];
+    int column_family_offset =
+        vertex_prop_column_family_offset_[label_id][prop_id];
     auto v_offset = GetOffset(v);
-    auto header_offset = prop_cols_meta[label_id][prop_id].header;
-    if (prop_cols_meta[label_id][prop_id].updatable == true) {
+    auto header_offset = prop_cols_meta[label_id][column_family_id].header;
+    if (prop_cols_meta[label_id][column_family_id].updatable == true) {
       FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
+                                                      [column_family_id] +
                                 header_offset);
       int vertex_per_page = header->get_num_row_per_page();
       int page_id = v_offset / vertex_per_page;
@@ -806,8 +835,16 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
-          t = *(((T*) data) + page_idx);
+          char* data =
+              page_header->get_data() +
+              BYTE_SIZE(vertex_per_page *
+                        vertex_prop_num_per_column_family_[label_id]
+                                                          [column_family_id]);
+          t = *(
+              (T*) (data +
+                    page_idx *
+                        column_family_data_length_[label_id][column_family_id] +
+                    column_family_offset));
           return;
         }
       }
@@ -818,17 +855,22 @@ class GartFragment {
       return;
     }
     assert(false);
+    return;
   }
 
   void GetDataImpl(std::string_view& t, const vertex_t& v,
                    prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    int column_family_id = vertex_prop_column_family_id_[label_id][prop_id];
+    int column_family_offset =
+        vertex_prop_column_family_offset_[label_id][prop_id];
     auto v_offset = GetOffset(v);
-    auto header_offset = prop_cols_meta[label_id][prop_id].header;
-    if (prop_cols_meta[label_id][prop_id].updatable == true) {
+    auto header_offset = prop_cols_meta[label_id][column_family_id].header;
+    if (prop_cols_meta[label_id][column_family_id].updatable == true) {
       FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id][prop_id] +
+          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
+                                                      [column_family_id] +
                                 header_offset);
       int vertex_per_page = header->get_num_row_per_page();
       int page_id = v_offset / vertex_per_page;
@@ -839,8 +881,17 @@ class GartFragment {
       for (; page_header;
            page_header = page_header->get_prev((uintptr_t) header)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data = page_header->get_data() + BYTE_SIZE(vertex_per_page);
-          int64_t value = *(((int64_t*) data) + page_idx);
+          char* data =
+              page_header->get_data() +
+              BYTE_SIZE(vertex_per_page *
+                        vertex_prop_num_per_column_family_[label_id]
+                                                          [column_family_id]);
+          int64_t value =
+              *((int64_t*) (data +
+                            page_idx *
+                                column_family_data_length_[label_id]
+                                                          [column_family_id] +
+                            column_family_offset));
           int64_t str_offset = value >> 16;
           int64_t str_len = value & 0xffff;
           t = std::string_view(string_buffer_ + str_offset, str_len);
@@ -854,7 +905,9 @@ class GartFragment {
       int64_t str_offset = value >> 16;
       int64_t str_len = value & 0xffff;
       t = std::string_view(string_buffer_ + str_offset, str_len);
+      return;
     }
+    return;
   }
 
   int64_t GetExternalIdAsInt64(const vertex_t& v) const {
@@ -1345,6 +1398,11 @@ class GartFragment {
   // for vertex property
   std::vector<int> vertex_prop_nums_;
   std::vector<std::vector<char*>> vertex_prop_blob_ptrs_;
+  std::vector<std::vector<int>> vertex_prop_column_family_id_;
+  std::vector<std::vector<int>> vertex_prop_column_family_offset_;
+  std::vector<std::vector<int>> vertex_prop_num_per_column_family_;
+  std::vector<std::vector<int>> column_family_data_length_;
+  std::vector<std::vector<int>> vertex_prop_id_in_column_family_;
 
   // for vertex external id
   std::vector<int64_t*> vertex_ext_id_ptrs_;
@@ -1358,7 +1416,6 @@ class GartFragment {
   int edge_label_num_;
   bool vertex_mata_known_ = false;
   bool edge_mata_known_ = false;
-  bool enable_row_store_for_vertex_property_ = false;
 
   std::map<label_id_t, std::string> vertex_label2name_;
   std::map<std::string, label_id_t> vertex_name2label_;
@@ -1371,8 +1428,6 @@ class GartFragment {
 
   std::map<std::pair<label_id_t, prop_id_t>, std::string> vertex_prop2dtype_;
   std::map<std::pair<label_id_t, prop_id_t>, std::string> edge_prop2dtype_;
-
-  std::vector<size_t> vertex_prop_total_bytes_;
 
   std::vector<size_t> edge_bitmap_size_;
 

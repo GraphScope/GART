@@ -85,6 +85,7 @@ class Property {  // NOLINT(build/class)
     bool updatable;
     size_t page_size;  // uint64_t(-1) or 0 means infinity, unit: items
     PropertyStoreDataType vtype = FLOAT;
+    size_t real_column_num = 0;
   };
 
   // schema for one type of vertex/edge (including serveral columns)
@@ -101,7 +102,7 @@ class Property {  // NOLINT(build/class)
   }
 
   virtual void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
-                      uint64_t ver) {
+                      uint64_t ver, gart::graph::GraphStore* graph_store) {
     assert(false);
   }
 

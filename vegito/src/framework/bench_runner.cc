@@ -99,9 +99,6 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   graph::SchemaImpl graph_schema;
   map<string, int> vertex_name_id_map;
 
-  graph_store->set_enable_row_store_for_vertex_property(
-      config["loadingConfig"]["enableRowStore"].as<bool>());
-
   YAML::Node vdef = config["vertexMappings"]["vertex_types"];
   YAML::Node edef = config["edgeMappings"]["edge_types"];
   assert(vdef.IsSequence() && edef.IsSequence());
@@ -113,9 +110,6 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
 
   Property::Schema prop_schema;          // for vertex properties
   prop_schema.store_type = PROP_COLUMN;  // use column store
-
-  Property::Column col;
-  col.page_size = 0;
 
   // alloc string buffer
   // TODO(wanglei): hard code
@@ -130,12 +124,13 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     graph_schema.label_id_map[name] = id;
     rg_map->define_vertex(id, id);  // (vlabel, table_id)
     graph_store->add_vgraph(id, rg_map);
-    prop_schema.table_id = id;
-    prop_schema.klen = sizeof(uint64_t);
   }
 
   graph_store->init_external_id_dtype(vlabel_num);
   graph_store->init_external_id_store(vlabel_num);
+  graph_store->init_vertex_prop_column_family_map(vlabel_num);
+  graph_store->init_vertex_prop_offset_in_column_family(vlabel_num);
+  graph_store->init_vertex_prop_id_in_column_family(vlabel_num);
 
   // Parse edge
   for (int idx = 0; idx < elabel_num; ++idx) {
@@ -186,12 +181,41 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     uint64_t edge_prop_prefix_bytes = 0;
     auto required_table_schema = table_schema[table_name];
 
+    std::vector<Property::Column> column_family_info(prop_info.size());
+    std::vector<bool> column_family_info_is_valid(prop_info.size(), false);
+    for (auto col_family_idx = 0; col_family_idx < prop_info.size();
+         col_family_idx++) {
+      column_family_info[col_family_idx].page_size = 0;
+      column_family_info[col_family_idx].updatable = true;
+      column_family_info[col_family_idx].vlen = 0;
+      column_family_info[col_family_idx].real_column_num = 0;
+    }
+
     for (int prop_idx = 0; prop_idx < prop_info.size(); prop_idx++) {
       int prop_id = prop_idx;
       string prop_name = prop_info[prop_idx]["property"].as<string>();
       string prop_dtype = "";
       string prop_table_col_name =
           prop_info[prop_idx]["dataField"]["name"].as<string>();
+
+      size_t column_family_id = 0;
+      if (is_vertex) {
+        column_family_id =
+            prop_info[prop_idx]["dataField"]["columnFamily"].as<size_t>(
+                prop_idx);
+        column_family_info_is_valid[column_family_id] = true;
+        graph_store->set_vertex_prop_id_in_column_family(
+            id, prop_id, column_family_info[column_family_id].real_column_num);
+        column_family_info[column_family_id].real_column_num++;
+        graph_store->set_vertex_prop_column_family_map(id, prop_id,
+                                                       column_family_id);
+        graph_schema.column_family[{id, prop_id}] = column_family_id;
+        graph_schema.column_family_offset[{id, prop_id}] =
+            column_family_info[column_family_id].vlen;
+        graph_store->set_vertex_prop_offset_in_column_family(
+            id, prop_id, column_family_info[column_family_id].vlen);
+      }
+
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx].size() != 2) {
           LOG(ERROR) << "Table schema file (" << table_schema_path
@@ -251,17 +275,10 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
         assert(false);
       }
 
-      if (is_vertex) {
-        // col.updatable = prop_info[prop_idx]["updatable"].get<bool>();
-        col.updatable = true;
-      }
-
       if (prop_dtype == "INT") {
         graph_schema.dtype_map[{id, prop_id}] = INT;
         if (is_vertex) {
-          col.vtype = INT;
-          col.vlen = sizeof(int);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen += sizeof(int);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, INT);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -271,9 +288,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "FLOAT") {
         graph_schema.dtype_map[{id, prop_id}] = FLOAT;
         if (is_vertex) {
-          col.vtype = FLOAT;
-          col.vlen = sizeof(float);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen += sizeof(float);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, FLOAT);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -283,9 +298,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "DOUBLE") {
         graph_schema.dtype_map[{id, prop_id}] = DOUBLE;
         if (is_vertex) {
-          col.vtype = DOUBLE;
-          col.vlen = sizeof(double);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen += sizeof(double);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, DOUBLE);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -295,9 +308,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "LONG") {
         graph_schema.dtype_map[{id, prop_id}] = LONG;
         if (is_vertex) {
-          col.vtype = LONG;
-          col.vlen = sizeof(uint64_t);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen += sizeof(uint64_t);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, LONG);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -307,9 +318,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "CHAR") {
         graph_schema.dtype_map[{id, prop_id}] = CHAR;
         if (is_vertex) {
-          col.vtype = CHAR;
-          col.vlen = sizeof(char);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen += sizeof(char);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, CHAR);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -319,10 +328,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "STRING") {
         graph_schema.dtype_map[{id, prop_id}] = STRING;
         if (is_vertex) {
-          col.vtype = STRING;
+          column_family_info[column_family_id].vlen += sizeof(uint64_t);
           // use string id (str_offset << 16 | str_len) instead of itself
-          col.vlen = sizeof(uint64_t);
-          prop_schema.cols.push_back(col);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, STRING);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -332,9 +339,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "DATE") {
         graph_schema.dtype_map[{id, prop_id}] = DATE;
         if (is_vertex) {
-          col.vtype = DATE;
-          col.vlen = sizeof(gart::graph::Date);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen +=
+              sizeof(gart::graph::Date);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, DATE);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -344,9 +350,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "DATETIME") {
         graph_schema.dtype_map[{id, prop_id}] = DATETIME;
         if (is_vertex) {
-          col.vtype = DATETIME;
-          col.vlen = sizeof(gart::graph::DateTime);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen +=
+              sizeof(gart::graph::DateTime);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, DATETIME);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -356,9 +361,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "TIME") {
         graph_schema.dtype_map[{id, prop_id}] = TIME;
         if (is_vertex) {
-          col.vtype = TIME;
-          col.vlen = sizeof(gart::graph::Time);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen +=
+              sizeof(gart::graph::Time);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, TIME);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -368,9 +372,8 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       } else if (prop_dtype == "TIMESTAMP") {
         graph_schema.dtype_map[{id, prop_id}] = TIMESTAMP;
         if (is_vertex) {
-          col.vtype = TIMESTAMP;
-          col.vlen = sizeof(gart::graph::TimeStamp);
-          prop_schema.cols.push_back(col);
+          column_family_info[column_family_id].vlen +=
+              sizeof(gart::graph::TimeStamp);
         } else {
           graph_store->insert_edge_property_dtypes(id, prop_id, TIMESTAMP);
           graph_store->insert_edge_prop_prefix_bytes(id, prop_id,
@@ -387,6 +390,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
     }
 
     if (is_vertex) {
+      // process external_id
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx][0].get<string>() ==
             external_id_col_name) {
@@ -405,17 +409,15 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
       }
     }
 
-    if (is_vertex && graph_store->get_enable_row_store_for_vertex_property()) {
-      col.vtype = BYTES;
-      size_t data_size = 0;
-      for (auto col_id = 0; col_id < prop_schema.cols.size(); col_id++) {
-        data_size += prop_schema.cols[col_id].vlen;
-      }
-      col.vlen = data_size;
-      prop_schema.cols.push_back(col);
-    }
-
     if (is_vertex) {
+      for (auto col_family_idx = 0; col_family_idx < column_family_info.size();
+           col_family_idx++) {
+        if (column_family_info_is_valid[col_family_idx]) {
+          prop_schema.cols.push_back(column_family_info[col_family_idx]);
+        }
+      }
+      prop_schema.table_id = id;
+      prop_schema.klen = sizeof(uint64_t);
       graph_store->add_vprop(id, prop_schema);
       prop_schema.cols.clear();
     } else {

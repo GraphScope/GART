@@ -31,6 +31,8 @@ struct PropDef {
   PropertyStoreDataType dtype;
   int id;
   string name;
+  int column_family_id;
+  int column_family_offset;
 
   vineyard::json json() const {
     using json = vineyard::json;
@@ -47,6 +49,8 @@ struct PropDef {
     res["data_type"] = type_str[dtype];
     res["id"] = id;
     res["name"] = name;
+    res["column_family_id"] = column_family_id;
+    res["column_family_offset"] = column_family_offset;
     return res;
   }
 
@@ -395,6 +399,14 @@ void SchemaImpl::fill_json(void* ptr) const {
     for (int pid = pid_begin; pid < pid_end; ++pid) {
       int local_pid = pid - pid_begin;
       props[pid].dtype = dtype_map.at({label_id, local_pid});
+      if (label_id < elabel_offset) {
+        props[pid].column_family_id = column_family.at({label_id, local_pid});
+        props[pid].column_family_offset =
+            column_family_offset.at({label_id, local_pid});
+      } else {
+        props[pid].column_family_id = -1;
+        props[pid].column_family_offset = -1;
+      }
     }
     type.propertyDefList.assign(props.begin() + pid_begin,
                                 props.begin() + pid_end);
@@ -462,8 +474,6 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
   blob_schema["epoch"] = write_epoch;
   blob_schema["vertex_label_num"] = blob_schemas_.size();
   blob_schema["string_buffer_object_id"] = string_buffer_object_id_;
-  blob_schema["enable_row_store_for_vertex_property"] =
-      enable_row_store_for_vertex_property_;
   auto blob_schemas = fetch_blob_schema(write_epoch);
   json blob_array = json::array();
   for (const auto& pair : blob_schemas) {
@@ -540,7 +550,7 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   vector<string> tmp_str(vprop.size());
   ;  // for store string_view
   for (size_t idx = 0; idx < vprop.size(); ++idx) {
-    auto dtype = get_property_schema(vlabel).cols[idx].vtype;
+    auto dtype = schema_.dtype_map.at({vlabel, idx});
     if (dtype == STRING) {
       auto str_len = vprop[idx].length();
       size_t old_offset = get_string_buffer_offset();
@@ -558,7 +568,7 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   }
 
   // insert properties
-  property->insert(v, gid, vprop, epoch);
+  property->insert(v, gid, vprop, epoch, this);
 
   return true;
 }
