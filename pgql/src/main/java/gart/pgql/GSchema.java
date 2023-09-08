@@ -148,7 +148,7 @@ class EdgeType {
         String edge = label.getName();
         String sourceTable = edgeTable.getSourceVertexTable().getTableName().getName();
         String destinationTable = edgeTable.getDestinationVertexTable().getTableName().getName();
-        String sourceVertex = "", destinationVertex = "";
+        String sourceVertex = null, destinationVertex = null;
 
         // table name in PGQL, while label name in YAML
         for (VertexTable vertexTable : vertexTables) {
@@ -161,6 +161,13 @@ class EdgeType {
                 destinationVertex = vlabel;
             }
         }
+        if (sourceVertex == null || destinationVertex == null) {
+            System.out.println("Error: cannot find vertex table for edge"
+                    + edge + " with sourceTable: " + sourceTable
+                    + ", destinationTable: " + destinationTable);
+            throw new RuntimeException();
+        }
+
         this.type_pair = new TypePair(edge, sourceVertex, destinationVertex);
 
         this.dataSourceName = edgeTable.getTableName().getName();
@@ -204,6 +211,13 @@ class EdgeType {
             if (vlabel.equals(this.type_pair.destination_vertex)) {
                 dstVertexTable = vertexTable;
             }
+        }
+        if (srcVertexTable == null || dstVertexTable == null) {
+            System.out.println("Error: cannot find vertex table for edge" +
+                    this.type_pair.edge + " with sourceTable: "
+                    + this.type_pair.source_vertex
+                    + ", destinationTable: " + this.type_pair.destination_vertex);
+            throw new RuntimeException();
         }
 
         List<Property> properties = new ArrayList<>();
