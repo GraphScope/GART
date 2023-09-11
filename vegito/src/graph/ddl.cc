@@ -34,15 +34,16 @@ RGMapping::RGMapping(int p_id)
 }
 
 void RGMapping::define_vertex(int vertex_label, int table_id) {
-  bool expand =
-      util::insert_vec(table2vlabel, table_id, vertex_label, (int) NO_EXIST);
+  bool expand = util::insert_vec(table2vlabel, table_id, vertex_label,
+                                 static_cast<int>(NO_EXIST));
   if (expand) {
     key2vids_.resize(table2vlabel.size());
     vid2keys_.resize(table2vlabel.size());
     key2vids_lock_.resize(table2vlabel.size());
   }
 
-  util::insert_vec(vlabel2table, vertex_label, table_id, (int) NO_EXIST);
+  util::insert_vec(vlabel2table, vertex_label, table_id,
+                   static_cast<int>(NO_EXIST));
 }
 
 void RGMapping::add_vprop_mapping(int vertex_label, int vprop_id, int col_id) {

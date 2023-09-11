@@ -251,8 +251,8 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 
   // vertex_table
   {
-    auto alloc = allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<seggraph::vertex_t>(array_allocator);
+    auto alloc = allocator_traits<decltype(array_allocator)>::rebind_alloc<
+        seggraph::vertex_t>(array_allocator);
 
     vineyard::ObjectID oid;
     uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
@@ -546,9 +546,8 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   add_inner(vlabel, lid);
 
   // deal with string
-  // allocate space for string
+  // allocate space for string_view
   vector<string> tmp_str(vprop.size());
-  ;  // for store string_view
   for (size_t idx = 0; idx < vprop.size(); ++idx) {
     auto dtype = schema_.dtype_map.at({vlabel, idx});
     if (dtype == STRING) {

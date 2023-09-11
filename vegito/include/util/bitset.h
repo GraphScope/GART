@@ -21,7 +21,7 @@
 #define BYTE_SIZE(n) (((n) + 7ul) >> 3)
 
 #define BYTE_INDEX(i) ((i) >> 3)
-#define BIT_OFFSET(i) ((i) &0x7)
+#define BIT_OFFSET(i) ((i) & 0x7)
 
 inline const bool get_bit(uint8_t* data, uint64_t idx) {
   return data[BYTE_INDEX(idx)] & (((uint8_t) 1) << BIT_OFFSET(idx));

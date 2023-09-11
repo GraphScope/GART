@@ -352,7 +352,7 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
     gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
     set_gid(data[vid_col], vertex_label_id, gid);
     std::string enternal_id;
-    // TODO (wanglei): now only vertex has enternal id
+    // TODO(wanglei): now only vertex has enternal id
     if (data[vid_col].is_number_integer()) {
       enternal_id = std::to_string(data[vid_col].get<int64_t>());
     } else if (data[vid_col].is_string()) {

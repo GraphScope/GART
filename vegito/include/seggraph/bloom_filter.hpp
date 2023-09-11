@@ -29,6 +29,7 @@
 
 #include <immintrin.h>
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 
 namespace seggraph {
