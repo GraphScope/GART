@@ -198,7 +198,7 @@ long long int grin_get_vertex_property_value_of_timestamp64(
 const float* grin_get_vertex_property_value_of_float_array(
     GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
-  return reinterpret_cast<const float*>(_g->GetRowDataAddr(_GRIN_VERTEX_T(v)));
+  return reinterpret_cast<const float*>(_g->GetRowDataAddr(_GRIN_VERTEX_T(v), 0));
 }
 
 GRIN_VERTEX_TYPE grin_get_vertex_type_from_property(GRIN_GRAPH g,

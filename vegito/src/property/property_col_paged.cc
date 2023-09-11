@@ -89,6 +89,10 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
   uintptr_t cur_ptr = flex_buf.allocated_sz;
   flex_buf.allocated_sz += pg_sz;
   assert(flex_buf.allocated_sz <= flex_buf.total_sz);
+  if (unlikely(flex_buf.allocated_sz > flex_buf.total_sz)) {
+    LOG(ERROR) << "Property column store is full for table " << table_id_
+               << ", column family " << prop_id;
+  }
   Page* ret = new (buf) Page(ver, prev);
 
   if (prev != nullptr) {

@@ -803,7 +803,35 @@ class GartFragment {
     return nullptr;
   }
 
-  char* GetRowDataAddr(const vertex_t& v) const { return nullptr; }
+  char* GetRowDataAddr(const vertex_t& v, prop_id_t column_family_id) const {
+    assert(IsInnerVertex(v));
+    label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    auto v_offset = GetOffset(v);
+    auto header_offset = prop_cols_meta[label_id][column_family_id].header;
+    FlexColBlobHeader* header =
+        (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
+                                                    [column_family_id] +
+                              header_offset);
+    int vertex_per_page = header->get_num_row_per_page();
+    int page_id = v_offset / vertex_per_page;
+    PageHeader* page_header =
+        header->get_page_header_ptr((uintptr_t) header, page_id);
+    int page_idx = v_offset % vertex_per_page;
+    for (; page_header;
+         page_header = page_header->get_prev((uintptr_t) header)) {
+      if (page_header->get_epoch() <= (int) read_epoch_number_) {
+        char* data =
+            page_header->get_data() +
+            BYTE_SIZE(
+                vertex_per_page *
+                vertex_prop_num_per_column_family_[label_id][column_family_id]);
+        return data +
+               page_idx *
+                   column_family_data_length_[label_id][column_family_id];
+      }
+    }
+    return nullptr;
+  }
 
   template <typename T>
   T GetData(const vertex_t& v, prop_id_t prop_id) const {
