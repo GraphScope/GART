@@ -32,6 +32,9 @@
 
 #include "property/property.h"
 
+namespace gart {
+namespace property {
+
 class PropertyColArray : public Property {
  public:
   explicit PropertyColArray(Property::Schema schema, uint64_t max_items);
@@ -118,5 +121,8 @@ class PropertyColArray : public Property {
 
   friend class Cursor;
 };
+
+}  // namespace property
+}  // namespace gart
 
 #endif  // VEGITO_SRC_PROPERTY_PROPERTY_COL_ARRAY_H_

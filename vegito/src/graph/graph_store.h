@@ -50,7 +50,7 @@ struct SchemaImpl {
   // label name -> label id
   std::unordered_map<std::string, int> label_id_map;
   // <label id, property idx> -> dtype
-  std::map<std::pair<int, int>, PropertyStoreDataType> dtype_map;
+  std::map<std::pair<int, int>, property::PropertyStoreDataType> dtype_map;
   // <label id, property idx> -> column_family
   std::map<std::pair<int, int>, int> column_family;
   // <label id, property idx> -> column_family_offset
@@ -99,11 +99,12 @@ class GraphStore {
   template <class GraphType>
   GraphType* get_graph(uint64_t vlabel);
 
-  inline Property* get_property(uint64_t vlabel) {
+  inline property::Property* get_property(uint64_t vlabel) {
     return property_stores_[vlabel];
   }
 
-  inline Property* get_property_snapshot(uint64_t vlabel, uint64_t version) {
+  inline property::Property* get_property_snapshot(uint64_t vlabel,
+                                                   uint64_t version) {
     if (property_stores_snapshots_.count({vlabel, version}))
       return property_stores_snapshots_[{vlabel, version}];
     else
@@ -136,18 +137,19 @@ class GraphStore {
 
   // return true if the vertex is in the local partition, else false
   bool insert_inner_vertex(int epoch, uint64_t gid, std::string external_id,
-                           StringViewList& vprop);
+                           property::StringViewList& vprop);
 
-  bool update_inner_vertex(int epoch, uint64_t gid, StringViewList& vprop);
+  bool update_inner_vertex(int epoch, uint64_t gid,
+                           property::StringViewList& vprop);
 
-  void construct_eprop(int elabel, const StringViewList& eprop,
+  void construct_eprop(int elabel, const property::StringViewList& eprop,
                        std::string& out);
 
   void add_string_buffer(size_t size);
 
   void add_vgraph(uint64_t vlabel, RGMapping* rg_map);
 
-  void add_vprop(uint64_t vlabel, Property::Schema schema);
+  void add_vprop(uint64_t vlabel, property::Property::Schema schema);
 
   void update_blob(uint64_t blob_epoch);
 
@@ -485,8 +487,8 @@ class GraphStore {
   std::unordered_map<uint64_t, seggraph::SegGraph*> ov_seg_graphs_;  // outer v
 
   // vlabel -> vertex property storage
-  std::unordered_map<uint64_t, Property*> property_stores_;
-  std::unordered_map<uint64_t, Property::Schema> property_schemas_;
+  std::unordered_map<uint64_t, property::Property*> property_stores_;
+  std::unordered_map<uint64_t, property::Property::Schema> property_schemas_;
 
   // vlabel -> vertex table
   std::unordered_map<uint64_t, VTable> vertex_tables_;
@@ -556,7 +558,8 @@ class GraphStore {
   std::shared_ptr<etcd::Client> etcd_client_;
 
   // (vlabel, version) -> vertex property storage snapshot
-  std::map<std::pair<uint64_t, uint64_t>, Property*> property_stores_snapshots_;
+  std::map<std::pair<uint64_t, uint64_t>, property::Property*>
+      property_stores_snapshots_;
 };
 
 }  // namespace graph

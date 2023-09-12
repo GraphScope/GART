@@ -20,6 +20,8 @@
 
 using std::string;
 
+using gart::property::StringViewList;
+
 namespace gart {
 namespace graph {
 

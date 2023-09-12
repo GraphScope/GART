@@ -28,6 +28,9 @@
 
 #define COL_USE_EPOCH 1
 
+namespace gart {
+namespace property {
+
 PropertyColArray::PropertyColArray(Property::Schema s, uint64_t max_items)
     : Property(max_items),
       seq_(max_items_, -1),
@@ -219,3 +222,6 @@ bool PropertyColArray::Cursor::nextRow(uint64_t* walk_cnt) {
 }
 
 char* PropertyColArray::Cursor::value() const { return ptr_; }
+
+}  // namespace property
+}  // namespace gart

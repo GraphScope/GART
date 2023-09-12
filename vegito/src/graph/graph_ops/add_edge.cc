@@ -23,6 +23,9 @@ using seggraph::vertex_t;
 using std::string;
 using std::string_view;
 
+using gart::property::PropertyStoreDataType;
+using gart::property::StringViewList;
+
 namespace gart {
 namespace graph {
 

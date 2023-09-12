@@ -42,6 +42,14 @@
 #include "seggraph/allocator.hpp"
 #include "util/util.h"
 
+namespace gart {
+
+namespace graph {
+class GraphStore;
+}  // namespace graph
+
+namespace property {
+
 typedef std::vector<std::string_view> StringViewList;
 
 enum PropertyStoreType { /* PROP_KV, PROP_ROW, */
@@ -70,12 +78,6 @@ enum PropertyStoreDataType {
   TIME = 17,
   TIMESTAMP = 18
 };
-
-namespace gart {
-namespace graph {
-class GraphStore;
-}  // namespace graph
-}  // namespace gart
 
 // multi-version store
 class Property {  // NOLINT(build/class)
@@ -320,5 +322,9 @@ class Property {  // NOLINT(build/class)
   static inline void assign_inline_str(void* ptr, const std::string_view& val) {
     reinterpret_cast<T*>(ptr)->assign(val);
   }
-};      // NOLINT(readability/braces)
+};  // NOLINT(readability/braces)
+
+}  // namespace property
+}  // namespace gart
+
 #endif  // VEGITO_SRC_PROPERTY_PROPERTY_H_

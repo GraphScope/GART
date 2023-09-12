@@ -32,6 +32,9 @@
 
 #include "property/property.h"
 
+namespace gart {
+namespace property {
+
 class PropertyColPaged : public Property {
  public:
   PropertyColPaged(Property::Schema schema, uint64_t max_items,
@@ -203,5 +206,8 @@ class PropertyColPaged : public Property {
 
   friend class Cursor;
 };
+
+}  // namespace property
+}  // namespace gart
 
 #endif  // VEGITO_SRC_PROPERTY_PROPERTY_COL_PAGED_H_

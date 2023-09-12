@@ -17,6 +17,8 @@
 
 using std::string;
 
+using gart::property::StringViewList;
+
 namespace gart {
 namespace graph {
 using SegGraph = seggraph::SegGraph;

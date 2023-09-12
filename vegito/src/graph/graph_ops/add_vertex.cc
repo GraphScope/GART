@@ -17,8 +17,11 @@
 
 #include "graph/graph_ops.h"
 #include "graph/type_def.h"
+#include "property/property.h"
 
 using std::string;
+
+using gart::property::StringViewList;
 
 namespace {
 

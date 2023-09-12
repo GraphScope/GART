@@ -34,6 +34,8 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+using namespace gart::property;
+
 namespace {
 inline vector<string_view> splitString(const string_view& str, char delimiter) {
   vector<std::string_view> result;

@@ -16,6 +16,7 @@
 #include <fstream>
 
 #include "graph/graph_store.h"
+#include "property/property.h"
 #include "util/bitset.h"
 
 using std::allocator_traits;
@@ -25,6 +26,8 @@ using std::string;
 using std::vector;
 
 using std::to_string;
+
+using namespace gart::property;
 
 namespace {
 struct PropDef {

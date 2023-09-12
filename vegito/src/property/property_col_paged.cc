@@ -53,6 +53,9 @@ thread_local void* cached_page[MAX_CACHED_TABLES][MAX_CACHED_COLS] = {
 
 }  // namespace
 
+namespace gart {
+namespace property {
+
 // NOTE: page_sz is number of objects, instead of bytes
 inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
     uint64_t page_sz, uint64_t vlen, uint64_t real_column_num, uint64_t ver,
@@ -834,3 +837,6 @@ bool PropertyColPaged::Cursor::nextRow(uint64_t* walk_cnt) {
   return true;
 }
 #endif
+
+}  // namespace property
+}  // namespace gart

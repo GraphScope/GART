@@ -24,15 +24,15 @@
 namespace gart {
 namespace graph {
 
-void process_add_vertex(const StringViewList& cmd,
+void process_add_vertex(const property::StringViewList& cmd,
                         graph::GraphStore* graph_store);
-void process_add_edge(const StringViewList& cmd,
+void process_add_edge(const property::StringViewList& cmd,
                       graph::GraphStore* graph_store);
-void process_del_vertex(const StringViewList& cmd,
+void process_del_vertex(const property::StringViewList& cmd,
                         graph::GraphStore* graph_store);
-void process_del_edge(const StringViewList& cmd,
+void process_del_edge(const property::StringViewList& cmd,
                       graph::GraphStore* graph_store);
-void process_update_vertex(const StringViewList& cmd,
+void process_update_vertex(const property::StringViewList& cmd,
                            graph::GraphStore* graph_store);
 }  // namespace graph
 }  // namespace gart
