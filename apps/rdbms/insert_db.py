@@ -156,16 +156,38 @@ def insert_vertices(prefix, csv_file, table_name, process_line_func):
         f.readline()  # skip the header
         line = f.readline()
         num_lines = 0
+        batch_size = 10000  # Number of records to insert in each batch
+        batch = []
         while line:
-            sql = process_line_func(line)
-            try:
-                cursor.execute(sql)
-            except errors.SyntaxError as error:
-                print("SyntaxError occurred:", error)
-                print(sql)
+            result = process_line_func(line)
+            batch.append(result)
+            if len(batch) >= batch_size:
+                try:
+                    sql = (
+                        f"insert into {table_name} values ("
+                        + "%s," * (len(batch[0]) - 1)
+                        + "%s)"
+                    )
+                    cursor.executemany(sql, batch)
+                    batch = []
+                    conn.commit()
+                except errors.SyntaxError as error:
+                    print("SyntaxError occurred:", error)
+                    print(sql)
             line = f.readline()
             num_lines += 1
-    conn.commit()
+    if batch:
+        try:
+            sql = (
+                f"insert into {table_name} values ("
+                + "%s," * (len(batch[0]) - 1)
+                + "%s)"
+            )
+            cursor.executemany(sql, batch)
+            conn.commit()
+        except errors.SyntaxError as error:
+            print("SyntaxError occurred:", error)
+            print(sql)
     timer.end()
     formatted_interval = "{:.2f}".format(timer.interval())
     print(
@@ -181,12 +203,26 @@ def insert_simple_edges(prefix, csv_file, table_name):
         header = f.readline()  # skip the header
         line = f.readline()
         num_lines = 0
+        batch_size = 10000  # Number of records to insert in each batch
+        batch = []
         while line:
             src, dst = line.strip().split("|")
-            cursor.execute(f"insert into {table_name} values({src}, {dst})")
+            batch.append((src, dst))
+            if len(batch) >= batch_size:
+                sql = (
+                    f"insert into {table_name} values ("
+                    + "%s," * (len(batch[0]) - 1)
+                    + "%s)"
+                )
+                cursor.executemany(sql, batch)
+                conn.commit()
+                batch = []
             line = f.readline()
             num_lines += 1
-    conn.commit()
+    if batch:
+        sql = f"insert into {table_name} values (" + "%s," * (len(batch[0]) - 1) + "%s)"
+        cursor.executemany(sql, batch)
+        conn.commit()
     timer.end()
     formatted_interval = "{:.2f}".format(timer.interval())
     print(
@@ -202,14 +238,26 @@ def insert_prop_edges(prefix, csv_file, table_name):
         header = f.readline()  # skip the header
         line = f.readline()
         num_lines = 0
+        batch_size = 10000  # Number of records to insert in each batch
+        batch = []
         while line:
             src, dst, prop = line.strip().split("|")
-            cursor.execute(
-                f"insert into {table_name} values({src}, {dst}, '{prop}')"
-            )
+            batch.append((src, dst, prop))
+            if len(batch) >= batch_size:
+                sql = (
+                    f"insert into {table_name} values ("
+                    + "%s," * (len(batch[0]) - 1)
+                    + "%s)"
+                )
+                cursor.executemany(sql, batch)
+                conn.commit()
+                batch = []
             line = f.readline()
             num_lines += 1
-    conn.commit()
+    if batch:
+        sql = f"insert into {table_name} values (" + "%s," * (len(batch[0]) - 1) + "%s)"
+        cursor.executemany(sql, batch)
+        conn.commit()
     timer.end()
     formatted_interval = "{:.2f}".format(timer.interval())
     print(
@@ -225,11 +273,8 @@ def process_organisation(line):
     org_id, org_type, org_name, org_url = line.strip().split("|")
     org_name = org_name.replace("'", "''")
     org_url = org_url.replace("'", "''")
-    sql = (
-        f"insert into organisation values({org_id},"
-        f"'{org_type}', '{org_name}', '{org_url}')"
-    )
-    return sql
+    result = (org_id, org_type, org_name, org_url)
+    return result
 
 
 insert_vertices("01", "/organisation_0_0.csv", "organisation", process_organisation)
@@ -240,11 +285,8 @@ def process_place(line):
     pla_id, pla_name, pla_url, pla_type = line.strip().split("|")
     pla_name = pla_name.replace("'", "''")
     pla_url = pla_url.replace("'", "''")
-    sql = (
-        f"insert into place values({pla_id},"
-        f"'{pla_name}', '{pla_url}', '{pla_type}')"
-    )
-    return sql
+    result = (pla_id, pla_name, pla_url, pla_type)
+    return result
 
 
 insert_vertices("02", "/place_0_0.csv", "place", process_place)
@@ -254,8 +296,8 @@ insert_vertices("02", "/place_0_0.csv", "place", process_place)
 def process_tag(line):
     tag_id, tag_name, tag_url = line.strip().split("|")
     tag_url = tag_url.replace("'", "''")
-    sql = f"insert into tag values({tag_id}, '{tag_name}', '{tag_url}')"
-    return sql
+    result = (tag_id, tag_name, tag_url)
+    return result
 
 
 insert_vertices("03", "/tag_0_0.csv", "tag", process_tag)
@@ -265,8 +307,8 @@ insert_vertices("03", "/tag_0_0.csv", "tag", process_tag)
 def process_tagclass(line):
     tagc_id, tagc_name, tagc_url = line.strip().split("|")
     tagc_url = tagc_url.replace("'", "''")
-    sql = f"insert into tagclass values({tagc_id}, '{tagc_name}', '{tagc_url}')"
-    return sql
+    result = (tagc_id, tagc_name, tagc_url)
+    return result
 
 
 insert_vertices("04", "/tagclass_0_0.csv", "tagclass", process_tagclass)
@@ -286,16 +328,21 @@ def process_person(line):
     ) = line.strip().split("|")
     p_first_name = p_first_name.replace("'", "''")
     p_last_name = p_last_name.replace("'", "''")
-    sql = (
-        f"insert into person values({p_id}, "
-        f"'{p_first_name}', '{p_last_name}', '{p_gender}', "
-        f"'{p_birthday}', '{p_creation_date}', "
-        f"'{p_location_ip}', '{p_browser_used}')"
+    result = (
+        p_id,
+        p_first_name,
+        p_last_name,
+        p_gender,
+        p_birthday,
+        p_creation_date,
+        p_location_ip,
+        p_browser_used,
     )
-    return sql
+    return result
 
 
 insert_vertices("05", "/person_0_0.csv", "person", process_person)
+
 
 # 06. comment
 def process_comment(line):
@@ -308,12 +355,15 @@ def process_comment(line):
         co_length,
     ) = line.strip().split("|")
     co_content = co_content.replace("'", "''")
-    sql = (
-        f"insert into comment values({co_id}, "
-        f"'{co_creation_date}', '{co_location_ip}', "
-        f"'{co_browser_used}', '{co_content}', {co_length})"
+    result = (
+        co_id,
+        co_creation_date,
+        co_location_ip,
+        co_browser_used,
+        co_content,
+        co_length,
     )
-    return sql
+    return result
 
 
 insert_vertices("06", "/comment_0_0.csv", "comment", process_comment)
@@ -332,13 +382,17 @@ def process_post(line):
         po_length,
     ) = line.strip().split("|")
     po_content = po_content.replace("'", "''")
-    sql = (
-        f"insert into post values({po_id}, "
-        f"'{po_image_file}', '{po_creation_date}', "
-        f"'{po_location_ip}', '{po_browser_used}', "
-        f"'{po_language}', '{po_content}', {po_length})"
+    result = (
+        po_id,
+        po_image_file,
+        po_creation_date,
+        po_location_ip,
+        po_browser_used,
+        po_language,
+        po_content,
+        po_length,
     )
-    return sql
+    return result
 
 
 insert_vertices("07", "/post_0_0.csv", "post", process_post)
@@ -348,8 +402,8 @@ insert_vertices("07", "/post_0_0.csv", "post", process_post)
 def process_forum(line):
     fo_id, fo_title, fo_creation_date = line.strip().split("|")
     fo_title = fo_title.replace("'", "''")
-    sql = f"insert into forum values({fo_id}, " f"'{fo_title}', '{fo_creation_date}')"
-    return sql
+    result = (fo_id, fo_title, fo_creation_date)
+    return result
 
 
 insert_vertices("08", "/forum_0_0.csv", "forum", process_forum)
