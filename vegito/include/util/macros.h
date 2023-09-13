@@ -36,6 +36,35 @@
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
+// Error code related
+#define GART_STRINGIFY(x) #x
+
+#define GART_TO_STRING(x) GART_STRINGIFY(x)
+
+#if (defined(__GNUC__) || defined(__APPLE__))
+#define GART_MUST_USE_RESULT __attribute__((warn_unused_result))
+#else
+#define GART_MUST_USE_RESULT
+#endif
+
+#if defined(__clang__)
+#define GART_MUST_USE_TYPE GART_MUST_USE_RESULT
+#else
+#define GART_MUST_USE_TYPE
+#endif
+
+#ifndef GET_MACRO
+#define GET_MACRO(_1, _2, NAME, ...) NAME
+#endif
+
+#ifndef GET_MACRO2
+#define GET_MACRO2(_1, _2, _3, NAME, ...) NAME
+#endif
+
+#ifndef GET_MACRO3
+#define GET_MACRO3(_1, _2, _3, _4, NAME, ...) NAME
+#endif
+
 /** options */
 #define BTREE_NODE_PREFETCH
 #define USE_BUILTIN_MEMFUNCS

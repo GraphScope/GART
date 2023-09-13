@@ -51,6 +51,7 @@ add_custom_target(convert_clformat
         VERBATIM)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../vegito/include)
 
 add_executable(binlog_convert_debezium binlog_convert.cc flags.cc parser.cc)
 

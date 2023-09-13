@@ -42,7 +42,7 @@ class Runner {
   void load_graph_partitions_(int mac_id, int total_partitions);
   void load_graph_partitions_from_logs_(int mac_id, int total_partitions);
   void apply_log_to_store_(const std::string_view& log, int p_id);
-  void start_kafka_to_process_(int p_id);
+  Status start_kafka_to_process_(int p_id);
   void start_file_stream_to_process_(int p_id);
 };
 

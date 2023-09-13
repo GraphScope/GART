@@ -19,6 +19,7 @@
 #include "converter/flags.h"
 #include "converter/kafka_helper.h"
 #include "converter/parser.h"
+#include "util/status.h"
 
 using converter::KafkaConsumer;
 using converter::KafkaOutputStream;
@@ -68,7 +69,7 @@ int main(int argc, char** argv) {
 
       string line(static_cast<const char*>(msg->payload()), msg->len());
       LogEntry log_entry;
-      parser.parse(log_entry, line, 0);
+      GART_CHECK_OK(parser.parse(log_entry, line, 0));
       ++init_logs;
       if (!log_entry.valid()) {
         consumer->delete_message(msg);
@@ -112,11 +113,11 @@ int main(int argc, char** argv) {
     int epoch = log_count / FLAGS_logs_per_epoch;
 
     LogEntry log_entry;
-    parser.parse(log_entry, line, epoch);
+    GART_CHECK_OK(parser.parse(log_entry, line, epoch));
 
     while (log_entry.more_entires()) {
       ostream << log_entry.to_string() << flush;
-      parser.parse(log_entry, line, epoch);
+      GART_CHECK_OK(parser.parse(log_entry, line, epoch));
 
       if (!log_entry.valid()) {
         break;

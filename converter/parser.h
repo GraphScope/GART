@@ -24,6 +24,7 @@
 #include "vineyard/common/util/json.h"
 
 #include "vegito/include/fragment/id_parser.h"
+#include "vegito/include/util/status.h"
 
 namespace converter {
 
@@ -81,10 +82,10 @@ class LogEntry {
 class TxnLogParser {
  public:
   TxnLogParser(const std::string& rgmapping_file, int subgraph_num) {
-    init(rgmapping_file, subgraph_num);
+    GART_CHECK_OK(init(rgmapping_file, subgraph_num));
   }
 
-  void parse(LogEntry& out, const std::string& log_str, int epoch);
+  gart::Status parse(LogEntry& out, const std::string& log_str, int epoch);
 
   ~TxnLogParser() = default;
 
@@ -95,7 +96,7 @@ class TxnLogParser {
 
   void set_gid(const vineyard::json& oid, int vlabel, int64_t gid);
 
-  void init(const std::string& rgmapping_file, int subgraph_num);
+  gart::Status init(const std::string& rgmapping_file, int subgraph_num);
 
   void fill_vertex(LogEntry& out, const vineyard::json& log);
 

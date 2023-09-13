@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "librdkafka/rdkafkacpp.h"
+#include "util/status.h"
 #include "yaml-cpp/yaml.h"
 
 #include "framework/bench_runner.h"
@@ -61,23 +62,23 @@ inline vector<string_view> splitString(const string_view& str, char delimiter) {
 namespace gart {
 namespace framework {
 
-void init_graph_schema(string graph_schema_path, string table_schema_path,
-                       graph::GraphStore* graph_store,
-                       graph::RGMapping* rg_map) {
+Status init_graph_schema(string graph_schema_path, string table_schema_path,
+                         graph::GraphStore* graph_store,
+                         graph::RGMapping* rg_map) {
   using json = vineyard::json;
 
   ifstream graph_schema_file(graph_schema_path);
   if (!graph_schema_file.is_open()) {
     LOG(ERROR) << "graph schema file (" << graph_schema_path << ") open failed."
                << "Not exist or permission denied.";
-    exit(1);
+    return Status::OpenFileError();
   }
 
   ifstream table_schema_file(table_schema_path);
   if (!table_schema_file.is_open()) {
     LOG(ERROR) << "table schema file (" << table_schema_path << ") open failed."
                << "Not exist or permission denied.";
-    exit(1);
+    return Status::OpenFileError();
   }
 
   YAML::Node config;
@@ -86,7 +87,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   } catch (YAML::ParserException& e) {
     LOG(ERROR) << "Parse graph schema file (" << graph_schema_path
                << ") failed: " << e.what();
-    exit(1);
+    return Status::GraphSchemaConfigError();
   }
 
   json table_schema;
@@ -95,7 +96,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
   } catch (json::parse_error& e) {
     LOG(ERROR) << "Parse table schema file (" << table_schema_path
                << ") failed: " << e.what();
-    exit(1);
+    return Status::TableConfigError();
   }
 
   graph::SchemaImpl graph_schema;
@@ -263,7 +264,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
                      prop_dtype_str.rfind("datetime(", 0) == 0) {
             prop_dtype = "DATETIME";
           } else {
-            assert(false);
+            return Status::TypeError();
           }
           break;
         }
@@ -383,7 +384,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
           edge_prop_prefix_bytes += sizeof(gart::graph::TimeStamp);
         }
       } else {
-        assert(false);
+        return Status::TypeError();
       }
 
       graph_schema.property_id_map[std::make_pair(prop_name, idx)] =
@@ -434,6 +435,7 @@ void init_graph_schema(string graph_schema_path, string table_schema_path,
 
   graph_store->set_schema(graph_schema);
   graph_store->update_property_bytes();
+  return Status::OK();
 }
 
 void Runner::apply_log_to_store_(const string_view& log, int p_id) {
@@ -484,7 +486,7 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
   }
 }
 
-void Runner::start_kafka_to_process_(int p_id) {
+Status Runner::start_kafka_to_process_(int p_id) {
   RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
   string rdkafka_err;
   if (conf->set("metadata.broker.list", FLAGS_kafka_broker_list, rdkafka_err) !=
@@ -508,7 +510,7 @@ void Runner::start_kafka_to_process_(int p_id) {
 
   if (!consumer) {
     LOG(INFO) << "Failed to create consumer: " << rdkafka_err;
-    exit(1);
+    return Status::KafkaConnectError();
   }
 
   RdKafka::Conf* tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
@@ -558,15 +560,16 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
   graph_stores_[p_id] = new graph::GraphStore(
       p_id, gart::framework::config.getServerID(), total_partitions);
   rg_maps_[p_id] = new graph::RGMapping(p_id);
-  init_graph_schema(FLAGS_schema_file_path, FLAGS_table_schema_file_path,
-                    graph_stores_[p_id], rg_maps_[p_id]);
+  GART_CHECK_OK(init_graph_schema(FLAGS_schema_file_path,
+                                  FLAGS_table_schema_file_path,
+                                  graph_stores_[p_id], rg_maps_[p_id]));
   graph_stores_[p_id]->put_schema();
   graph_stores_[p_id]->put_schema4gie();
   int v_label_num = graph_stores_[p_id]->get_total_vertex_label_num();
   graph_stores_[p_id]->init_ovg2ls(v_label_num);
   graph_stores_[p_id]->init_vertex_maps(v_label_num);
 #ifndef WITH_TEST
-  start_kafka_to_process_(p_id);
+  GART_CHECK_OK(start_kafka_to_process_(p_id));
 #else
   start_file_stream_to_process_(p_id);
 #endif

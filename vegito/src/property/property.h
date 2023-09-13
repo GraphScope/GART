@@ -40,6 +40,7 @@
 #include "fragment/shared_storage.h"
 #include "graph/type_def.h"
 #include "util/allocator.hpp"
+#include "util/status.h"
 #include "util/util.h"
 
 namespace gart {

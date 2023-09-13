@@ -24,8 +24,6 @@
  *
  */
 
-#include "property/property_col_paged.h"
-
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -33,8 +31,10 @@
 #include <string>
 
 #include "graph/graph_store.h"
+#include "property/property_col_paged.h"
 #include "util/bitset.h"
 #include "util/macros.h"
+#include "util/status.h"
 
 #define LAZY_PAGE_ALLOC 1
 
@@ -356,10 +356,7 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
 void PropertyColPaged::insert(uint64_t off, uint64_t k,
                               const StringViewList& v_list, uint64_t ver,
                               gart::graph::GraphStore* graph_store) {
-  if (unlikely(off > max_items_)) {
-    LOG(ERROR) << "off " << off << " > max_items_ " << max_items_;
-    assert(false);
-  }
+  GART_ASSERT(off < max_items_);
 
   auto graph_schema = graph_store->get_schema();
 

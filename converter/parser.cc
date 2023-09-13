@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "glog/logging.h"
+#include "util/status.h"
 #include "vineyard/common/util/json.h"
 #include "yaml-cpp/yaml.h"
 
@@ -102,14 +103,15 @@ string LogEntry::to_string() const {
   return base;
 }
 
-void TxnLogParser::init(const string& rgmapping_file, int subgraph_num) {
+gart::Status TxnLogParser::init(const string& rgmapping_file,
+                                int subgraph_num) {
   subgraph_num_ = subgraph_num;
 
   ifstream rg_mapping_file_stream(rgmapping_file);
   if (!rg_mapping_file_stream.is_open()) {
     LOG(ERROR) << "RGMapping file (" << rgmapping_file << ") open failed."
                << "Not exist or permission denied.";
-    exit(1);
+    return gart::Status::OpenFileError();
   }
 
   YAML::Node rg_mapping;
@@ -118,7 +120,7 @@ void TxnLogParser::init(const string& rgmapping_file, int subgraph_num) {
   } catch (YAML::ParserException& e) {
     LOG(ERROR) << "RGMapping file (" << rgmapping_file << ") parse failed."
                << "Error message: " << e.what();
-    exit(1);
+    return gart::Status::GraphSchemaConfigError();
   }
   YAML::Node vdef = rg_mapping["vertexMappings"]["vertex_types"];
   YAML::Node edef = rg_mapping["edgeMappings"]["edge_types"];
@@ -179,9 +181,11 @@ void TxnLogParser::init(const string& rgmapping_file, int subgraph_num) {
   for (auto idx = 0; idx < vlabel_num_; ++idx) {
     vertex_nums_per_fragment_[idx].resize(subgraph_num_, 0);
   }
+  return gart::Status::OK();
 }
 
-void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
+gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
+                                 int epoch) {
   out.properties.clear();
   out.valid_ = false;
   out.epoch = epoch;
@@ -195,7 +199,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
     log = json::parse(log_str);
   } catch (json::exception& e) {
     LOG(ERROR) << "TxnLog parse failed. Error message: " << e.what();
-    return;
+    return gart::Status::ParseJsonError();
   }
 
   string table_name, type;
@@ -209,7 +213,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   if (table2vlabel_it == table2vlabel_.end() &&
       table2elabel_it == table2elabel_.end()) {
     // skip unused tables
-    return;
+    return gart::Status::OK();
   }
 #ifndef USE_DEBEZIUM
   type = log["type"].get<string>();
@@ -219,7 +223,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   if (table2elabel_it != table2elabel_.end()) {
     if (table2vlabel_it != table2vlabel_.end()) {
       LOG(ERROR) << "Table name conflict: " << table_name;
-      return;
+      return gart::Status::GraphSchemaConfigError();
     }
     out.entity_type = LogEntry::EntityType::EDGE;
   } else {
@@ -253,7 +257,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   if (type == "r" && snapshot == "false") {
     LOG(ERROR) << "Invalid operation type " << type
                << ", when snapshot status is " << snapshot;
-    return;
+    return gart::Status::OperationError();
   }
 
   if (out.snapshot == LogEntry::Snapshot::OTHER) {
@@ -262,7 +266,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
 #endif
   if (out.op_type == LogEntry::OpType::UNKNOWN) {
     LOG(ERROR) << "Unknown operation type: " << type;
-    return;
+    return gart::Status::OperationError();
   }
 
   if (out.op_type == LogEntry::OpType::UPDATE &&
@@ -285,7 +289,7 @@ void TxnLogParser::parse(LogEntry& out, const string& log_str, int epoch) {
   fill_prop(out, log);
 
   out.valid_ = true;
-  return;
+  return gart::Status::OK();
 }
 
 int64_t TxnLogParser::get_gid(const json& oid, int vlabel) const {

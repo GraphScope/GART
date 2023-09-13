@@ -80,6 +80,7 @@ file(GLOB UTIL_HEADER_FILES
           "vegito/include/util/serializer.h"
           "vegito/include/util/varint.h"
           "vegito/include/util/bitset.h"
+          "vegito/include/util/status.h"
           )
 
 add_library(util_header INTERFACE)
