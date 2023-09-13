@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.2...3.5)
 
 set(BINLOG_CONVERT_MAJOR_VERSION 0)
 set(BINLOG_CONVERT_MINOR_VERSION 1)

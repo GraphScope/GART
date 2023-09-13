@@ -188,8 +188,8 @@ GraphStore::~GraphStore() {
   for (const auto& schema : blob_schemas_) {
     vineyard::ObjectID vertex_table_oid = schema.second.get_vertex_table_oid(),
                        ovl2g_oid = schema.second.get_ovl2g_oid();
-    array_allocator.deallocate_v6d(vertex_table_oid);
-    array_allocator.deallocate_v6d(ovl2g_oid);
+    array_allocator_.deallocate_v6d(vertex_table_oid);
+    array_allocator_.deallocate_v6d(ovl2g_oid);
   }
 }
 
@@ -231,8 +231,8 @@ void GraphStore::put_schema4gie() {
 
 void GraphStore::add_string_buffer(size_t size) {
   auto alloc =
-      std::allocator_traits<decltype(array_allocator)>::rebind_alloc<char>(
-          array_allocator);
+      std::allocator_traits<decltype(array_allocator_)>::rebind_alloc<char>(
+          array_allocator_);
   vineyard::ObjectID object_id;
   string_buffer_ = alloc.allocate_v6d(size, object_id);
   string_buffer_object_id_ = object_id;
@@ -254,8 +254,8 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 
   // vertex_table
   {
-    auto alloc = allocator_traits<decltype(array_allocator)>::rebind_alloc<
-        seggraph::vertex_t>(array_allocator);
+    auto alloc = allocator_traits<decltype(array_allocator_)>::rebind_alloc<
+        seggraph::vertex_t>(array_allocator_);
 
     vineyard::ObjectID oid;
     uint64_t max_v = seg_graphs_[vlabel]->get_vertex_capacity() +
@@ -275,8 +275,8 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
   // ovl2g
   {
     auto alloc =
-        allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
-            array_allocator);
+        allocator_traits<decltype(array_allocator_)>::rebind_alloc<uint64_t>(
+            array_allocator_);
 
     vineyard::ObjectID oid;
     uint64_t max_v = ov_seg_graphs_[vlabel]->get_vertex_capacity();
@@ -317,16 +317,16 @@ void GraphStore::init_external_id_storage(uint64_t vlabel) {
   vineyard::ObjectID object_id = 0;
   uint64_t v_capacity = seg_graphs_[vlabel]->get_vertex_capacity();
   auto alloc =
-      std::allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
-          array_allocator);
+      std::allocator_traits<decltype(array_allocator_)>::rebind_alloc<uint64_t>(
+          array_allocator_);
   external_id_stores_[vlabel] = alloc.allocate_v6d(v_capacity, object_id);
   blob_schemas_[vlabel].set_external_id_oid(object_id);
   blob_schemas_[vlabel].set_external_id_dtype(external_id_dtype_[vlabel]);
 
   uint64_t outer_v_capacity = ov_seg_graphs_[vlabel]->get_vertex_capacity();
   auto outer_alloc =
-      std::allocator_traits<decltype(array_allocator)>::rebind_alloc<uint64_t>(
-          array_allocator);
+      std::allocator_traits<decltype(array_allocator_)>::rebind_alloc<uint64_t>(
+          array_allocator_);
   outer_external_id_stores_[vlabel] =
       outer_alloc.allocate_v6d(outer_v_capacity, object_id);
   blob_schemas_[vlabel].set_outer_external_id_oid(object_id);

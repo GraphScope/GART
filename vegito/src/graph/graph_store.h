@@ -235,7 +235,7 @@ class GraphStore {
   }
 
   inline void init_ovg2ls(uint64_t vlabel_num) {
-    auto v6d_client = array_allocator.get_client();
+    auto v6d_client = array_allocator_.get_client();
     for (auto idx = 0; idx < vlabel_num; idx++) {
       std::shared_ptr<hashmap_t> hmap;
       VINEYARD_CHECK_OK(hashmap_t::Make(*v6d_client, 1, hmap));
@@ -252,7 +252,7 @@ class GraphStore {
   }
 
   inline void init_vertex_maps(uint64_t vlabel_num) {
-    auto v6d_client = array_allocator.get_client();
+    auto v6d_client = array_allocator_.get_client();
     for (auto idx = 0; idx < vlabel_num; idx++) {
       std::shared_ptr<hashmap_t> hmap;
       VINEYARD_CHECK_OK(hashmap_t::Make(*v6d_client, 1, hmap));
@@ -553,7 +553,7 @@ class GraphStore {
 
   uint64_t blob_epoch_;
 
-  SparseArrayAllocator<void> array_allocator;
+  SparseArrayAllocator<void> array_allocator_;
 
   std::shared_ptr<etcd::Client> etcd_client_;
 

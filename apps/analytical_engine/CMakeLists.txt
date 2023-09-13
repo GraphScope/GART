@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.1...3.5)
 
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION GRAPHSCOPE_ANALYTICAL_VERSION)
 # Strip trailing newline
