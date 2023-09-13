@@ -59,12 +59,11 @@ class SegGraph {
         seg_id(0),
         max_seg_id(_max_vertex_id / VERTEX_PER_SEG),
 
-        array_allocator(false),
+        // memory allocator
         block_manager(_max_block_size),
+        array_allocator(block_manager.get_client()),
 
         rg_map(rg_map) {
-    array_allocator.set_client(block_manager.get_client());
-
     auto futex_allocater =
         std::allocator_traits<decltype(array_allocator)>::rebind_alloc<Futex>(
             array_allocator);
@@ -208,8 +207,8 @@ class SegGraph {
   const segid_t max_seg_id;
 
   // memory allocator
-  SparseArrayAllocator<void> array_allocator;  // meta data
   BlockManager block_manager;                  // topology data
+  SparseArrayAllocator<void> array_allocator;  // meta data
 
   Futex* vertex_futexes;
   std::shared_timed_mutex** seg_mutexes;

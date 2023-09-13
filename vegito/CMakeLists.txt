@@ -97,7 +97,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 ### add main files ###
 
 file(GLOB SOURCES
-          "src/system_flags.cc" "src/framework/*.cc"
+          "src/system_flags.cc" "src/framework/*.cc" "src/memory/*.cc"
           "src/graph/*.cc" "src/graph/graph_ops/*.cc"
           "src/property/*.cc" "src/seggraph/*.cpp"
           )

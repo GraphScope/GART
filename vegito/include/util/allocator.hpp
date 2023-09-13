@@ -31,31 +31,30 @@ template <typename T>
 struct SparseArrayAllocator {
   using value_type = T;
 
-  explicit SparseArrayAllocator(bool init_client = true)
-      : client(init_client ? new vineyard::Client : nullptr), copied(false) {
-    if (init_client) {
-      std::string ipc_socket = gart::framework::config.getIPCScoket();
-      VINEYARD_CHECK_OK(client->Connect(ipc_socket));
-    }
+  SparseArrayAllocator() : client_(new vineyard::Client), init_client_(true) {
+    std::string ipc_socket = gart::framework::config.getIPCScoket();
+    VINEYARD_CHECK_OK(client_->Connect(ipc_socket));
   }
+
+  explicit SparseArrayAllocator(vineyard::Client* client)
+      : client_(client), init_client_(false) {}
 
   template <class U>
   SparseArrayAllocator(const SparseArrayAllocator<U>& that)
-      : client(that.client), copied(true) {
-    assert(client);
+      : client_(that.client_), init_client_(false) {
+    assert(client_);
   }
 
   ~SparseArrayAllocator() {
-    if (!copied) {
-      client->Disconnect();
-      delete client;
-      client = nullptr;
+    if (init_client_) {
+      assert(client_);
+      client_->Disconnect();
+      delete client_;
+      client_ = nullptr;
     }
   }
 
-  void set_client(vineyard::Client* _client) { client = _client; }
-
-  vineyard::Client* get_client() { return client; }
+  vineyard::Client* get_client() { return client_; }
 
   T* allocate_v6d(size_t n, vineyard::ObjectID& oid) {
     size_t size = n * sizeof(T);
@@ -64,15 +63,15 @@ struct SparseArrayAllocator {
 
     std::unique_ptr<vineyard::BlobWriter> blob_writer;
     std::shared_ptr<vineyard::Blob> blob;
-    VINEYARD_CHECK_OK(client->CreateBlob(size, blob_writer));
-    VINEYARD_CHECK_OK(client->GetBlob(blob_writer->id(), true, blob));
+    VINEYARD_CHECK_OK(client_->CreateBlob(size, blob_writer));
+    VINEYARD_CHECK_OK(client_->GetBlob(blob_writer->id(), true, blob));
     auto data = reinterpret_cast<void*>(blob_writer->data());
     oid = blob_writer->id();
     return static_cast<T*>(data);
   }
 
   void deallocate_v6d(vineyard::ObjectID oid) {
-    VINEYARD_CHECK_OK(client->DelData(oid));
+    VINEYARD_CHECK_OK(client_->DelData(oid));
   }
 
   T* allocate(size_t n) {
@@ -91,18 +90,9 @@ struct SparseArrayAllocator {
     munmap(data, size);
   }
 
-  template <class U>
-  bool operator==(const SparseArrayAllocator<U>&) {
-    return true;
-  }
-  template <class U>
-  bool operator!=(const SparseArrayAllocator<U>&) {
-    return false;
-  }
-
  private:
-  vineyard::Client* client;
-  const bool copied;
+  vineyard::Client* client_;
+  const bool init_client_;
 
   template <typename>
   friend struct SparseArrayAllocator;
