@@ -39,6 +39,9 @@ BufferManager::BufferManager(uint64_t capacity, vineyard::Client* v6d_client)
   init_();
 }
 
+BufferManager::BufferManager(vineyard::Client* v6d_client)
+    : capacity_(0), array_allocator_(v6d_client), size_(0) {}
+
 void BufferManager::init_() {
   auto alloc =
       std::allocator_traits<decltype(array_allocator_)>::rebind_alloc<char>(
@@ -46,6 +49,11 @@ void BufferManager::init_() {
   vineyard::ObjectID object_id;
   buffer_ = alloc.allocate_v6d(capacity_, object_id);
   buffer_oid_ = object_id;
+}
+
+void BufferManager::init_capacity(uint64_t capacity) {
+  capacity_ = capacity;
+  init_();
 }
 
 }  // namespace memory

@@ -39,14 +39,33 @@ namespace memory {
 // TODO(ssj): Now only single-threaded access is supported.
 class BufferManager {
  public:
+  // Allocate a buffer of size 'size' from the memory pool and create a vineyard
+  // client
   explicit BufferManager(uint64_t capacity);
+
+  // Use the given vineyard client, the capacity is undetermined
+  // need to call init_capacity() to allocate the buffer
+  explicit BufferManager(vineyard::Client* v6d_client);
+
+  // Allocate a buffer of size 'size' from the memory pool and use the given
+  // vineyard client
   BufferManager(uint64_t capacity, vineyard::Client* v6d_client);
-  ~BufferManager();
+
+  ~BufferManager() {}
+
+  void init_capacity(uint64_t capacity);
+
+  uint64_t get_capacity() const { return capacity_; }
+  char* get_buffer() const { return buffer_; }
+  vineyard::ObjectID get_buffer_oid() const { return buffer_oid_; }
+
+  uint64_t get_size() const { return size_; }
+  void set_size(uint64_t size) { size_ = size; }
 
  private:
   void init_();
 
-  const uint64_t capacity_;
+  uint64_t capacity_;
   SparseArrayAllocator<void> array_allocator_;
 
   uint64_t size_;  // allocated size

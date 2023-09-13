@@ -32,6 +32,7 @@
 #include "vineyard/basic/ds/hashmap_mvcc.h"
 
 #include "fragment/id_parser.h"
+#include "memory/buffer_manager.h"
 #include "property/property_col_array.h"
 #include "property/property_col_paged.h"
 #include "seggraph/seggraph.hpp"
@@ -85,13 +86,12 @@ class GraphStore {
         mid_(mid),
         local_pnum_(total_partitions),
         total_partitions_(total_partitions),
+        array_allocator_(),
         key_pid_map_(INIT_VEC_SZ),
         key_off_map_(INIT_VEC_SZ),
         pid_off_map_(INIT_VEC_SZ),
         total_vertex_label_num_(0),
-        string_buffer_(nullptr),
-        string_buffer_size_(0),
-        string_buffer_offset_(0),
+        string_buffer_manager_(array_allocator_.get_client()),
         etcd_client_(std::make_shared<etcd::Client>(FLAGS_etcd_endpoint)) {}
 
   ~GraphStore();
@@ -383,13 +383,21 @@ class GraphStore {
     return edge_table_maps_[name];
   }
 
-  char* get_string_buffer() const { return string_buffer_; }
+  char* get_string_buffer() const {
+    return string_buffer_manager_.get_buffer();
+  }
 
-  size_t get_string_buffer_offset() const { return string_buffer_offset_; }
+  size_t get_string_buffer_offset() const {
+    return string_buffer_manager_.get_size();
+  }
 
-  void set_string_buffer_offset(size_t loc) { string_buffer_offset_ = loc; }
+  void set_string_buffer_offset(size_t loc) {
+    string_buffer_manager_.set_size(loc);
+  }
 
-  size_t get_string_buffer_size() const { return string_buffer_size_; }
+  size_t get_string_buffer_size() const {
+    return string_buffer_manager_.get_capacity();
+  }
 
   void init_edge_bitmap_size(uint64_t elabel_num) {
     edge_bitmap_size_.resize(elabel_num);
@@ -479,6 +487,8 @@ class GraphStore {
   const int total_partitions_;  // total number of partitions
   int total_vertex_label_num_;
 
+  SparseArrayAllocator<void> array_allocator_;
+
   // graph store schema
   SchemaImpl schema_;
 
@@ -526,11 +536,7 @@ class GraphStore {
       key_lid_map_;  // vlabel -> <key, local id>
 
   // for string buffer
-  // TODO(ssj): now a global string buffer, maybe need to refine for each column
-  char* string_buffer_;
-  size_t string_buffer_size_;
-  size_t string_buffer_offset_;
-  vineyard::ObjectID string_buffer_object_id_;
+  memory::BufferManager string_buffer_manager_;
 
   // for bitmap
   std::vector<size_t> edge_bitmap_size_;
@@ -552,8 +558,6 @@ class GraphStore {
       history_blob_schemas_;  // version --> map<vlabel, schema>
 
   uint64_t blob_epoch_;
-
-  SparseArrayAllocator<void> array_allocator_;
 
   std::shared_ptr<etcd::Client> etcd_client_;
 

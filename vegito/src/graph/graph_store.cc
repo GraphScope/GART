@@ -230,13 +230,7 @@ void GraphStore::put_schema4gie() {
 }
 
 void GraphStore::add_string_buffer(size_t size) {
-  auto alloc =
-      std::allocator_traits<decltype(array_allocator_)>::rebind_alloc<char>(
-          array_allocator_);
-  vineyard::ObjectID object_id;
-  string_buffer_ = alloc.allocate_v6d(size, object_id);
-  string_buffer_object_id_ = object_id;
-  string_buffer_size_ = size;
+  string_buffer_manager_.init_capacity(size);
 }
 
 void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
@@ -476,7 +470,8 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
   blob_schema["fnum"] = local_pnum_;
   blob_schema["epoch"] = write_epoch;
   blob_schema["vertex_label_num"] = blob_schemas_.size();
-  blob_schema["string_buffer_object_id"] = string_buffer_object_id_;
+  blob_schema["string_buffer_object_id"] =
+      string_buffer_manager_.get_buffer_oid();
   auto blob_schemas = fetch_blob_schema(write_epoch);
   json blob_array = json::array();
   for (const auto& pair : blob_schemas) {
