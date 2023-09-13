@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "glog/logging.h"
-#include "util/status.h"
 #include "vineyard/common/util/json.h"
 #include "yaml-cpp/yaml.h"
 

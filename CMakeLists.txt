@@ -12,7 +12,7 @@ endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 add_subdirectory(converter)
 add_subdirectory(vegito)
 add_subdirectory(pgql)
-add_subdirectory(apps/analytical_engine apps)
+# add_subdirectory(apps/analytical_engine apps)
 
 ### Copy test schema ###
 file(COPY ${CMAKE_SOURCE_DIR}/vegito/test/schema DESTINATION ${CMAKE_BINARY_DIR})

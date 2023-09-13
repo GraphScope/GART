@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "librdkafka/rdkafkacpp.h"
-#include "util/status.h"
 #include "yaml-cpp/yaml.h"
 
 #include "framework/bench_runner.h"

@@ -19,7 +19,6 @@
 #include "converter/flags.h"
 #include "converter/kafka_helper.h"
 #include "converter/parser.h"
-#include "util/status.h"
 
 using converter::KafkaConsumer;
 using converter::KafkaOutputStream;
