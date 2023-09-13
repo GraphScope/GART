@@ -39,7 +39,7 @@
 
 #include "fragment/shared_storage.h"
 #include "graph/type_def.h"
-#include "seggraph/allocator.hpp"
+#include "util/allocator.hpp"
 #include "util/util.h"
 
 namespace gart {
@@ -302,7 +302,7 @@ class Property {  // NOLINT(build/class)
 
   std::vector<gart::VPropMeta> blob_metas_;
 
-  seggraph::SparseArrayAllocator<char> array_allocator;
+  SparseArrayAllocator<char> array_allocator;
 
 #if 1  // cache for performance!
   uint64_t padding_[8];

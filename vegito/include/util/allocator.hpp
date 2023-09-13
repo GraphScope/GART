@@ -13,21 +13,19 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef VEGITO_INCLUDE_UTIL_ALLOCATOR_HPP_
+#define VEGITO_INCLUDE_UTIL_ALLOCATOR_HPP_
 
 #include <sys/mman.h>
 
 #include <limits>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "vineyard/client/client.h"
 #include "vineyard/client/ds/blob.h"
 
 #include "framework/config.h"  // NOLINT(build/include_subdir)
-
-namespace seggraph {
 
 template <typename T>
 struct SparseArrayAllocator {
@@ -110,4 +108,4 @@ struct SparseArrayAllocator {
   friend struct SparseArrayAllocator;
 };
 
-}  // namespace seggraph
+#endif  // VEGITO_INCLUDE_UTIL_ALLOCATOR_HPP_

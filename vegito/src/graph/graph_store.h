@@ -553,7 +553,7 @@ class GraphStore {
 
   uint64_t blob_epoch_;
 
-  seggraph::SparseArrayAllocator<void> array_allocator;
+  SparseArrayAllocator<void> array_allocator;
 
   std::shared_ptr<etcd::Client> etcd_client_;
 

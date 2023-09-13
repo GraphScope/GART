@@ -32,9 +32,9 @@
 
 #include "fragment/shared_storage.h"
 #include "graph/ddl.h"
-#include "seggraph/allocator.hpp"
 #include "seggraph/block_manager.hpp"
 #include "seggraph/futex.hpp"
+#include "util/allocator.hpp"
 
 namespace seggraph {
 class SegEdgeIterator;
@@ -75,8 +75,8 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     seg_mutexes = shared_mutex_allocater.allocate(max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    auto pointer_allocater = std::allocator_traits<
+        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
     vertex_ptrs = pointer_allocater.allocate(max_vertex_id);
 
     edge_label_ptrs =
@@ -107,8 +107,8 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     shared_mutex_allocater.deallocate(seg_mutexes, max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<decltype(
-        array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    auto pointer_allocater = std::allocator_traits<
+        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
 
     pointer_allocater.deallocate(vertex_ptrs, max_vertex_id);
 

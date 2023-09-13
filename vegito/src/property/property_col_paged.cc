@@ -73,7 +73,7 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
 #if UPDATE_STAT
     stat_.num_copy += BYTE_SIZE(page_sz * real_column_num);  // bitmap size
     stat_.num_copy += vlen * page_sz;                        // size
-                                       // ++stat_.num_copy;    // count
+    // ++stat_.num_copy;                                        // count
 #endif
   }
 
@@ -109,7 +109,7 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
 #if UPDATE_STAT
     stat_.num_copy += BYTE_SIZE(page_sz * real_column_num);  // bitmap size
     stat_.num_copy += vlen * page_sz;                        // size
-                                       // ++stat_.num_copy;    // count
+    // ++stat_.num_copy;                                        // count
 #endif
   }
   flex_buf.header->page_ptr[pg_num] = cur_ptr;
@@ -533,7 +533,6 @@ void PropertyColPaged::update(uint64_t off, uint64_t k,
       } else {
         *((int64_t*) (prop_buffer[col_family_id] + col_family_offset)) =
             *(int64_t*) dst;
-        ;
       }
     } else {
       LOG(ERROR) << "Unsupported data type: " << dtype;
