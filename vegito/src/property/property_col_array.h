@@ -37,7 +37,8 @@ namespace property {
 
 class PropertyColArray : public Property {
  public:
-  explicit PropertyColArray(Property::Schema schema, uint64_t max_items);
+  explicit PropertyColArray(Property::Schema schema, uint64_t max_items,
+                            memory::BufferManager& buf_mgr);
 
   void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
 

@@ -233,6 +233,10 @@ void GraphStore::add_string_buffer(size_t size) {
   string_buffer_manager_.init_capacity(size);
 }
 
+void GraphStore::add_vprop_buffer(size_t size) {
+  vprop_buffer_manager_.init_capacity(size);
+}
+
 void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
   seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
   auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
@@ -262,7 +266,7 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
     vtable.min_outer_location = max_v;
     vtable.size = max_v;
 
-    gart::VTableMeta meta(oid, max_v);  // TODO(sijie): update args
+    gart::VTableMeta meta(oid, max_v);  // TODO(ssj): update args
     blob_schema.set_vtable_meta(meta);
   }
 
@@ -290,7 +294,8 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
 
   switch (schema.store_type) {
   case PROP_COLUMN: {
-    property_stores_[vlabel] = new PropertyColPaged(schema, v_capacity);
+    property_stores_[vlabel] =
+        new PropertyColPaged(schema, v_capacity, vprop_buffer_manager_);
     assert(blob_schemas_.find(vlabel) != blob_schemas_.end());
     auto& blob_schema = blob_schemas_[vlabel];
     auto p = property_stores_[vlabel];
@@ -298,7 +303,8 @@ void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
     break;
   }
   case PROP_COLUMN2: {
-    property_stores_[vlabel] = new PropertyColArray(schema, v_capacity);
+    property_stores_[vlabel] =
+        new PropertyColArray(schema, v_capacity, vprop_buffer_manager_);
     break;
   }
   default:
@@ -408,7 +414,7 @@ void SchemaImpl::fill_json(void* ptr) const {
     type.propertyDefList.assign(props.begin() + pid_begin,
                                 props.begin() + pid_end);
     if (!is_v) {
-      // TODO(sijie): src_vlabel, dst_vlabel
+      // TODO(ssj): src_vlabel, dst_vlabel
       const auto& pair = edge_relation.at(label_id);
       type.src_vlabel = sj.types.at(pair.first).label;
       type.dst_vlabel = sj.types.at(pair.second).label;

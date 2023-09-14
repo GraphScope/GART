@@ -38,6 +38,7 @@ namespace property {
 class PropertyColPaged : public Property {
  public:
   PropertyColPaged(Property::Schema schema, uint64_t max_items,
+                   memory::BufferManager& buf_mgr,
                    const std::vector<uint32_t>* split = nullptr);
   ~PropertyColPaged();
 

@@ -31,8 +31,9 @@
 namespace gart {
 namespace property {
 
-PropertyColArray::PropertyColArray(Property::Schema s, uint64_t max_items)
-    : Property(max_items),
+PropertyColArray::PropertyColArray(Property::Schema s, uint64_t max_items,
+                                   memory::BufferManager& buf_mgr)
+    : Property(max_items, buf_mgr),
       seq_(max_items_, -1),
       cols_(s.cols),
       key_col_(max_items_),

@@ -92,6 +92,20 @@ uint64_t BufferManager::put_cstring(const std::string_view& sv) {
   return offset;
 }
 
+char* BufferManager::get_region(uint64_t len) {
+  uint64_t offset = size_;
+  size_t new_size = offset + len;
+  if (new_size >= capacity_) {
+    LOG(ERROR) << "BufferManager: buffer overflow (capacity: " << capacity_
+               << ", size: " << size_ << ", new_size: " << new_size << ")";
+    assert(false);
+    return nullptr;
+  }
+  size_ = new_size;
+
+  return buffer_ + offset;
+}
+
 void BufferManager::get_string(uint64_t offset, uint64_t len,
                                std::string& output) const {
   output.assign(buffer_ + offset, len);

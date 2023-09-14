@@ -116,6 +116,7 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
   // alloc string buffer
   // TODO(wanglei): hard code
   graph_store->add_string_buffer((1ul << 30) * 10);  // 10GB
+  graph_store->add_vprop_buffer((1ul << 30) * 30);   // 30GB
 
   // Parse vertex
   for (int idx = 0; idx < vlabel_num; ++idx) {

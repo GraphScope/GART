@@ -136,8 +136,9 @@ inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(
 }
 
 PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
+                                   memory::BufferManager& buf_mgr,
                                    const vector<uint32_t>* split)
-    : Property(max_items),
+    : Property(max_items, buf_mgr),
       table_id_(s.table_id),
       cols_(s.cols),
       col_oids_(s.cols.size()),
@@ -205,7 +206,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       //     "malloc %lf GB\n",
       //     table_id_, i, page_sz, vlen, page_num,
       //     FlexColHeader::size(page_num), total_sz / 1024.0 / 1024 / 1024);
-      char* buf = mem_alloc(total_sz, &col_oids_[i]);
+      char* buf = v6d_mem_alloc(total_sz, &col_oids_[i]);
       FlexColHeader* header = reinterpret_cast<FlexColHeader*>(buf);
       flex_bufs_[i].total_sz = total_sz;
       flex_bufs_[i].buf = buf;
@@ -226,7 +227,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
         flexCols_[i].pages[p] = page;
       }
     } else {
-      fixCols_[i] = mem_alloc(vlen * max_items_, &col_oids_[i]);
+      fixCols_[i] = v6d_mem_alloc(vlen * max_items_, &col_oids_[i]);
       printf("Vlabel %d column %d (fixed), malloc %lf GB\n", table_id_, i,
              vlen * max_items_ / 1024.0 / 1024 / 1024);
     }

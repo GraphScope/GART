@@ -28,6 +28,7 @@
 #define VEGITO_SRC_MEMORY_BUFFER_MANAGER_H_
 
 #include <cstdint>
+#include <string>
 
 #include "util/allocator.hpp"
 #include "vineyard/client/ds/blob.h"
@@ -73,6 +74,14 @@ class BufferManager {
   uint64_t put_cstring(const std::string_view& sv);
 
   void get_string(uint64_t offset, uint64_t len, std::string& output) const;
+
+  inline vineyard::ObjectID get_oid() const { return buffer_oid_; }
+
+  // Allocate a buffer region
+  // Return the start offset of the region in buffer (`nullptr` if failed)
+  // `len` is the length of the region
+  // TODO(ssj): Need to support thread-safety
+  char* get_region(uint64_t len);
 
  private:
   void init_();

@@ -92,6 +92,7 @@ class GraphStore {
         pid_off_map_(INIT_VEC_SZ),
         total_vertex_label_num_(0),
         string_buffer_manager_(array_allocator_.get_client()),
+        vprop_buffer_manager_(array_allocator_.get_client()),
         etcd_client_(std::make_shared<etcd::Client>(FLAGS_etcd_endpoint)) {}
 
   ~GraphStore();
@@ -146,6 +147,8 @@ class GraphStore {
                        std::string& out);
 
   void add_string_buffer(size_t size);
+
+  void add_vprop_buffer(size_t size);
 
   void add_vgraph(uint64_t vlabel, RGMapping* rg_map);
 
@@ -538,6 +541,9 @@ class GraphStore {
 
   // for string buffer
   memory::BufferManager string_buffer_manager_;
+
+  // for vertex property page buffer
+  memory::BufferManager vprop_buffer_manager_;
 
   // for bitmap
   std::vector<size_t> edge_bitmap_size_;

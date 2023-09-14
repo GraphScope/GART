@@ -39,6 +39,7 @@
 
 #include "fragment/shared_storage.h"
 #include "graph/type_def.h"
+#include "memory/buffer_manager.h"
 #include "util/allocator.hpp"
 #include "util/status.h"
 #include "util/util.h"
@@ -136,8 +137,7 @@ class Property {  // NOLINT(build/class)
     return off;
   }
 
-  char* mem_alloc(size_t bytes, uint64_t* obj_id = nullptr) {
-    return array_allocator.allocate_v6d(bytes, *obj_id);
+  char* v6d_mem_alloc(size_t bytes, uint64_t* obj_id) {
   }
 
   virtual void putByOffset(uint64_t offset, uint64_t key, char* val,
@@ -271,8 +271,11 @@ class Property {  // NOLINT(build/class)
   }
 
  protected:
-  explicit Property(uint64_t max_items)
-      : max_items_(max_items), header_(0), stable_header_(0) {}
+  explicit Property(uint64_t max_items, memory::BufferManager& buf_mgr)
+      : max_items_(max_items),
+        buf_mgr_(buf_mgr),
+        header_(0),
+        stable_header_(0) {}
 
   static inline void copy_val_(char* dst, const char* src, uint64_t sz) {
     switch (sz) {
@@ -304,6 +307,8 @@ class Property {  // NOLINT(build/class)
   std::vector<gart::VPropMeta> blob_metas_;
 
   SparseArrayAllocator<char> array_allocator;
+
+  memory::BufferManager& buf_mgr_;
 
 #if 1  // cache for performance!
   uint64_t padding_[8];
