@@ -36,6 +36,23 @@
 namespace gart {
 namespace memory {
 
+struct BufferRegion {
+  BufferRegion() : ptr(nullptr), len(-1), offset(0), oid(0) {}
+
+  char* get_ptr() const { return ptr; }
+  uint64_t get_len() const { return len; }
+  uint64_t get_offset() const { return offset; }
+  vineyard::ObjectID get_oid() const { return oid; }
+
+ private:
+  char* ptr;
+  uint64_t len;
+  uint64_t offset;
+  vineyard::ObjectID oid;
+
+  friend class BufferManager;
+};
+
 // Buffer manager for the memory pool on Vineyard
 // TODO(ssj): Now only single-threaded access is supported.
 class BufferManager {
@@ -75,13 +92,12 @@ class BufferManager {
 
   void get_string(uint64_t offset, uint64_t len, std::string& output) const;
 
-  inline vineyard::ObjectID get_oid() const { return buffer_oid_; }
-
   // Allocate a buffer region
   // Return the start offset of the region in buffer (`nullptr` if failed)
   // `len` is the length of the region
+  // `region` is the output parameter
   // TODO(ssj): Need to support thread-safety
-  char* get_region(uint64_t len);
+  void get_region(uint64_t len, BufferRegion& region);
 
  private:
   void init_();

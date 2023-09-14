@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <utility>
 
 #include "graph/graph_store.h"
 #include "property/property_col_paged.h"
