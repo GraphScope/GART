@@ -383,20 +383,21 @@ class GraphStore {
     return edge_table_maps_[name];
   }
 
-  char* get_string_buffer() const {
-    return string_buffer_manager_.get_buffer();
+  // Return the offset and length of the string in the string buffer
+  inline uint64_t put_cstring(const std::string_view& sv) {
+    size_t str_len = sv.length();
+    size_t str_offset = string_buffer_manager_.put_cstring(sv);
+    return (str_offset << 16) | str_len;
   }
 
-  size_t get_string_buffer_offset() const {
-    return string_buffer_manager_.get_size();
+  inline uint64_t put_cstring(const std::string& str) {
+    return put_cstring(std::string_view(str));
   }
 
-  void set_string_buffer_offset(size_t loc) {
-    string_buffer_manager_.set_size(loc);
-  }
-
-  size_t get_string_buffer_size() const {
-    return string_buffer_manager_.get_capacity();
+  inline void get_string(uint64_t key, std::string& output) const {
+    size_t str_offset = key >> 16;
+    size_t str_len = key & 0xffff;
+    string_buffer_manager_.get_string(str_offset, str_len, output);
   }
 
   void init_edge_bitmap_size(uint64_t elabel_num) {

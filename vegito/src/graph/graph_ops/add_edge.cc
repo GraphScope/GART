@@ -86,16 +86,7 @@ void process_add_edge(const StringViewList& cmd,
       if (graph_store->get_external_id_dtype(dst_label) ==
           PropertyStoreDataType::STRING) {
         std::string dst_external_id = string(cmd[5]);
-        auto str_len = dst_external_id.length();
-        size_t old_offset = graph_store->get_string_buffer_offset();
-        char* string_buffer = graph_store->get_string_buffer();
-        // each string is ended with '\0'
-        size_t new_offset = old_offset + str_len + 1;
-        assert(new_offset < graph_store->get_string_buffer_size());
-        memcpy(string_buffer + old_offset, dst_external_id.data(), str_len);
-        string_buffer[new_offset - 1] = '\0';
-        graph_store->set_string_buffer_offset(new_offset);
-        int64_t value = (old_offset << 16) | str_len;
+        uint64_t value = graph_store->put_cstring(dst_external_id);
         outer_external_id_store_addr[ov] = value;
       } else {
         int64_t dst_external_id = stoll(string(cmd[5]));
@@ -126,16 +117,7 @@ void process_add_edge(const StringViewList& cmd,
       if (graph_store->get_external_id_dtype(src_label) ==
           PropertyStoreDataType::STRING) {
         std::string src_external_id = string(cmd[4]);
-        auto str_len = src_external_id.length();
-        size_t old_offset = graph_store->get_string_buffer_offset();
-        char* string_buffer = graph_store->get_string_buffer();
-        // each string is ended with '\0'
-        size_t new_offset = old_offset + str_len + 1;
-        assert(new_offset < graph_store->get_string_buffer_size());
-        memcpy(string_buffer + old_offset, src_external_id.data(), str_len);
-        string_buffer[new_offset - 1] = '\0';
-        graph_store->set_string_buffer_offset(new_offset);
-        int64_t value = (old_offset << 16) | str_len;
+        uint64_t value = graph_store->put_cstring(src_external_id);
         outer_external_id_store_addr[ov] = value;
       } else {
         int64_t src_external_id = stoll(string(cmd[4]));

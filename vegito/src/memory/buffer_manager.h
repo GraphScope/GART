@@ -51,7 +51,7 @@ class BufferManager {
   // vineyard client
   BufferManager(uint64_t capacity, vineyard::Client* v6d_client);
 
-  ~BufferManager() {}
+  ~BufferManager();
 
   void init_capacity(uint64_t capacity);
 
@@ -62,9 +62,22 @@ class BufferManager {
   uint64_t get_size() const { return size_; }
   void set_size(uint64_t size) { size_ = size; }
 
+  // Allocate a buffer for a string
+  // Return the start offset of the string in buffer (-1 if failed)
+  // `str` is the pointer to the string (C++ style)
+  // `len` is the length of the string  (C++ style)
+  // Set the string as the C systle string (ended by '\0')
+  // TODO(ssj): Need to support thread-safety
+  uint64_t put_cstring(const std::string& str);
+
+  uint64_t put_cstring(const std::string_view& sv);
+
+  void get_string(uint64_t offset, uint64_t len, std::string& output) const;
+
  private:
   void init_();
 
+  bool inited_;
   uint64_t capacity_;
   SparseArrayAllocator<void> array_allocator_;
 

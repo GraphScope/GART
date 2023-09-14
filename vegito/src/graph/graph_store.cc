@@ -526,16 +526,7 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   assert(v == off);
 
   if (external_id_dtype_[vlabel] == PropertyStoreDataType::STRING) {
-    auto str_len = external_id.length();
-    size_t old_offset = get_string_buffer_offset();
-    char* string_buffer = get_string_buffer();
-    // each string is ended with '\0'
-    size_t new_offset = old_offset + str_len + 1;
-    assert(new_offset < get_string_buffer_size());
-    memcpy(string_buffer + old_offset, external_id.data(), str_len);
-    string_buffer[new_offset - 1] = '\0';
-    set_string_buffer_offset(new_offset);
-    int64_t value = (old_offset << 16) | str_len;
+    uint64_t value = put_cstring(external_id);
     external_id_stores_[vlabel][v] = value;
   } else {
     external_id_stores_[vlabel][v] = std::stoll(external_id);
@@ -549,16 +540,7 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   for (size_t idx = 0; idx < vprop.size(); ++idx) {
     auto dtype = schema_.dtype_map.at({vlabel, idx});
     if (dtype == STRING) {
-      auto str_len = vprop[idx].length();
-      size_t old_offset = get_string_buffer_offset();
-      char* string_buffer = get_string_buffer();
-      // each string is ended with '\0'
-      size_t new_offset = old_offset + str_len + 1;
-      assert(new_offset < get_string_buffer_size());
-      memcpy(string_buffer + old_offset, vprop[idx].data(), str_len);
-      string_buffer[new_offset - 1] = '\0';
-      set_string_buffer_offset(new_offset);
-      uint64_t value = (old_offset << 16) | str_len;
+      uint64_t value = put_cstring(vprop[idx]);
       tmp_str[idx] = to_string(value);
       vprop[idx] = tmp_str[idx];
     }
@@ -618,14 +600,7 @@ void GraphStore::construct_eprop(int elabel, const StringViewList& eprop,
       if (str_len == 0) {
         set_bit(bitmap, idx);
       }
-      size_t old_offset = get_string_buffer_offset();
-      char* string_buffer = get_string_buffer();
-      size_t new_offset = old_offset + str_len + 1;
-      assert(new_offset < get_string_buffer_size());
-      memcpy(string_buffer + old_offset, eprop[idx].data(), str_len);
-      string_buffer[new_offset - 1] = '\0';
-      set_string_buffer_offset(new_offset);
-      uint64_t value = (old_offset << 16) | str_len;
+      uint64_t value = put_cstring(eprop[idx]);
       tmp_str = to_string(value);
       sv = tmp_str;
     }

@@ -506,27 +506,17 @@ void PropertyColPaged::update(uint64_t off, uint64_t k,
         col_family_updated[col_family_id] = true;
       }
     } else if (dtype == STRING) {
-      char* string_buffer = graph_store->get_string_buffer();
       std::string old_value;
       if (!old_value_is_null) {
-        int64_t fake_old_value = *(int64_t*) dst;
-        int64_t old_str_offset = fake_old_value >> 16;
-        int64_t old_str_len = fake_old_value & 0xffff;
-        old_value = std::string(string_buffer + old_str_offset, old_str_len);
+        int64_t old_str_key = *(int64_t*) dst;
+        graph_store->get_string(old_str_key, old_value);
       }
       std::string new_value = std::string(v_list[prop_idx]);
       if (old_value_is_null || old_value != new_value) {
-        size_t old_offset = graph_store->get_string_buffer_offset();
-        size_t new_str_len = new_value.length();
-        size_t new_str_offset = old_offset + new_str_len + 1;
-        assert(new_str_offset < graph_store->get_string_buffer_size());
-        memcpy(string_buffer + old_offset, new_value.c_str(), new_str_len);
-        string_buffer[new_str_offset - 1] = '\0';
-        int64_t real_value = old_offset << 16 | new_str_len;
+        uint64_t new_str_key = graph_store->put_cstring(new_value);
         *((int64_t*) (prop_buffer[col_family_id] + col_family_offset)) =
-            real_value;
+            new_str_key;
         col_family_updated[col_family_id] = true;
-        graph_store->set_string_buffer_offset(new_str_offset);
       } else {
         *((int64_t*) (prop_buffer[col_family_id] + col_family_offset)) =
             *(int64_t*) dst;
