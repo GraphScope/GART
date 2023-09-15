@@ -34,8 +34,6 @@
 #include "graph/graph_store.h"
 #include "property/property_col_paged.h"
 #include "util/bitset.h"
-#include "util/macros.h"
-#include "util/status.h"
 
 #define LAZY_PAGE_ALLOC 1
 
@@ -60,48 +58,19 @@ namespace property {
 // NOTE: page_sz is number of objects, instead of bytes
 inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
     uint64_t page_sz, uint64_t vlen, uint64_t real_column_num, uint64_t ver,
-    Page* prev) {
-  char* buf = nullptr;
-  uint32_t pg_sz =
-      sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz * real_column_num);
-
-  buf = reinterpret_cast<char*>(malloc(pg_sz));
-  Page* ret = new (buf) Page(ver, prev);
-
-  if (page_sz != 1 && prev != nullptr) {
-    memcpy(ret->content, prev->content,
-           page_sz * vlen + BYTE_SIZE(page_sz * real_column_num));
-#if UPDATE_STAT
-    stat_.num_copy += BYTE_SIZE(page_sz * real_column_num);  // bitmap size
-    stat_.num_copy += vlen * page_sz;                        // size
-    // ++stat_.num_copy;                                        // count
-#endif
-  }
-
-  return ret;
-}
-
-inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
-    uint64_t page_sz, uint64_t vlen, uint64_t real_column_num, uint64_t ver,
     Page* prev, uint64_t prop_id, uint64_t pg_num) {
   FlexBuf& flex_buf = flex_bufs_[prop_id];
   char* buf = nullptr;
   uint32_t pg_sz =
       sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz * real_column_num);
 
-  buf = reinterpret_cast<char*>(&flex_buf.buf[flex_buf.allocated_sz]);
-  uintptr_t cur_ptr = flex_buf.allocated_sz;
-  flex_buf.allocated_sz += pg_sz;
-  assert(flex_buf.allocated_sz <= flex_buf.total_sz);
-  if (unlikely(flex_buf.allocated_sz > flex_buf.total_sz)) {
-    LOG(ERROR) << "Property column store is full for table " << table_id_
-               << ", column family " << prop_id;
-  }
-  Page* ret = new (buf) Page(ver, prev);
+  uint64_t cur_ptr;
+  buf = v6d_malloc(pg_sz, col_v6d_oids_[prop_id], cur_ptr);
+  assert(buf);
+  Page* ret = new (buf) Page(ver, cur_ptr, prev);
 
   if (prev != nullptr) {
-    ret->prev_ptr =
-        reinterpret_cast<char*>(prev) - reinterpret_cast<char*>(flex_buf.buf);
+    ret->prev_ptr = prev->v6d_offset;
   }
 
   if (page_sz != 1 && prev != nullptr) {
@@ -120,18 +89,15 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
 inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(
     uint64_t page_sz, uint64_t vlen, uint64_t real_column_num, uint64_t prop_id,
     uint64_t pg_num) {
-  FlexBuf& flex_buf = flex_bufs_[prop_id];
   char* buf = nullptr;
   uint32_t pg_sz =
       sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz * real_column_num);
 
-  buf = reinterpret_cast<char*>(&flex_buf.buf[flex_buf.allocated_sz]);
-  uintptr_t cur_ptr = flex_buf.allocated_sz;
-  flex_buf.allocated_sz += pg_sz;
+  vineyard::ObjectID oid;
+  uint64_t cur_ptr;
+  buf = v6d_malloc(pg_sz, oid, cur_ptr);
 
-  // must have empty space for multi-version pages (getNewPage_), so not <=
-  assert(flex_buf.allocated_sz < flex_buf.total_sz);
-
+  FlexBuf& flex_buf = flex_bufs_[prop_id];
   flex_buf.header->page_ptr[pg_num] = cur_ptr;
   return reinterpret_cast<Page*>(buf);
 }
@@ -142,7 +108,8 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
     : Property(max_items, buf_mgr),
       table_id_(s.table_id),
       cols_(s.cols),
-      col_oids_(s.cols.size()),
+      col_v6d_oids_(s.cols.size()),
+      col_v6d_offsets_(s.cols.size()),
       flex_bufs_(s.cols.size()),
       fixCols_(s.cols.size(), nullptr),
       flexCols_(s.cols.size()) {
@@ -196,18 +163,13 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       flexCols_[i].locks.assign(page_num, 0);
       flexCols_[i].pages.assign(page_num, nullptr);
       flexCols_[i].old_pages.assign(page_num, nullptr);
-      size_t total_sz =
-          FlexColHeader::size(page_num) +
-          page_num * (sizeof(Page) + page_sz * vlen + null_bitmap_size);
-      // TODO(ssj): (hardcode) 1.5 is 1x init pages + 0.5x MVCC pages
-      total_sz *= 1.5;
-      // printf(
-      //     "Vlabel %d column %d (flex), "
-      //     "page size %lu, vlen %lu, page num %d, size of header %lu, "
-      //     "malloc %lf GB\n",
-      //     table_id_, i, page_sz, vlen, page_num,
-      //     FlexColHeader::size(page_num), total_sz / 1024.0 / 1024 / 1024);
-      char* buf = v6d_mem_alloc(total_sz, &col_oids_[i]);
+      // size_t total_sz =
+      //     FlexColHeader::size(page_num) +
+      //     page_num * (sizeof(Page) + page_sz * vlen + null_bitmap_size);
+      // total_sz *= 1.5;
+
+      size_t total_sz = FlexColHeader::size(page_num);
+      char* buf = v6d_malloc(total_sz, col_v6d_oids_[i], col_v6d_offsets_[i]);
       FlexColHeader* header = reinterpret_cast<FlexColHeader*>(buf);
       flex_bufs_[i].total_sz = total_sz;
       flex_bufs_[i].buf = buf;
@@ -216,19 +178,22 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
 
       header->num_row_per_page = page_sz;
 
-      for (int p = 0; p < page_num; ++p) {
-#if LAZY_PAGE_ALLOC == 0
-        Page* page = getNewPage_(page_sz, vlen, cols_[i].real_column_num, -1,
-                                 nullptr, i, p);
-        flexCols_[i].old_pages[p] = page;
-#else
-        Page* page =
-            getInitPage_(page_sz, vlen, cols_[i].real_column_num, i, p);
-#endif
-        flexCols_[i].pages[p] = page;
-      }
+      //       for (int p = 0; p < page_num; ++p) {
+      // #if LAZY_PAGE_ALLOC == 0
+      //         Page* page = getNewPage_(page_sz, vlen,
+      //         cols_[i].real_column_num, -1,
+      //                                  nullptr, i, p);
+      //         flexCols_[i].old_pages[p] = page;
+      // #else
+      //         Page* page =
+      //             getInitPage_(page_sz, vlen, cols_[i].real_column_num, i,
+      //             p);
+      // #endif
+      //         flexCols_[i].pages[p] = page;
+      //       }
     } else {
-      fixCols_[i] = v6d_mem_alloc(vlen * max_items_, &col_oids_[i]);
+      fixCols_[i] =
+          v6d_malloc(vlen * max_items_, col_v6d_oids_[i], col_v6d_offsets_[i]);
       printf("Vlabel %d column %d (fixed), malloc %lf GB\n", table_id_, i,
              vlen * max_items_ / 1024.0 / 1024 / 1024);
     }
@@ -239,7 +204,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
     gart::VPropMeta& meta = blob_metas_[i];
     meta.init(i, val_lens_[i], cols_[i].updatable, cols_[i].vtype);
 
-    meta.set_oid(col_oids_[i], 0);  // TODO(wanglei): hard code of header
+    meta.set_oid(col_v6d_oids_[i], col_v6d_offsets_[i]);
   }
 }
 
@@ -268,7 +233,8 @@ inline PropertyColPaged::Page* PropertyColPaged::findWithInsertPage_(
   if (flexCols_[colID].old_pages[pg_num] == nullptr) {
     gart::util::lock32(&flex.locks[pg_num]);
     if (flexCols_[colID].old_pages[pg_num] == nullptr) {
-      page = new (page) Page(version, nullptr);
+      page = getNewPage_(col.page_size, col.vlen, col.real_column_num, -1,
+                         nullptr, colID, pg_num);
       flexCols_[colID].old_pages[pg_num] = page;
     }
     gart::util::unlock32(&flex.locks[pg_num]);
@@ -277,6 +243,7 @@ inline PropertyColPaged::Page* PropertyColPaged::findWithInsertPage_(
   if (page->ver == -1) {
     page->ver = version;  // a initialized page
     page->min_ver = version;
+    flex.pages[pg_num] = page;
   } else if (version > page->ver) {
     gart::util::lock32(&flex.locks[pg_num]);
     page = flex.pages[pg_num];

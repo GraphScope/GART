@@ -137,7 +137,12 @@ class Property {  // NOLINT(build/class)
     return off;
   }
 
-  char* v6d_mem_alloc(size_t bytes, uint64_t* obj_id) {
+  inline char* v6d_malloc(size_t bytes, uint64_t& obj_id, uint64_t& offset) {
+    memory::BufferRegion region;
+    buf_mgr_.get_region(bytes, region);
+    obj_id = region.get_oid();
+    offset = region.get_offset();
+    return region.get_ptr();
   }
 
   virtual void putByOffset(uint64_t offset, uint64_t key, char* val,
@@ -305,8 +310,6 @@ class Property {  // NOLINT(build/class)
   const uint64_t max_items_;
 
   std::vector<gart::VPropMeta> blob_metas_;
-
-  SparseArrayAllocator<char> array_allocator;
 
   memory::BufferManager& buf_mgr_;
 

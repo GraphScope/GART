@@ -96,6 +96,7 @@ class PropertyColPaged : public Property {
   struct Page {
     uint64_t ver;
     uintptr_t prev_ptr;
+    uint64_t v6d_offset;
     uint64_t min_ver;
     Page* prev;
     Page* next;
@@ -103,8 +104,9 @@ class PropertyColPaged : public Property {
 
     Page() {}
 
-    Page(uint64_t v, Page* n)
+    Page(uint64_t v, uint64_t o, Page* n)
         : ver(v),
+          v6d_offset(o),
           prev(n),
           next(nullptr),
           prev_ptr(0),
@@ -120,9 +122,6 @@ class PropertyColPaged : public Property {
     std::vector<uint32_t> locks;
     std::vector<Page*> old_pages;  // tailer (oldest)
   };
-
-  Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t real_column_num,
-                    uint64_t ver, Page* prev);
 
   Page* getNewPage_(uint64_t page_sz, uint64_t vlen, uint64_t real_column_num,
                     uint64_t ver, Page* prev, uint64_t prop_id,
@@ -166,7 +165,8 @@ class PropertyColPaged : public Property {
   std::vector<FlexBuf> flex_bufs_;
 
   // object id for each property
-  std::vector<vineyard::ObjectID> col_oids_;
+  std::vector<vineyard::ObjectID> col_v6d_oids_;
+  std::vector<uint64_t> col_v6d_offsets_;  // for FlexColHeader
 
   Page* findPage(int col_id, uint64_t page_num, uint64_t version,
                  uint64_t* walk_cnt = nullptr);

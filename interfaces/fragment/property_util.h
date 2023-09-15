@@ -54,6 +54,7 @@ class PageHeader {
   uint64_t ver_;
   uintptr_t prev_ptr_;
   // unuse for reader
+  uint64_t oid;
   uint64_t min_ver;
   PageHeader* prev_;
   PageHeader* next;
