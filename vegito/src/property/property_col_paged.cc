@@ -55,53 +55,6 @@ thread_local void* cached_page[MAX_CACHED_TABLES][MAX_CACHED_COLS] = {
 namespace gart {
 namespace property {
 
-// NOTE: page_sz is number of objects, instead of bytes
-inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
-    uint64_t page_sz, uint64_t vlen, uint64_t real_column_num, uint64_t ver,
-    Page* prev, uint64_t prop_id, uint64_t pg_num) {
-  FlexBuf& flex_buf = flex_bufs_[prop_id];
-  char* buf = nullptr;
-  uint32_t pg_sz =
-      sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz * real_column_num);
-
-  uint64_t cur_ptr;
-  buf = v6d_malloc(pg_sz, col_v6d_oids_[prop_id], cur_ptr);
-  assert(buf);
-  Page* ret = new (buf) Page(ver, cur_ptr, prev);
-
-  if (prev != nullptr) {
-    ret->prev_ptr = prev->v6d_offset;
-  }
-
-  if (page_sz != 1 && prev != nullptr) {
-    memcpy(ret->content, prev->content,
-           page_sz * vlen + BYTE_SIZE(page_sz * real_column_num));
-#if UPDATE_STAT
-    stat_.num_copy += BYTE_SIZE(page_sz * real_column_num);  // bitmap size
-    stat_.num_copy += vlen * page_sz;                        // size
-    // ++stat_.num_copy;                                        // count
-#endif
-  }
-  flex_buf.header->page_ptr[pg_num] = cur_ptr;
-  return ret;
-}
-
-inline PropertyColPaged::Page* PropertyColPaged::getInitPage_(
-    uint64_t page_sz, uint64_t vlen, uint64_t real_column_num, uint64_t prop_id,
-    uint64_t pg_num) {
-  char* buf = nullptr;
-  uint32_t pg_sz =
-      sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz * real_column_num);
-
-  vineyard::ObjectID oid;
-  uint64_t cur_ptr;
-  buf = v6d_malloc(pg_sz, oid, cur_ptr);
-
-  FlexBuf& flex_buf = flex_bufs_[prop_id];
-  flex_buf.header->page_ptr[pg_num] = cur_ptr;
-  return reinterpret_cast<Page*>(buf);
-}
-
 PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
                                    memory::BufferManager& buf_mgr,
                                    const vector<uint32_t>* split)
@@ -219,6 +172,37 @@ PropertyColPaged::~PropertyColPaged() {
       delete[] fixCols_[i];
     }
   }
+}
+
+// NOTE: page_sz is number of objects, instead of bytes
+inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
+    uint64_t page_sz, uint64_t vlen, uint64_t real_column_num, uint64_t ver,
+    Page* prev, uint64_t prop_id, uint64_t pg_num) {
+  FlexBuf& flex_buf = flex_bufs_[prop_id];
+  char* buf = nullptr;
+  uint32_t pg_sz =
+      sizeof(Page) + vlen * page_sz + BYTE_SIZE(page_sz * real_column_num);
+
+  uint64_t cur_ptr;
+  buf = v6d_malloc(pg_sz, col_v6d_oids_[prop_id], cur_ptr);
+  assert(buf);
+  Page* ret = new (buf) Page(ver, cur_ptr, prev);
+
+  if (prev != nullptr) {
+    ret->prev_ptr = prev->v6d_offset;
+  }
+
+  if (page_sz != 1 && prev != nullptr) {
+    memcpy(ret->content, prev->content,
+           page_sz * vlen + BYTE_SIZE(page_sz * real_column_num));
+#if UPDATE_STAT
+    stat_.num_copy += BYTE_SIZE(page_sz * real_column_num);  // bitmap size
+    stat_.num_copy += vlen * page_sz;                        // size
+    // ++stat_.num_copy;                                        // count
+#endif
+  }
+  flex_buf.header->page_ptr[pg_num] = cur_ptr;
+  return ret;
 }
 
 inline PropertyColPaged::Page* PropertyColPaged::findWithInsertPage_(

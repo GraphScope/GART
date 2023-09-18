@@ -44,9 +44,12 @@ class EpochGraphReader;
 
 class SegGraph {
  public:
+  // _max_vertex_id:
+  //   the maximum vertex id in the graph, decides the size of the
+  //   vertex table and the rows of properties
   SegGraph(gart::graph::RGMapping* rg_map,
-           size_t _max_block_size = 1 * (1ul << 30),   // 35 for large graph
-           vertex_t _max_vertex_id = 1 * (1ul << 20))  // 25 for large graph
+           size_t _max_block_size = 1 * (1ul << 30),  // 35 for large graph
+           vertex_t _max_vertex_id = 1 * (1ul << 30))
       : epoch_id(0),
         transaction_id(0),
         vertex_id(0),
@@ -165,9 +168,7 @@ class SegGraph {
     return rg_map->get_edge_meta(static_cast<int>(label)).edge_prop_size;
   }
 
-  bool is_edge_undirected(label_t label) {
-    return edge_is_undirected[label];
-  }
+  bool is_edge_undirected(label_t label) { return edge_is_undirected[label]; }
 
   /**
    * Analytics interface

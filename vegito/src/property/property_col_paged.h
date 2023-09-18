@@ -127,10 +127,6 @@ class PropertyColPaged : public Property {
                     uint64_t ver, Page* prev, uint64_t prop_id,
                     uint64_t pg_num);
 
-  // for the first page for a `pg_num`
-  Page* getInitPage_(uint64_t page_sz, uint64_t vlen, uint64_t real_column_num,
-                     uint64_t prop_id, uint64_t pg_num);
-
   Page* findWithInsertPage_(int col_id, uint64_t page_num, uint64_t version);
 
   const int table_id_;
