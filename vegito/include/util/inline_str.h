@@ -156,7 +156,6 @@ class inline_str_16 : public inline_str_base<uint16_t, N> {
 // equiavlent to CHAR(N)
 template <unsigned int N, char FillChar = ' '>
 class inline_str_fixed {
-  // XXX: argh...
   template <typename T, bool DoCompress>
   friend class serializer;
 

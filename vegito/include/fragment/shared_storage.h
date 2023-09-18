@@ -26,9 +26,8 @@
 
 namespace gart {
 
-// TODO(ssj): need to refine typedef
-typedef vineyard::ObjectID oid_t;  // object id for Blob
-typedef uint64_t index_t;
+using oid_t = vineyard::ObjectID;  // object id for Blob
+using index_t = uint64_t;
 
 #define get_blob_ptr(oid) (static_cast<char*>(nullptr))
 
@@ -38,7 +37,7 @@ typedef uint64_t index_t;
 // [min, max_inner) ... [min_outer, max)
 //   inner ID ->    ...    <- outer ID
 struct VTable {
-  typedef uint64_t lid_t;  // TODO(ssj): need to refine this type
+  using lid_t = uint64_t;
 
   lid_t lids[0];
 };
@@ -302,7 +301,6 @@ class BlobSchema {
 
   oid_t vertex_map_oid_;
 
-  // uint64_t num_vprops;
   std::vector<VPropMeta> vprops;
 
   oid_t ov_block_oid;
@@ -310,8 +308,6 @@ class BlobSchema {
 
   VTableMeta vertex_table;  // indexed by vertex label
   ArrayMeta ovl2g;          // indexed by vertex label, array
-
-  // TODO(ssj): properties
 };
 
 }  // namespace gart

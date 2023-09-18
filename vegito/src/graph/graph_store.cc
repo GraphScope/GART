@@ -266,7 +266,7 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
     vtable.min_outer_location = max_v;
     vtable.size = max_v;
 
-    gart::VTableMeta meta(oid, max_v);  // TODO(ssj): update args
+    gart::VTableMeta meta(oid, max_v);
     blob_schema.set_vtable_meta(meta);
   }
 
@@ -414,7 +414,6 @@ void SchemaImpl::fill_json(void* ptr) const {
     type.propertyDefList.assign(props.begin() + pid_begin,
                                 props.begin() + pid_end);
     if (!is_v) {
-      // TODO(ssj): src_vlabel, dst_vlabel
       const auto& pair = edge_relation.at(label_id);
       type.src_vlabel = sj.types.at(pair.first).label;
       type.dst_vlabel = sj.types.at(pair.second).label;
