@@ -88,7 +88,12 @@ void EpochGraphWriter::update_edge_label_block(segid_t segid, label_t label,
     for (size_t i = 0; i < edge_label_block->get_num_entries(); i++) {
       auto& label_entry = edge_label_block->get_entries()[i];
       if (label_entry.get_label() == label) {
-        label_entry.set_pointer(segment_pointer, dir);
+        if (graph.is_edge_undirected(label)) {
+          label_entry.set_pointer(segment_pointer, EOUT);
+          label_entry.set_pointer(segment_pointer, EIN);
+        } else {
+          label_entry.set_pointer(segment_pointer, dir);
+        }
         return;
       }
     }
@@ -96,7 +101,12 @@ void EpochGraphWriter::update_edge_label_block(segid_t segid, label_t label,
 
   EdgeLabelEntry label_entry;
   label_entry.set_label(label);
-  label_entry.set_pointer(segment_pointer, dir);
+  if (graph.is_edge_undirected(label)) {
+    label_entry.set_pointer(segment_pointer, EOUT);
+    label_entry.set_pointer(segment_pointer, EIN);
+  } else {
+    label_entry.set_pointer(segment_pointer, dir);
+  }
 
   if (!edge_label_block || !edge_label_block->append(label_entry)) {
     auto num_entries =

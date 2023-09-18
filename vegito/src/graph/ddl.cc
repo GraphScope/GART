@@ -41,7 +41,7 @@ void RGMapping::define_vertex(int vertex_label, int table_id) {
     vid2keys_.resize(table2vlabel.size());
     key2vids_lock_.resize(table2vlabel.size());
   }
-
+  vertex_label_num_++;
   util::insert_vec(vlabel2table, vertex_label, table_id,
                    static_cast<int>(NO_EXIST));
 }

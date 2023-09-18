@@ -17,6 +17,7 @@
 #define VEGITO_SRC_GRAPH_DDL_H_
 
 #include <cassert>
+#include <cstddef>
 #include <map>
 #include <unordered_map>
 #include <utility>
@@ -87,6 +88,10 @@ class RGMapping {
     assert(elabel < edges_.size());
     return edges_[elabel];
   }
+
+  inline const size_t get_edge_label_num() const { return vlabel2elabel_.size(); }
+
+  inline const size_t get_vertex_label_num() const { return vertex_label_num_; }
 
   // return edge_label
   inline int get_edge_meta(int dst_vlabel, EdgeMeta& meta) const {
@@ -182,6 +187,8 @@ class RGMapping {
 
   // <src_vlabel, dst_vlabel> -> elabel
   std::map<std::pair<int, int>, int> vlabel2elabel_;
+
+  size_t vertex_label_num_ = 0;
 
 #if USE_TBB_MAP
   using map_t = tbb::concurrent_unordered_map<uint64_t, uint64_t>;

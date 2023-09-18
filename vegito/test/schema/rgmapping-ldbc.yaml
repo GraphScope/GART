@@ -407,6 +407,7 @@ edgeMappings:
         edge: knows
         source_vertex: person
         destination_vertex: person
+        undirected: true
       dataSourceName: knows
       sourceVertexMappings:
         - dataField:

@@ -89,6 +89,17 @@ class SegGraph {
     seg_mutexes[0] = new std::shared_timed_mutex();
     edge_label_ptrs[0] = block_manager.NULLPOINTER;
     srand(time(0));
+
+    size_t edge_label_num = rg_map->get_edge_label_num();
+    size_t vertex_label_num = rg_map->get_vertex_label_num();
+    for (auto idx = 0; idx < edge_label_num; idx++) {
+      auto& meta = rg_map->get_edge_meta(idx + vertex_label_num);
+      if (meta.undirected) {
+        edge_is_undirected.push_back(true);
+      } else {
+        edge_is_undirected.push_back(false);
+      }
+    }
   }
 
   SegGraph(const SegGraph&) = delete;
@@ -161,6 +172,10 @@ class SegGraph {
     return rg_map->get_edge_meta(static_cast<int>(label)).edge_prop_size;
   }
 
+  bool is_edge_undirected(label_t label) {
+    return edge_is_undirected[label];
+  }
+
   /**
    * Analytics interface
    */
@@ -221,6 +236,8 @@ class SegGraph {
   vineyard::ObjectID edge_label_ptrs_oid;
   vineyard::ObjectID ovl2g_oid;
   vineyard::ObjectID ovg2l_map;
+
+  std::vector<bool> edge_is_undirected;
 
   gart::BlobSchema blob_schema;
   uint64_t deleted_inner = 0;
