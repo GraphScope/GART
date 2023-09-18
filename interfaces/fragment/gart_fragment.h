@@ -680,19 +680,16 @@ class GartFragment {
     auto v_offset = GetOffset(v);
     auto header_offset = prop_cols_meta[label_id][column_family_id].header;
 
+    const char* blob_base = vertex_prop_blob_ptrs_[label_id][column_family_id];
     FlexColBlobHeader* header =
-        (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
-                                                    [column_family_id] +
-                              header_offset);
+        (FlexColBlobHeader*) (blob_base + header_offset);
     int vertex_per_page = header->get_num_row_per_page();
     int page_id = v_offset / vertex_per_page;
-    PageHeader* page_header =
-        header->get_page_header_ptr((uintptr_t) header, page_id);
+    PageHeader* page_header = header->get_page_header_ptr(blob_base, page_id);
     int page_idx = v_offset % vertex_per_page;
-    char* data = nullptr;
+    const char* data = nullptr;
 
-    for (; page_header;
-         page_header = page_header->get_prev((uintptr_t) header)) {
+    for (; page_header; page_header = page_header->get_prev(blob_base)) {
       if (page_header->get_epoch() <= (int) read_epoch_number_) {
         data = page_header->get_data();
         break;
@@ -708,13 +705,14 @@ class GartFragment {
   }
 
   template <typename T>
-  char* GetDataAddr(const vertex_t& v, prop_id_t prop_id) const {
+  const char* GetDataAddr(const vertex_t& v, prop_id_t prop_id) const {
     T t{};
     return GetDataAddrImpl(t, v, prop_id);
   }
 
   template <typename T>
-  char* GetDataAddrImpl(T& t, const vertex_t& v, prop_id_t prop_id) const {
+  const char* GetDataAddrImpl(T& t, const vertex_t& v,
+                              prop_id_t prop_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     int column_family_id = vertex_prop_column_family_id_[label_id][prop_id];
@@ -723,20 +721,18 @@ class GartFragment {
     auto v_offset = GetOffset(v);
     auto header_offset = prop_cols_meta[label_id][column_family_id].header;
     if (prop_cols_meta[label_id][column_family_id].updatable == true) {
+      const char* blob_base =
+          vertex_prop_blob_ptrs_[label_id][column_family_id];
       FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
-                                                      [column_family_id] +
-                                header_offset);
+          (FlexColBlobHeader*) (blob_base + header_offset);
       int vertex_per_page = header->get_num_row_per_page();
       int page_id = v_offset / vertex_per_page;
-      PageHeader* page_header =
-          header->get_page_header_ptr((uintptr_t) header, page_id);
+      PageHeader* page_header = header->get_page_header_ptr(blob_base, page_id);
       int page_idx = v_offset % vertex_per_page;
 
-      for (; page_header;
-           page_header = page_header->get_prev((uintptr_t) header)) {
+      for (; page_header; page_header = page_header->get_prev(blob_base)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data =
+          const char* data =
               page_header->get_data() +
               BYTE_SIZE(vertex_per_page *
                         vertex_prop_num_per_column_family_[label_id]
@@ -765,20 +761,18 @@ class GartFragment {
     auto v_offset = GetOffset(v);
     auto header_offset = prop_cols_meta[label_id][column_family_id].header;
     if (prop_cols_meta[label_id][column_family_id].updatable == true) {
+      const char* blob_base =
+          vertex_prop_blob_ptrs_[label_id][column_family_id];
       FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
-                                                      [column_family_id] +
-                                header_offset);
+          (FlexColBlobHeader*) (blob_base + header_offset);
       int vertex_per_page = header->get_num_row_per_page();
       int page_id = v_offset / vertex_per_page;
-      PageHeader* page_header =
-          header->get_page_header_ptr((uintptr_t) header, page_id);
+      PageHeader* page_header = header->get_page_header_ptr(blob_base, page_id);
       int page_idx = v_offset % vertex_per_page;
 
-      for (; page_header;
-           page_header = page_header->get_prev((uintptr_t) header)) {
+      for (; page_header; page_header = page_header->get_prev(blob_base)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data =
+          const char* data =
               page_header->get_data() +
               BYTE_SIZE(vertex_per_page *
                         vertex_prop_num_per_column_family_[label_id]
@@ -803,24 +797,22 @@ class GartFragment {
     return nullptr;
   }
 
-  char* GetRowDataAddr(const vertex_t& v, prop_id_t column_family_id) const {
+  const char* GetRowDataAddr(const vertex_t& v,
+                             prop_id_t column_family_id) const {
     assert(IsInnerVertex(v));
     label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
     auto v_offset = GetOffset(v);
     auto header_offset = prop_cols_meta[label_id][column_family_id].header;
+    const char* blob_base = vertex_prop_blob_ptrs_[label_id][column_family_id];
     FlexColBlobHeader* header =
-        (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
-                                                    [column_family_id] +
-                              header_offset);
+        (FlexColBlobHeader*) (blob_base + header_offset);
     int vertex_per_page = header->get_num_row_per_page();
     int page_id = v_offset / vertex_per_page;
-    PageHeader* page_header =
-        header->get_page_header_ptr((uintptr_t) header, page_id);
+    PageHeader* page_header = header->get_page_header_ptr(blob_base, page_id);
     int page_idx = v_offset % vertex_per_page;
-    for (; page_header;
-         page_header = page_header->get_prev((uintptr_t) header)) {
+    for (; page_header; page_header = page_header->get_prev(blob_base)) {
       if (page_header->get_epoch() <= (int) read_epoch_number_) {
-        char* data =
+        const char* data =
             page_header->get_data() +
             BYTE_SIZE(
                 vertex_per_page *
@@ -850,20 +842,18 @@ class GartFragment {
     auto v_offset = GetOffset(v);
     auto header_offset = prop_cols_meta[label_id][column_family_id].header;
     if (prop_cols_meta[label_id][column_family_id].updatable == true) {
+      const char* blob_base =
+          vertex_prop_blob_ptrs_[label_id][column_family_id];
       FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
-                                                      [column_family_id] +
-                                header_offset);
+          (FlexColBlobHeader*) (blob_base + header_offset);
       int vertex_per_page = header->get_num_row_per_page();
       int page_id = v_offset / vertex_per_page;
-      PageHeader* page_header =
-          header->get_page_header_ptr((uintptr_t) header, page_id);
+      PageHeader* page_header = header->get_page_header_ptr(blob_base, page_id);
       int page_idx = v_offset % vertex_per_page;
 
-      for (; page_header;
-           page_header = page_header->get_prev((uintptr_t) header)) {
+      for (; page_header; page_header = page_header->get_prev(blob_base)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data =
+          const char* data =
               page_header->get_data() +
               BYTE_SIZE(vertex_per_page *
                         vertex_prop_num_per_column_family_[label_id]
@@ -896,20 +886,18 @@ class GartFragment {
     auto v_offset = GetOffset(v);
     auto header_offset = prop_cols_meta[label_id][column_family_id].header;
     if (prop_cols_meta[label_id][column_family_id].updatable == true) {
+      const char* blob_base =
+          vertex_prop_blob_ptrs_[label_id][column_family_id];
       FlexColBlobHeader* header =
-          (FlexColBlobHeader*) (vertex_prop_blob_ptrs_[label_id]
-                                                      [column_family_id] +
-                                header_offset);
+          (FlexColBlobHeader*) (blob_base + header_offset);
       int vertex_per_page = header->get_num_row_per_page();
       int page_id = v_offset / vertex_per_page;
-      PageHeader* page_header =
-          header->get_page_header_ptr((uintptr_t) header, page_id);
+      PageHeader* page_header = header->get_page_header_ptr(blob_base, page_id);
       int page_idx = v_offset % vertex_per_page;
 
-      for (; page_header;
-           page_header = page_header->get_prev((uintptr_t) header)) {
+      for (; page_header; page_header = page_header->get_prev(blob_base)) {
         if (page_header->get_epoch() <= (int) read_epoch_number_) {
-          char* data =
+          const char* data =
               page_header->get_data() +
               BYTE_SIZE(vertex_per_page *
                         vertex_prop_num_per_column_family_[label_id]

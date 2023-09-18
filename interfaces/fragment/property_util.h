@@ -41,11 +41,13 @@ struct VertexPropMeta {
 
 class PageHeader {
  public:
-  int get_epoch() { return ver_; }
-  PageHeader* get_prev(uintptr_t base_addr) {
+  int get_epoch() const { return ver_; }
+
+  PageHeader* get_prev(const char* base_addr) const {
     return (PageHeader*) (base_addr + prev_ptr_);
   }
-  char* get_data() {
+
+  const char* get_data() const {
     // return ((char*)this) + sizeof(*this);
     return content;
   }
@@ -63,11 +65,11 @@ class PageHeader {
 
 class FlexColBlobHeader {
  public:
-  PageHeader* get_page_header_ptr(uintptr_t base_ptr, int loc) {
-    return (PageHeader*) (base_ptr + page_ptr[loc]);
+  PageHeader* get_page_header_ptr(const char* base_ptr, int page_id) const {
+    return (PageHeader*) (base_ptr + page_ptr[page_id]);
   }
 
-  int get_num_row_per_page() { return num_row_per_page_; }
+  int get_num_row_per_page() const { return num_row_per_page_; }
 
  private:
   int num_row_per_page_;
