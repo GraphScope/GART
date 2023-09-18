@@ -89,7 +89,9 @@ class RGMapping {
     return edges_[elabel];
   }
 
-  inline const size_t get_edge_label_num() const { return vlabel2elabel_.size(); }
+  inline const size_t get_edge_label_num() const {
+    return vlabel2elabel_.size();
+  }
 
   inline const size_t get_vertex_label_num() const { return vertex_label_num_; }
 

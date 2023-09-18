@@ -39,7 +39,6 @@
 namespace seggraph {
 class SegEdgeIterator;
 class EpochEdgeIterator;
-class SegTransaction;
 class EpochGraphWriter;
 class EpochGraphReader;
 
@@ -157,12 +156,6 @@ class SegGraph {
 
   BlockManager& get_block_manager() { return block_manager; }
 
-  void recycle_segments(timestamp_t epoch_id);
-
-  SegTransaction begin_transaction();
-  SegTransaction begin_read_only_transaction();
-  SegTransaction begin_batch_loader();
-
   // new epoch_based interface
   EpochGraphReader create_graph_reader(timestamp_t read_epoch);
   EpochGraphWriter create_graph_writer(timestamp_t write_epoch);
@@ -205,6 +198,8 @@ class SegGraph {
   gart::BlobSchema& get_blob_schema() { return blob_schema; }
 
  private:
+  void recycle_segments(timestamp_t epoch_id);
+
   using cacheline_padding_t = char[64];
 
   std::atomic<timestamp_t> epoch_id;
@@ -264,7 +259,6 @@ class SegGraph {
 
   friend class SegEdgeIterator;
   friend class EpochEdgeIterator;
-  friend class SegTransaction;
   friend class EpochGraphWriter;
   friend class EpochGraphReader;
 };

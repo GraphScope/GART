@@ -25,27 +25,11 @@
 #include "seggraph/segment_graph.hpp"
 #include "seggraph/epoch_graph_reader.hpp"
 #include "seggraph/epoch_graph_writer.hpp"
-#include "seggraph/segment_transaction.hpp"
 
-using SegTransaction = seggraph::SegTransaction;
 using EpochGraphReader = seggraph::EpochGraphReader;
 using EpochGraphWriter = seggraph::EpochGraphWriter;
 using SegGraph = seggraph::SegGraph;
 using timestamp_t = seggraph::timestamp_t;
-
-SegTransaction SegGraph::begin_transaction() {
-  auto local_txn_id = transaction_id.fetch_add(1, std::memory_order_relaxed) +
-                      1;  // txn_id begin from 1
-  auto read_epoch_id = epoch_id.load(std::memory_order_acquire);
-  read_epoch_table.local() = read_epoch_id;
-  return SegTransaction(*this, local_txn_id, read_epoch_id, false, true);
-}
-
-SegTransaction SegGraph::begin_read_only_transaction() {
-  auto read_epoch_id = epoch_id.load(std::memory_order_acquire);
-  read_epoch_table.local() = read_epoch_id;
-  return SegTransaction(*this, RO_TRANSACTION, read_epoch_id, false, false);
-}
 
 EpochGraphReader SegGraph::create_graph_reader(timestamp_t read_epoch) {
   return EpochGraphReader(*this, read_epoch);
@@ -56,12 +40,6 @@ EpochGraphWriter SegGraph::create_graph_writer(timestamp_t write_epoch) {
     recycle_segments(write_epoch);
   }
   return EpochGraphWriter(*this, write_epoch);
-}
-
-SegTransaction SegGraph::begin_batch_loader() {
-  auto read_epoch_id = epoch_id.load(std::memory_order_acquire);
-  read_epoch_table.local() = read_epoch_id;
-  return SegTransaction(*this, RO_TRANSACTION, read_epoch_id, true, false);
 }
 
 void SegGraph::recycle_segments(timestamp_t epoch_id) {

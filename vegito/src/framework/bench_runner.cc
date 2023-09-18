@@ -145,14 +145,16 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
     auto dst_col =
         edef[idx]["destinationVertexMappings"][0]["dataField"]["name"]
             .as<string>();
-    
-    bool edge_is_undirected = edef[idx]["type_pair"]["undirected"].as<bool>(false);
+
+    bool edge_is_undirected =
+        edef[idx]["type_pair"]["undirected"].as<bool>(false);
     graph_schema.label_id_map[name] = id;
     int src_label_id = vertex_name_id_map.find(src_name)->second;
     int dst_label_id = vertex_name_id_map.find(dst_name)->second;
     graph_schema.edge_relation[id] = {src_label_id, dst_label_id};
     // TODO(wanglei): fk and is_directed are hard code
-    rg_map->define_nn_edge(id, src_label_id, dst_label_id, 0, 0, edge_is_undirected,
+    rg_map->define_nn_edge(id, src_label_id, dst_label_id, 0, 0,
+                           edge_is_undirected,
                            edef[idx]["dataFieldMappings"].size());
   }
 
