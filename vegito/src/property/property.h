@@ -167,10 +167,6 @@ class Property {  // NOLINT(build/class)
     return nullptr;
   }
 
-  std::vector<size_t>& get_val_lens() { return val_lens_; }
-  std::vector<size_t>& get_val_offs() { return val_off_; }
-  std::vector<PropertyStoreDataType>& get_val_types() { return val_type_; }
-
   virtual char* getByOffset(uint64_t offset, int columnID, uint64_t version,
                             uint64_t* walk_cnt = nullptr) = 0;
 
@@ -184,7 +180,6 @@ class Property {  // NOLINT(build/class)
   // schema
   std::vector<size_t> val_lens_;
   std::vector<size_t> val_off_;
-  std::vector<PropertyStoreDataType> val_type_;
 
   class RowCursor {
    public:

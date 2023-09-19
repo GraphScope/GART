@@ -38,8 +38,7 @@ namespace property {
 class PropertyColPaged : public Property {
  public:
   PropertyColPaged(Property::Schema schema, uint64_t max_items,
-                   memory::BufferManager& buf_mgr,
-                   const std::vector<uint32_t>* split = nullptr);
+                   memory::BufferManager& buf_mgr);
   ~PropertyColPaged();
 
   // for insert
@@ -84,15 +83,6 @@ class PropertyColPaged : public Property {
   char* locateValue(int colid, char* col, size_t offset);
 
  private:
-  // physical columns
-  struct PColumn {
-    uint16_t cid;     // column index
-    uint16_t offset;  // field offset in bytes
-
-    PColumn() {}
-    PColumn(uint16_t c, uint16_t o) : cid(c), offset(o) {}
-  };
-
   struct Page {
     uint64_t ver;
     uintptr_t prev_ptr;
@@ -134,9 +124,6 @@ class PropertyColPaged : public Property {
 
   // for each column
   std::vector<Property::Column> cols_;
-  std::vector<PColumn> pcols_;
-  std::vector<uint64_t> split_;
-  std::vector<uint64_t> split_vlen_;
 
   std::vector<char*> fixCols_;
   std::vector<FlexCol> flexCols_;

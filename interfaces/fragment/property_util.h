@@ -31,12 +31,10 @@ typedef inline_str_fixed<22> TimeStamp;
 
 struct VertexPropMeta {
   int prop_id;
-  int val_size;
   bool updatable;
   obj_id_t object_id;
   uintptr_t header;  // offset for colblob header
   std::string name;
-  int dtype;
 };
 
 class PageHeader {

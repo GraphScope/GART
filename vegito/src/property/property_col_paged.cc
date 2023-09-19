@@ -56,8 +56,7 @@ namespace gart {
 namespace property {
 
 PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
-                                   memory::BufferManager& buf_mgr,
-                                   const vector<uint32_t>* split)
+                                   memory::BufferManager& buf_mgr)
     : Property(max_items, buf_mgr),
       table_id_(s.table_id),
       cols_(s.cols),
@@ -72,7 +71,6 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
     size_t vlen = cols_[i].vlen;
     val_off_.push_back(val_len_);
     val_lens_.push_back(vlen);
-    val_type_.push_back(cols_[i].vtype);
 
     val_len_ += vlen;
     if (cols_[i].page_size > max_items_)
@@ -80,29 +78,6 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
     if (cols_[i].page_size == 0)
       cols_[i].page_size = 4 * 1024;
   }
-
-  pcols_.reserve(cols_.size());
-  if (split == nullptr) {
-    for (int i = 0; i < cols_.size(); ++i) {
-      pcols_.emplace_back(i, 0);
-      split_.emplace_back(i);
-      split_vlen_.emplace_back(val_lens_[i]);
-    }
-  } else {
-    assert(split->size() > 0);
-    for (int s = 0; s < split->size(); ++s) {
-      int begin = (*split)[s];
-      int end = (s == split->size() - 1) ? cols_.size() : (*split)[s + 1];
-      uint64_t off = 0;
-      for (int i = begin; i < end; ++i) {
-        pcols_.emplace_back(s, off);
-        off += val_lens_[i];
-      }
-      split_.emplace_back(s);
-      split_vlen_.emplace_back(off);
-    }
-  }
-  assert(pcols_.size() == cols_.size());
 
   for (int i = 0; i < cols_.size(); ++i) {
     size_t vlen = val_lens_[i];
@@ -130,20 +105,6 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
       flex_bufs_[i].allocated_sz = 0 + FlexColHeader::size(page_num);
 
       header->num_row_per_page = page_sz;
-
-      //       for (int p = 0; p < page_num; ++p) {
-      // #if LAZY_PAGE_ALLOC == 0
-      //         Page* page = getNewPage_(page_sz, vlen,
-      //         cols_[i].real_column_num, -1,
-      //                                  nullptr, i, p);
-      //         flexCols_[i].old_pages[p] = page;
-      // #else
-      //         Page* page =
-      //             getInitPage_(page_sz, vlen, cols_[i].real_column_num, i,
-      //             p);
-      // #endif
-      //         flexCols_[i].pages[p] = page;
-      //       }
     } else {
       fixCols_[i] =
           v6d_malloc(vlen * max_items_, col_v6d_oids_[i], col_v6d_offsets_[i]);
@@ -155,7 +116,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
   blob_metas_.resize(cols_.size());
   for (int i = 0; i < cols_.size(); ++i) {
     gart::VPropMeta& meta = blob_metas_[i];
-    meta.init(i, val_lens_[i], cols_[i].updatable, cols_[i].vtype);
+    meta.init(i, cols_[i].updatable);
 
     meta.set_oid(col_v6d_oids_[i], col_v6d_offsets_[i]);
   }

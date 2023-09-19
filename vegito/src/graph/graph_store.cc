@@ -87,7 +87,6 @@ const string EDGE = "EDGE";      // NOLINT(runtime/string)
 
 struct TypeDef {
   int id;
-  // vector<int> index; empty
   string label;
   vector<PropDef> propertyDefList;
   string src_vlabel;  // for edge
@@ -286,7 +285,7 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
   blob_schemas_[vlabel] = blob_schema;
 }
 
-void GraphStore::add_vprop(uint64_t vlabel, Property::Schema schema) {
+void GraphStore::add_vprop(uint64_t vlabel, const Property::Schema& schema) {
   assert(seg_graphs_[vlabel]);
 
   property_schemas_[vlabel] = schema;

@@ -415,7 +415,6 @@ class GartFragment {
         prop_meta.updatable = vertex_prop_config[idx]["updatable"].get<bool>();
         prop_meta.header = vertex_prop_config[idx]["header"].get<uint64_t>();
         prop_meta.object_id = v_prop_obj_id;
-        prop_meta.dtype = vertex_prop_config[idx]["type"].get<int>();
         prop_cols_meta[vlabel][prop_id] = prop_meta;
       }
     }

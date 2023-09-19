@@ -43,9 +43,6 @@ PropertyColArray::PropertyColArray(Property::Schema s, uint64_t max_items,
   for (int i = 0; i < cols_.size(); i++) {
     size_t vlen = cols_[i].vlen;
     val_lens_.push_back(vlen);
-    val_type_.push_back(cols_[i].vtype);
-
-    // fixCols_[i] = new char[vlen * max_items_];
 
     if (cols_[i].updatable) {
       flexCols_[i] = new char[(sizeof(ValueNode) + vlen) * max_items_];

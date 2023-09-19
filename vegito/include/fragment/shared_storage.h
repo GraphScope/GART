@@ -172,11 +172,9 @@ struct ArrayMeta {
 struct VPropMeta {
   VPropMeta() {}
 
-  void init(uint64_t prop_id, int val_sz, bool updatable, int16_t type) {
+  void init(uint64_t prop_id, bool updatable) {
     this->prop_id = prop_id;
-    this->val_sz = val_sz;
     this->updatable = updatable;
-    this->type = type;
   }
 
   void set_oid(oid_t object_id, uintptr_t header) {
@@ -189,11 +187,8 @@ struct VPropMeta {
     json res;
     res["object_id"] = object_id;
     res["prop_id"] = prop_id;
-    res["val_sz"] = val_sz;
-    res["type"] = type;
     res["updatable"] = updatable;
     res["header"] = header;
-
     return res;
   }
 
@@ -201,8 +196,6 @@ struct VPropMeta {
   oid_t object_id;
   uintptr_t header;  // for extension
   int prop_id;
-  int16_t val_sz;  // size of value in bytes
-  int16_t type;
   bool updatable;
 };
 

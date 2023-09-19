@@ -152,7 +152,7 @@ class GraphStore {
 
   void add_vgraph(uint64_t vlabel, RGMapping* rg_map);
 
-  void add_vprop(uint64_t vlabel, property::Property::Schema schema);
+  void add_vprop(uint64_t vlabel, const property::Property::Schema& schema);
 
   void update_blob(uint64_t blob_epoch);
 
