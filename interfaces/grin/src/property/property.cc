@@ -216,16 +216,16 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
   std::string dtype_str = _g->GetVertexPropDataType(v_type, prop_id);
   void* _value = NULL;
   if (dtype_str == "INT") {
-    _value = _g->template GetDataAddr<int32_t>(_GRIN_VERTEX_T(v), prop_id);
+    _value = const_cast<char*>(_g->template GetDataAddr<int32_t>(_GRIN_VERTEX_T(v), prop_id));
   } else if (dtype_str == "LONG") {
-    _value = _g->template GetDataAddr<uint64_t>(_GRIN_VERTEX_T(v), prop_id);
+    _value = const_cast<char*>(_g->template GetDataAddr<uint64_t>(_GRIN_VERTEX_T(v), prop_id));
   } else if (dtype_str == "FLOAT") {
-    _value = _g->template GetDataAddr<float>(_GRIN_VERTEX_T(v), prop_id);
+    _value = const_cast<char*>(_g->template GetDataAddr<float>(_GRIN_VERTEX_T(v), prop_id));
   } else if (dtype_str == "DOUBLE") {
-    _value = _g->template GetDataAddr<double>(_GRIN_VERTEX_T(v), prop_id);
+    _value = const_cast<char*>(_g->template GetDataAddr<double>(_GRIN_VERTEX_T(v), prop_id));
   } else if (dtype_str == "STRING") {
     _value =
-        _g->template GetDataAddr<std::string_view>(_GRIN_VERTEX_T(v), prop_id);
+        const_cast<char*>(_g->template GetDataAddr<std::string_view>(_GRIN_VERTEX_T(v), prop_id));
   } else {
     grin_error_code = GRIN_ERROR_CODE::UNKNOWN_DATATYPE;
     _value = NULL;
