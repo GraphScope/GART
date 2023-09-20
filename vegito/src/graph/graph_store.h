@@ -80,8 +80,7 @@ class GraphStore {
     uint64_t min_outer_location;
   };
 
-  GraphStore(int local_pid = 0, int mid = 0, int total_partitions = 0,
-             int total_vertex_label_num = 1)
+  GraphStore(int local_pid, int mid, int total_partitions)
       : local_pid_(local_pid),
         mid_(mid),
         local_pnum_(total_partitions),

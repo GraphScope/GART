@@ -65,7 +65,6 @@ class SegGraph {
 
         // memory allocator
         block_manager(_max_block_size),
-        array_allocator(block_manager.get_client()),
 
         rg_map(rg_map) {
     auto futex_allocater =
@@ -78,6 +77,13 @@ class SegGraph {
             std::shared_timed_mutex*>(array_allocator);
     seg_mutexes = shared_mutex_allocater.allocate(max_seg_id);
 
+    auto char_allocater =
+        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<char>(
+            array_allocator);
+    char* block_manager_ptr =
+        char_allocater.allocate_v6d(_max_block_size, block_manager_oid);
+    block_manager.init_buffer(block_manager_ptr);
+
     auto pointer_allocater = std::allocator_traits<
         decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
     vertex_ptrs = pointer_allocater.allocate(max_vertex_id);
@@ -86,7 +92,7 @@ class SegGraph {
         pointer_allocater.allocate_v6d(max_seg_id, edge_label_ptrs_oid);
 
     gart::ArrayMeta meta(edge_label_ptrs_oid, max_seg_id);
-    blob_schema.set_block_oid(block_manager.get_block_oid());
+    blob_schema.set_block_oid(block_manager_oid);
     blob_schema.set_elabel2segs(meta);
 
     // tricky method: avoid corner case in segment lock
@@ -127,6 +133,11 @@ class SegGraph {
     pointer_allocater.deallocate(vertex_ptrs, max_vertex_id);
 
     pointer_allocater.deallocate_v6d(edge_label_ptrs_oid);
+
+    auto char_allocater =
+        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<char>(
+            array_allocator);
+    char_allocater.deallocate_v6d(block_manager_oid);
   }
 
   vertex_t get_max_vertex_id() const { return vertex_id; }
@@ -231,6 +242,7 @@ class SegGraph {
   vertex_t* vertex_table;
   vertex_t* ovl2g;
 
+  vineyard::ObjectID block_manager_oid;
   vineyard::ObjectID edge_label_ptrs_oid;
   vineyard::ObjectID ovl2g_oid;
   vineyard::ObjectID ovg2l_map;

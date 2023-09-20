@@ -24,19 +24,13 @@
 
 #pragma once
 
-#include <sys/mman.h>
-
-#include <memory>
-#include <string>
+#include <iostream>
 #include <vector>
 
 #include "common/util/likely.h"
 #include "glog/logging.h"
 #include "tbb/enumerable_thread_specific.h"
-#include "vineyard/client/client.h"
-#include "vineyard/client/ds/blob.h"
 
-#include "framework/config.h"  // NOLINT(build/include_subdir)
 #include "seggraph/types.hpp"
 
 namespace seggraph {
@@ -49,40 +43,20 @@ class BlockManager {
   explicit BlockManager(size_t _capacity)
       : capacity(_capacity),
         mutex(),
+        used_size(0),
+        fd(EMPTY_FD),
+        file_size(FILE_TRUNC_SIZE),
+        data(nullptr),
         free_blocks(std::vector<std::vector<uintptr_t>>(
             LARGE_BLOCK_THRESHOLD, std::vector<uintptr_t>())),
         large_free_blocks(MAX_ORDER, std::vector<uintptr_t>()) {
-    {
-      using BlobWriter = vineyard::BlobWriter;
-      using Blob = vineyard::Blob;
-
-      fd = EMPTY_FD;
-
-      std::string ipc_socket = gart::framework::config.getIPCScoket();
-
-      VINEYARD_CHECK_OK(client.Connect(ipc_socket));
-      std::unique_ptr<BlobWriter> blob_writer;
-      std::shared_ptr<Blob> blob;
-      VINEYARD_CHECK_OK(client.CreateBlob(capacity, blob_writer));
-      VINEYARD_CHECK_OK(client.GetBlob(blob_writer->id(), true, blob));
-      data = reinterpret_cast<void*>(blob_writer->data());
-
-      oid = blob_writer->id();
-    }
-
-    file_size = FILE_TRUNC_SIZE;
-    used_size = 0;
-
     null_holder = alloc(LARGE_BLOCK_THRESHOLD);
   }
 
   ~BlockManager() {
     free(null_holder, LARGE_BLOCK_THRESHOLD);
-    msync(data, capacity, MS_SYNC);
-    munmap(data, capacity);
     if (fd != EMPTY_FD)
       close(fd);
-    client.Disconnect();
   }
 
   void print_free_blocks_info() {
@@ -107,6 +81,8 @@ class BlockManager {
     }
     return ret;
   }
+
+  void init_buffer(char* ptr) { data = ptr; }
 
   uintptr_t alloc(order_t order) {
     uintptr_t pointer = NULLPOINTER;
@@ -168,16 +144,10 @@ class BlockManager {
     return reinterpret_cast<char*>(ptr) - reinterpret_cast<char*>(data);
   }
 
-  inline vineyard::ObjectID get_block_oid() const { return oid; }
-
-  inline vineyard::Client* get_client() { return &client; }
-
  private:
   const size_t capacity;
   int fd;
   void* data;
-  vineyard::Client client;
-  vineyard::ObjectID oid;
   std::mutex mutex;
   tbb::enumerable_thread_specific<std::vector<std::vector<uintptr_t>>>
       free_blocks;
