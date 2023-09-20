@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 
+#include "glog/logging.h"
 #include "vineyard/client/client.h"
 #include "vineyard/client/ds/blob.h"
 
@@ -34,14 +35,19 @@ struct SparseArrayAllocator {
   SparseArrayAllocator() : client_(new vineyard::Client), init_client_(true) {
     std::string ipc_socket = gart::framework::config.getIPCScoket();
     VINEYARD_CHECK_OK(client_->Connect(ipc_socket));
+
+    VINEYARD_CHECK_OK(client_->InstanceStatus(v6d_status_));
   }
 
   explicit SparseArrayAllocator(vineyard::Client* client)
-      : client_(client), init_client_(false) {}
+      : client_(client), init_client_(false) {
+    VINEYARD_CHECK_OK(client_->InstanceStatus(v6d_status_));
+  }
 
   template <class U>
   SparseArrayAllocator(const SparseArrayAllocator<U>& that)
       : client_(that.client_), init_client_(false) {
+    VINEYARD_CHECK_OK(client_->InstanceStatus(v6d_status_));
     assert(client_);
   }
 
@@ -60,6 +66,19 @@ struct SparseArrayAllocator {
     size_t size = n * sizeof(T);
     if (n > std::numeric_limits<std::size_t>::max() / sizeof(T))
       throw std::bad_alloc();
+
+    size_t usage = v6d_status_->memory_usage;
+    size_t limit = v6d_status_->memory_limit;
+    // printf("Vineyard memory usage %.2f + %.2f = %.2f MB\n",
+    //        usage / 1.0 / (1 << 20), size / 1.0 / (1 << 20),
+    //        (usage + size) / 1.0 / (1 << 20));
+    if (usage + size > limit) {
+      LOG(ERROR) << "Vineyard memory usage " << usage << " + " << size
+                 << " exceeds limit " << limit;
+      assert(false);
+      exit(-1);
+      return nullptr;
+    }
 
     std::unique_ptr<vineyard::BlobWriter> blob_writer;
     std::shared_ptr<vineyard::Blob> blob;
@@ -91,8 +110,10 @@ struct SparseArrayAllocator {
   }
 
  private:
-  vineyard::Client* client_;
   const bool init_client_;
+  vineyard::Client* client_;
+
+  std::shared_ptr<struct vineyard::InstanceStatus> v6d_status_;
 
   template <typename>
   friend struct SparseArrayAllocator;

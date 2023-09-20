@@ -44,12 +44,14 @@ class EpochGraphReader;
 
 class SegGraph {
  public:
+  // _max_block_size:
+  //   the maximum size (capacity) in bytes of the `block_manager`
   // _max_vertex_id:
   //   the maximum vertex id in the graph, decides the size of the
   //   vertex table and the rows of properties
   SegGraph(gart::graph::RGMapping* rg_map,
-           size_t _max_block_size = 1 * (1ul << 30),  // 35 for large graph
-           vertex_t _max_vertex_id = 1 * (1ul << 30))
+           size_t _max_block_size = 1 * (1ul << 30),   // 35 for large graph
+           vertex_t _max_vertex_id = 1 * (1ul << 25))  // 30 for large graph
       : epoch_id(0),
         transaction_id(0),
         vertex_id(0),
