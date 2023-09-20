@@ -104,7 +104,7 @@ class BufferManager {
 
   bool inited_;
   uint64_t capacity_;
-  SparseArrayAllocator<void> array_allocator_;
+  SparseArrayAllocator array_allocator_;
 
   uint64_t size_;  // allocated size
   vineyard::ObjectID buffer_oid_;

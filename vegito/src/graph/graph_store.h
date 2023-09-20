@@ -490,7 +490,7 @@ class GraphStore {
   const int total_partitions_;  // total number of partitions
   int total_vertex_label_num_;
 
-  SparseArrayAllocator<void> array_allocator_;
+  SparseArrayAllocator array_allocator_;
 
   // graph store schema
   SchemaImpl schema_;

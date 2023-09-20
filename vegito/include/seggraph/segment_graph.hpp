@@ -67,29 +67,19 @@ class SegGraph {
         block_manager(_max_block_size),
 
         rg_map(rg_map) {
-    auto futex_allocater =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<Futex>(
-            array_allocator);
-    vertex_futexes = futex_allocater.allocate(max_vertex_id);
+    vertex_futexes = array_allocator.allocate<Futex>(max_vertex_id);
 
-    auto shared_mutex_allocater =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<
-            std::shared_timed_mutex*>(array_allocator);
-    seg_mutexes = shared_mutex_allocater.allocate(max_seg_id);
+    seg_mutexes =
+        array_allocator.allocate<std::shared_timed_mutex*>(max_seg_id);
 
-    auto char_allocater =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<char>(
-            array_allocator);
     char* block_manager_ptr =
-        char_allocater.allocate_v6d(_max_block_size, block_manager_oid);
+        array_allocator.allocate_v6d(_max_block_size, block_manager_oid);
     block_manager.init_buffer(block_manager_ptr);
 
-    auto pointer_allocater = std::allocator_traits<
-        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
-    vertex_ptrs = pointer_allocater.allocate(max_vertex_id);
+    vertex_ptrs = array_allocator.allocate<uintptr_t>(max_vertex_id);
 
-    edge_label_ptrs =
-        pointer_allocater.allocate_v6d(max_seg_id, edge_label_ptrs_oid);
+    edge_label_ptrs = array_allocator.allocate_v6d<uintptr_t>(
+        max_seg_id, edge_label_ptrs_oid);
 
     gart::ArrayMeta meta(edge_label_ptrs_oid, max_seg_id);
     blob_schema.set_block_oid(block_manager_oid);
@@ -117,27 +107,15 @@ class SegGraph {
   SegGraph(SegGraph&&) = delete;
 
   ~SegGraph() noexcept {
-    auto futex_allocater =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<Futex>(
-            array_allocator);
-    futex_allocater.deallocate(vertex_futexes, max_vertex_id);
+    array_allocator.deallocate(vertex_futexes, max_vertex_id);
 
-    auto shared_mutex_allocater =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<
-            std::shared_timed_mutex*>(array_allocator);
-    shared_mutex_allocater.deallocate(seg_mutexes, max_seg_id);
+    array_allocator.deallocate(seg_mutexes, max_seg_id);
 
-    auto pointer_allocater = std::allocator_traits<
-        decltype(array_allocator)>::rebind_alloc<uintptr_t>(array_allocator);
+    array_allocator.deallocate(vertex_ptrs, max_vertex_id);
 
-    pointer_allocater.deallocate(vertex_ptrs, max_vertex_id);
+    array_allocator.deallocate_v6d(edge_label_ptrs_oid);
 
-    pointer_allocater.deallocate_v6d(edge_label_ptrs_oid);
-
-    auto char_allocater =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<char>(
-            array_allocator);
-    char_allocater.deallocate_v6d(block_manager_oid);
+    array_allocator.deallocate_v6d(block_manager_oid);
   }
 
   vertex_t get_max_vertex_id() const { return vertex_id; }
@@ -190,10 +168,7 @@ class SegGraph {
   T* alloc_vertex_array(T init, vertex_t sz = -1) {
     if (sz == -1)
       sz = get_max_vertex_id();
-    auto vertex_data_allocater =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<T>(
-            array_allocator);
-    T* vertex_data = vertex_data_allocater.allocate(sz);
+    T* vertex_data = array_allocator.allocate<T>(sz);
     assert(vertex_data);
     for (vertex_t v_i = 0; v_i < sz; v_i++) {
       vertex_data[v_i] = init;
@@ -203,10 +178,7 @@ class SegGraph {
 
   template <typename T>
   T* dealloc_vertex_array(T* vertex_data) {
-    auto vertex_data_allocater =
-        std::allocator_traits<decltype(array_allocator)>::rebind_alloc<T>(
-            array_allocator);
-    vertex_data_allocater.deallocate(vertex_data, get_max_vertex_id());
+    array_allocator.deallocate(vertex_data, get_max_vertex_id());
   }
 
   gart::BlobSchema& get_blob_schema() { return blob_schema; }
@@ -231,8 +203,8 @@ class SegGraph {
   const segid_t max_seg_id;
 
   // memory allocator
-  BlockManager block_manager;                  // topology data
-  SparseArrayAllocator<void> array_allocator;  // meta data
+  BlockManager block_manager;            // topology data
+  SparseArrayAllocator array_allocator;  // meta data
 
   Futex* vertex_futexes;
   std::shared_timed_mutex** seg_mutexes;

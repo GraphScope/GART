@@ -28,10 +28,7 @@
 
 #include "framework/config.h"  // NOLINT(build/include_subdir)
 
-template <typename T>
 struct SparseArrayAllocator {
-  using value_type = T;
-
   SparseArrayAllocator() : client_(new vineyard::Client), init_client_(true) {
     std::string ipc_socket = gart::framework::config.getIPCScoket();
     VINEYARD_CHECK_OK(client_->Connect(ipc_socket));
@@ -42,13 +39,6 @@ struct SparseArrayAllocator {
   explicit SparseArrayAllocator(vineyard::Client* client)
       : client_(client), init_client_(false) {
     VINEYARD_CHECK_OK(client_->InstanceStatus(v6d_status_));
-  }
-
-  template <class U>
-  SparseArrayAllocator(const SparseArrayAllocator<U>& that)
-      : client_(that.client_), init_client_(false) {
-    VINEYARD_CHECK_OK(client_->InstanceStatus(v6d_status_));
-    assert(client_);
   }
 
   ~SparseArrayAllocator() {
@@ -62,6 +52,7 @@ struct SparseArrayAllocator {
 
   vineyard::Client* get_client() { return client_; }
 
+  template <typename T = char>
   T* allocate_v6d(size_t n, vineyard::ObjectID& oid) {
     size_t size = n * sizeof(T);
     if (n > std::numeric_limits<std::size_t>::max() / sizeof(T))
@@ -93,6 +84,7 @@ struct SparseArrayAllocator {
     VINEYARD_CHECK_OK(client_->DelData(oid));
   }
 
+  template <typename T = char>
   T* allocate(size_t n) {
     size_t size = n * sizeof(T);
     if (n > std::numeric_limits<std::size_t>::max() / sizeof(T))
@@ -104,6 +96,7 @@ struct SparseArrayAllocator {
     return static_cast<T*>(data);
   }
 
+  template <typename T = char>
   void deallocate(T* data, size_t n) noexcept {
     size_t size = n * sizeof(T);
     munmap(data, size);
@@ -114,9 +107,6 @@ struct SparseArrayAllocator {
   vineyard::Client* client_;
 
   std::shared_ptr<struct vineyard::InstanceStatus> v6d_status_;
-
-  template <typename>
-  friend struct SparseArrayAllocator;
 };
 
 #endif  // VEGITO_INCLUDE_UTIL_ALLOCATOR_HPP_
