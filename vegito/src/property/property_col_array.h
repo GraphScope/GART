@@ -85,7 +85,7 @@ class PropertyColArray : public Property {
     return vlen;
   }
 
-  std::vector<Property::Column> cols_;
+  std::vector<Property::ColumnFamily> cols_;
   std::vector<int64_t> seq_;
 
   std::vector<uint64_t> key_col_;

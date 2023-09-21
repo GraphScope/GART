@@ -190,14 +190,14 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
     uint64_t edge_prop_prefix_bytes = 0;
     auto required_table_schema = table_schema[table_name];
 
-    std::vector<Property::Column> column_family_info(prop_info.size());
+    std::vector<Property::ColumnFamily> column_family_info(prop_info.size());
     std::vector<bool> column_family_info_is_valid(prop_info.size(), false);
     for (auto col_family_idx = 0; col_family_idx < prop_info.size();
          col_family_idx++) {
       column_family_info[col_family_idx].page_size = 0;
       column_family_info[col_family_idx].updatable = true;
       column_family_info[col_family_idx].vlen = 0;
-      column_family_info[col_family_idx].real_column_num = 0;
+      column_family_info[col_family_idx].column_num = 0;
     }
 
     for (int prop_idx = 0; prop_idx < prop_info.size(); prop_idx++) {
@@ -214,8 +214,8 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
                 prop_idx);
         column_family_info_is_valid[column_family_id] = true;
         graph_store->set_vertex_prop_id_in_column_family(
-            id, prop_id, column_family_info[column_family_id].real_column_num);
-        column_family_info[column_family_id].real_column_num++;
+            id, prop_id, column_family_info[column_family_id].column_num);
+        column_family_info[column_family_id].column_num++;
         graph_store->set_vertex_prop_column_family_map(id, prop_id,
                                                        column_family_id);
         graph_schema.column_family[{id, prop_id}] = column_family_id;
@@ -408,10 +408,9 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
           if (prop_dtype_str.rfind("varchar", 0) == 0 ||
               prop_dtype_str == "character varying" ||
               prop_dtype_str == "text") {
-            graph_store->set_external_id_dtype(id,
-                                               PropertyStoreDataType::STRING);
+            graph_store->set_external_id_dtype(id, PropertyDataType::STRING);
           } else {
-            graph_store->set_external_id_dtype(id, PropertyStoreDataType::LONG);
+            graph_store->set_external_id_dtype(id, PropertyDataType::LONG);
           }
           break;
         }
@@ -422,13 +421,13 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
       for (auto col_family_idx = 0; col_family_idx < column_family_info.size();
            col_family_idx++) {
         if (column_family_info_is_valid[col_family_idx]) {
-          prop_schema.cols.push_back(column_family_info[col_family_idx]);
+          prop_schema.col_families.push_back(
+              column_family_info[col_family_idx]);
         }
       }
       prop_schema.table_id = id;
-      prop_schema.klen = sizeof(uint64_t);
       graph_store->add_vprop(id, prop_schema);
-      prop_schema.cols.clear();
+      prop_schema.col_families.clear();
     } else {
       graph_store->insert_edge_prop_total_bytes(id, edge_prop_prefix_bytes);
       edge_prop_prefix_bytes = 0;

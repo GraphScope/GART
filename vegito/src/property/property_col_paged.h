@@ -123,7 +123,7 @@ class PropertyColPaged : public Property {
   uint64_t val_len_;
 
   // for each column
-  std::vector<Property::Column> cols_;
+  std::vector<Property::ColumnFamily> cols_;
 
   std::vector<char*> fixCols_;
   std::vector<FlexCol> flexCols_;

@@ -34,6 +34,7 @@
 #include "graph/graph_store.h"
 #include "property/property_col_paged.h"
 #include "util/bitset.h"
+#include "util/status.h"
 
 #define LAZY_PAGE_ALLOC 1
 
@@ -59,12 +60,12 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
                                    memory::BufferManager& buf_mgr)
     : Property(max_items, buf_mgr),
       table_id_(s.table_id),
-      cols_(s.cols),
-      col_v6d_oids_(s.cols.size()),
-      col_v6d_offsets_(s.cols.size()),
-      flex_bufs_(s.cols.size()),
-      fixCols_(s.cols.size(), nullptr),
-      flexCols_(s.cols.size()) {
+      cols_(s.col_families),
+      col_v6d_oids_(s.col_families.size()),
+      col_v6d_offsets_(s.col_families.size()),
+      flex_bufs_(s.col_families.size()),
+      fixCols_(s.col_families.size(), nullptr),
+      flexCols_(s.col_families.size()) {
   // each column
   val_len_ = 0;
   for (int i = 0; i < cols_.size(); i++) {
@@ -86,7 +87,7 @@ PropertyColPaged::PropertyColPaged(Property::Schema s, uint64_t max_items,
     if (cols_[i].updatable) {
       size_t page_sz = cols_[i].page_size;
       int page_num = (max_items_ + page_sz - 1) / page_sz;
-      size_t null_bitmap_size = BYTE_SIZE(page_sz * cols_[i].real_column_num);
+      size_t null_bitmap_size = BYTE_SIZE(page_sz * cols_[i].column_num);
       assert(page_num != 0);
       flexCols_[i].locks.assign(page_num, 0);
       flexCols_[i].pages.assign(page_num, nullptr);
@@ -168,7 +169,7 @@ inline PropertyColPaged::Page* PropertyColPaged::getNewPage_(
 
 inline PropertyColPaged::Page* PropertyColPaged::findWithInsertPage_(
     int colID, uint64_t pg_num, uint64_t version) {
-  const Property::Column& col = cols_[colID];
+  const Property::ColumnFamily& col = cols_[colID];
 
   FlexCol& flex = flexCols_[colID];
   assert(pg_num < flex.pages.size());
@@ -178,8 +179,8 @@ inline PropertyColPaged::Page* PropertyColPaged::findWithInsertPage_(
   if (flexCols_[colID].old_pages[pg_num] == nullptr) {
     gart::util::lock32(&flex.locks[pg_num]);
     if (flexCols_[colID].old_pages[pg_num] == nullptr) {
-      page = getNewPage_(col.page_size, col.vlen, col.real_column_num, -1,
-                         nullptr, colID, pg_num);
+      page = getNewPage_(col.page_size, col.vlen, col.column_num, -1, nullptr,
+                         colID, pg_num);
       flexCols_[colID].old_pages[pg_num] = page;
     }
     gart::util::unlock32(&flex.locks[pg_num]);
@@ -194,7 +195,7 @@ inline PropertyColPaged::Page* PropertyColPaged::findWithInsertPage_(
     page = flex.pages[pg_num];
 
     if (version > page->ver) {
-      Page* newPage = getNewPage_(col.page_size, col.vlen, col.real_column_num,
+      Page* newPage = getNewPage_(col.page_size, col.vlen, col.column_num,
                                   version, page, colID, pg_num);
       flex.pages[pg_num] = newPage;
       page = newPage;
@@ -211,7 +212,7 @@ inline PropertyColPaged::Page* PropertyColPaged::findPage(int colID,
                                                           uint64_t pg_num,
                                                           uint64_t version,
                                                           uint64_t* walk_cnt) {
-  const Property::Column& col = cols_[colID];
+  const Property::ColumnFamily& col = cols_[colID];
 
   FlexCol& flex = flexCols_[colID];
   assert(pg_num < flex.pages.size());
@@ -244,7 +245,7 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
   }
 
   for (int i = 0; i < cols_.size(); ++i) {
-    const Property::Column& col = cols_[i];
+    const Property::ColumnFamily& col = cols_[i];
 
     size_t vlen = col.vlen;
     char* dst = nullptr;
@@ -253,7 +254,7 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
       int pg_num = off / col.page_size;
       page = findWithInsertPage_(i, pg_num, ver);
       assert(page && page->ver == ver);
-      dst = page->content + BYTE_SIZE(col.page_size * col.real_column_num) +
+      dst = page->content + BYTE_SIZE(col.page_size * col.column_num) +
             (off % col.page_size) * vlen;
     } else {
       dst = fixCols_[i] + off * vlen;
@@ -319,7 +320,7 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
   }
 
   for (auto idx = 0; idx < cols_.size(); idx++) {
-    const Property::Column& col = cols_[idx];
+    const Property::ColumnFamily& col = cols_[idx];
     size_t vlen = col.vlen;
     char* dst = nullptr;
     Page* page;
@@ -327,7 +328,7 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
       int pg_num = off / col.page_size;
       page = findWithInsertPage_(idx, pg_num, ver);
       assert(page && page->ver == ver);
-      dst = page->content + BYTE_SIZE(col.page_size * col.real_column_num) +
+      dst = page->content + BYTE_SIZE(col.page_size * col.column_num) +
             (off % col.page_size) * vlen;
     } else {
       dst = fixCols_[idx] + off * vlen;
@@ -338,10 +339,10 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
          prop_idx++) {
       if (prop_value_is_null[idx][prop_idx] == false) {
         reset_bit((uint8_t*) (page->content),
-                  off % col.page_size * col.real_column_num + prop_idx);
+                  off % col.page_size * col.column_num + prop_idx);
       } else {
         set_bit((uint8_t*) (page->content),
-                off % col.page_size * col.real_column_num + prop_idx);
+                off % col.page_size * col.column_num + prop_idx);
       }
     }
   }
@@ -369,15 +370,15 @@ void PropertyColPaged::update(uint64_t off, uint64_t k,
         graph_store->get_vertex_prop_id_in_column_family(table_id_, prop_idx);
     bool is_null_value = false;
     bool old_value_is_null = false;
-    const Property::Column& col = cols_[col_family_id];
+    const Property::ColumnFamily& col = cols_[col_family_id];
     size_t vlen = col.vlen;
     int pg_num = off / col.page_size;
     FlexCol& flex = flexCols_[col_family_id];
     Page* page = flex.pages[pg_num];
 
     if (get_bit((uint8_t*) (page->content),
-                off % col.page_size * col.real_column_num +
-                    prop_id_in_col_family) == true) {
+                off % col.page_size * col.column_num + prop_id_in_col_family) ==
+        true) {
       old_value_is_null = true;
     }
 
@@ -392,7 +393,7 @@ void PropertyColPaged::update(uint64_t off, uint64_t k,
     prop_value_is_null[col_family_id].push_back(false);
 
     auto dtype = graph_schema.dtype_map[std::make_pair(table_id_, prop_idx)];
-    char* dst = page->content + BYTE_SIZE(col.page_size * col.real_column_num) +
+    char* dst = page->content + BYTE_SIZE(col.page_size * col.column_num) +
                 (off % col.page_size) * vlen + col_family_offset;
     if (dtype == INT) {
       int new_value = std::stoi(std::string(v_list[prop_idx]));
@@ -443,22 +444,22 @@ void PropertyColPaged::update(uint64_t off, uint64_t k,
 
   for (auto col_family_id = 0; col_family_id < cols_.size(); col_family_id++) {
     if (col_family_updated[col_family_id]) {
-      const Property::Column& col = cols_[col_family_id];
+      const Property::ColumnFamily& col = cols_[col_family_id];
       size_t vlen = col.vlen;
       int pg_num = off / col.page_size;
       Page* new_page = findWithInsertPage_(col_family_id, pg_num, ver);
       assert(new_page && new_page->ver == ver);
       char* new_dst = new_page->content + (off % col.page_size) * vlen +
-                      BYTE_SIZE(col.page_size * col.real_column_num);
+                      BYTE_SIZE(col.page_size * col.column_num);
       memcpy(new_dst, prop_buffer[col_family_id], vlen);
       for (auto prop_id = 0; prop_id < prop_value_is_null[col_family_id].size();
            prop_id++) {
         if (prop_value_is_null[col_family_id][prop_id] == false) {
           reset_bit((uint8_t*) (new_page->content),
-                    off % col.page_size * col.real_column_num + prop_id);
+                    off % col.page_size * col.column_num + prop_id);
         } else {
           set_bit((uint8_t*) (new_page->content),
-                  off % col.page_size * col.real_column_num + prop_id);
+                  off % col.page_size * col.column_num + prop_id);
         }
       }
     }
@@ -478,7 +479,7 @@ void PropertyColPaged::update(uint64_t off, const vector<int>& cids, char* v,
   // if (meta_seq >= seq) return;  // XXX: fix it, set seq on each columns
 
   for (int i : cids) {
-    const Property::Column& col = cols_[i];
+    const Property::ColumnFamily& col = cols_[i];
 
     uint64_t vlen = col.vlen;
     uint64_t voff = val_off_[i];
@@ -507,7 +508,7 @@ void PropertyColPaged::update(uint64_t off, int cid, char* v, uint64_t ver) {
     return;
   assert(off < max_items_);
 
-  const Property::Column& col = cols_[cid];
+  const Property::ColumnFamily& col = cols_[cid];
 
   uint64_t vlen = col.vlen;
 
@@ -570,7 +571,7 @@ void PropertyColPaged::gc(uint64_t ver) {
 char* PropertyColPaged::getByOffset(uint64_t offset, int col_id,
                                     uint64_t version, uint64_t* walk_cnt) {
   char* val = nullptr;
-  const Property::Column& col = cols_[col_id];
+  const Property::ColumnFamily& col = cols_[col_id];
   assert(offset < max_items_);
   // if (offset >= max_items_) return nullptr;
 
@@ -609,7 +610,7 @@ char* PropertyColPaged::getByOffset(uint64_t offset, int col_id,
 
 size_t PropertyColPaged::getCol(int col_id, uint64_t start_off, size_t size,
                                 uint64_t lver, vector<char*>& pages) {
-  const Property::Column& col = cols_[col_id];
+  const Property::ColumnFamily& col = cols_[col_id];
   pages.clear();
   assert(col.updatable);
   int start_pg = start_off / col.page_size;

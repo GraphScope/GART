@@ -20,6 +20,7 @@
 
 #include "graph/ddl.h"
 #include "graph/graph_store.h"
+#include "util/status.h"
 
 namespace gart {
 namespace framework {

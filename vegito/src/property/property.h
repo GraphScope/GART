@@ -34,14 +34,11 @@
 #include <vector>
 
 #include "glog/logging.h"
-#include "util/macros.h"
-#include "vineyard/common/util/uuid.h"
 
 #include "fragment/shared_storage.h"
 #include "graph/type_def.h"
 #include "memory/buffer_manager.h"
-#include "util/allocator.hpp"
-#include "util/status.h"
+#include "util/macros.h"
 #include "util/util.h"
 
 namespace gart {
@@ -59,7 +56,7 @@ enum PropertyStoreType { /* PROP_KV, PROP_ROW, */
                          PROP_COLUMN2
 };
 
-enum PropertyStoreDataType {
+enum PropertyDataType {
   INVALID = 0,
   BOOL = 1,
   CHAR = 2,
@@ -84,19 +81,17 @@ enum PropertyStoreDataType {
 // multi-version store
 class Property {  // NOLINT(build/class)
  public:
-  struct Column {
+  struct ColumnFamily {
     size_t vlen;
     bool updatable;
     size_t page_size;  // uint64_t(-1) or 0 means infinity, unit: items
-    PropertyStoreDataType vtype = FLOAT;
-    size_t real_column_num = 0;
+    size_t column_num = 0;
   };
 
   // schema for one type of vertex/edge (including serveral columns)
   struct Schema {
     int table_id;
-    size_t klen;
-    std::vector<Column> cols;  //  each column
+    std::vector<ColumnFamily> col_families;  //  each column
     PropertyStoreType store_type;
   };
 

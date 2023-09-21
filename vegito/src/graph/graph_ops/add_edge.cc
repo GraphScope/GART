@@ -23,7 +23,7 @@ using seggraph::vertex_t;
 using std::string;
 using std::string_view;
 
-using gart::property::PropertyStoreDataType;
+using gart::property::PropertyDataType;
 using gart::property::StringViewList;
 
 namespace gart {
@@ -84,7 +84,7 @@ void process_add_edge(const StringViewList& cmd,
       uint64_t* outer_external_id_store_addr =
           graph_store->get_outer_external_id_store(dst_label);
       if (graph_store->get_external_id_dtype(dst_label) ==
-          PropertyStoreDataType::STRING) {
+          PropertyDataType::STRING) {
         std::string dst_external_id = string(cmd[5]);
         uint64_t value = graph_store->put_cstring(dst_external_id);
         outer_external_id_store_addr[ov] = value;
@@ -115,7 +115,7 @@ void process_add_edge(const StringViewList& cmd,
       uint64_t* outer_external_id_store_addr =
           graph_store->get_outer_external_id_store(src_label);
       if (graph_store->get_external_id_dtype(src_label) ==
-          PropertyStoreDataType::STRING) {
+          PropertyDataType::STRING) {
         std::string src_external_id = string(cmd[4]);
         uint64_t value = graph_store->put_cstring(src_external_id);
         outer_external_id_store_addr[ov] = value;

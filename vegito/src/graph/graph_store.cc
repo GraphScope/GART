@@ -19,7 +19,6 @@
 #include "property/property.h"
 #include "util/bitset.h"
 
-using std::allocator_traits;
 using std::map;
 using std::numeric_limits;
 using std::string;
@@ -31,7 +30,7 @@ using namespace gart::property;
 
 namespace {
 struct PropDef {
-  PropertyStoreDataType dtype;
+  PropertyDataType dtype;
   int id;
   string name;
   int column_family_id;
@@ -63,15 +62,15 @@ struct PropDef {
     res["key"]["id"] = id;
     res["key"]["name"] = name;
     int dtype_index = 0;
-    if (dtype == PropertyStoreDataType::BOOL) {
+    if (dtype == PropertyDataType::BOOL) {
       dtype_index = 0;
-    } else if (dtype == PropertyStoreDataType::INT) {
+    } else if (dtype == PropertyDataType::INT) {
       dtype_index = 1;
-    } else if (dtype == PropertyStoreDataType::LONG) {
+    } else if (dtype == PropertyDataType::LONG) {
       dtype_index = 2;
-    } else if (dtype == PropertyStoreDataType::DOUBLE) {
+    } else if (dtype == PropertyDataType::DOUBLE) {
       dtype_index = 3;
-    } else if (dtype == PropertyStoreDataType::STRING) {
+    } else if (dtype == PropertyDataType::STRING) {
       dtype_index = 4;
     } else {
       assert(false);
@@ -495,7 +494,7 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   IdParser<seggraph::vertex_t> parser;
   parser.Init(total_partitions_, total_vertex_label_num_);
   auto vlabel = parser.GetLabelId(gid);
-  if (external_id_dtype_[vlabel] == PropertyStoreDataType::LONG) {
+  if (external_id_dtype_[vlabel] == PropertyDataType::LONG) {
     std::shared_ptr<hashmap_t> hmap;
     set_vertex_map(hmap, vlabel, std::stoll(external_id), (int64_t) gid);
   }
@@ -518,7 +517,7 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   auto off = property->getNewOffset();
   assert(v == off);
 
-  if (external_id_dtype_[vlabel] == PropertyStoreDataType::STRING) {
+  if (external_id_dtype_[vlabel] == PropertyDataType::STRING) {
     uint64_t value = put_cstring(external_id);
     external_id_stores_[vlabel][v] = value;
   } else {

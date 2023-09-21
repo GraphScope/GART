@@ -35,10 +35,10 @@ PropertyColArray::PropertyColArray(Property::Schema s, uint64_t max_items,
                                    memory::BufferManager& buf_mgr)
     : Property(max_items, buf_mgr),
       seq_(max_items_, -1),
-      cols_(s.cols),
+      cols_(s.col_families),
       key_col_(max_items_),
-      fixCols_(s.cols.size(), nullptr),
-      flexCols_(s.cols.size(), nullptr) {
+      fixCols_(s.col_families.size(), nullptr),
+      flexCols_(s.col_families.size(), nullptr) {
   // each column
   for (int i = 0; i < cols_.size(); i++) {
     size_t vlen = cols_[i].vlen;
@@ -80,7 +80,7 @@ void PropertyColArray::_put(uint64_t offset, uint64_t key, char* val,
     return;
 
   for (int i = 0; i < cols_.size(); ++i) {
-    const Property::Column& col = cols_[i];
+    const Property::ColumnFamily& col = cols_[i];
     if (meta_seq >= 0 && !col.updatable)
       break;
 
@@ -130,7 +130,7 @@ char* PropertyColArray::getByOffset(uint64_t offset, uint64_t version) {
 char* PropertyColArray::getByOffset(uint64_t offset, int col_id,
                                     uint64_t version, uint64_t* walk_cnt) {
   char* val = nullptr;
-  const Property::Column& col = cols_[col_id];
+  const Property::ColumnFamily& col = cols_[col_id];
 
   if (col.updatable) {
     char* buf = flexCols_[col_id] + (sizeof(ValueNode) + col.vlen) * offset;
@@ -155,7 +155,7 @@ const std::vector<uint64_t>& PropertyColArray::getKeyCol() const {
 }
 
 char* PropertyColArray::getFixCol(int col_id) const {
-  const Property::Column& col = cols_[col_id];
+  const Property::ColumnFamily& col = cols_[col_id];
   assert(!col.updatable);
   return fixCols_[col_id];
 }

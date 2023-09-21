@@ -51,7 +51,7 @@ struct SchemaImpl {
   // label name -> label id
   std::unordered_map<std::string, int> label_id_map;
   // <label id, property idx> -> dtype
-  std::map<std::pair<int, int>, property::PropertyStoreDataType> dtype_map;
+  std::map<std::pair<int, int>, property::PropertyDataType> dtype_map;
   // <label id, property idx> -> column_family
   std::map<std::pair<int, int>, int> column_family;
   // <label id, property idx> -> column_family_offset
@@ -320,8 +320,8 @@ class GraphStore {
       auto v_label = iter->first;
       auto prop_schemas = iter->second;
       int prefix_sum = 0;
-      for (int idx = 0; idx < prop_schemas.cols.size(); idx++) {
-        auto vlen = prop_schemas.cols[idx].vlen;
+      for (int idx = 0; idx < prop_schemas.col_families.size(); idx++) {
+        auto vlen = prop_schemas.col_families[idx].vlen;
         property_prefix_bytes_.emplace(std::make_pair(v_label, idx),
                                        prefix_sum);
         prefix_sum += vlen;
