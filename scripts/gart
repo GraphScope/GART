@@ -129,6 +129,19 @@ while [ : ]; do
   esac
 done
 
+# check file path
+function make_absolute_path() {
+  local path=$1
+  if [[ ! $path = /* ]]; then
+    path=$(readlink -f "$path" 2>/dev/null || pwd -P)
+  fi
+  echo "$path"
+}
+
+v6d_sock=$(make_absolute_path "$v6d_sock")
+rgmapping_file=$(make_absolute_path "$rgmapping_file")
+table_schema_file=$(make_absolute_path "$table_schema_file")
+
 # set default port
 if [ !$set_port ] && [ "$db_type" == "postgresql" ]; then
     db_port=5432
@@ -282,6 +295,10 @@ echo "    master-hostname: $master_hostname"
 ##################### Stop Previous GART ######################
 echo "Stop previous GART"
 ./stop-gart --kill-v6d-sock $v6d_sock
+
+####################### Clean Etcd #######################
+echo "Clean etcd"
+etcdctl --endpoints=$etcd_endpoint del --prefix $etcd_prefix > /dev/null 2>&1
 
 ####################### Extract Schema #######################
 if [ $is_master == true ]; then
