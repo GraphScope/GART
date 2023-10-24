@@ -30,7 +30,11 @@ namespace converter {
 
 class LogEntry {
  public:
-  LogEntry() : valid_(false), update_has_finish_delete(false) {}
+  LogEntry()
+      : valid_(false),
+        update_has_finish_delete(false),
+        all_labels_have_process(false),
+        table_idx(0) {}
 
   static LogEntry bulk_load_end();
 
@@ -42,7 +46,9 @@ class LogEntry {
 
   // One log may produce multiple log entries
   // Now it is only used for update edges (delete + insert)
-  bool more_entires() const { return update_has_finish_delete; }
+  bool more_entires() const {
+    return update_has_finish_delete || !all_labels_have_process;
+  }
 
  private:
   enum class EntityType { VERTEX, EDGE };
@@ -74,6 +80,8 @@ class LogEntry {
   // log status (meta-data)
   bool valid_;
   bool update_has_finish_delete;
+  bool all_labels_have_process;
+  size_t table_idx;
   Snapshot snapshot;
 
   friend class TxnLogParser;
@@ -107,16 +115,19 @@ class TxnLogParser {
   // used for schema mapping (unchanged after init)
   int vlabel_num_;
   int subgraph_num_;
+  std::map<std::string, bool> useful_tables_;
+  std::map<std::string, bool> is_vlable_names_;
+  std::map<std::string, std::vector<std::string>> table2label_names_;
   std::map<std::string, int>
-      table2vlabel_;  // data source (table) -> vlabel id (from 0)
-  std::map<std::string, int>
-      table2elabel_;  // data source (table) -> elabel id (from 0)
+      table2vlabel_;  // table_name -> vlabel id (from 0), one table only
+                      // responses to one vertex label
+  std::map<std::string, int> elabel_names2elabel_;
   std::map<std::string, std::vector<std::string>>
-      required_properties_;  // table name -> required column names
+      required_properties_;  // vertex/edge label names -> required column names
   std::map<std::string, std::string>
-      vertex_id_columns_;  // table name -> id column name
+      vertex_id_columns_;  // vertex_label name -> id column name
   std::map<std::string, std::pair<std::string, std::string>>
-      edge_label_columns_;  // table name -> (src column name, dst column
+      edge_label_columns_;  // edge_label name -> (src column name, dst column
                             // name)
   std::vector<std::pair<int, int>> edge_label2src_dst_labels_;
   gart::IdParser<int64_t> id_parser_;

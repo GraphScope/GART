@@ -134,9 +134,11 @@ gart::Status TxnLogParser::init(const string& rgmapping_file,
     int id = idx;
     const string& table_name = vdef[idx]["dataSourceName"].as<string>();
     const string& label = vdef[idx]["type_name"].as<string>();
+    table2label_names_[table_name].push_back(label);
     table2vlabel_.emplace(table_name, id);
-    vertex_id_columns_.emplace(table_name,
-                               vdef[idx]["idFieldName"].as<string>());
+    useful_tables_.emplace(table_name, true);
+    is_vlable_names_.emplace(label, true);
+    vertex_id_columns_.emplace(label, vdef[idx]["idFieldName"].as<string>());
     vertex_label2ids.emplace(label, id);
     YAML::Node properties = vdef[idx]["mappings"];
     vector<string> required_prop_names;
@@ -145,21 +147,24 @@ gart::Status TxnLogParser::init(const string& rgmapping_file,
           properties[prop_id]["dataField"]["name"].as<string>();
       required_prop_names.emplace_back(prop_name);
     }
-    required_properties_.emplace(table_name, required_prop_names);
+    required_properties_.emplace(label, required_prop_names);
   }
 
   // parse edges
   for (int idx = 0; idx < elabel_num; ++idx) {
     auto table_name = edef[idx]["dataSourceName"].as<string>();
-    table2elabel_.emplace(table_name, idx);
+    useful_tables_.emplace(table_name, true);
     auto src_label = edef[idx]["type_pair"]["source_vertex"].as<string>();
     auto dst_label = edef[idx]["type_pair"]["destination_vertex"].as<string>();
+    auto label = edef[idx]["type_pair"]["edge"].as<string>();
+    table2label_names_[table_name].push_back(label);
     auto src_col =
         edef[idx]["sourceVertexMappings"][0]["dataField"]["name"].as<string>();
     auto dst_col =
         edef[idx]["destinationVertexMappings"][0]["dataField"]["name"]
             .as<string>();
-    edge_label_columns_.emplace(table_name, make_pair(src_col, dst_col));
+    edge_label_columns_.emplace(label, make_pair(src_col, dst_col));
+    elabel_names2elabel_.emplace(label, idx);
     auto src_label_id = vertex_label2ids.find(src_label)->second;
     auto dst_label_id = vertex_label2ids.find(dst_label)->second;
     edge_label2src_dst_labels_.push_back(make_pair(src_label_id, dst_label_id));
@@ -169,7 +174,7 @@ gart::Status TxnLogParser::init(const string& rgmapping_file,
       auto prop_name = properties[prop_id]["dataField"]["name"].as<string>();
       required_prop_names.emplace_back(prop_name);
     }
-    required_properties_.emplace(table_name, required_prop_names);
+    required_properties_.emplace(label, required_prop_names);
   }
 
   id_parser_.Init(subgraph_num_, vlabel_num_);
@@ -207,10 +212,8 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
 #else
   table_name = log["source"]["table"].get<string>();
 #endif
-  auto table2vlabel_it = table2vlabel_.find(table_name);
-  auto table2elabel_it = table2elabel_.find(table_name);
-  if (table2vlabel_it == table2vlabel_.end() &&
-      table2elabel_it == table2elabel_.end()) {
+  auto useful_tables_it = useful_tables_.find(table_name);
+  if (useful_tables_it == useful_tables_.end()) {
     // skip unused tables
     return gart::Status::OK();
   }
@@ -219,14 +222,12 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
 #else
   type = log["op"].get<string>();
 #endif
-  if (table2elabel_it != table2elabel_.end()) {
-    if (table2vlabel_it != table2vlabel_.end()) {
-      LOG(ERROR) << "Table name conflict: " << table_name;
-      return gart::Status::GraphSchemaConfigError();
-    }
-    out.entity_type = LogEntry::EntityType::EDGE;
-  } else {
+  auto label_name = table2label_names_.find(table_name)->second[out.table_idx];
+  auto is_vlabel_name_it = is_vlable_names_.find(label_name);
+  if (is_vlabel_name_it != is_vlable_names_.end()) {
     out.entity_type = LogEntry::EntityType::VERTEX;
+  } else {
+    out.entity_type = LogEntry::EntityType::EDGE;
   }
 
 #ifndef USE_DEBEZIUM
@@ -288,6 +289,15 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
   fill_prop(out, log);
 
   out.valid_ = true;
+  if (out.update_has_finish_delete != true) {
+    out.table_idx++;
+  }
+  if (out.table_idx < table2label_names_.find(table_name)->second.size()) {
+    out.all_labels_have_process = false;
+  } else {
+    out.all_labels_have_process = true;
+    out.table_idx = 0;
+  }
   return gart::Status::OK();
 }
 
@@ -387,12 +397,14 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
   }
 #endif
 
-  out.edge.elabel = table2elabel_.find(table_name)->second;
+  std::string elable_name =
+      table2label_names_.find(table_name)->second[out.table_idx];
+  out.edge.elabel = elabel_names2elabel_.find(elable_name)->second;
 
-  auto edge_col = edge_label_columns_.find(table_name)->second;
+  auto edge_col = edge_label_columns_.find(elable_name)->second;
   string src_name = edge_col.first;
   string dst_name = edge_col.second;
-  auto edge_label_id = table2elabel_.find(table_name)->second;
+  auto edge_label_id = elabel_names2elabel_.find(elable_name)->second;
   int src_label_id = edge_label2src_dst_labels_[edge_label_id].first;
   int dst_label_id = edge_label2src_dst_labels_[edge_label_id].second;
 
@@ -430,7 +442,8 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
     data = log["after"];
   }
 #endif
-  auto iter = required_properties_.find(table_name);
+  auto label_name = table2label_names_.find(table_name)->second[out.table_idx];
+  auto iter = required_properties_.find(label_name);
   const vector<string>& required_prop_names = iter->second;
 
   for (size_t prop_id = 0; prop_id < required_prop_names.size(); prop_id++) {

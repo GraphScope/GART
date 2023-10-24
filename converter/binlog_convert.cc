@@ -69,6 +69,16 @@ int main(int argc, char** argv) {
       string line(static_cast<const char*>(msg->payload()), msg->len());
       LogEntry log_entry;
       GART_CHECK_OK(parser.parse(log_entry, line, 0));
+
+      while (log_entry.more_entires()) {
+        ostream << log_entry.to_string() << flush;
+        GART_CHECK_OK(parser.parse(log_entry, line, 0));
+
+        if (!log_entry.valid()) {
+          break;
+        }
+      }
+
       ++init_logs;
       if (!log_entry.valid()) {
         consumer->delete_message(msg);
