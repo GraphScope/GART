@@ -142,6 +142,30 @@ class PropertyPageRank
               << " local_vertex_num: " << local_vertex_num
               << " local_edge_num: " << local_edge_num << std::endl;
 
+#if 0  // for fine-grained debug
+    for (auto v_label = 0; v_label < 1; v_label++) {
+      auto inner_vertices_iter = frag.InnerVertices(v_label);
+      while (inner_vertices_iter.valid()) {
+        auto v = inner_vertices_iter.vertex();
+        auto v_id = frag.template GetData<uint64_t>(v, 0);
+        auto v_type = frag.template GetData<std::string_view>(v, 1);
+        auto v_name = frag.template GetData<std::string_view>(v, 2);
+        auto v_url = frag.template GetData<std::string_view>(v, 3);
+        auto v_id_is_valid = frag.VertexPropValueIsValid(v, 0);
+        auto v_type_is_valid = frag.VertexPropValueIsValid(v, 1);
+        auto v_name_is_valid = frag.VertexPropValueIsValid(v, 2);
+        auto v_url_is_valid = frag.VertexPropValueIsValid(v, 3);
+        std::cout << "v_id: " << v_id << " v_type: " << v_type
+                  << " v_name: " << v_name << " v_url: " << v_url
+                  << " v_id_is_valid: " << v_id_is_valid
+                  << " v_type_is_valid: " << v_type_is_valid
+                  << " v_name_is_valid: " << v_name_is_valid
+                  << " v_url_is_valid: " << v_url_is_valid << std::endl;
+        inner_vertices_iter.next();
+      }
+    }
+#endif
+
     int dangling_vnum = 0;
 
     for (auto v_label = 0; v_label < v_label_num; v_label++) {

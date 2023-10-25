@@ -80,3 +80,6 @@ core.*
 
 # GRIN header files
 interfaces/grin/include/
+
+# tmp directory
+tmp/
