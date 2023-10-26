@@ -83,8 +83,10 @@ unsigned long long int _grin_create_property(unsigned, unsigned);
 #define GRIN_VID_T uint64_t
 
 typedef gart::GartFragment<GRIN_OID_T, GRIN_VID_T> GRIN_FRAGMENT_T;
-typedef std::map<GRIN_FRAGMENT_T::label_id_t, std::string> GRIN_LABEL_NAME_MAP_T;
-typedef std::map<std::pair<GRIN_FRAGMENT_T::label_id_t, unsigned>, std::string> GRIN_PROPERTY_NAME_MAP_T;
+typedef std::map<GRIN_FRAGMENT_T::label_id_t, std::string>
+    GRIN_LABEL_NAME_MAP_T;
+typedef std::map<std::pair<GRIN_FRAGMENT_T::label_id_t, unsigned>, std::string>
+    GRIN_PROPERTY_NAME_MAP_T;
 
 struct GRIN_GRAPH_T {
   GRIN_FRAGMENT_T* frag;

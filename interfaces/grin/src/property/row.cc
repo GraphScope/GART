@@ -15,11 +15,35 @@ limitations under the License.
 #include "grin/include/include/property/property.h"
 #include "grin/include/include/property/propertylist.h"
 #include "grin/include/include/property/row.h"
+#include "grin/include/include/property/value.h"
+
+#if defined(GRIN_ENABLE_ROW) && \
+    defined(GRIN_TRAIT_PROPERTY_VALUE_OF_FLOAT_ARRAY)
+void grin_destroy_row_value_of_float_array(GRIN_GRAPH g, const float* addr,
+                                           size_t size) {}
+
+const float* grin_get_float_array_from_row(GRIN_GRAPH g, GRIN_ROW r,
+                                           size_t index, size_t* length) {
+  // TODO(wanglei): implement this
+  assert(false);
+  return nullptr;
+}
+
+bool grin_insert_float_array_to_row(GRIN_GRAPH g, GRIN_ROW r, const float* addr,
+                                    size_t idx) {
+  assert(false);
+  return false;
+}
+#endif
 
 #ifdef GRIN_ENABLE_ROW
 void grin_destroy_row(GRIN_GRAPH g, GRIN_ROW r) {
   auto _r = static_cast<GRIN_ROW_T*>(r);
   delete _r;
+}
+
+void grin_destroy_row_value_of_string(GRIN_GRAPH g, const char* addr) {
+  delete addr;
 }
 
 int grin_get_int32_from_row(GRIN_GRAPH g, GRIN_ROW r, size_t idx) {
@@ -143,7 +167,6 @@ bool grin_insert_timestamp64_to_row(GRIN_GRAPH g, GRIN_ROW r,
 #endif
 
 #if defined(GRIN_ENABLE_ROW) && defined(GRIN_TRAIT_CONST_VALUE_PTR)
-/** @brief the value of a property from row by its position in row */
 const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt,
                                     size_t idx) {
   auto _r = static_cast<GRIN_ROW_T*>(r);
@@ -174,7 +197,6 @@ const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt,
   return NULL;
 }
 #endif
-///@}
 
 #if defined(GRIN_WITH_VERTEX_PROPERTY) && defined(GRIN_ENABLE_ROW)
 GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {

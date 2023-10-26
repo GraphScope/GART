@@ -28,6 +28,12 @@ find_package(vineyard 0.15.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 link_libraries(${VINEYARD_LIBRARIES})
 
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS include/proto/storage.proto)
+
 include("../../vegito/cmake/FindGFlags.cmake")
 if (GFLAGS_FOUND)
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
@@ -54,16 +60,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/extension/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/include)
 
-file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc")
-
-add_custom_target(grin_clformat
-        COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
-        COMMENT "Running clang-format."
-        VERBATIM)
 
 file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/partition/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "include/extension/src/*.cc")
-add_library(gart_grin SHARED ${SOURCES})
-target_link_libraries(gart_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${MPI_CXX_LIBRARIES})
+add_library(gart_grin SHARED ${SOURCES} ${PROTO_SRCS} ${PROTO_HDRS})
+target_link_libraries(gart_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PROTOBUF_LIBRARIES})
 
 
 add_executable(run_grin_test test/test.cc)
@@ -71,3 +71,10 @@ add_executable(run_grin_test test/test.cc)
 target_include_directories(run_grin_test PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps fragment)
 target_link_libraries(run_grin_test gart_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${MPI_CXX_LIBRARIES})
 target_link_libraries(run_grin_test OpenMP::OpenMP_CXX)
+
+file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc")
+
+add_custom_target(grin_clformat
+        COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
+        COMMENT "Running clang-format."
+        VERBATIM)

@@ -60,7 +60,7 @@ GRIN_DATATYPE StringToDataType(std::string dtype_str) {
   } else {
     return GRIN_DATATYPE::Undefined;
   }
-    return GRIN_DATATYPE::Undefined;
+  return GRIN_DATATYPE::Undefined;
 }
 
 unsigned _grin_get_type_from_property(unsigned long long int prop) {

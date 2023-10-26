@@ -824,6 +824,13 @@ class GartFragment {
     return nullptr;
   }
 
+  size_t GetColumnFamilyDataLength(const vertex_t& v,
+                                   prop_id_t column_family_id) const {
+    // note: in bytes
+    label_id_t label_id = vid_parser.GetLabelId(v.GetValue());
+    return column_family_data_length_[label_id][column_family_id];
+  }
+
   template <typename T>
   T GetData(const vertex_t& v, prop_id_t prop_id) const {
     T t{};
