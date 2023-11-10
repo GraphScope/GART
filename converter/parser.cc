@@ -373,6 +373,10 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
     } else {
       LOG(ERROR) << "Unknown vertex id type: " << data[vid_col].type_name();
     }
+    if (external_id.empty()) {
+      LOG(ERROR) << "Empty external id for vertex: " << vlabel_name;
+      assert(false);
+    }
     out.external_id = external_id;
   } else if (out.op_type == LogEntry::OpType::DELETE ||
              out.op_type == LogEntry::OpType::UPDATE) {

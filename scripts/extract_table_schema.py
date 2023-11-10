@@ -137,6 +137,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
         id_name = ""  # TODO: not support id in edge yet
         props = edef["dataFieldMappings"]
         type = edef["type_pair"]["edge"]
+        table_name = edef["dataSourceName"]
         element = {"typeId": idx, "typeName": type}
 
         p_idx = 0
@@ -145,7 +146,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
             p_name = prop["property"]
             pele = {"propertyId": p_idx, "propertyName": p_name}
             p_type = ""
-            for key, value in schema[type]:
+            for key, value in schema[table_name]:
                 if key == p_name:
                     p_type = value
 
