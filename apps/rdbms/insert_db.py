@@ -325,7 +325,7 @@ def process_person(line):
         p_creation_date,
         p_location_ip,
         p_browser_used,
-    ) = line.strip().split("|")
+    ) = line.strip().split("|")[:8]
     p_first_name = p_first_name.replace("'", "''")
     p_last_name = p_last_name.replace("'", "''")
     result = (

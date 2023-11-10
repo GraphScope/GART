@@ -399,6 +399,7 @@ fi
 # TODO(wanglei): add distributed deployment of debezium
 if [ "$use_debezium" == 1 ]; then
     if [ $is_master == true ]; then
+        unset CLASSPATH
         echo "Start Debezium"
         if [ "$db_type" == "mysql" ]; then
             echo "    Start Debezium connector for MySQL"

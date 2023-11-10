@@ -20,6 +20,9 @@
 namespace gart {
 namespace graph {
 
+const int RGMapping::NO_EXIST = -1;
+const int RGMapping::INIT_VEC_SZ = 128;
+
 RGMapping::RGMapping(int p_id)
     : p_id_(p_id),
       table2vlabel(INIT_VEC_SZ, NO_EXIST),

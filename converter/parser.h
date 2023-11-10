@@ -117,10 +117,11 @@ class TxnLogParser {
   int subgraph_num_;
   std::map<std::string, bool> useful_tables_;
   std::map<std::string, bool> is_vlable_names_;
+  // table_name -> vertex_label names (one table may responses to multiple
+  // vertex labels)
   std::map<std::string, std::vector<std::string>> table2label_names_;
   std::map<std::string, int>
-      table2vlabel_;  // table_name -> vlabel id (from 0), one table only
-                      // responses to one vertex label
+      vertex_label2ids_;  // vlabel name -> vlabel id (from 0)
   std::map<std::string, int> elabel_names2elabel_;
   std::map<std::string, std::vector<std::string>>
       required_properties_;  // vertex/edge label names -> required column names

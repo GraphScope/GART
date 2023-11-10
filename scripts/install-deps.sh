@@ -22,14 +22,14 @@ git clone https://github.com/microsoft/cpprestsdk.git
 cd cpprestsdk
 mkdir -p build && cd build
 cmake .. -DCPPREST_EXCLUDE_WEBSOCKETS=ON
-make -j && make install
+make -j && sudo make install
 cd ../..
 
 git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git
 cd etcd-cpp-apiv3
 mkdir -p build && cd build
 cmake ..
-make -j && make install
+make -j && sudo make install
 cd ../..
 
 # TBB

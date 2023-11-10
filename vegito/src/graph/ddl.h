@@ -171,8 +171,8 @@ class RGMapping {
 #endif
 
  private:
-  static const int NO_EXIST = -1;
-  static const int INIT_VEC_SZ = 128;
+  static const int NO_EXIST;
+  static const int INIT_VEC_SZ;
 
  private:
   const int p_id_;
