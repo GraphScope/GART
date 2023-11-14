@@ -471,6 +471,17 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
   if (op == "bulkload_end") {
     cout << "Completion of bulkload and transition to epoch " << cur_epoch
          << endl;
+    for (int i = 0; i < graph_stores_[p_id]->get_total_vertex_label_num();
+         ++i) {
+      seggraph::SegGraph* graph =
+          graph_stores_[p_id]->get_graph<seggraph::SegGraph>(i);
+      if (graph) {
+        printf("frag %d, vlabel %d: %lu vertices, get_block_usage %lu\n", p_id,
+               i, graph->get_max_vertex_id(), graph->get_block_usage());
+      } else {
+        LOG(ERROR) << "empty pointer frag " << p_id << ", vlabel " << i;
+      }
+    }
     return;
   }
 

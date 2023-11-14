@@ -51,7 +51,7 @@ class SegGraph {
   //   vertex table and the rows of properties
   SegGraph(gart::graph::RGMapping* rg_map,
            size_t _max_block_size = 1 * (1ul << 30),   // 35 for large graph
-           vertex_t _max_vertex_id = 1 * (1ul << 25))  // 30 for large graph
+           vertex_t _max_vertex_id = 1 * (1ul << 26))
       : epoch_id(0),
         transaction_id(0),
         vertex_id(0),
@@ -121,6 +121,8 @@ class SegGraph {
   vertex_t get_max_vertex_id() const { return vertex_id; }
 
   vertex_t get_vertex_capacity() const { return max_vertex_id; }
+
+  uint64_t get_block_usage() { return block_manager.getUsedMemory(); }
 
   uint64_t get_deleted_inner_num() const { return deleted_inner; }
 
