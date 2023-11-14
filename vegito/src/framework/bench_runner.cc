@@ -476,10 +476,16 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
       seggraph::SegGraph* graph =
           graph_stores_[p_id]->get_graph<seggraph::SegGraph>(i);
       if (graph) {
-        printf("frag %d, vlabel %d: %lu vertices, get_block_usage %lu\n", p_id,
-               i, graph->get_max_vertex_id(), graph->get_block_usage());
+        printf("frag %d, vlabel %d, inner: %lu vertices, get_block_usage %lu\n",
+               p_id, i, graph->get_max_vertex_id(), graph->get_block_usage());
       } else {
         LOG(ERROR) << "empty pointer frag " << p_id << ", vlabel " << i;
+      }
+
+      seggraph::SegGraph* ovg = graph_stores_[p_id]->get_ov_graph(i);
+      if (ovg) {
+        printf("frag %d, vlabel %d, outer: %lu vertices, get_block_usage %lu\n",
+               p_id, i, graph->get_max_vertex_id(), graph->get_block_usage());
       }
     }
     return;
