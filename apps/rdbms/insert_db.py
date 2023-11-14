@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
-import time
+import multiprocessing
 import subprocess
 import sys
+import time
 import os
 
 from psycopg2 import errors
@@ -141,15 +142,21 @@ class Timer:
             print("Time interval: ：{:.2f} second".format(duration))
 
 
-timer = Timer()
-conn = engine.raw_connection()
-cursor = conn.cursor()
+total_timer = Timer()
 base_dir = args.data_dir
+vertex_process = []
+edge_process = []
 
 
 # `process_line_func`: func(line) -> sql
-def insert_vertices(prefix, csv_file, table_name, process_line_func):
+def insert_vertices_thread(prefix, csv_file, table_name, process_line_func):
     # print(f"{prefix}. Inserting {table_name} table...")
+    conn = engine.raw_connection()
+    cursor = conn.cursor()
+    sql = ""
+    cursor.execute(f"DELETE FROM {table_name};")  # TODO(SSJ): checkpoint?
+
+    timer = Timer()
     timer.start()
     file = base_dir + csv_file
     with open(file, "r", encoding="UTF-8") as f:
@@ -188,17 +195,40 @@ def insert_vertices(prefix, csv_file, table_name, process_line_func):
         except errors.SyntaxError as error:
             print("SyntaxError occurred:", error)
             print(sql)
+
     timer.end()
     formatted_interval = "{:.2f}".format(timer.interval())
     print(
         f"{prefix}. Insert {num_lines} rows into {table_name} table, time: {formatted_interval} {timer.unit()}"
     )
+    conn.close()
 
 
-def insert_simple_edges(prefix, csv_file, table_name):
+def insert_vertices(prefix, csv_file, table_name, process_line_func):
+    prcoess = multiprocessing.Process(
+        target=insert_vertices_thread,
+        args=(prefix, csv_file, table_name, process_line_func),
+    )
+    vertex_process.append(prcoess)
+    prcoess.start()
+
+
+def insert_simple_edges_thread(prefix, csv_file, table_name):
     # print(f"{prefix}. Inserting {table_name} table...")
+    conn = engine.raw_connection()
+    cursor = conn.cursor()
+    sql = ""
+    cursor.execute(f"DELETE FROM {table_name};")  # TODO(SSJ): checkpoint?
+
+    timer = Timer()
     timer.start()
     file = base_dir + csv_file
+    if not os.path.isfile(file):
+        lower_file = base_dir + csv_file.lower()
+        if not os.path.isfile(lower_file):
+            print(f"Files {file} and {lower_file} do not exist.")
+        file = lower_file
+
     with open(file, "r", encoding="UTF-8") as f:
         header = f.readline()  # skip the header
         line = f.readline()
@@ -223,17 +253,39 @@ def insert_simple_edges(prefix, csv_file, table_name):
         sql = f"insert into {table_name} values (" + "%s," * (len(batch[0]) - 1) + "%s)"
         cursor.executemany(sql, batch)
         conn.commit()
+
     timer.end()
     formatted_interval = "{:.2f}".format(timer.interval())
     print(
         f"{prefix}. Insert {num_lines} rows into {table_name} table, time: {formatted_interval} {timer.unit()}"
     )
+    conn.close()
 
 
-def insert_prop_edges(prefix, csv_file, table_name):
+def insert_simple_edges(prefix, csv_file, table_name):
+    process = multiprocessing.Process(
+        target=insert_simple_edges_thread, args=(prefix, csv_file, table_name)
+    )
+    edge_process.append(process)
+    process.start()
+
+
+def insert_prop_edges_thread(prefix, csv_file, table_name):
     # print(f"{prefix}. Inserting {table_name} table...")
+    conn = engine.raw_connection()
+    cursor = conn.cursor()
+    sql = ""
+    cursor.execute(f"DELETE FROM {table_name};")  # TODO(SSJ): checkpoint?
+
+    timer = Timer()
     timer.start()
     file = base_dir + csv_file
+    if not os.path.isfile(file):
+        lower_file = base_dir + csv_file.lower()
+        if not os.path.isfile(lower_file):
+            print(f"Files {file} and {lower_file} do not exist.")
+        file = lower_file
+
     with open(file, "r", encoding="UTF-8") as f:
         header = f.readline()  # skip the header
         line = f.readline()
@@ -241,7 +293,12 @@ def insert_prop_edges(prefix, csv_file, table_name):
         batch_size = 10000  # Number of records to insert in each batch
         batch = []
         while line:
-            src, dst, prop = line.strip().split("|")
+            try:
+                src, dst, prop = line.strip().split("|")
+            except ValueError:
+                # print(f"{num_lines} line in file {csv_file} has error: {line}")
+                src, dst = line.strip().split("|")
+                prop = "2010-08-14T20:59:58.658+00:00"  # TODO(SSJ): for GIE
             batch.append((src, dst, prop))
             if len(batch) >= batch_size:
                 sql = (
@@ -258,11 +315,21 @@ def insert_prop_edges(prefix, csv_file, table_name):
         sql = f"insert into {table_name} values (" + "%s," * (len(batch[0]) - 1) + "%s)"
         cursor.executemany(sql, batch)
         conn.commit()
+
     timer.end()
     formatted_interval = "{:.2f}".format(timer.interval())
     print(
         f"{prefix}. Insert {num_lines} rows into {table_name} table, time: {formatted_interval} {timer.unit()}"
     )
+    conn.close()
+
+
+def insert_prop_edges(prefix, csv_file, table_name):
+    process = multiprocessing.Process(
+        target=insert_prop_edges_thread, args=(prefix, csv_file, table_name)
+    )
+    edge_process.append(process)
+    process.start()
 
 
 # Insert vertex tables
@@ -277,9 +344,6 @@ def process_organisation(line):
     return result
 
 
-insert_vertices("01", "/organisation_0_0.csv", "organisation", process_organisation)
-
-
 # 02. place
 def process_place(line):
     pla_id, pla_name, pla_url, pla_type = line.strip().split("|")
@@ -287,9 +351,6 @@ def process_place(line):
     pla_url = pla_url.replace("'", "''")
     result = (pla_id, pla_name, pla_url, pla_type)
     return result
-
-
-insert_vertices("02", "/place_0_0.csv", "place", process_place)
 
 
 # 03. tag
@@ -300,18 +361,12 @@ def process_tag(line):
     return result
 
 
-insert_vertices("03", "/tag_0_0.csv", "tag", process_tag)
-
-
 # 04. tagclass
 def process_tagclass(line):
     tagc_id, tagc_name, tagc_url = line.strip().split("|")
     tagc_url = tagc_url.replace("'", "''")
     result = (tagc_id, tagc_name, tagc_url)
     return result
-
-
-insert_vertices("04", "/tagclass_0_0.csv", "tagclass", process_tagclass)
 
 
 # 05. person
@@ -341,9 +396,6 @@ def process_person(line):
     return result
 
 
-insert_vertices("05", "/person_0_0.csv", "person", process_person)
-
-
 # 06. comment
 def process_comment(line):
     (
@@ -364,9 +416,6 @@ def process_comment(line):
         co_length,
     )
     return result
-
-
-insert_vertices("06", "/comment_0_0.csv", "comment", process_comment)
 
 
 # 07. post
@@ -395,9 +444,6 @@ def process_post(line):
     return result
 
 
-insert_vertices("07", "/post_0_0.csv", "post", process_post)
-
-
 # 08. forum
 def process_forum(line):
     fo_id, fo_title, fo_creation_date = line.strip().split("|")
@@ -406,10 +452,32 @@ def process_forum(line):
     return result
 
 
+total_timer = Timer()
+total_timer.start()
+
+insert_vertices("01", "/organisation_0_0.csv", "organisation", process_organisation)
+
+insert_vertices("02", "/place_0_0.csv", "place", process_place)
+
+insert_vertices("03", "/tag_0_0.csv", "tag", process_tag)
+
+insert_vertices("04", "/tagclass_0_0.csv", "tagclass", process_tagclass)
+
+insert_vertices("05", "/person_0_0.csv", "person", process_person)
+
+insert_vertices("06", "/comment_0_0.csv", "comment", process_comment)
+
+insert_vertices("07", "/post_0_0.csv", "post", process_post)
+
 insert_vertices("08", "/forum_0_0.csv", "forum", process_forum)
 
+for process in vertex_process:
+    process.join()
 
-# insert edge tables
+total_timer.end()
+print("Load vertex time: {:.2f} {}".format(total_timer.total(), total_timer.unit()))
+
+# insert edge tables without additional properties
 
 
 insert_simple_edges("09", "/organisation_isLocatedIn_place_0_0.csv", "org_islocationin")
@@ -461,6 +529,8 @@ insert_prop_edges("30", "/person_studyAt_organisation_0_0.csv", "studyat")
 
 insert_prop_edges("31", "/person_workAt_organisation_0_0.csv", "workat")
 
-conn.close()
+for process in edge_process:
+    process.join()
 
-print("Total time: {:.2f} {}".format(timer.total(), timer.unit()))
+total_timer.end()
+print("Total time: {:.2f} {}".format(total_timer.total(), total_timer.unit()))
