@@ -160,16 +160,17 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
 
 - Create a PostgreSQL user (`debezium`) for the log capture Debezium:
     ```
-    CREATE USER 'debezium'@'localhost' IDENTIFIED BY '123456';
+    CREATE USER debezium WITH PASSWORD '123456';
     ALTER USER debezium REPLICATION;
     ALTER USER debezium LOGIN;
 
     # TODO: for dbuser
+    CREATE USER dbuser WITH PASSWORD '123456';
     CREATE DATABASE ldbc;
     GRANT ALL ON DATABASE ldbc TO dbuser;
     ```
 
-- Modify the configuration file `pg_hba.conf` to [trust the user](https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings) `debezium`
+- Modify the configuration file `/etc/postgresql/$PSQL_VERSION/main/pg_hba.conf` to [trust the user](https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings) `debezium`
     ```
     local   replication     debezium                          trust
     host    replication     debezium  127.0.0.1/32            trust

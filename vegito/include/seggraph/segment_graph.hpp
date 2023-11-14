@@ -67,16 +67,16 @@ class SegGraph {
         block_manager(_max_block_size),
 
         rg_map(rg_map) {
-    vertex_futexes = array_allocator.allocate<Futex>(max_vertex_id);
+    vertex_futexes = array_allocator.allocate<Futex>(max_vertex_id + 1);
 
     seg_mutexes =
-        array_allocator.allocate<std::shared_timed_mutex*>(max_seg_id);
+        array_allocator.allocate<std::shared_timed_mutex*>(max_seg_id + 1);
 
     char* block_manager_ptr =
         array_allocator.allocate_v6d(_max_block_size, block_manager_oid);
     block_manager.init_buffer(block_manager_ptr);
 
-    vertex_ptrs = array_allocator.allocate<uintptr_t>(max_vertex_id);
+    vertex_ptrs = array_allocator.allocate<uintptr_t>(max_vertex_id + 1);
 
     edge_label_ptrs = array_allocator.allocate_v6d<uintptr_t>(
         max_seg_id, edge_label_ptrs_oid);
@@ -107,11 +107,11 @@ class SegGraph {
   SegGraph(SegGraph&&) = delete;
 
   ~SegGraph() noexcept {
-    array_allocator.deallocate(vertex_futexes, max_vertex_id);
+    array_allocator.deallocate(vertex_futexes, max_vertex_id + 1);
 
-    array_allocator.deallocate(seg_mutexes, max_seg_id);
+    array_allocator.deallocate(seg_mutexes, max_seg_id + 1);
 
-    array_allocator.deallocate(vertex_ptrs, max_vertex_id);
+    array_allocator.deallocate(vertex_ptrs, max_vertex_id + 1);
 
     array_allocator.deallocate_v6d(edge_label_ptrs_oid);
 
