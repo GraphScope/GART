@@ -50,7 +50,7 @@ class SegGraph {
   //   the maximum vertex id in the graph, decides the size of the
   //   vertex table and the rows of properties
   SegGraph(gart::graph::RGMapping* rg_map,
-           size_t _max_block_size = 1 * (1ul << 30),   // 35 for large graph
+           size_t _max_block_size = 1 * (1ul << 30),
            vertex_t _max_vertex_id = 1 * (1ul << 26))
       : epoch_id(0),
         transaction_id(0),

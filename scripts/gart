@@ -23,7 +23,7 @@ etcd_prefix="gart_meta_"
 kafka_server="127.0.0.1:9092"
 subgraph_num=1
 use_debezium=1
-db_type="mysql"
+db_type="postgresql"
 enable_bulkload=false
 hostfile=
 
@@ -102,7 +102,7 @@ while [ : ]; do
         ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
-        echo "      --db-type:           type of data source: mysql, postgresql (default: mysql)"
+        echo "      --db-type:           type of data source: postgresql, mysql (default: postgresql)"
         echo "  -d, --db-host:           database host (default: 127.0.0.1)"
         echo "      --db-port:           database port (default: 3306 for MySQL, 5432 for PostgreSQL)"
         echo "  -b, --db-name:           database name (default: ldbc)"
