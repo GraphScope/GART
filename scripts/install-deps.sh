@@ -171,6 +171,7 @@ database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localho
 schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 snapshot.mode=<if enable buldload, set as "initial", otherwise set as "never">
 
+slot.name=debezium
 plugin.name=pgoutput
 publication.autocreate.mode=filtered
 

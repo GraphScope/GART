@@ -158,14 +158,12 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     max_wal_senders = <larger than 0>
     ```
 
-- Create a PostgreSQL user (`debezium`) for the log capture Debezium:
+- Create a PostgreSQL user (`dbuser`) for the log capture Debezium:
     ```
-    CREATE USER debezium WITH PASSWORD '123456';
-    ALTER USER debezium REPLICATION;
-    ALTER USER debezium LOGIN;
-
-    # TODO: for dbuser
     CREATE USER dbuser WITH PASSWORD '123456';
+    ALTER USER dbuser REPLICATION;
+    ALTER USER dbuser LOGIN;
+
     CREATE DATABASE ldbc;
     GRANT ALL ON DATABASE ldbc TO dbuser;
     ```
