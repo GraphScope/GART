@@ -47,6 +47,7 @@ class BlockManager {
         fd(EMPTY_FD),
         file_size(FILE_TRUNC_SIZE),
         data(nullptr),
+        enough(false),
         free_blocks(std::vector<std::vector<uintptr_t>>(
             LARGE_BLOCK_THRESHOLD, std::vector<uintptr_t>())),
         large_free_blocks(MAX_ORDER, std::vector<uintptr_t>()) {
@@ -98,9 +99,14 @@ class BlockManager {
       pointer = used_size.fetch_add(block_size);
 
       if (unlikely(getUsedMemory() > capacity)) {
-        LOG(ERROR) << "BlockManager: out of memory."
-                   << " Capacity: " << capacity << " Used: " << getUsedMemory()
-                   << " Order: " << int(order);
+        if (!enough) {
+          LOG(ERROR) << "BlockManager: out of memory."
+                     << " Capacity: " << capacity
+                     << " Used: " << getUsedMemory()
+                     << " Order: " << int(order);
+          enough = true;
+        }
+        return NULLPOINTER;
       }
 
       if (pointer + block_size >= file_size) {
@@ -148,6 +154,7 @@ class BlockManager {
   const size_t capacity;
   int fd;
   void* data;
+  bool enough;
   std::mutex mutex;
   tbb::enumerable_thread_specific<std::vector<std::vector<uintptr_t>>>
       free_blocks;

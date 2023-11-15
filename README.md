@@ -104,6 +104,10 @@ sudo make install
 ```
 
 The dependencies can be installed by [scripts/install-deps.sh](scripts/install-deps.sh) in a proper directory.
+```
+cd /path/to/deps
+. path/to/gart/scripts/install-deps.sh
+```
 
 To build GART by Docker, we provide a [Dockerfile](./Dockerfile):
 ```
