@@ -194,7 +194,10 @@ class GraphStore {
 
   inline void add_outer(uint64_t vlabel, seggraph::vertex_t lid) {
     VTable& vtable = vertex_tables_[vlabel];
-    assert(vtable.max_inner_location != vtable.min_outer_location);
+    if (vtable.max_inner_location == vtable.min_outer_location) {
+      LOG(ERROR) << "Not enough space for outer vertex for vlabel " << vlabel;
+      assert(false);
+    }
     vtable.table[vtable.min_outer_location - 1] = lid;
     --vtable.min_outer;
     --vtable.min_outer_location;
