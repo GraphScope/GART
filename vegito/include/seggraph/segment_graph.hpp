@@ -125,6 +125,10 @@ class SegGraph {
 
   uint64_t get_block_usage() { return block_manager.getUsedMemory(); }
 
+  void get_v6d_usage(size_t& usage, size_t& limit) const {
+    array_allocator.v6d_usage_limit(usage, limit);
+  }
+
   uint64_t get_deleted_inner_num() const { return deleted_inner; }
 
   uint64_t get_deleted_outer_num() const { return deleted_outer; }

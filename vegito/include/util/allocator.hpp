@@ -52,6 +52,11 @@ struct SparseArrayAllocator {
 
   vineyard::Client* get_client() { return client_; }
 
+  void v6d_usage_limit(size_t& usage, size_t& limit) const {
+    usage = v6d_status_->memory_usage;
+    limit = v6d_status_->memory_limit;
+  }
+
   template <typename T = char>
   T* allocate_v6d(size_t n, vineyard::ObjectID& oid) {
     size_t size = n * sizeof(T);

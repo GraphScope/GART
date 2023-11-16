@@ -476,8 +476,13 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
       seggraph::SegGraph* graph =
           graph_stores_[p_id]->get_graph<seggraph::SegGraph>(i);
       if (graph) {
-        printf("frag %d, vlabel %d, inner: %lu vertices, get_block_usage %lu\n",
-               p_id, i, graph->get_max_vertex_id(), graph->get_block_usage());
+        size_t usage, limit;
+        graph->get_v6d_usage(usage, limit);
+        printf(
+            "frag %d, vlabel %d, inner: %lu vertices, get_block_usage %lu, v6d "
+            "usage %.2lf GB, limit %.2lf GB\n",
+            p_id, i, graph->get_max_vertex_id(), graph->get_block_usage(),
+            double(usage) / (1 << 30), double(limit) / (1 << 30));
       } else {
         LOG(ERROR) << "empty pointer frag " << p_id << ", vlabel " << i;
       }
