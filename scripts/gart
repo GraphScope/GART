@@ -315,9 +315,11 @@ if [ $is_master == true ]; then
     fi
 fi
 
+declare -A pids     # array to store pids and comments
+
 ################### Bulk Load Initialize ######################
 if [ "$use_debezium" == 1 ] && $enable_bulkload; then
-    rm /tmp/connect.offsets
+    rm /tmp/connect.offsets 1 > /dev/null 2>&1
     echo "Remove /tmp/connect.offsets for bulk load"
 fi
 
@@ -325,6 +327,7 @@ fi
 if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
     echo "Start to launch vineyardd on $v6d_sock"
     vineyardd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
+    pids["Vineyard"]=$!
 fi
 
 ####################### Capturer: Zookeeper and Kafka #######################
@@ -335,12 +338,12 @@ if [ $is_master == true ]; then
 
     echo "Start Zookeeper and Kafka"
     $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-
-    sleep 5
+    # pids["Zookeeper"]=$!  # TODO(SSJ): check if Zookeeper is started
+    sleep 3
 
     $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-
-    sleep 10
+    # pids["Kafka"]=$!  # TODO(SSJ): check if Kafka is started
+    sleep 5
 
     # check Kafka failure
     for i in {1..3}
@@ -352,8 +355,11 @@ if [ $is_master == true ]; then
             fi
 
             $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+            #pids["Zookeeper"]=$!
             sleep 3
+
             $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+            #pids["Kafka"]=$!
             sleep 5
         else
             break
@@ -391,6 +397,7 @@ if [ "$use_debezium" == 0 ]; then
         echo "Start Maxwell"
         $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog > /dev/null 2>&1 &
 
+        pids["Maxwell"]=$!
         sleep 3
     fi
 fi
@@ -408,6 +415,7 @@ if [ "$use_debezium" == 1 ]; then
             echo "    Start Debezium connector for PostgreSQL"
             $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-postgresql.properties > /dev/null 2>&1 &
         fi
+        pids["Debezium"]=$!
         sleep 5
     fi
 fi
@@ -430,7 +438,7 @@ if [ $is_master == true ]; then
         $CONVENTER_HOME/binlog_convert_maxwell --rg_mapping_file_path $rgmapping_file \
             --subgraph_num $subgraph_num --logs_per_epoch 10000 &
     fi
-
+    pids["Converter"]=$!
     sleep 2
 fi
 
@@ -447,6 +455,14 @@ for ((i=$start_slot; i<$start_slot + $slot; i++)); do
     --schema_file_path $rgmapping_file \
     --table_schema_file_path $table_schema_file \
     --subgraph_num $subgraph_num --subgraph_id $i &
+    pids["Vegito-$i"]=$!
 done
+
+echo "Process IDs:"
+for key in "${!pids[@]}"; do
+    echo "$key: ${pids[$key]}"
+done
+
+./check_process.sh "$(declare -p pids)" &
 
 sleep 2 # wait for output
