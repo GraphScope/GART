@@ -49,7 +49,7 @@ class SegGraph {
   // _max_vertex_id:
   //   the maximum vertex id in the graph, decides the size of the
   //   vertex table and the rows of properties
-  SegGraph(gart::graph::RGMapping* rg_map,
+  SegGraph(gart::graph::RGMapping* rg_map, int _vlabel,
            size_t _max_block_size = 1 * (1ul << 30),
            vertex_t _max_vertex_id = 1 * (1ul << 26))
       : epoch_id(0),
@@ -57,6 +57,7 @@ class SegGraph {
         vertex_id(0),
         read_epoch_table(NO_TRANSACTION),
         recycled_vertex_ids(),
+        vlabel(_vlabel),
         max_vertex_id(_max_vertex_id),
 
         // segment
@@ -64,7 +65,7 @@ class SegGraph {
         max_seg_id(_max_vertex_id / VERTEX_PER_SEG),
 
         // memory allocator
-        block_manager(_max_block_size),
+        block_manager(_vlabel, _max_block_size),
 
         rg_map(rg_map) {
     vertex_futexes = array_allocator.allocate<Futex>(max_vertex_id + 1);
@@ -201,6 +202,7 @@ class SegGraph {
       segments_to_recycle;
   tbb::concurrent_queue<vertex_t> recycled_vertex_ids;
 
+  const int vlabel;
   const vertex_t max_vertex_id;
   const segid_t max_seg_id;
 

@@ -40,8 +40,9 @@ class BlockManager {
 
   static uint64_t allocated_mem_size;
 
-  explicit BlockManager(size_t _capacity)
-      : capacity(_capacity),
+  explicit BlockManager(int _vlabel, size_t _capacity)
+      : vlabel(_vlabel),
+        capacity(_capacity),
         mutex(),
         used_size(0),
         fd(EMPTY_FD),
@@ -101,7 +102,7 @@ class BlockManager {
       if (unlikely(getUsedMemory() > capacity)) {
         if (!enough) {
           LOG(ERROR) << "BlockManager: out of memory."
-                     << " Capacity: " << capacity
+                     << " VertexLabel: " << vlabel << " Capacity: " << capacity
                      << " Used: " << getUsedMemory()
                      << " Order: " << int(order);
           enough = true;
@@ -151,6 +152,7 @@ class BlockManager {
   }
 
  private:
+  const int vlabel;
   const size_t capacity;
   int fd;
   void* data;
