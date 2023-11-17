@@ -98,13 +98,13 @@ class BlockManager {
     if (pointer == NULLPOINTER) {
       size_t block_size = 1ul << order;
       pointer = used_size.fetch_add(block_size);
+      size_t used_memory = getUsedMemory();
 
-      if (unlikely(getUsedMemory() > capacity)) {
+      if (unlikely(used_memory > capacity)) {
         if (!enough) {
           LOG(ERROR) << "BlockManager: out of memory."
                      << " VertexLabel: " << vlabel << " Capacity: " << capacity
-                     << " Used: " << getUsedMemory()
-                     << " Order: " << int(order);
+                     << " Used: " << used_memory << " Order: " << int(order);
           enough = true;
         }
         return NULLPOINTER;

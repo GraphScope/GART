@@ -475,8 +475,8 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
          ++i) {
       seggraph::SegGraph* graph =
           graph_stores_[p_id]->get_graph<seggraph::SegGraph>(i);
+      size_t usage, limit;
       if (graph) {
-        size_t usage, limit;
         graph->get_v6d_usage(usage, limit);
         printf(
             "frag %d, vlabel %d, inner: %lu vertices, get_block_usage %lu, v6d "
@@ -489,8 +489,12 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
 
       seggraph::SegGraph* ovg = graph_stores_[p_id]->get_ov_graph(i);
       if (ovg) {
-        printf("frag %d, vlabel %d, outer: %lu vertices, get_block_usage %lu\n",
-               p_id, i, graph->get_max_vertex_id(), graph->get_block_usage());
+        ovg->get_v6d_usage(usage, limit);
+        printf(
+            "frag %d, vlabel %d, outer: %lu vertices, get_block_usage %lu, v6d "
+            "usage %.2lf GB, limit %.2lf GB\n",
+            p_id, i, graph->get_max_vertex_id(), graph->get_block_usage(),
+            double(usage) / (1 << 30), double(limit) / (1 << 30));
       }
     }
     return;

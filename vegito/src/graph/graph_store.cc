@@ -236,7 +236,7 @@ void GraphStore::add_vprop_buffer(size_t size) {
 }
 
 int block_size_num_v_power[][2] = {{24, 13}, {30, 12}, {31, 14}, {23, 12},
-                                   {33, 18}, {35, 26}, {34, 25}, {32, 21}};
+                                   {33, 18}, {36, 26}, {34, 25}, {32, 21}};
 
 void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
 #if 0  // size specified for each vlabel in LDBC
