@@ -167,6 +167,7 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     CREATE USER dbuser WITH PASSWORD '123456';
     ALTER USER dbuser REPLICATION;
     ALTER USER dbuser LOGIN;
+    GRANT pg_read_server_files TO dbuser;       -- For loading CSV files
 
     CREATE DATABASE ldbc;
     GRANT ALL ON DATABASE ldbc TO dbuser;
