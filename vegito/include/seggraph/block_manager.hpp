@@ -36,7 +36,8 @@
 namespace seggraph {
 class BlockManager {
  public:
-  constexpr static uintptr_t NULLPOINTER = 0;  // UINTPTR_MAX;
+  // null_holder instead of UINTPTR_MAX
+  constexpr static uintptr_t NULLPOINTER = 0;
 
   static uint64_t allocated_mem_size;
 
@@ -185,26 +186,4 @@ class BlockManager {
   constexpr static size_t FILE_TRUNC_SIZE = 1ul << 30;  // 1GB
 };
 
-class BlockManagerLibc {
- public:
-  constexpr static uintptr_t NULLPOINTER = UINTPTR_MAX;
-
-  uintptr_t alloc(order_t order) {
-    auto p = aligned_alloc(1ul << order, 1ul << order);
-    if (!p)
-      throw std::runtime_error("Failed to alloc block");
-    return reinterpret_cast<std::uintptr_t>(p);
-  }
-
-  void free(uintptr_t block, order_t order) {
-    ::free(reinterpret_cast<void*>(block));
-  }
-
-  template <typename T>
-  T* convert(uintptr_t block) {
-    if (block == NULLPOINTER)
-      return nullptr;
-    return reinterpret_cast<T*>(block);
-  }
-};
 }  // namespace seggraph
