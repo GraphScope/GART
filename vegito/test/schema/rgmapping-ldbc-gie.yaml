@@ -1,0 +1,482 @@
+---
+graph: LDBC
+loadingConfig:
+  dataSource: mysql
+  database: ldbc
+  method: append
+vertexMappings:
+  vertex_types:
+    - type_name: ORGANISATION
+      dataSourceName: organisation
+      idFieldName: org_id
+      mappings:
+        - property: id
+          dataField:
+            name: org_id
+            columnFamily: 0
+        - property: type
+          dataField:
+            name: org_type
+            columnFamily: 1
+        - property: name
+          dataField:
+            name: org_name
+            columnFamily: 1
+        - property: url
+          dataField:
+            name: org_url
+            columnFamily: 1
+    - type_name: PLACE
+      dataSourceName: place
+      idFieldName: pla_id
+      mappings:
+        - property: id
+          dataField:
+            name: pla_id
+        - property: name
+          dataField:
+            name: pla_name
+        - property: url
+          dataField:
+            name: pla_url
+        - property: type
+          dataField:
+            name: pla_type
+    - type_name: TAG
+      dataSourceName: tag
+      idFieldName: tag_id
+      mappings:
+        - property: id
+          dataField:
+            name: tag_id
+        - property: name
+          dataField:
+            name: tag_name
+        - property: url
+          dataField:
+            name: tag_url
+    - type_name: TAGCLASS
+      dataSourceName: tagclass
+      idFieldName: tagc_id
+      mappings:
+        - property: id
+          dataField:
+            name: tagc_id
+        - property: name
+          dataField:
+            name: tagc_name
+        - property: url
+          dataField:
+            name: tagc_url
+    - type_name: PERSON
+      dataSourceName: person
+      idFieldName: p_id
+      mappings:
+        - property: id
+          dataField:
+            name: p_id
+        - property: firstName
+          dataField:
+            name: p_first_name
+        - property: lastName
+          dataField:
+            name: p_last_name
+        - property: gender
+          dataField:
+            name: p_gender
+        - property: birthday
+          dataField:
+            name: p_birthday
+        - property: creationDate
+          dataField:
+            name: p_creation_date
+        - property: locationIP
+          dataField:
+            name: p_location_ip
+        - property: browserUsed
+          dataField:
+            name: p_browser_used
+    - type_name: COMMENT
+      dataSourceName: comment
+      idFieldName: co_id
+      mappings:
+        - property: id
+          dataField:
+            name: co_id
+            columnFamily: 0
+        - property: creationDate
+          dataField:
+            name: co_creation_date
+            columnFamily: 1
+        - property: locationIP
+          dataField:
+            name: co_location_ip
+            columnFamily: 1
+        - property: browserUsed
+          dataField:
+            name: co_browser_used
+            columnFamily: 2
+        - property: content
+          dataField:
+            name: co_content
+            columnFamily: 2
+        - property: length
+          dataField:
+            name: co_length
+            columnFamily: 3
+    - type_name: POST
+      dataSourceName: post
+      idFieldName: po_id
+      mappings:
+        - property: id
+          dataField:
+            name: po_id
+        - property: imageFile
+          dataField:
+            name: po_image_file
+        - property: creationDate
+          dataField:
+            name: po_creation_date
+        - property: locationIP
+          dataField:
+            name: po_location_ip
+        - property: browserUsed
+          dataField:
+            name: po_browser_used
+        - property: language
+          dataField:
+            name: po_language
+        - property: content
+          dataField:
+            name: po_content
+        - property: length
+          dataField:
+            name: po_length
+    - type_name: FORUM
+      dataSourceName: forum
+      idFieldName: fo_id
+      mappings:
+        - property: id
+          dataField:
+            name: fo_id
+        - property: title
+          dataField:
+            name: fo_title
+        - property: creationDate
+          dataField:
+            name: fo_creation_date
+edgeMappings:
+  edge_types:
+    - type_pair:
+        edge: org_ISLOCATEDIN
+        source_vertex: ORGANISATION
+        destination_vertex: PLACE
+      dataSourceName: org_islocationin
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: ISPARTOF
+        source_vertex: PLACE
+        destination_vertex: PLACE
+      dataSourceName: ispartof
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: ISSUBCLASSOF
+        source_vertex: TAGCLASS
+        destination_vertex: TAGCLASS
+      dataSourceName: issubclassof
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: HASTYPE
+        source_vertex: TAG
+        destination_vertex: TAGCLASS
+      dataSourceName: hastype
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: COMMENT_HASCREATOR
+        source_vertex: COMMENT
+        destination_vertex: PERSON
+      dataSourceName: comment_hascreator
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: COMMENT_HASTAG
+        source_vertex: COMMENT
+        destination_vertex: TAG
+      dataSourceName: comment_hastag
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: COMMENT_ISLOCATEDIN
+        source_vertex: COMMENT
+        destination_vertex: PLACE
+      dataSourceName: comment_islocationin
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: REPLYOF_COMMENT
+        source_vertex: COMMENT
+        destination_vertex: COMMENT
+      dataSourceName: replyof_comment
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: REPLYOF_POST
+        source_vertex: COMMENT
+        destination_vertex: POST
+      dataSourceName: replyof_post
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: POST_HASCREATOR
+        source_vertex: POST
+        destination_vertex: PERSON
+      dataSourceName: post_hascreator
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: POST_HASTAG
+        source_vertex: POST
+        destination_vertex: TAG
+      dataSourceName: post_hastag
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: POST_ISLOCATEDIN
+        source_vertex: POST
+        destination_vertex: PLACE
+      dataSourceName: post_islocationin
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: CONTAINEROF
+        source_vertex: FORUM
+        destination_vertex: POST
+      dataSourceName: forum_containerof
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: HASMODERATOR
+        source_vertex: FORUM
+        destination_vertex: PERSON
+      dataSourceName: forum_hasmoderator
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: FORUM_HASTAG
+        source_vertex: FORUM
+        destination_vertex: TAG
+      dataSourceName: forum_hastag
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: HASINTEREST
+        source_vertex: PERSON
+        destination_vertex: TAG
+      dataSourceName: person_hasinterest
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: PERSON_ISLOCATEDIN
+        source_vertex: PERSON
+        destination_vertex: PLACE
+      dataSourceName: person_islocationin
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: HASMEMBER
+        source_vertex: FORUM
+        destination_vertex: PERSON
+      dataSourceName: forum_hasmember
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        - property: joinDate
+          dataField:
+            name: fo_hm_join_date
+    - type_pair:
+        edge: KNOWS
+        source_vertex: PERSON
+        destination_vertex: PERSON
+        undirected: true
+      dataSourceName: knows
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        - property: creationDate
+          dataField:
+            name: kn_creation_date
+    - type_pair:
+        edge: LIKES_COMMENT
+        source_vertex: PERSON
+        destination_vertex: COMMENT
+      dataSourceName: likes_comment
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        - property: creationDate
+          dataField:
+            name: likes_co_creation_date
+    - type_pair:
+        edge: LIKES_POST
+        source_vertex: PERSON
+        destination_vertex: POST
+      dataSourceName: likes_post
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        - property: creationDate
+          dataField:
+            name: likes_po_creation_date
+    - type_pair:
+        edge: STUDYAT
+        source_vertex: PERSON
+        destination_vertex: ORGANISATION
+      dataSourceName: studyat
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        - property: classYear
+          dataField:
+            name: sa_class_year
+    - type_pair:
+        edge: WORKAT
+        source_vertex: PERSON
+        destination_vertex: ORGANISATION
+      dataSourceName: workat
+      sourceVertexMappings:
+        - dataField:
+            name: src
+      destinationVertexMappings:
+        - dataField:
+            name: dst
+      dataFieldMappings:
+        - property: workFrom
+          dataField:
+            name: wa_work_from
+...

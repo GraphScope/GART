@@ -40,6 +40,7 @@ void process_add_vertex(const StringViewList& cmd,
   int write_epoch = stoi(string(cmd[0]));
   uint64_t vid = static_cast<uint64_t>(stoll(string(cmd[1])));
   std::string external_id = string(cmd[2]);
+  assert(!external_id.empty());
   StringViewList props(cmd.begin() + 3, cmd.end());
   graph_store->insert_inner_vertex(write_epoch, vid, external_id, props);
 }

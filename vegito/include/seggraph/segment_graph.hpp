@@ -49,14 +49,15 @@ class SegGraph {
   // _max_vertex_id:
   //   the maximum vertex id in the graph, decides the size of the
   //   vertex table and the rows of properties
-  SegGraph(gart::graph::RGMapping* rg_map,
-           size_t _max_block_size = 1 * (1ul << 30),   // 35 for large graph
-           vertex_t _max_vertex_id = 1 * (1ul << 25))  // 30 for large graph
+  SegGraph(gart::graph::RGMapping* rg_map, int _vlabel,
+           size_t _max_block_size = 1 * (1ul << 30),
+           vertex_t _max_vertex_id = 1 * (1ul << 26))
       : epoch_id(0),
         transaction_id(0),
         vertex_id(0),
         read_epoch_table(NO_TRANSACTION),
         recycled_vertex_ids(),
+        vlabel(_vlabel),
         max_vertex_id(_max_vertex_id),
 
         // segment
@@ -64,19 +65,19 @@ class SegGraph {
         max_seg_id(_max_vertex_id / VERTEX_PER_SEG),
 
         // memory allocator
-        block_manager(_max_block_size),
+        block_manager(_vlabel, _max_block_size),
 
         rg_map(rg_map) {
-    vertex_futexes = array_allocator.allocate<Futex>(max_vertex_id);
+    vertex_futexes = array_allocator.allocate<Futex>(max_vertex_id + 1);
 
     seg_mutexes =
-        array_allocator.allocate<std::shared_timed_mutex*>(max_seg_id);
+        array_allocator.allocate<std::shared_timed_mutex*>(max_seg_id + 1);
 
     char* block_manager_ptr =
         array_allocator.allocate_v6d(_max_block_size, block_manager_oid);
     block_manager.init_buffer(block_manager_ptr);
 
-    vertex_ptrs = array_allocator.allocate<uintptr_t>(max_vertex_id);
+    vertex_ptrs = array_allocator.allocate<uintptr_t>(max_vertex_id + 1);
 
     edge_label_ptrs = array_allocator.allocate_v6d<uintptr_t>(
         max_seg_id, edge_label_ptrs_oid);
@@ -107,11 +108,11 @@ class SegGraph {
   SegGraph(SegGraph&&) = delete;
 
   ~SegGraph() noexcept {
-    array_allocator.deallocate(vertex_futexes, max_vertex_id);
+    array_allocator.deallocate(vertex_futexes, max_vertex_id + 1);
 
-    array_allocator.deallocate(seg_mutexes, max_seg_id);
+    array_allocator.deallocate(seg_mutexes, max_seg_id + 1);
 
-    array_allocator.deallocate(vertex_ptrs, max_vertex_id);
+    array_allocator.deallocate(vertex_ptrs, max_vertex_id + 1);
 
     array_allocator.deallocate_v6d(edge_label_ptrs_oid);
 
@@ -121,6 +122,12 @@ class SegGraph {
   vertex_t get_max_vertex_id() const { return vertex_id; }
 
   vertex_t get_vertex_capacity() const { return max_vertex_id; }
+
+  uint64_t get_block_usage() { return block_manager.getUsedMemory(); }
+
+  void get_v6d_usage(size_t& usage, size_t& limit) const {
+    array_allocator.v6d_usage_limit(usage, limit);
+  }
 
   uint64_t get_deleted_inner_num() const { return deleted_inner; }
 
@@ -199,6 +206,7 @@ class SegGraph {
       segments_to_recycle;
   tbb::concurrent_queue<vertex_t> recycled_vertex_ids;
 
+  const int vlabel;
   const vertex_t max_vertex_id;
   const segid_t max_seg_id;
 

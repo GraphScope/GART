@@ -171,6 +171,8 @@ start:
         order++;
 
       auto new_seg_pointer = graph.block_manager.alloc(order);
+      if (new_seg_pointer == BlockManager::NULLPOINTER)
+        return;
       auto new_segment =
           graph.block_manager.convert<VegitoSegmentHeader>(new_seg_pointer);
       new_segment->fill(new_seg_pointer, order, segid);
@@ -221,6 +223,8 @@ start:
         // allocate a new segment
         order_t new_order = segment->get_order() + 1;
         auto new_seg_pointer = graph.block_manager.alloc(new_order);
+        if (new_seg_pointer == BlockManager::NULLPOINTER)
+          return;
         auto new_segment =
             graph.block_manager.convert<VegitoSegmentHeader>(new_seg_pointer);
         new_segment->fill(new_seg_pointer, new_order, segid);
@@ -292,6 +296,8 @@ start:
     size_t size = sizeof(EpochBlockHeader) + sizeof(VegitoEpochEntry);
     order_t order = size_to_order(size);
     auto new_epoch_table_pointer = graph.block_manager.alloc(order);
+    if (new_epoch_table_pointer == BlockManager::NULLPOINTER)
+      return;
     auto new_epoch_table =
         graph.block_manager.convert<EpochBlockHeader>(new_epoch_table_pointer);
 
@@ -317,6 +323,8 @@ start:
       // create new epoch table
       order_t order = epoch_table->get_order() + 1;
       auto new_epoch_table_pointer = graph.block_manager.alloc(order);
+      if (new_epoch_table_pointer == BlockManager::NULLPOINTER)
+        return;
       auto new_epoch_table = graph.block_manager.convert<EpochBlockHeader>(
           new_epoch_table_pointer);
       new_epoch_table->fill(order, epoch_table_pointer, latest_epoch);
@@ -437,6 +445,8 @@ void EpochGraphWriter::merge_segments(label_t label, dir_t dir) {
     auto segment = locate_segment(segid, label, dir);
     if (segment) {
       auto new_seg_pointer = graph.block_manager.alloc(segment->get_order());
+      if (new_seg_pointer == BlockManager::NULLPOINTER)
+        return;
       auto new_segment =
           graph.block_manager.convert<VegitoSegmentHeader>(new_seg_pointer);
       new_segment->fill(new_seg_pointer, segment->get_order(), segid);

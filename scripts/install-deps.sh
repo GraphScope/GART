@@ -22,14 +22,14 @@ git clone https://github.com/microsoft/cpprestsdk.git
 cd cpprestsdk
 mkdir -p build && cd build
 cmake .. -DCPPREST_EXCLUDE_WEBSOCKETS=ON
-make -j && make install
+make -j && sudo make install
 cd ../..
 
 git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git
 cd etcd-cpp-apiv3
 mkdir -p build && cd build
 cmake ..
-make -j && make install
+make -j && sudo make install
 cd ../..
 
 # TBB
@@ -171,6 +171,7 @@ database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localho
 schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 snapshot.mode=<if enable buldload, set as "initial", otherwise set as "never">
 
+slot.name=debezium
 plugin.name=pgoutput
 publication.autocreate.mode=filtered
 

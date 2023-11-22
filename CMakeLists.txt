@@ -21,6 +21,7 @@ file(COPY ${CMAKE_SOURCE_DIR}/vegito/test/schema DESTINATION ${CMAKE_BINARY_DIR}
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/scripts)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/gart gart SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/stop-gart stop-gart SYMBOLIC)
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/check_process.sh check_process.sh SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py scripts/extract_table_schema.py SYMBOLIC)
 
 ### install headers ###

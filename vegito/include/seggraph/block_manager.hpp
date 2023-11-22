@@ -36,17 +36,20 @@
 namespace seggraph {
 class BlockManager {
  public:
-  constexpr static uintptr_t NULLPOINTER = 0;  // UINTPTR_MAX;
+  // null_holder instead of UINTPTR_MAX
+  constexpr static uintptr_t NULLPOINTER = 0;
 
   static uint64_t allocated_mem_size;
 
-  explicit BlockManager(size_t _capacity)
-      : capacity(_capacity),
+  explicit BlockManager(int _vlabel, size_t _capacity)
+      : vlabel(_vlabel),
+        capacity(_capacity),
         mutex(),
         used_size(0),
         fd(EMPTY_FD),
         file_size(FILE_TRUNC_SIZE),
         data(nullptr),
+        enough(false),
         free_blocks(std::vector<std::vector<uintptr_t>>(
             LARGE_BLOCK_THRESHOLD, std::vector<uintptr_t>())),
         large_free_blocks(MAX_ORDER, std::vector<uintptr_t>()) {
@@ -96,11 +99,16 @@ class BlockManager {
     if (pointer == NULLPOINTER) {
       size_t block_size = 1ul << order;
       pointer = used_size.fetch_add(block_size);
+      size_t used_memory = getUsedMemory();
 
-      if (unlikely(getUsedMemory() > capacity)) {
-        LOG(ERROR) << "BlockManager: out of memory."
-                   << " Capacity: " << capacity << " Used: " << getUsedMemory()
-                   << " Order: " << int(order);
+      if (unlikely(used_memory > capacity)) {
+        if (!enough) {
+          LOG(ERROR) << "BlockManager: out of memory."
+                     << " VertexLabel: " << vlabel << " Capacity: " << capacity
+                     << " Used: " << used_memory << " Order: " << int(order);
+          enough = true;
+        }
+        return NULLPOINTER;
       }
 
       if (pointer + block_size >= file_size) {
@@ -145,9 +153,11 @@ class BlockManager {
   }
 
  private:
+  const int vlabel;
   const size_t capacity;
   int fd;
   void* data;
+  bool enough;
   std::mutex mutex;
   tbb::enumerable_thread_specific<std::vector<std::vector<uintptr_t>>>
       free_blocks;
@@ -176,26 +186,4 @@ class BlockManager {
   constexpr static size_t FILE_TRUNC_SIZE = 1ul << 30;  // 1GB
 };
 
-class BlockManagerLibc {
- public:
-  constexpr static uintptr_t NULLPOINTER = UINTPTR_MAX;
-
-  uintptr_t alloc(order_t order) {
-    auto p = aligned_alloc(1ul << order, 1ul << order);
-    if (!p)
-      throw std::runtime_error("Failed to alloc block");
-    return reinterpret_cast<std::uintptr_t>(p);
-  }
-
-  void free(uintptr_t block, order_t order) {
-    ::free(reinterpret_cast<void*>(block));
-  }
-
-  template <typename T>
-  T* convert(uintptr_t block) {
-    if (block == NULLPOINTER)
-      return nullptr;
-    return reinterpret_cast<T*>(block);
-  }
-};
 }  // namespace seggraph

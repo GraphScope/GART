@@ -104,6 +104,10 @@ sudo make install
 ```
 
 The dependencies can be installed by [scripts/install-deps.sh](scripts/install-deps.sh) in a proper directory.
+```
+cd /path/to/deps
+. path/to/gart/scripts/install-deps.sh
+```
 
 To build GART by Docker, we provide a [Dockerfile](./Dockerfile):
 ```
@@ -158,22 +162,22 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     max_wal_senders = <larger than 0>
     ```
 
-- Create a PostgreSQL user (`debezium`) for the log capture Debezium:
+- Create a PostgreSQL user (`dbuser`) for the log capture Debezium:
     ```
-    CREATE USER 'debezium'@'localhost' IDENTIFIED BY '123456';
-    ALTER USER debezium REPLICATION;
-    ALTER USER debezium LOGIN;
+    CREATE USER dbuser WITH PASSWORD '123456';
+    ALTER USER dbuser REPLICATION;
+    ALTER USER dbuser LOGIN;
+    GRANT pg_read_server_files TO dbuser;       -- For loading CSV files
 
-    # TODO: for dbuser
     CREATE DATABASE ldbc;
     GRANT ALL ON DATABASE ldbc TO dbuser;
     ```
 
-- Modify the configuration file `pg_hba.conf` to [trust the user](https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings) `debezium`
+- Modify the configuration file `/etc/postgresql/$PSQL_VERSION/main/pg_hba.conf` to [trust the user](https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings) `dbuser`
     ```
-    local   replication     debezium                          trust
-    host    replication     debezium  127.0.0.1/32            trust
-    host    replication     debezium  ::1/128                 trust
+    local   replication     dbuser                          trust
+    host    replication     dbuser  127.0.0.1/32            trust
+    host    replication     dbuser  ::1/128                 trust
     ```
 
 - Finally, we restart PostgreSQL

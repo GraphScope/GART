@@ -43,7 +43,7 @@ def get_parser():
     return parser
 
 
-def exetract_schema(cursor, rgmapping_file, database, output):
+def exetract_schema(cursor, rgmapping_file, database, db_type, output):
     with open(rgmapping_file, "r", encoding="UTF-8") as f:
         config = yaml.safe_load(f)
     tables = (
@@ -55,11 +55,11 @@ def exetract_schema(cursor, rgmapping_file, database, output):
         table_name = table["dataSourceName"]
         sql = ""
         # sql = "SHOW COLUMNS FROM " + table_name
-        if args.db_type == "mysql":
+        if db_type == "mysql":
             sql = f"""SELECT COLUMN_NAME, COLUMN_TYPE
                     FROM information_schema.COLUMNS
                     WHERE TABLE_NAME='{table_name}' and TABLE_SCHEMA='{database}'"""
-        elif args.db_type == "postgresql":
+        elif db_type == "postgresql":
             sql = f"""SELECT COLUMN_NAME, DATA_TYPE
             FROM information_schema.COLUMNS
             WHERE TABLE_NAME='{table_name}' and TABLE_CATALOG='{database}'"""
@@ -77,6 +77,7 @@ def exetract_schema(cursor, rgmapping_file, database, output):
     return schema, sum_row
 
 
+# schema: {table_name: [(column_name, column_type), ...]}
 def produce_graph_schema(schema, rgmapping_file, output_yaml):
     result = {
         "name": "LDBC",
@@ -95,6 +96,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
         id_name = vdef["idFieldName"]
         props = vdef["mappings"]
         type = vdef["type_name"]
+        table_name = vdef["dataSourceName"]
         element = {"typeId": idx, "typeName": type}
         vtype_to_id[type] = idx
 
@@ -102,11 +104,19 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
         pelements = []
         for prop in props:
             p_name = prop["property"]
+            col_name = prop["dataField"]["name"]
             pele = {"propertyId": p_idx, "propertyName": p_name}
             p_type = ""
-            for key, value in schema[type]:
-                if key == p_name:
+            for key, value in schema[table_name]:
+                if key == col_name:
                     p_type = value
+
+            if p_type == "":
+                print(
+                    "Cannot find the type of property `%s` in table `%s`"
+                    % (col_name, table_name)
+                )
+                exit(1)
 
             # TODO: fix the type to the unified format (DT_...)
             if p_name == id_name:
@@ -127,6 +137,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
         id_name = ""  # TODO: not support id in edge yet
         props = edef["dataFieldMappings"]
         type = edef["type_pair"]["edge"]
+        table_name = edef["dataSourceName"]
         element = {"typeId": idx, "typeName": type}
 
         p_idx = 0
@@ -135,7 +146,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
             p_name = prop["property"]
             pele = {"propertyId": p_idx, "propertyName": p_name}
             p_type = ""
-            for key, value in schema[type]:
+            for key, value in schema[table_name]:
                 if key == p_name:
                     p_type = value
 
@@ -164,7 +175,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
         result["schema"]["edgeTypes"].append(element)
         idx += 1
 
-    with open(output_yaml, "w") as f:
+    with open(output_yaml, "w", encoding="UTF-8") as f:
         yaml.dump(result, f, sort_keys=False)
 
 
@@ -216,7 +227,9 @@ if __name__ == "__main__":
     conn = engine.raw_connection()
     cursor = conn.cursor()
 
-    schema, sum_row = exetract_schema(cursor, args.rgmapping_file, args.db, args.output)
+    schema, sum_row = exetract_schema(
+        cursor, args.rgmapping_file, args.db, args.db_type, args.output
+    )
     conn.close()
 
     produce_graph_schema(schema, args.rgmapping_file, args.output_yaml)

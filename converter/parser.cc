@@ -25,6 +25,7 @@
 #include "yaml-cpp/yaml.h"
 
 using std::ifstream;
+using std::map;
 using std::string;
 using std::vector;
 
@@ -127,19 +128,16 @@ gart::Status TxnLogParser::init(const string& rgmapping_file,
   vlabel_num_ = vdef.size();
   int elabel_num = edef.size();
 
-  std::map<std::string, int> vertex_label2ids;  // vlabel name -> vlabel id
-
   // parse vertex
   for (int idx = 0; idx < vlabel_num_; ++idx) {
     int id = idx;
     const string& table_name = vdef[idx]["dataSourceName"].as<string>();
     const string& label = vdef[idx]["type_name"].as<string>();
     table2label_names_[table_name].push_back(label);
-    table2vlabel_.emplace(table_name, id);
     useful_tables_.emplace(table_name, true);
     is_vlable_names_.emplace(label, true);
     vertex_id_columns_.emplace(label, vdef[idx]["idFieldName"].as<string>());
-    vertex_label2ids.emplace(label, id);
+    vertex_label2ids_.emplace(label, id);
     YAML::Node properties = vdef[idx]["mappings"];
     vector<string> required_prop_names;
     for (uint64_t prop_id = 0; prop_id < properties.size(); prop_id++) {
@@ -165,8 +163,8 @@ gart::Status TxnLogParser::init(const string& rgmapping_file,
             .as<string>();
     edge_label_columns_.emplace(label, make_pair(src_col, dst_col));
     elabel_names2elabel_.emplace(label, idx);
-    auto src_label_id = vertex_label2ids.find(src_label)->second;
-    auto dst_label_id = vertex_label2ids.find(dst_label)->second;
+    auto src_label_id = vertex_label2ids_.find(src_label)->second;
+    auto dst_label_id = vertex_label2ids_.find(dst_label)->second;
     edge_label2src_dst_labels_.push_back(make_pair(src_label_id, dst_label_id));
     YAML::Node properties = edef[idx]["dataFieldMappings"];
     vector<string> required_prop_names;
@@ -351,8 +349,10 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
   }
 #endif
 
-  const string& vid_col = vertex_id_columns_.find(table_name)->second;
-  int vertex_label_id = table2vlabel_.find(table_name)->second;
+  string vlabel_name =
+      table2label_names_.find(table_name)->second[out.table_idx];
+  const string& vid_col = vertex_id_columns_.find(vlabel_name)->second;
+  int vertex_label_id = vertex_label2ids_.find(vlabel_name)->second;
 
   int64_t gid = 0;
   if (out.op_type == LogEntry::OpType::INSERT) {
@@ -364,7 +364,7 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
 
     gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
     set_gid(data[vid_col], vertex_label_id, gid);
-    std::string external_id;
+    string external_id;
     // TODO(wanglei): now only vertex has external id
     if (data[vid_col].is_number_integer()) {
       external_id = std::to_string(data[vid_col].get<int64_t>());
@@ -372,6 +372,10 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
       external_id = data[vid_col].get<string>();
     } else {
       LOG(ERROR) << "Unknown vertex id type: " << data[vid_col].type_name();
+    }
+    if (external_id.empty()) {
+      LOG(ERROR) << "Empty external id for vertex: " << vlabel_name;
+      assert(false);
     }
     out.external_id = external_id;
   } else if (out.op_type == LogEntry::OpType::DELETE ||
@@ -397,7 +401,7 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
   }
 #endif
 
-  std::string elable_name =
+  string elable_name =
       table2label_names_.find(table_name)->second[out.table_idx];
   out.edge.elabel = elabel_names2elabel_.find(elable_name)->second;
 
@@ -411,13 +415,13 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
   if (data[src_name].is_number_integer()) {
     out.src_external_id = std::to_string(data[src_name].get<int64_t>());
   } else if (data[src_name].is_string()) {
-    out.src_external_id = data[src_name].get<std::string>();
+    out.src_external_id = data[src_name].get<string>();
   }
 
   if (data[dst_name].is_number_integer()) {
     out.dst_external_id = std::to_string(data[dst_name].get<int64_t>());
   } else if (data[dst_name].is_string()) {
-    out.dst_external_id = data[dst_name].get<std::string>();
+    out.dst_external_id = data[dst_name].get<string>();
   }
 
   int64_t src_gid = get_gid(data[src_name], src_label_id);

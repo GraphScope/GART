@@ -35,6 +35,8 @@ else
     exit 1
 fi
 
+kill $(ps aux | grep '[c]heck_process.sh' | awk '{print $2}') > /dev/null 2>&1
+
 echo "Stop writer"
 kill $(ps aux | grep '[v]egito' | awk '{print $2}') > /dev/null 2>&1
 

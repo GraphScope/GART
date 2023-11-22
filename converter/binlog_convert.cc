@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   // bulk load data
   if (FLAGS_enable_bulkload) {
     cout << "Bulk load data start" << endl;
-    int init_logs = 0;
+    uint64_t init_logs = 0;
     auto startTime = std::chrono::high_resolution_clock::now();
     while (1) {
       RdKafka::Message* msg = consumer->consume(&is_timeout);
@@ -95,7 +95,15 @@ int main(int argc, char** argv) {
       ostream << log_entry.to_string() << flush;
       consumer->delete_message(msg);
 
-      if (init_logs % 100000 == 0 && init_logs) {
+      const uint64_t kLogInterval = 1000000ull;
+      const uint64_t kDotInterval = kLogInterval / 10;
+      const char kDot = '.';
+
+      if (init_logs % kDotInterval == 0) {
+        cout << kDot << flush;
+      }
+
+      if (init_logs % kLogInterval == 0 && init_logs) {
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                             endTime - startTime)
@@ -103,8 +111,12 @@ int main(int argc, char** argv) {
 
         startTime = endTime;
 
+        cout << "\r";  // move cursor to the beginning of line
+
         cout << "Bulk load data: " << init_logs << " logs"
-             << " time: " << duration << " ms" << endl;
+             << " time: " << duration << " ms,"
+             << " speed: " << (kLogInterval * 1000 / duration) << " logs/s"
+             << endl;
       }
     }
   }

@@ -235,12 +235,27 @@ void GraphStore::add_vprop_buffer(size_t size) {
   vprop_buffer_manager_.init_capacity(size);
 }
 
+int block_size_num_v_power[][2] = {{24, 13}, {30, 12}, {31, 14}, {23, 12},
+                                   {33, 18}, {36, 26}, {34, 25}, {32, 21}};
+
 void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
-  seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
-  auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
+#if 0  // size specified for each vlabel in LDBC
+  uint64_t block_size = 1ul << block_size_num_v_power[vlabel][0];
+  uint64_t num_vertex = 1ul << block_size_num_v_power[vlabel][1];
+  seg_graphs_[vlabel] =
+      new seggraph::SegGraph(rg_map, vlabel, block_size, num_vertex);
 
   // add outer CSR and its schema
-  ov_seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map);
+  ov_seg_graphs_[vlabel] =
+      new seggraph::SegGraph(rg_map, vlabel, block_size, num_vertex);
+#else
+  seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map, vlabel);
+
+  // add outer CSR and its schema
+  ov_seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map, vlabel);
+#endif
+
+  auto& blob_schema = seg_graphs_[vlabel]->get_blob_schema();
   auto& ov_schema = ov_seg_graphs_[vlabel]->get_blob_schema();
   blob_schema.set_ov_block_oid(ov_schema.get_block_oid());
   blob_schema.set_ov_elabel2segs(ov_schema.get_elabel2segs());
