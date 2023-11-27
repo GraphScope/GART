@@ -32,6 +32,8 @@ class Runner {
 
   void run();
 
+  inline uint64_t get_latest_epoch() const { return latest_epoch_; }
+
  protected:
   // for graph
   std::vector<graph::GraphStore*> graph_stores_;

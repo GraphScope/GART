@@ -522,7 +522,7 @@ class GartFragment {
     if (vertex_mata_known_ == false) {
       computeVertexNum();
     }
-    return tvnums_[label_id];
+    return ivnums_[label_id];
   }
 
   bool GetVertex(label_id_t label, const oid_t& oid, vertex_t& v) const {
