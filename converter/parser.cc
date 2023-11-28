@@ -283,8 +283,10 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
   } else {
     fill_edge(out, log);
   }
-
-  fill_prop(out, log);
+  
+  if (out.op_type != LogEntry::OpType::DELETE) {
+    fill_prop(out, log);
+  }
 
   out.valid_ = true;
   if (out.update_has_finish_delete != true) {

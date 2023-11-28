@@ -85,15 +85,15 @@ int main(int argc, char** argv) {
         continue;
       }
 
+      ostream << log_entry.to_string() << flush;
+      consumer->delete_message(msg);
+
       if (log_entry.last_snapshot()) {
         cout << "Bulk load data finished: " << init_logs << " logs" << endl;
         log_count = FLAGS_logs_per_epoch;  // for the first epoch
         ostream << LogEntry::bulk_load_end().to_string() << flush;
         break;
       }
-
-      ostream << log_entry.to_string() << flush;
-      consumer->delete_message(msg);
 
       const uint64_t kLogInterval = 1000000ull;
       const uint64_t kDotInterval = kLogInterval / 10;
