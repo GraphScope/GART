@@ -39,11 +39,6 @@
 #include "system_flags.h"  // NOLINT(build/include_subdir)
 
 namespace gart {
-
-namespace framework {
-class Runner;
-}  // namespace framework
-
 namespace graph {
 
 using hashmap_t = vineyard::HashmapMVCC<int64_t, int64_t>;
@@ -85,8 +80,7 @@ class GraphStore {
     uint64_t min_outer_location;
   };
 
-  GraphStore(int local_pid, int mid, int total_partitions,
-             gart::framework::Runner* runner)
+  GraphStore(int local_pid, int mid, int total_partitions)
       : local_pid_(local_pid),
         mid_(mid),
         local_pnum_(total_partitions),
@@ -98,8 +92,7 @@ class GraphStore {
         total_vertex_label_num_(0),
         string_buffer_manager_(array_allocator_.get_client()),
         vprop_buffer_manager_(array_allocator_.get_client()),
-        etcd_client_(std::make_shared<etcd::Client>(FLAGS_etcd_endpoint)),
-        runner_(runner) {}
+        etcd_client_(std::make_shared<etcd::Client>(FLAGS_etcd_endpoint)) {}
 
   ~GraphStore();
 
@@ -248,7 +241,7 @@ class GraphStore {
 
   inline void init_ovg2ls(uint64_t vlabel_num) {
     auto v6d_client = array_allocator_.get_client();
-    history_ovg2ls_.resize(vlabel_num);
+    history_ovg2ls_.resize(vlabel_num, nullptr);
     for (auto idx = 0; idx < vlabel_num; idx++) {
       std::shared_ptr<hashmap_t> hmap;
       VINEYARD_CHECK_OK(hashmap_t::Make(*v6d_client, 1, hmap));
@@ -261,7 +254,7 @@ class GraphStore {
 
   inline void init_vertex_maps(uint64_t vlabel_num) {
     auto v6d_client = array_allocator_.get_client();
-    history_vertex_maps_.resize(vlabel_num);
+    history_vertex_maps_.resize(vlabel_num, nullptr);
     for (auto idx = 0; idx < vlabel_num; idx++) {
       std::shared_ptr<hashmap_t> hmap;
       VINEYARD_CHECK_OK(hashmap_t::Make(*v6d_client, 1, hmap));
@@ -492,8 +485,6 @@ class GraphStore {
   const int total_partitions_;  // total number of partitions
   int total_vertex_label_num_;
 
-  gart::framework::Runner* runner_;
-
   SparseArrayAllocator array_allocator_;
 
   // graph store schema
@@ -515,8 +506,8 @@ class GraphStore {
 
   // outer v: vlabel -> pointer of lid hashmap
   std::vector<std::shared_ptr<hashmap_t>> ovg2ls_;
-  // label ->version -> pointer of lid hashmap
-  std::vector<std::vector<std::shared_ptr<hashmap_t>>> history_ovg2ls_;
+  // label -> pointer of lid hashmap of latest stable version
+  std::vector<std::shared_ptr<hashmap_t>> history_ovg2ls_;
 
   // meta data for property fields
   std::map<uint64_t, uint64_t> property_bytes_;
@@ -563,8 +554,8 @@ class GraphStore {
   std::vector<uint64_t*> external_id_stores_;
   std::vector<uint64_t*> outer_external_id_stores_;
   std::vector<std::shared_ptr<hashmap_t>> vertex_maps_;
-  // label ->version -> pointer of vertex hashmap
-  std::vector<std::vector<std::shared_ptr<hashmap_t>>> history_vertex_maps_;
+  // vlabel -> pointer of vertex hashmap of the latest stable version
+  std::vector<std::shared_ptr<hashmap_t>> history_vertex_maps_;
 
   // vlabel -> vertex blob schemas
   std::map<uint64_t, gart::BlobSchema> blob_schemas_;

@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <fstream>
 
-#include "framework/bench_runner.h"
 #include "graph/graph_store.h"
 #include "property/property.h"
 #include "util/bitset.h"
@@ -348,8 +347,8 @@ void GraphStore::update_blob(uint64_t blob_epoch) {
         ov_graph->get_max_vertex_id() + ov_graph->get_deleted_outer_num());
     schema.set_ovg2l_oid(ovg2ls_[vlabel]->id());
     schema.set_vertex_map_oid(vertex_maps_[vlabel]->id());
-    history_vertex_maps_[vlabel].push_back(vertex_maps_[vlabel]);
-    history_ovg2ls_[vlabel].push_back(ovg2ls_[vlabel]);
+    history_vertex_maps_[vlabel] = vertex_maps_[vlabel];
+    history_ovg2ls_[vlabel] = ovg2ls_[vlabel];
   }
   blob_epoch_ = blob_epoch;
 }
@@ -585,19 +584,11 @@ void GraphStore::set_vertex_map(std::shared_ptr<hashmap_t>& hmap,
                                 uint64_t v_label, int64_t oid, int64_t gid) {
   VINEYARD_CHECK_OK(vertex_maps_[v_label]->emplace(hmap, oid, gid));
   if (hmap != nullptr) {
-    uint64_t stable_epoch = runner_->get_latest_epoch();
-    if (stable_epoch == 0) {
-      auto old_hmap = vertex_maps_[v_label];
+    auto old_hmap = vertex_maps_[v_label];
+    auto hmap_in_previous_epoch = history_vertex_maps_[v_label];
+    if (old_hmap != hmap_in_previous_epoch) {
       auto v6d_client = array_allocator_.get_client();
       VINEYARD_DISCARD(old_hmap->blob_writer()->Abort(*v6d_client));
-    } else {
-      stable_epoch = stable_epoch - 1;
-      auto old_hmap = vertex_maps_[v_label];
-      auto hmap_in_previous_epoch = history_vertex_maps_[v_label][stable_epoch];
-      if (old_hmap != hmap_in_previous_epoch) {
-        auto v6d_client = array_allocator_.get_client();
-        VINEYARD_DISCARD(old_hmap->blob_writer()->Abort(*v6d_client));
-      }
     }
     vertex_maps_[v_label] = hmap;
   }
@@ -607,19 +598,11 @@ void GraphStore::set_ovg2l(std::shared_ptr<hashmap_t>& hmap, uint64_t v_label,
                            int64_t gid, int64_t lid) {
   VINEYARD_CHECK_OK(ovg2ls_[v_label]->emplace(hmap, gid, lid));
   if (hmap != nullptr) {
-    uint64_t stable_epoch = runner_->get_latest_epoch();
-    if (stable_epoch == 0) {
-      auto old_hmap = ovg2ls_[v_label];
+    auto old_hmap = ovg2ls_[v_label];
+    auto hmap_in_previous_epoch = history_ovg2ls_[v_label];
+    if (old_hmap != hmap_in_previous_epoch) {
       auto v6d_client = array_allocator_.get_client();
       VINEYARD_DISCARD(old_hmap->blob_writer()->Abort(*v6d_client));
-    } else {
-      stable_epoch = stable_epoch - 1;
-      auto old_hmap = ovg2ls_[v_label];
-      auto hmap_in_previous_epoch = history_ovg2ls_[v_label][stable_epoch];
-      if (old_hmap != hmap_in_previous_epoch) {
-        auto v6d_client = array_allocator_.get_client();
-        VINEYARD_DISCARD(old_hmap->blob_writer()->Abort(*v6d_client));
-      }
     }
     ovg2ls_[v_label] = hmap;
   }

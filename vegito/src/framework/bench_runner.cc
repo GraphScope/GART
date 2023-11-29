@@ -589,7 +589,7 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
 
   // load graph
   graph_stores_[p_id] = new graph::GraphStore(
-      p_id, gart::framework::config.getServerID(), total_partitions, this);
+      p_id, gart::framework::config.getServerID(), total_partitions);
   rg_maps_[p_id] = new graph::RGMapping(p_id);
   GART_CHECK_OK(init_graph_schema(FLAGS_schema_file_path,
                                   FLAGS_table_schema_file_path,
