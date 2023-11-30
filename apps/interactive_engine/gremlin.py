@@ -1,37 +1,55 @@
 #! /usr/bin/env python3
 
+import argparse
 import readline
 import time
 
 from gremlin_python.driver.client import Client
 
-client = Client(f"ws://127.0.0.1:8182/gremlin", "g")
 
-# if client is effectively connected
-try:
-    client.submit("g.V().limit(1)")
-except:
-    print("Connection failed!")
-    exit(-1)
+def get_parser():
+    parser = argparse.ArgumentParser(
+        description="GIE (Interactive Engine) Client",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
-while 1:
-    query = input("gremlin> ")
-    if query == "quit" or query == "q" or query == "exit":
-        print("Bye!")
-        break
-    elif len(query) > 0:
-        try:
-            start_time = time.time()
-            callback = client.submit(query)
-            print(callback.all().result())
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print(f"Execution time: { int(execution_time * 1000) } ms")
-        except:
-            print("Something went wrong!")
-            continue
-        else:
-            pass
+    parser.add_argument("--host", default="127.0.0.1", help="Engine server host")
+    parser.add_argument("--port", default=8182, help="Engine server port")
+
+    return parser
+
+
+if __name__ == "__main__":
+    args = get_parser().parse_args()
+    uri = f"ws://{args.host}:{args.port}/gremlin"
+    client = Client(uri, "g")
+
+    # if client is effectively connected
+    try:
+        client.submit("g.V().limit(1)")
+        print(f"Connected to GIE in {uri}")
+    except:
+        print("Connection failed!")
+        exit(-1)
+
+    while 1:
+        query = input("gremlin> ")
+        if query == "quit" or query == "q" or query == "exit":
+            print("Bye!")
+            break
+        elif len(query) > 0:
+            try:
+                start_time = time.time()
+                callback = client.submit(query)
+                print(callback.all().result())
+                end_time = time.time()
+                execution_time = end_time - start_time
+                print(f"Execution time: { int(execution_time * 1000) } ms")
+            except:
+                print("Something went wrong!")
+                continue
+            else:
+                pass
 
 
 # g.V().as('a').hasLabel('PERSON').out('2..3', 'knows').with('PATH_OPT', 'SIMPLE').out().where(eq('a'))
