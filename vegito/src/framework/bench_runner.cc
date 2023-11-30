@@ -107,6 +107,7 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
   int vlabel_num = vdef.size(), elabel_num = edef.size();
 
   graph_store->set_vertex_label_num(vlabel_num);
+  graph_store->init_id_parser(vlabel_num);
   graph_schema.elabel_offset = vlabel_num;
   int prop_offset = 0;
 
@@ -468,7 +469,7 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
     latest_epoch_ = cur_epoch;
   }
 
-  if (op == "bulkload_end") {
+  if (unlikely(op == "bulkload_end")) {
     cout << "Completion of bulkload and transition to epoch " << cur_epoch
          << endl;
     for (int i = 0; i < graph_stores_[p_id]->get_total_vertex_label_num();

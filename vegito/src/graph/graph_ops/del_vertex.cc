@@ -32,14 +32,10 @@ void process_del_vertex(const StringViewList& cmd,
                         graph::GraphStore* graph_store) {
   int write_epoch = stoi(string(cmd[0]));
   uint64_t vid = static_cast<uint64_t>(stoll(string(cmd[1])));
-  gart::IdParser<vertex_t> parser;
-  parser.Init(graph_store->get_total_partitions(),
-              graph_store->get_total_vertex_label_num());
-
-  auto fid = parser.GetFid(vid);
+  auto fid = graph_store->id_parser.GetFid(vid);
   if (fid == graph_store->get_local_pid()) {  // is a inner vertex
-    auto v_offset = parser.GetOffset(vid);
-    auto v_label = parser.GetLabelId(vid);
+    auto v_offset = graph_store->id_parser.GetOffset(vid);
+    auto v_label = graph_store->id_parser.GetLabelId(vid);
     seggraph::SegGraph* src_graph =
         graph_store->get_graph<seggraph::SegGraph>(v_label);
     graph_store->delete_inner(v_label,
@@ -145,8 +141,10 @@ void process_del_vertex(const StringViewList& cmd,
       std::string_view edge_data(buf);
       free(prop_buffer);
       for (auto idx = 0; idx < delete_loc.size(); idx++) {
-        auto dst_offset = parser.GetOffset(delete_vertices[idx]);
-        auto dst_label = parser.GetLabelId(delete_vertices[idx]);
+        auto dst_offset =
+            graph_store->id_parser.GetOffset(delete_vertices[idx]);
+        auto dst_label =
+            graph_store->id_parser.GetLabelId(delete_vertices[idx]);
         auto mask = ((seggraph::vertex_t) 1)
                     << (sizeof(seggraph::vertex_t) * 8 - 1);
         auto dst_loc = delete_loc[idx] | mask;
@@ -196,7 +194,8 @@ void process_del_vertex(const StringViewList& cmd,
 
               auto dst_delete_flag =
                   vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
-              if (parser.GetOffset(vid) == v_offset && dst_delete_flag != 1) {
+              if (graph_store->id_parser.GetOffset(vid) == v_offset &&
+                  dst_delete_flag != 1) {
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
@@ -231,7 +230,8 @@ void process_del_vertex(const StringViewList& cmd,
           seggraph::SegGraph* dst_graph = graph_store->get_ov_graph(dst_label);
           auto dst_writer = dst_graph->create_graph_writer(write_epoch);
           auto max_outer_id_offset =
-              (((vertex_t) 1) << parser.GetOffsetWidth()) - (vertex_t) 1;
+              (((vertex_t) 1) << graph_store->id_parser.GetOffsetWidth()) -
+              (vertex_t) 1;
           segid_t dst_segid =
               dst_graph->get_vertex_seg_id(max_outer_id_offset - dst_offset);
           uint32_t dst_segidx =
@@ -273,7 +273,8 @@ void process_del_vertex(const StringViewList& cmd,
 
               auto dst_delete_flag =
                   vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
-              if (parser.GetOffset(vid) == v_offset && dst_delete_flag != 1) {
+              if (graph_store->id_parser.GetOffset(vid) == v_offset &&
+                  dst_delete_flag != 1) {
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
@@ -397,8 +398,10 @@ void process_del_vertex(const StringViewList& cmd,
       std::string_view edge_data(buf);
       free(prop_buffer);
       for (auto idx = 0; idx < delete_loc.size(); idx++) {
-        auto dst_offset = parser.GetOffset(delete_vertices[idx]);
-        auto dst_label = parser.GetLabelId(delete_vertices[idx]);
+        auto dst_offset =
+            graph_store->id_parser.GetOffset(delete_vertices[idx]);
+        auto dst_label =
+            graph_store->id_parser.GetLabelId(delete_vertices[idx]);
         auto mask = ((seggraph::vertex_t) 1)
                     << (sizeof(seggraph::vertex_t) * 8 - 1);
 
@@ -446,7 +449,8 @@ void process_del_vertex(const StringViewList& cmd,
               seggraph::vertex_t vid = dst_entries_cursor->get_dst();
               auto dst_delete_flag =
                   vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
-              if (parser.GetOffset(vid) == v_offset && dst_delete_flag != 1) {
+              if (graph_store->id_parser.GetOffset(vid) == v_offset &&
+                  dst_delete_flag != 1) {
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
@@ -481,7 +485,8 @@ void process_del_vertex(const StringViewList& cmd,
           seggraph::SegGraph* dst_graph = graph_store->get_ov_graph(dst_label);
           auto dst_writer = dst_graph->create_graph_writer(write_epoch);
           auto max_outer_id_offset =
-              (((vertex_t) 1) << parser.GetOffsetWidth()) - (vertex_t) 1;
+              (((vertex_t) 1) << graph_store->id_parser.GetOffsetWidth()) -
+              (vertex_t) 1;
           segid_t dst_segid =
               dst_graph->get_vertex_seg_id(max_outer_id_offset - dst_offset);
           uint32_t dst_segidx =
@@ -521,7 +526,8 @@ void process_del_vertex(const StringViewList& cmd,
               seggraph::vertex_t vid = dst_entries_cursor->get_dst();
               auto dst_delete_flag =
                   vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
-              if (parser.GetOffset(vid) == v_offset && dst_delete_flag != 1) {
+              if (graph_store->id_parser.GetOffset(vid) == v_offset &&
+                  dst_delete_flag != 1) {
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
                                dst_prefix_sum[dst_segment_idx];
@@ -557,7 +563,7 @@ void process_del_vertex(const StringViewList& cmd,
   } else if (fid !=
              graph_store
                  ->get_local_pid()) {  // is outer vertex of this fragment
-    auto v_label = parser.GetLabelId(vid);
+    auto v_label = graph_store->id_parser.GetLabelId(vid);
     uint64_t ov = graph_store->get_lid(v_label, vid);
     if (ov == uint64_t(-1)) {
       return;
@@ -565,9 +571,11 @@ void process_del_vertex(const StringViewList& cmd,
 
     auto v_offset = ov;
     auto max_outer_id_offset =
-        (((vertex_t) 1) << parser.GetOffsetWidth()) - (vertex_t) 1;
+        (((vertex_t) 1) << graph_store->id_parser.GetOffsetWidth()) -
+        (vertex_t) 1;
     seggraph::SegGraph* src_graph = graph_store->get_ov_graph(v_label);
-    auto real_lid = parser.GenerateId(0, v_label, max_outer_id_offset - ov);
+    auto real_lid =
+        graph_store->id_parser.GenerateId(0, v_label, max_outer_id_offset - ov);
     graph_store->delete_outer(v_label,
                               real_lid);  // delete vertex from vertex table
     src_graph->add_deleted_outer_num(1);
@@ -676,8 +684,10 @@ void process_del_vertex(const StringViewList& cmd,
       std::string_view edge_data(buf);
       free(prop_buffer);
       for (auto idx = 0; idx < delete_loc.size(); idx++) {
-        auto dst_offset = parser.GetOffset(delete_vertices[idx]);
-        auto dst_label = parser.GetLabelId(delete_vertices[idx]);
+        auto dst_offset =
+            graph_store->id_parser.GetOffset(delete_vertices[idx]);
+        auto dst_label =
+            graph_store->id_parser.GetLabelId(delete_vertices[idx]);
         auto mask = ((seggraph::vertex_t) 1)
                     << (sizeof(seggraph::vertex_t) * 8 - 1);
         auto dst_loc = delete_loc[idx] | mask;
@@ -728,7 +738,8 @@ void process_del_vertex(const StringViewList& cmd,
 
               auto dst_delete_flag =
                   vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
-              if ((max_outer_id_offset - parser.GetOffset(vid)) == ov &&
+              if ((max_outer_id_offset -
+                   graph_store->id_parser.GetOffset(vid)) == ov &&
                   dst_delete_flag != 1) {
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +
@@ -860,8 +871,10 @@ void process_del_vertex(const StringViewList& cmd,
       std::string_view edge_data(buf);
       free(prop_buffer);
       for (auto idx = 0; idx < delete_loc.size(); idx++) {
-        auto dst_offset = parser.GetOffset(delete_vertices[idx]);
-        auto dst_label = parser.GetLabelId(delete_vertices[idx]);
+        auto dst_offset =
+            graph_store->id_parser.GetOffset(delete_vertices[idx]);
+        auto dst_label =
+            graph_store->id_parser.GetLabelId(delete_vertices[idx]);
         auto mask = ((seggraph::vertex_t) 1)
                     << (sizeof(seggraph::vertex_t) * 8 - 1);
         auto dst_loc = delete_loc[idx] | mask;
@@ -913,7 +926,8 @@ void process_del_vertex(const StringViewList& cmd,
               seggraph::vertex_t vid = dst_entries_cursor->get_dst();
               auto dst_delete_flag =
                   vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
-              if ((max_outer_id_offset - parser.GetOffset(vid)) == ov &&
+              if ((max_outer_id_offset -
+                   graph_store->id_parser.GetOffset(vid)) == ov &&
                   dst_delete_flag != 1) {
                 is_founded = true;
                 auto del_loc = dst_entries - dst_entries_cursor - 1 +

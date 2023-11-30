@@ -35,19 +35,17 @@ void process_add_edge(const StringViewList& cmd,
   int elabel = stoi(string(cmd[1]));
   uint64_t src_vid = static_cast<uint64_t>(stoll(string(cmd[2])));
   uint64_t dst_vid = static_cast<uint64_t>(stoll(string(cmd[3])));
-  gart::IdParser<seggraph::vertex_t> parser;
-  parser.Init(graph_store->get_total_partitions(),
-              graph_store->get_total_vertex_label_num());
   auto max_outer_id_offset =
-      (((vertex_t) 1) << parser.GetOffsetWidth()) - (seggraph::vertex_t) 1;
-  auto src_fid = parser.GetFid(src_vid);
-  auto dst_fid = parser.GetFid(dst_vid);
+      (((vertex_t) 1) << graph_store->id_parser.GetOffsetWidth()) -
+      (seggraph::vertex_t) 1;
+  auto src_fid = graph_store->id_parser.GetFid(src_vid);
+  auto dst_fid = graph_store->id_parser.GetFid(dst_vid);
   if (src_fid != graph_store->get_local_pid() &&
       dst_fid != graph_store->get_local_pid()) {
     return;
   }
-  auto src_label = parser.GetLabelId(src_vid);
-  auto dst_label = parser.GetLabelId(dst_vid);
+  auto src_label = graph_store->id_parser.GetLabelId(src_vid);
+  auto dst_label = graph_store->id_parser.GetLabelId(dst_vid);
 
   seggraph::SegGraph* src_graph =
       graph_store->get_graph<seggraph::SegGraph>(src_label);
@@ -75,7 +73,8 @@ void process_add_edge(const StringViewList& cmd,
       // we need to add dst_vertex to outer vertices
       ov = ov_writer.new_vertex();
       graph_store->set_lid(dst_label, dst_vid, ov);
-      auto dst_lid = parser.GenerateId(0, dst_label, max_outer_id_offset - ov);
+      auto dst_lid = graph_store->id_parser.GenerateId(
+          0, dst_label, max_outer_id_offset - ov);
       std::shared_ptr<hashmap_t> hmap;
       graph_store->set_ovg2l(hmap, dst_label, dst_vid, dst_lid);
       graph_store->add_outer(dst_label, dst_lid);
@@ -91,11 +90,18 @@ void process_add_edge(const StringViewList& cmd,
       } else {
         int64_t dst_external_id = stoll(string(cmd[5]));
         outer_external_id_store_addr[ov] = dst_external_id;
+#ifndef USE_GLOBAL_VERTEX_MAP
+        // local vertex map
+        std::shared_ptr<hashmap_t> hmap;
+        graph_store->set_vertex_map(hmap, dst_label, dst_external_id,
+                                    (int64_t) dst_vid);
+#endif
       }
     }
-    auto src_offset = parser.GetOffset(src_vid);
-    auto src_lid = parser.GenerateId(0, src_label, src_offset);
-    auto dst_lid = parser.GenerateId(0, dst_label, max_outer_id_offset - ov);
+    auto src_offset = graph_store->id_parser.GetOffset(src_vid);
+    auto src_lid = graph_store->id_parser.GenerateId(0, src_label, src_offset);
+    auto dst_lid = graph_store->id_parser.GenerateId(0, dst_label,
+                                                     max_outer_id_offset - ov);
     src_writer.put_edge(src_offset, elabel, seggraph::EOUT, dst_lid, edge_data);
     ov_writer.put_edge(ov, elabel, seggraph::EIN, src_lid, edge_data);
   } else if (src_fid != graph_store->get_local_pid() &&
@@ -106,7 +112,8 @@ void process_add_edge(const StringViewList& cmd,
     if (ov == uint64_t(-1)) {
       ov = ov_writer.new_vertex();
       graph_store->set_lid(src_label, src_vid, ov);
-      auto src_lid = parser.GenerateId(0, src_label, max_outer_id_offset - ov);
+      auto src_lid = graph_store->id_parser.GenerateId(
+          0, src_label, max_outer_id_offset - ov);
       std::shared_ptr<hashmap_t> hmap;
       graph_store->set_ovg2l(hmap, src_label, src_vid, src_lid);
       graph_store->add_outer(src_label, src_lid);
@@ -122,18 +129,27 @@ void process_add_edge(const StringViewList& cmd,
       } else {
         int64_t src_external_id = stoll(string(cmd[4]));
         outer_external_id_store_addr[ov] = src_external_id;
+#ifndef USE_GLOBAL_VERTEX_MAP
+        // local vertex map
+        std::shared_ptr<hashmap_t> hmap;
+        graph_store->set_vertex_map(hmap, src_label, src_external_id,
+                                    (int64_t) src_vid);
+#endif
       }
     }
-    auto dst_offset = parser.GetOffset(dst_vid);
-    auto src_lid = parser.GenerateId(0, src_label, max_outer_id_offset - ov);
-    auto dst_lid = parser.GenerateId(0, dst_label, dst_offset);
+    auto dst_offset = graph_store->id_parser.GetOffset(dst_vid);
+    auto src_lid = graph_store->id_parser.GenerateId(0, src_label,
+                                                     max_outer_id_offset - ov);
+    auto dst_lid = graph_store->id_parser.GenerateId(0, dst_label, dst_offset);
     ov_writer.put_edge(ov, elabel, seggraph::EOUT, dst_lid, edge_data);
     dst_writer.put_edge(dst_offset, elabel, seggraph::EIN, src_lid, edge_data);
   } else {
-    auto src_offset = parser.GetOffset(src_vid);
-    auto dst_offset = parser.GetOffset(dst_vid);
-    vertex_t src_lid = parser.GenerateId(0, src_label, src_offset);
-    vertex_t dst_lid = parser.GenerateId(0, dst_label, dst_offset);
+    auto src_offset = graph_store->id_parser.GetOffset(src_vid);
+    auto dst_offset = graph_store->id_parser.GetOffset(dst_vid);
+    vertex_t src_lid =
+        graph_store->id_parser.GenerateId(0, src_label, src_offset);
+    vertex_t dst_lid =
+        graph_store->id_parser.GenerateId(0, dst_label, dst_offset);
 
     // inner edges
     src_writer.put_edge(src_offset, elabel, seggraph::EOUT, dst_lid, edge_data);

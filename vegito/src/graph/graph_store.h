@@ -124,6 +124,11 @@ class GraphStore {
   void set_vertex_label_num(uint64_t vlabel_num) {
     total_vertex_label_num_ = vlabel_num;
   }
+
+  void init_id_parser(uint64_t vlabel_num) {
+    id_parser.Init(total_partitions_, vlabel_num);
+  }
+
   inline uint64_t get_vtable_max_inner(uint64_t vlabel) {
     return vertex_tables_[vlabel].max_inner;
   }
@@ -175,15 +180,13 @@ class GraphStore {
 
   inline void delete_inner(uint64_t vlabel, seggraph::vertex_t offset) {
     VTable& vtable = vertex_tables_[vlabel];
-    gart::IdParser<seggraph::vertex_t> parser;
-    parser.Init(get_total_partitions(), get_total_vertex_label_num());
     for (auto i = 0; i < vtable.max_inner_location; i++) {
       auto value = vtable.table[i];
       auto delete_flag = value >> (sizeof(seggraph::vertex_t) * 8 - 1);
       if (delete_flag == 1) {
         continue;
       }
-      if (parser.GetOffset(value) == offset) {
+      if (id_parser.GetOffset(value) == offset) {
         uint64_t delete_mask = ((uint64_t) 1) << (sizeof(uint64_t) * 8 - 1);
         vtable.table[vtable.max_inner_location] = (i | delete_mask);
         ++vtable.max_inner_location;
@@ -205,8 +208,6 @@ class GraphStore {
 
   inline void delete_outer(uint64_t vlabel, seggraph::vertex_t lid) {
     VTable& vtable = vertex_tables_[vlabel];
-    gart::IdParser<seggraph::vertex_t> parser;
-    parser.Init(get_total_partitions(), get_total_vertex_label_num());
     for (auto i = vtable.size - 1; i >= vtable.min_outer_location; i--) {
       auto value = vtable.table[i];
       auto delete_flag = value >> (sizeof(seggraph::vertex_t) * 8 - 1);
@@ -475,6 +476,9 @@ class GraphStore {
   }
 
   void init_external_id_storage(uint64_t vlabel);
+
+ public:
+  IdParser<seggraph::vertex_t> id_parser;
 
  private:
   static const int INIT_VEC_SZ = 128;

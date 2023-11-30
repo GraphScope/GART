@@ -29,11 +29,9 @@ void process_del_edge(const StringViewList& cmd,
   int elabel = stoi(string(cmd[1]));
   uint64_t src_vid = static_cast<uint64_t>(stoll(string(cmd[2])));
   uint64_t dst_vid = static_cast<uint64_t>(stoll(string(cmd[3])));
-  gart::IdParser<vertex_t> parser;
-  parser.Init(graph_store->get_total_partitions(),
-              graph_store->get_total_vertex_label_num());
   auto max_outer_id_offset =
-      (((vertex_t) 1) << parser.GetOffsetWidth()) - (vertex_t) 1;
+      (((vertex_t) 1) << graph_store->id_parser.GetOffsetWidth()) -
+      (vertex_t) 1;
 
   uint64_t edge_prop_bytes =
       graph_store->get_edge_prop_total_bytes(
@@ -44,14 +42,14 @@ void process_del_edge(const StringViewList& cmd,
   std::string buf(prop_buffer, edge_prop_bytes);
   std::string_view edge_data(buf);
   free(prop_buffer);
-  auto src_fid = parser.GetFid(src_vid);
-  auto dst_fid = parser.GetFid(dst_vid);
+  auto src_fid = graph_store->id_parser.GetFid(src_vid);
+  auto dst_fid = graph_store->id_parser.GetFid(dst_vid);
   if (src_fid != graph_store->get_local_pid() &&
       dst_fid != graph_store->get_local_pid()) {
     return;
   }
-  auto src_label = parser.GetLabelId(src_vid);
-  auto dst_label = parser.GetLabelId(dst_vid);
+  auto src_label = graph_store->id_parser.GetLabelId(src_vid);
+  auto dst_label = graph_store->id_parser.GetLabelId(dst_vid);
 
   seggraph::SegGraph* src_graph;
   seggraph::SegGraph* dst_graph;
@@ -60,7 +58,7 @@ void process_del_edge(const StringViewList& cmd,
 
   if (src_fid == graph_store->get_local_pid() &&
       dst_fid != graph_store->get_local_pid()) {
-    src_offset = parser.GetOffset(src_vid);
+    src_offset = graph_store->id_parser.GetOffset(src_vid);
     src_offset_reverse = src_offset;
     dst_offset_reverse = graph_store->get_lid(dst_label, dst_vid);
     assert(dst_offset_reverse != -1);
@@ -73,15 +71,15 @@ void process_del_edge(const StringViewList& cmd,
     src_offset_reverse = graph_store->get_lid(src_label, src_vid);
     assert(src_offset_reverse != -1);
     src_offset = max_outer_id_offset - src_offset_reverse;
-    dst_offset = parser.GetOffset(dst_vid);
+    dst_offset = graph_store->id_parser.GetOffset(dst_vid);
     dst_offset_reverse = dst_offset;
     src_graph = graph_store->get_ov_graph(src_label);
     dst_graph = graph_store->get_graph<seggraph::SegGraph>(dst_label);
 
   } else {
-    src_offset = parser.GetOffset(src_vid);
+    src_offset = graph_store->id_parser.GetOffset(src_vid);
     src_offset_reverse = src_offset;
-    dst_offset = parser.GetOffset(dst_vid);
+    dst_offset = graph_store->id_parser.GetOffset(dst_vid);
     dst_offset_reverse = dst_offset;
     src_graph = graph_store->get_graph<seggraph::SegGraph>(src_label);
     dst_graph = graph_store->get_graph<seggraph::SegGraph>(dst_label);
@@ -136,7 +134,8 @@ void process_del_edge(const StringViewList& cmd,
         seggraph::vertex_t vid = src_entries_cursor->get_dst();
 
         auto delete_flag = vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
-        if (parser.GetOffset(vid) == dst_offset && delete_flag != 1) {
+        if (graph_store->id_parser.GetOffset(vid) == dst_offset &&
+            delete_flag != 1) {
           is_founded = true;
           auto del_loc = src_entries - src_entries_cursor - 1 +
                          src_prefix_sum[src_segment_idx];
@@ -211,7 +210,8 @@ void process_del_edge(const StringViewList& cmd,
       while (dst_entries_cursor != dst_entries) {
         seggraph::vertex_t vid = dst_entries_cursor->get_dst();
         auto delete_flag = vid >> (sizeof(seggraph::vertex_t) * 8 - 1);
-        if (parser.GetOffset(vid) == src_offset && delete_flag != 1) {
+        if (graph_store->id_parser.GetOffset(vid) == src_offset &&
+            delete_flag != 1) {
           is_founded = true;
           auto del_loc = dst_entries - dst_entries_cursor - 1 +
                          dst_prefix_sum[dst_segment_idx];

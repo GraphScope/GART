@@ -507,23 +507,30 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
 bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
                                      std::string external_id,
                                      StringViewList& vprop) {
-  // parse id
-  IdParser<seggraph::vertex_t> parser;
-  parser.Init(total_partitions_, total_vertex_label_num_);
+  auto vlabel = id_parser.GetLabelId(gid);
+#ifdef USE_GLOBAL_VERTEX_MAP
   // global vertex map
-  auto vlabel = parser.GetLabelId(gid);
   if (external_id_dtype_[vlabel] == PropertyDataType::LONG) {
     std::shared_ptr<hashmap_t> hmap;
     set_vertex_map(hmap, vlabel, std::stoll(external_id), (int64_t) gid);
   }
+#endif
 
-  auto fid = parser.GetFid(gid);
+  auto fid = id_parser.GetFid(gid);
   if (fid != local_pid_) {
     return false;  // not in this partition
   }
 
-  auto voffset = parser.GetOffset(gid);
-  auto lid = parser.GenerateId(0, vlabel, voffset);
+#ifndef USE_GLOBAL_VERTEX_MAP
+  // local vertex map
+  if (external_id_dtype_[vlabel] == PropertyDataType::LONG) {
+    std::shared_ptr<hashmap_t> hmap;
+    set_vertex_map(hmap, vlabel, std::stoll(external_id), (int64_t) gid);
+  }
+#endif
+
+  auto voffset = id_parser.GetOffset(gid);
+  auto lid = id_parser.GenerateId(0, vlabel, voffset);
 
   // get handle of graph and property
   seggraph::SegGraph* graph = get_graph<seggraph::SegGraph>(vlabel);
@@ -564,16 +571,13 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
 
 bool GraphStore::update_inner_vertex(int epoch, uint64_t gid,
                                      StringViewList& vprop) {
-  // parse id
-  IdParser<seggraph::vertex_t> parser;
-  parser.Init(total_partitions_, total_vertex_label_num_);
-  auto fid = parser.GetFid(gid);
+  auto fid = id_parser.GetFid(gid);
   if (fid != local_pid_) {
     return false;  // not in this partition
   }
 
-  auto vlabel = parser.GetLabelId(gid);
-  auto voffset = parser.GetOffset(gid);
+  auto vlabel = id_parser.GetLabelId(gid);
+  auto voffset = id_parser.GetOffset(gid);
   Property* property = get_property(vlabel);
 
   property->update(voffset, gid, vprop, epoch, this);
