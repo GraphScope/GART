@@ -1,6 +1,33 @@
 [
     {
         "arguments": [
+            "/usr/bin/clang-10",
+            "-c",
+            "-Wno-ignored-attributes",
+            "-fno-strict-aliasing",
+            "-fwrapv",
+            "-Wno-unused-command-line-argument",
+            "-O2",
+            "-I.",
+            "-I./",
+            "-I/usr/include/postgresql/12/server",
+            "-I/usr/include/postgresql/internal",
+            "-Wdate-time",
+            "-D_FORTIFY_SOURCE=2",
+            "-D_GNU_SOURCE",
+            "-I/usr/include/libxml2",
+            "-I/usr/include/mit-krb5",
+            "-flto=thin",
+            "-emit-llvm",
+            "-o",
+            "log.bc",
+            "log.c"
+        ],
+        "directory": "/opt/ssj/projects/gart/apps/pgx",
+        "file": "log.c"
+    },
+    {
+        "arguments": [
             "gcc",
             "-c",
             "-Wall",
@@ -37,34 +64,7 @@
             "log.o",
             "log.c"
         ],
-        "directory": "/opt/ssj/projects/pgx-example",
-        "file": "log.c"
-    },
-    {
-        "arguments": [
-            "/usr/bin/clang-10",
-            "-c",
-            "-Wno-ignored-attributes",
-            "-fno-strict-aliasing",
-            "-fwrapv",
-            "-Wno-unused-command-line-argument",
-            "-O2",
-            "-I.",
-            "-I./",
-            "-I/usr/include/postgresql/12/server",
-            "-I/usr/include/postgresql/internal",
-            "-Wdate-time",
-            "-D_FORTIFY_SOURCE=2",
-            "-D_GNU_SOURCE",
-            "-I/usr/include/libxml2",
-            "-I/usr/include/mit-krb5",
-            "-flto=thin",
-            "-emit-llvm",
-            "-o",
-            "log.bc",
-            "log.c"
-        ],
-        "directory": "/opt/ssj/projects/pgx-example",
+        "directory": "/opt/ssj/projects/gart/apps/pgx",
         "file": "log.c"
     }
 ]

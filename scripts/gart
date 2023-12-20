@@ -460,7 +460,7 @@ done
 
 echo "Process IDs:"
 for key in "${!pids[@]}"; do
-    echo "$key: ${pids[$key]}"
+    echo "    $key: ${pids[$key]}"
 done
 
 ./check_process.sh "$(declare -p pids)" &
