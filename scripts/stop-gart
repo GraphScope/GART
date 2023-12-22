@@ -61,4 +61,8 @@ echo "Stop Zookeeper and Kafka"
 $KAFKA_BIN/kafka-server-stop.sh
 $KAFKA_BIN/zookeeper-server-stop.sh
 
+# To kill all legacy kafka and zookeeper processes
+kill $(ps aux | grep '[k]afka' | awk '{print $2}') > /dev/null 2>&1
+kill $(ps aux | grep '[z]ookeeper' | awk '{print $2}') > /dev/null 2>&1
+
 sleep 3

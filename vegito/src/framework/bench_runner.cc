@@ -21,6 +21,7 @@
 #include "librdkafka/rdkafkacpp.h"
 #include "yaml-cpp/yaml.h"
 
+#include <stdio.h>
 #include "framework/bench_runner.h"
 #include "graph/graph_ops.h"
 #include "util/bitset.h"
@@ -229,10 +230,9 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx].size() != 2) {
           LOG(ERROR) << "Table schema file (" << table_schema_path
-                     << ") format error. "
-                     << "Table name" << table_name << "Column index " << col_idx
-                     << " has " << required_table_schema[col_idx].size()
-                     << " columns.";
+                     << ") format error. " << "Table name" << table_name
+                     << "Column index " << col_idx << " has "
+                     << required_table_schema[col_idx].size() << " columns.";
           assert(false);
         }
         if (required_table_schema[col_idx][0].get<string>() ==
@@ -279,9 +279,8 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
 
       if (prop_dtype == "") {
         LOG(ERROR) << "Table schema file (" << table_schema_path
-                   << ") format error. "
-                   << "Table name " << table_name << " Column name "
-                   << prop_table_col_name << " not found.";
+                   << ") format error. " << "Table name " << table_name
+                   << " Column name " << prop_table_col_name << " not found.";
         assert(false);
       }
 
@@ -484,6 +483,7 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
             "usage %.2lf GB, limit %.2lf GB\n",
             p_id, i, graph->get_max_vertex_id(), graph->get_block_usage(),
             double(usage) / (1 << 30), double(limit) / (1 << 30));
+        fflush(stdout);
       } else {
         LOG(ERROR) << "empty pointer frag " << p_id << ", vlabel " << i;
       }
@@ -496,6 +496,7 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
             "usage %.2lf GB, limit %.2lf GB\n",
             p_id, i, ovg->get_max_vertex_id(), ovg->get_block_usage(),
             double(usage) / (1 << 30), double(limit) / (1 << 30));
+        fflush(stdout);
       }
     }
     return;
