@@ -78,6 +78,9 @@ GRIN_VERTEX grin_get_vertex_by_internal_id_by_type(GRIN_GRAPH g,
                                                    GRIN_VERTEX_TYPE vt,
                                                    long long int id) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
+  if (!_g->InternalIdIsValid(id, vt)) {
+    return GRIN_NULL_VERTEX;
+  }
   if ((uint64_t) id < _g->GetMaxInnerVerticesNum(vt)) {
     return _g->vid_parser.GenerateId(0, vt, id);
   } else {

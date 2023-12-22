@@ -76,8 +76,8 @@ python/proto
 
 # Protobuf GRPC
 *.pb.*
-*_pb2.py
-*_pb2_grpc.py
+*_pb2.py*
+*_pb2_grpc.py*
 
 # Visual Studio Code
 .vscode/

@@ -1,0 +1,55 @@
+// Copyright 2023 Alibaba Group Holding Limited. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package gart.rpc;
+
+service QueryGraphService{
+    rpc getData (Request) returns (Response){}
+}
+
+// For simulating networkx reporting functionalities
+enum ReportType {
+  NODE_NUM = 0;
+  EDGE_NUM = 1;
+  HAS_NODE = 2;
+  HAS_EDGE = 3;
+  NODE_DATA = 4;
+  EDGE_DATA = 5;
+  SUCCS_BY_NODE = 6;
+  PREDS_BY_NODE = 7;
+  SELFLOOPS_NUM = 8;
+  NODE_ID_CACHE_BY_GID = 9;
+  NODE_ATTR_CACHE_BY_GID = 10;
+  SUCC_BY_GID = 11;
+  PRED_BY_GID = 12;
+  SUCC_ATTR_BY_GID = 13;
+  PRED_ATTR_BY_GID = 14;
+  SUCC_ATTR_BY_NODE = 15;
+  PRED_ATTR_BY_NODE = 16;
+  NODES = 17;
+  NODES_GID = 18;
+}
+
+//
+message Request {
+  ReportType op = 1;
+  string args=2;
+}
+
+message Response {
+  bytes result = 1;
+}

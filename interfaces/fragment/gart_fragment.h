@@ -418,6 +418,43 @@ class GartFragment {
         prop_cols_meta[vlabel][prop_id] = prop_meta;
       }
     }
+#ifdef USE_INTERNAL_ID
+    vertex_internal_id_null_bitmap_.resize(vertex_label_num_);
+    vertex_mata_known_ = true;
+    for (auto v_label = 0; v_label < vertex_label_num_; v_label++) {
+      size_t bitmap_size =
+          GetMaxInnerVerticesNum(v_label) + GetMaxOuterVerticesNum(v_label);
+      size_t bitmap_byte_size = BYTE_SIZE(bitmap_size);
+      vertex_internal_id_null_bitmap_[v_label].resize(bitmap_byte_size);
+      memset(vertex_internal_id_null_bitmap_[v_label].data(), 0,
+             bitmap_byte_size);
+      auto inner_vertices = InnerVertices(v_label);
+      size_t ivnum = 0;
+      while (inner_vertices.valid()) {
+        ivnum++;
+        auto src = inner_vertices.vertex();
+        auto location = GetOffset(src);
+        set_bit(reinterpret_cast<uint8_t*>(
+                    vertex_internal_id_null_bitmap_[v_label].data()),
+                location);
+        inner_vertices.next();
+      }
+      ivnums_[v_label] = ivnum;
+      auto outer_vertices = OuterVertices(v_label);
+      size_t ovnum = 0;
+      while (outer_vertices.valid()) {
+        ovnum++;
+        auto src = outer_vertices.vertex();
+        auto location = GetOffset(src) + GetMaxInnerVerticesNum(v_label);
+        set_bit(reinterpret_cast<uint8_t*>(
+                    vertex_internal_id_null_bitmap_[v_label].data()),
+                location);
+        outer_vertices.next();
+      }
+      ovnums_[v_label] = ovnum;
+      tvnums_[v_label] = ivnum + ovnum;
+    }
+#endif
   }
 
   bool directed() const { return directed_; }
@@ -518,7 +555,7 @@ class GartFragment {
                                 label_id);
   }
 
-  inline vid_t GetVerticesNum(label_id_t label_id) {
+  inline size_t GetVerticesNum(label_id_t label_id) {
     if (vertex_mata_known_ == false) {
       computeVertexNum();
     }
@@ -1086,6 +1123,18 @@ class GartFragment {
                                  vid_parser.GetOffset(v.GetValue()));
   }
 
+#ifdef USE_INTERNAL_ID
+  bool InternalIdIsValid(vid_t internal_id, label_id_t v_label) {
+    if (internal_id < 0 || internal_id > GetMaxInnerVerticesNum(v_label) +
+                                             GetMaxOuterVerticesNum(v_label)) {
+      return false;
+    }
+    return get_bit(reinterpret_cast<uint8_t*>(
+                       vertex_internal_id_null_bitmap_[v_label].data()),
+                   internal_id);
+  }
+#endif
+
   inline gart::EdgeIterator GetIncomingAdjList(const vertex_t& v,
                                                label_id_t e_label) const {
     auto segment = locate_segment_(v, e_label, seggraph::EIN);
@@ -1450,6 +1499,9 @@ class GartFragment {
 
   std::map<std::pair<label_id_t, prop_id_t>, std::string> vertex_prop2dtype_;
   std::map<std::pair<label_id_t, prop_id_t>, std::string> edge_prop2dtype_;
+#ifdef USE_INTERNAL_ID
+  std::vector<std::string> vertex_internal_id_null_bitmap_;
+#endif
 
   std::vector<size_t> edge_bitmap_size_;
 

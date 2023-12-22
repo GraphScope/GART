@@ -17,6 +17,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g2")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 
+option(WITH_INTERNAL_ID "use internal id?" ON)
+
+if(WITH_INTERNAL_ID)
+  add_definitions(-DUSE_INTERNAL_ID)
+endif()
+
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
 if(COMPILER_SUPPORTS_MARCH_NATIVE)

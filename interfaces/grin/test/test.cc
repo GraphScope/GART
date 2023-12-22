@@ -80,7 +80,10 @@ void test_extension(char* uri) {
     auto v = grin_get_vertex_from_iter(g, vertex_iter);
     auto v_oid = grin_get_vertex_external_id_of_int64(g, v);
     auto v_via_oid = grin_get_vertex_by_external_id_of_int64(g, v_oid);
+    auto v_iid = grin_get_vertex_internal_id_by_type(g, 0, v);
+    auto v_via_iid = grin_get_vertex_by_internal_id_by_type(g, 0, v_iid);
     std::cout << "v_oid = " << v_oid << " v = " << v << " v_via_oid = " << v_via_oid << std::endl;
+    std::cout << "v = " << v << " v_iid = " << v_iid << " v_via_iid = " << v_via_iid << std::endl;
     GRIN_EDGE_TYPE_LIST etl = grin_get_edge_type_list(g);
     size_t etl_size = grin_get_edge_type_list_size(g, etl);
     for (size_t etl_i = 0; etl_i < etl_size; ++etl_i) {
@@ -1164,7 +1167,7 @@ int main() {
   std::string meta_prefix = "";
   int fragment_per_machine = 1;
 
-  std::string uri_str = "gart://127.0.0.1:23760?read_epoch=179&total_partition_num=1&local_partition_num=1&start_partition_id=0&meta_prefix=gart_meta_";
+  std::string uri_str = "gart://127.0.0.1:23760?read_epoch=0&total_partition_num=4&local_partition_num=1&start_partition_id=0&meta_prefix=gart_meta_";
   /*
       "gart://"
       "127.0.0.1:23799?read_epoch=4&total_partition_num=2&local_partition_num="

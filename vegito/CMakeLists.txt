@@ -10,7 +10,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option (WITH_TEST "build for test" OFF)
-option (USE_GLOBAL_VERTEX_MAP "use global vertex map?" OFF)
+option (WITH_GLOBAL_VERTEX_MAP "use global vertex map?" OFF)
+
+if(WITH_GLOBAL_VERTEX_MAP)
+  add_definitions(-DUSE_GLOBAL_VERTEX_MAP)
+endif()
 
 ### Forbid in-source builds ###
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
