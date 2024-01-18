@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "commands/dbcommands.h"
 #include "executor/executor.h"
 #include "funcapi.h"
 #include "miscadmin.h"
@@ -31,7 +32,6 @@ void _PG_init(void);
 void _PG_fini(void);
 
 static int nested_level = 0;
-static char query[1024];
 static void write_file(const char* str);
 static char* read_file(FILE* fp);
 
@@ -66,7 +66,9 @@ static void write_file(const char* str) {
 }
 
 static char* read_file(FILE* fp) {
+  static char query[1024];
   char* rc = NULL;
+
   rc = fgets(query, 1023, fp);
   return rc ? query : NULL;
 }
@@ -161,10 +163,73 @@ Datum pg_all_queries(PG_FUNCTION_ARGS) {
 }
 
 Datum pg_call_shell(PG_FUNCTION_ARGS) {
+  char result[500];
+
+  Oid userid;
+  char* username;
+  Oid databaseid;
+  char* databasename;
+
+  userid = GetUserId();
+  username = GetUserNameFromId(userid, false);
+
+  databaseid = MyDatabaseId;
+  databasename = get_database_name(databaseid);
+
   text* command = PG_GETARG_TEXT_PP(0);
-  system("sh /opt/ssj/projects/pgx-example/test.sh");
-  char result[100];
-  sprintf(result, "Hello World! %s", VARDATA_ANY(command));
+
+  FILE* fp;
+  FILE* output_file;
+  char path[1035];
+
+  /* 打开命令用于读取. */
+  fp = popen(". /opt/ssj/projects/gart/apps/pgx/run.sh", "r");
+  if (fp == NULL) {
+    fprintf(stderr, "执行命令失败了\n");
+    exit(1);
+  }
+
+  /* 打开文件用于写入. */
+  output_file = fopen("/opt/postgresql/tmp.log", "w");
+  if (output_file == NULL) {
+    sprintf(result, "无法打开文件 /opt/postgresql/tmp.log\n");
+    pclose(fp);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  /* 逐行读取输出并写入到文件 */
+  while (fgets(path, sizeof(path), fp) != NULL) {
+    int char_written = fprintf(output_file, "%s", path);
+    sprintf(result, "%d: %s", char_written, path);
+    if (char_written < 0) {
+      sprintf(result, "无法写入文件 /opt/postgresql/tmp.log\n");
+      pclose(fp);
+      PG_RETURN_TEXT_P(cstring_to_text(result));
+      return (Datum) 0;
+    }
+  }
+  fflush(output_file);
+  fclose(output_file);
+
+  // popen(". /opt/ssj/projects/gart/apps/pgx/run.sh", "r");
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+  return (Datum) 0;
+
+  /* 关闭文件流并获取命令的退出状态. */
+  int status = pclose(fp);
+  fprintf(stderr, "Command exit status: %d\n", status);
+
+  const char* cmd = ". /opt/ssj/projects/gart/apps/pgx/run.sh";
+  int err = system(cmd);
+
+  if (err) {
+    sprintf(result, "Error (%d) %s in %s from %s. %s", err,
+            VARDATA_ANY(command), databasename, username, cmd);
+  } else {
+    sprintf(result, "Hello %s in %s from %s. %s", VARDATA_ANY(command),
+            databasename, username, cmd);
+  }
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;
 }
