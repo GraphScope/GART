@@ -327,7 +327,8 @@ fi
 ####################### Vineyard #######################
 if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
     echo "Start to launch vineyardd on $v6d_sock"
-    vineyardd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
+    # TODO: etcd_cmd user for PostgreSQL Extension
+    vineyardd --etcd_cmd=/usr/local/bin/etcd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
     pids["Vineyard"]=$!
 fi
 

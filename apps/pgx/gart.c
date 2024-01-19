@@ -38,8 +38,8 @@ static char* read_file(FILE* fp);
 Datum pg_all_queries(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(pg_all_queries);
 
-Datum pg_call_shell(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(pg_call_shell);
+Datum gart_connect(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_connect);
 
 static void process_utility(PlannedStmt* pstmt, const char* queryString,
                             ProcessUtilityContext context, ParamListInfo params,
@@ -162,7 +162,7 @@ Datum pg_all_queries(PG_FUNCTION_ARGS) {
   return (Datum) 0;
 }
 
-Datum pg_call_shell(PG_FUNCTION_ARGS) {
+Datum gart_connect(PG_FUNCTION_ARGS) {
   char result[500];
 
   Oid userid;
@@ -178,32 +178,42 @@ Datum pg_call_shell(PG_FUNCTION_ARGS) {
 
   text* command = PG_GETARG_TEXT_PP(0);
 
+  // if (err) {
+  //   sprintf(result, "Error (%d) %s in %s from %s. %s", err,
+  //           VARDATA_ANY(command), databasename, username, cmd);
+  // } else {
+  //   sprintf(result, "Hello %s in %s from %s. %s", VARDATA_ANY(command),
+  //           databasename, username, cmd);
+  // }
+
   FILE* fp;
   FILE* output_file;
   char path[1035];
 
-  /* 打开命令用于读取. */
-  fp = popen(". /opt/ssj/projects/gart/apps/pgx/run.sh", "r");
+  const char* cmd = ". /opt/ssj/projects/gart/apps/pgx/run.sh";
+  const char* log_file = "/opt/postgresql/tmp.log";
+
+  fp = popen(cmd, "r");
   if (fp == NULL) {
-    fprintf(stderr, "执行命令失败了\n");
+    fprintf(stderr, "Execute command error: %s\n", cmd);
     exit(1);
   }
 
-  /* 打开文件用于写入. */
-  output_file = fopen("/opt/postgresql/tmp.log", "w");
+  // open file for writing logs
+  output_file = fopen(log_file, "w");
   if (output_file == NULL) {
-    sprintf(result, "无法打开文件 /opt/postgresql/tmp.log\n");
+    sprintf(result, "Cannot open log file: %s\n", log_file);
     pclose(fp);
     PG_RETURN_TEXT_P(cstring_to_text(result));
     return (Datum) 0;
   }
 
-  /* 逐行读取输出并写入到文件 */
+  // output to logs line by line
   while (fgets(path, sizeof(path), fp) != NULL) {
     int char_written = fprintf(output_file, "%s", path);
     sprintf(result, "%d: %s", char_written, path);
     if (char_written < 0) {
-      sprintf(result, "无法写入文件 /opt/postgresql/tmp.log\n");
+      sprintf(result, "Cannot write log file: %s\n", log_file);
       pclose(fp);
       PG_RETURN_TEXT_P(cstring_to_text(result));
       return (Datum) 0;
@@ -212,24 +222,9 @@ Datum pg_call_shell(PG_FUNCTION_ARGS) {
   fflush(output_file);
   fclose(output_file);
 
-  // popen(". /opt/ssj/projects/gart/apps/pgx/run.sh", "r");
-  PG_RETURN_TEXT_P(cstring_to_text(result));
-  return (Datum) 0;
-
-  /* 关闭文件流并获取命令的退出状态. */
   int status = pclose(fp);
   fprintf(stderr, "Command exit status: %d\n", status);
 
-  const char* cmd = ". /opt/ssj/projects/gart/apps/pgx/run.sh";
-  int err = system(cmd);
-
-  if (err) {
-    sprintf(result, "Error (%d) %s in %s from %s. %s", err,
-            VARDATA_ANY(command), databasename, username, cmd);
-  } else {
-    sprintf(result, "Hello %s in %s from %s. %s", VARDATA_ANY(command),
-            databasename, username, cmd);
-  }
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;
 }

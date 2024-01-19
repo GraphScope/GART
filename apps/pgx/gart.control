@@ -1,4 +1,4 @@
 comment = 'PostgreSQL Logger Utility'
 default_version = '0.0.1'
 relocatable = true
-module_pathname = '$libdir/log'
+module_pathname = '$libdir/gart'
