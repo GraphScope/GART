@@ -176,7 +176,7 @@ Datum gart_connect(PG_FUNCTION_ARGS) {
   databaseid = MyDatabaseId;
   databasename = get_database_name(databaseid);
 
-  text* command = PG_GETARG_TEXT_PP(0);
+  text* password = PG_GETARG_TEXT_PP(0);
 
   // if (err) {
   //   sprintf(result, "Error (%d) %s in %s from %s. %s", err,
@@ -190,14 +190,11 @@ Datum gart_connect(PG_FUNCTION_ARGS) {
   FILE* output_file;
   char path[1035];
 
-  const char* cmd = ". /opt/ssj/projects/gart/apps/pgx/run.sh";
+  const char* base_cmd = "sh /opt/ssj/projects/gart/apps/pgx/run.sh";
   const char* log_file = "/opt/postgresql/tmp.log";
-
-  fp = popen(cmd, "r");
-  if (fp == NULL) {
-    fprintf(stderr, "Execute command error: %s\n", cmd);
-    exit(1);
-  }
+  char cmd[1000];
+  sprintf(cmd, "%s %s %s %s", base_cmd, username, VARDATA_ANY(password),
+          databasename);
 
   // open file for writing logs
   output_file = fopen(log_file, "w");
@@ -206,6 +203,16 @@ Datum gart_connect(PG_FUNCTION_ARGS) {
     pclose(fp);
     PG_RETURN_TEXT_P(cstring_to_text(result));
     return (Datum) 0;
+  }
+
+  fprintf(output_file, "Command: %s\n", cmd);
+  fflush(output_file);
+
+  // execute command
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    fprintf(stderr, "Execute command error: %s\n", cmd);
+    exit(1);
   }
 
   // output to logs line by line
