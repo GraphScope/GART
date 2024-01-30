@@ -60,6 +60,19 @@ find_package(OpenMP REQUIRED)
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
+find_package(RapidJSON REQUIRED)
+if (DEFINED RapidJSON_INCLUDE_DIRS)  # rapidjson > 1.1.0
+    include_directories(${RapidJSON_INCLUDE_DIRS})
+else ()  # rapidjson <= 1.1.0
+    include_directories(${RAPIDJSON_INCLUDE_DIRS})
+endif ()
+add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
+
+find_package(msgpack REQUIRED)
+
 find_package(vineyard 0.15.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 link_libraries(${VINEYARD_LIBRARIES})
@@ -75,5 +88,9 @@ find_package(Boost REQUIRED COMPONENTS system filesystem
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 
-add_executable(gart_networkx_server server/graph_server.cc ${PROTO_SOURCES})
+file(GLOB SOURCES
+          "server/utils/*.cc" 
+          )
+
+add_executable(gart_networkx_server server/graph_server.cc ${PROTO_SOURCES} ${SOURCES})
 target_link_libraries(gart_networkx_server ${GRPC_LIBRARIES} ${Protobuf_LIBRARIES} ${MPI_CXX_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})

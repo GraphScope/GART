@@ -172,8 +172,7 @@ GRIN_VERTEX_TYPE_LIST grin_get_src_types_by_edge_type(GRIN_GRAPH g,
                                                       GRIN_EDGE_TYPE et) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
-  vtl->push_back(
-      _g->edge2vertex_map.find((et) + _g->vertex_label_num())->second.first);
+  vtl->push_back(_g->edge2vertex_map.find(et)->second.first);
   return vtl;
 }
 
@@ -183,8 +182,7 @@ GRIN_VERTEX_TYPE_LIST grin_get_dst_types_by_edge_type(GRIN_GRAPH g,
                                                       GRIN_EDGE_TYPE et) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
-  vtl->push_back(
-      _g->edge2vertex_map.find((et) + _g->vertex_label_num())->second.second);
+  vtl->push_back(_g->edge2vertex_map.find(et)->second.second);
   return vtl;
 }
 
@@ -192,8 +190,7 @@ GRIN_EDGE_TYPE_LIST grin_get_edge_types_by_vertex_type_pair(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1, GRIN_VERTEX_TYPE vt2) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g)->frag;
   auto etl = new GRIN_EDGE_TYPE_LIST_T();
-  auto etype = _g->vertex2edge_map.find(std::make_pair(vt1, vt2))->second -
-               _g->vertex_label_num();
+  auto etype = _g->vertex2edge_map.find(std::make_pair(vt1, vt2))->second;
   etl->push_back(etype);
   return etl;
 }

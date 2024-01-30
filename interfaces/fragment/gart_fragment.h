@@ -268,8 +268,8 @@ class GartFragment {
       auto src_id = vertex_name_id_map.find(src_name)->second;
       auto dst_id = vertex_name_id_map.find(dst_name)->second;
 
-      vertex2edge_map.emplace(std::make_pair(src_id, dst_id), e_label_id);
-      edge2vertex_map.emplace(e_label_id, std::make_pair(src_id, dst_id));
+      vertex2edge_map.emplace(std::make_pair(src_id, dst_id), e_label_id - vertex_label_num_);
+      edge2vertex_map.emplace(e_label_id - vertex_label_num_, std::make_pair(src_id, dst_id));
 
       edge_label_num_++;
     }

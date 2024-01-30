@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <stdio.h>
 
 #include <fstream>
 #include <string>
@@ -21,7 +22,6 @@
 #include "librdkafka/rdkafkacpp.h"
 #include "yaml-cpp/yaml.h"
 
-#include <stdio.h>
 #include "framework/bench_runner.h"
 #include "graph/graph_ops.h"
 #include "util/bitset.h"
