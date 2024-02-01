@@ -154,6 +154,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       label_id_t label_id = node[0].GetInt();
       // in gart, oid is a uint64_t
       oid_t oid = node[1].GetInt64();
+      getNeighborsAttrList(label_id, oid, op, *in_archive);
       break;
     }
     case gart::rpc::NODES: {
@@ -331,18 +332,20 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         edge_iter = fragment_->GetOutgoingAdjList(src, e_label);
       }
       while (edge_iter.valid()) {
+        gart::dynamic::Value prop_data(rapidjson::kObjectType);
         for (auto prop_id = 0; prop_id < edge_prop_num; prop_id++) {
-          gart::dynamic::Value ref_data(rapidjson::kObjectType);
           std::string dtype = fragment_->GetEdgePropDataType(e_label, prop_id);
           std::string prop_name = fragment_->GetEdgePropName(e_label, prop_id);
-          PropertyConverter<GraphType>::EdgeValue(fragment_, edge_iter, dtype,
-                                                  prop_name, prop_id, ref_data);
-          data_array.PushBack(ref_data);
+          PropertyConverter<GraphType>::EdgeValue(
+              fragment_, edge_iter, dtype, prop_name, prop_id, prop_data);
         }
+        data_array.PushBack(prop_data);
         edge_iter.next();
       }
     }
-    arc << data_array;
+    msgpack::sbuffer sbuf;
+    msgpack::pack(&sbuf, data_array);
+    arc << sbuf;
   }
 };
 }  // namespace gart
