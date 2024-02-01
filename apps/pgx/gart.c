@@ -38,8 +38,8 @@ static char* read_file(FILE* fp);
 Datum pg_all_queries(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(pg_all_queries);
 
-Datum gart_connect(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(gart_connect);
+Datum gart_get_connection(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_get_connection);
 
 static void process_utility(PlannedStmt* pstmt, const char* queryString,
                             ProcessUtilityContext context, ParamListInfo params,
@@ -162,7 +162,7 @@ Datum pg_all_queries(PG_FUNCTION_ARGS) {
   return (Datum) 0;
 }
 
-Datum gart_connect(PG_FUNCTION_ARGS) {
+Datum gart_get_connection(PG_FUNCTION_ARGS) {
   char result[500];
 
   Oid userid;
@@ -177,14 +177,6 @@ Datum gart_connect(PG_FUNCTION_ARGS) {
   databasename = get_database_name(databaseid);
 
   text* password = PG_GETARG_TEXT_PP(0);
-
-  // if (err) {
-  //   sprintf(result, "Error (%d) %s in %s from %s. %s", err,
-  //           VARDATA_ANY(command), databasename, username, cmd);
-  // } else {
-  //   sprintf(result, "Hello %s in %s from %s. %s", VARDATA_ANY(command),
-  //           databasename, username, cmd);
-  // }
 
   FILE* fp;
   FILE* output_file;
