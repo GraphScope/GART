@@ -3,7 +3,20 @@
 username=$1
 password=$2
 
-. /opt/ssj/projects/gart/apps/pgx/gart-pgx-config-template.sh
+config_file="/opt/ssj/projects/gart/apps/pgx/gart-pgx-config-template.ini"
+
+parse_ini() {
+    section=$1
+    key=$2
+    awk -F '=' -v section="$section" -v key="$key" '
+        /^\['"$section"'\]$/ {found=1; next}
+        /^\[/ && found {exit}
+        found && $1 == key {print $2; exit}
+        ' "$config_file" | tr -d ' '
+}
+
+KAFKA_HOME=$(parse_ini "path" "KAFKA_HOME" $config_file)
+GART_HOME=$(parse_ini "path" "GART_HOME" $config_file)
 
 echo "username: $username"
 echo "password: $password"

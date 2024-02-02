@@ -21,10 +21,10 @@
 #define MAX_LINE_LENGTH 256
 #define MAX_SECTION 50
 #define MAX_KEY 50
-#define MAX_VALUE 100
+#define MAX_VALUE 1024
 
 // Remove whitespace characters at the beginning and end of a string
-void trim(char* str) {
+static void trim(char* str) {
   char *start, *end;
 
   // Trim leading space
@@ -49,7 +49,7 @@ void trim(char* str) {
 }
 
 // Parsing key-value pairs in INI files
-int parse_line(char* line, char* section, char* key, char* value) {
+static int parse_line(char* line, char* section, char* key, char* value) {
   char* start = line;
   char* end;
 
@@ -84,9 +84,9 @@ int parse_line(char* line, char* section, char* key, char* value) {
   return -1;
 }
 
-int parse_ini(char* file_name, char sections[][MAX_SECTION],
-              char keys[][MAX_KEY], char values[][MAX_VALUE],
-              int section_heads[], int* num_section, int* num_key) {
+int parse_ini_file(char* file_name, char sections[][MAX_SECTION],
+                   char keys[][MAX_KEY], char values[][MAX_VALUE],
+                   int section_heads[], int* num_section, int* num_key) {
   FILE* file = fopen(file_name, "r");
   char line[MAX_LINE_LENGTH];
   char section[MAX_SECTION] = {0};
@@ -135,25 +135,17 @@ int parse_ini(char* file_name, char sections[][MAX_SECTION],
   return 0;
 }
 
-#if 1
-int main() {
-  char* file_name =
-      "/opt/ssj/projects/gart/apps/pgx/gart-pgx-config-template.ini";
+static int section_heads[MAX_LINE_LENGTH] = {0};
+static char sections[MAX_LINE_LENGTH][MAX_SECTION] = {0};
+static char keys[MAX_LINE_LENGTH][MAX_KEY] = {0};
+static char values[MAX_LINE_LENGTH][MAX_VALUE] = {0};
 
-  int section_heads[MAX_LINE_LENGTH] = {0};
-  char sections[MAX_LINE_LENGTH][MAX_SECTION] = {0};
-  char keys[MAX_LINE_LENGTH][MAX_KEY] = {0};
-  char values[MAX_LINE_LENGTH][MAX_VALUE] = {0};
+static int num_section = 0;
+static int num_key = 0;
 
-  int num_section = 0;
-  int num_key = 0;
-
-  parse_ini(file_name, sections, keys, values, section_heads, &num_section,
-            &num_key);
-
-  // for (int i = 0; i < num_section + 1; i++) {
-  //   printf("section_heads[%d] = %d\n", i, section_heads[i]);
-  // }
+void init_parse_ini(char* file_name) {
+  parse_ini_file(file_name, sections, keys, values, section_heads, &num_section,
+                 &num_key);
 
   for (int i = 0; i < num_section; i++) {
     printf("Section: [%s]\n", sections[i]);
@@ -161,5 +153,30 @@ int main() {
       printf("Key = %s, Value = %s\n", keys[j], values[j]);
     }
   }
+}
+
+void find_value(char* section, char* key, char* value) {
+  for (int i = 0; i < num_section; i++) {
+    if (strcmp(section, sections[i]) == 0) {
+      for (int j = section_heads[i]; j < section_heads[i + 1]; j++) {
+        if (strcmp(key, keys[j]) == 0) {
+          strcpy(value, values[j]);
+          return;
+        }
+      }
+    }
+  }
+  value = NULL;
+}
+
+#if 1
+int main() {
+  char* file_name =
+      "/opt/ssj/projects/gart/apps/pgx/gart-pgx-config-template.ini";
+  init_parse_ini(file_name);
+  char value[MAX_VALUE];
+  find_value("path", "KAFKA_HOME", value);
+  printf("KAFKA_HOME = %s\n", value);
+  return 0;
 }
 #endif
