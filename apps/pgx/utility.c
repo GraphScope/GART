@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "utility.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +54,7 @@ static void trim(char* str) {
 static int parse_line(char* line, char* section, char* key, char* value) {
   char* start = line;
   char* end;
+  char* equal_sign;
 
   // Skip empty lines and comment lines
   if (line[0] == ';' || line[0] == '#' || line[0] == '\n') {
@@ -70,13 +73,13 @@ static int parse_line(char* line, char* section, char* key, char* value) {
   }
 
   // Parsing key-value pairs
-  char* equal_sign = strchr(line, '=');
+  equal_sign = strchr(line, '=');
   if (equal_sign != NULL) {
     *equal_sign = '\0';
     strncpy(key, start, MAX_KEY);
-    trim(key);  // 去除可能的首尾空格
+    trim(key);  // Remove possible leading and trailing spaces
     strncpy(value, equal_sign + 1, MAX_VALUE);
-    trim(value);  // 去除可能的首尾空格
+    trim(value);  // Remove possible leading and trailing spaces
     return 1;
   }
 
@@ -84,9 +87,9 @@ static int parse_line(char* line, char* section, char* key, char* value) {
   return -1;
 }
 
-int parse_ini_file(char* file_name, char sections[][MAX_SECTION],
-                   char keys[][MAX_KEY], char values[][MAX_VALUE],
-                   int section_heads[], int* num_section, int* num_key) {
+static int parse_ini_file(const char* file_name, char sections[][MAX_SECTION],
+                          char keys[][MAX_KEY], char values[][MAX_VALUE],
+                          int section_heads[], int* num_section, int* num_key) {
   FILE* file = fopen(file_name, "r");
   char line[MAX_LINE_LENGTH];
   char section[MAX_SECTION] = {0};
@@ -143,9 +146,11 @@ static char values[MAX_LINE_LENGTH][MAX_VALUE] = {0};
 static int num_section = 0;
 static int num_key = 0;
 
-void init_parse_ini(char* file_name) {
+void init_parse_ini(const char* file_name) {
   parse_ini_file(file_name, sections, keys, values, section_heads, &num_section,
                  &num_key);
+
+#if 0  // debug print
 
   for (int i = 0; i < num_section; i++) {
     printf("Section: [%s]\n", sections[i]);
@@ -153,6 +158,8 @@ void init_parse_ini(char* file_name) {
       printf("Key = %s, Value = %s\n", keys[j], values[j]);
     }
   }
+
+#endif
 }
 
 void find_value(char* section, char* key, char* value) {
@@ -169,7 +176,7 @@ void find_value(char* section, char* key, char* value) {
   value = NULL;
 }
 
-#if 1
+#if 0  // test
 int main() {
   char* file_name =
       "/opt/ssj/projects/gart/apps/pgx/gart-pgx-config-template.ini";
@@ -177,6 +184,10 @@ int main() {
   char value[MAX_VALUE];
   find_value("path", "KAFKA_HOME", value);
   printf("KAFKA_HOME = %s\n", value);
+  find_value("path", "GART_HOME", value);
+  printf("GART_HOME = %s\n", value);
+  find_value("log", "log_path", value);
+  printf("log_path = %s\n", value);
   return 0;
 }
 #endif

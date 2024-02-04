@@ -17,7 +17,7 @@
 #define GART_APPS_PGX_UTILITY_H_
 
 // parse the ini file
-void init_parse_ini(char* file_name);
+void init_parse_ini(const char* file_name);
 
 // find the value of the key in the section
 // if the section is NULL, find the value of the key in the global section

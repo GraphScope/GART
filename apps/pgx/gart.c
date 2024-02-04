@@ -24,6 +24,7 @@
 #include "funcapi.h"
 #include "miscadmin.h"
 #include "tcop/utility.h"
+#include "utility.h"
 #include "utils/builtins.h"
 
 PG_MODULE_MAGIC;
@@ -162,43 +163,75 @@ Datum pg_all_queries(PG_FUNCTION_ARGS) {
   return (Datum) 0;
 }
 
+static inline void safe_text_to_cstring(text* src, char dst[]) {
+  strncpy(dst, VARDATA_ANY(src), VARSIZE_ANY_EXHDR(src));
+  dst[VARSIZE_ANY_EXHDR(src)] = '\0';
+}
+
 Datum gart_get_connection(PG_FUNCTION_ARGS) {
-  char result[500];
+  char result[2048];
 
   Oid userid;
   char* username;
   Oid databaseid;
   char* databasename;
 
+  text* config_file_name_text;
+  text* password_text;
+  char config_file_name[512];
+  char password[512];
+
+  FILE* fp;
+  FILE* log_file;
+  char log_file_name[128];
+  char log_line[1024];
+
+  char cmd[1000];
+
+  // get username and database name from Postgres
   userid = GetUserId();
   username = GetUserNameFromId(userid, false);
 
   databaseid = MyDatabaseId;
   databasename = get_database_name(databaseid);
 
-  text* password = PG_GETARG_TEXT_PP(0);
+  // parse arguments
+  config_file_name_text = PG_GETARG_TEXT_PP(0);
+  password_text = PG_GETARG_TEXT_PP(1);
+  safe_text_to_cstring(config_file_name_text, config_file_name);
+  safe_text_to_cstring(password_text, password);
 
-  FILE* fp;
-  FILE* output_file;
-  char path[1035];
-
-  const char* base_cmd = "sh /opt/ssj/projects/gart/apps/pgx/run.sh";
-  const char* log_file = "/opt/postgresql/tmp.log";
-  char cmd[1000];
-  sprintf(cmd, "%s %s %s %s", base_cmd, username, VARDATA_ANY(password),
-          databasename);
-
-  // open file for writing logs
-  output_file = fopen(log_file, "w");
-  if (output_file == NULL) {
-    sprintf(result, "Cannot open log file: %s\n", log_file);
-    pclose(fp);
+  // parse ini file
+  if (fopen(config_file_name, "r") == NULL) {
+    sprintf(result, "Cannot open config file: %s.\n", config_file_name);
     PG_RETURN_TEXT_P(cstring_to_text(result));
     return (Datum) 0;
   }
 
-  fprintf(output_file, "Command: %s\n", cmd);
-  fflush(output_file);
+  init_parse_ini(config_file_name);
+
+  find_value("log", "log_path", log_file_name);
+
+  // open file for writing logs
+  log_file = fopen(log_file_name, "w");
+  if (log_file == NULL) {
+    sprintf(result, "Cannot open log file: %s\n", log_file_name);
+    pclose(log_file);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  char value[1024];
+  find_value("path", "KAFKA_HOME", value);
+  fprintf(log_file, "C KAFKA_HOME = %s\n", value);
+  find_value("path", "GART_HOME", value);
+  fprintf(log_file, "C GART_HOME = %s\n", value);
+
+  sprintf(cmd, "sh %s/apps/pgx/run.sh %s %s %s", value, username, password,
+          databasename);
+  fprintf(log_file, "Command: %s\n", cmd);
+
+  fflush(log_file);
 
   // execute command
   fp = popen(cmd, "r");
@@ -208,21 +241,20 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   }
 
   // output to logs line by line
-  while (fgets(path, sizeof(path), fp) != NULL) {
-    int char_written = fprintf(output_file, "%s", path);
-    sprintf(result, "%d: %s", char_written, path);
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    int char_written = fprintf(log_file, "%s", log_line);
+    sprintf(result, "%s\n%d: %s", result, char_written, log_line);
     if (char_written < 0) {
-      sprintf(result, "Cannot write log file: %s\n", log_file);
+      sprintf(result, "Cannot write log file: %s\n", log_file_name);
       pclose(fp);
       PG_RETURN_TEXT_P(cstring_to_text(result));
       return (Datum) 0;
     }
   }
-  fflush(output_file);
-  fclose(output_file);
+  fflush(log_file);
+  fclose(log_file);
 
-  int status = pclose(fp);
-  fprintf(stderr, "Command exit status: %d\n", status);
+  pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;
