@@ -40,7 +40,7 @@ echo "subgraph_num: $subgraph_num"
 echo "enable_bulkload: $enable_bulkload"
 
 (export KAFKA_HOME=$KAFKA_HOME; cd $GART_HOME/build; \
-./gart --db-type $db_type -u $username -p $password -r $rgmapping --v6d-sock $v6d_sock -e $etcd_endpoint --subgraph-num $subgraph_num --enable-bulkload $enable_bulkload 2>&1 \
+./gart --db-type $db_type -u $username -p $password -r $rgmapping --v6d-sock $v6d_sock -e $etcd_endpoints --subgraph-num $subgraph_num --enable-bulkload $enable_bulkload 2>&1 \
  | tee $real_time_log_path &)
 
 # (export KAFKA_HOME=$KAFKA_HOME; cd $GART_HOME/build;./stop-gart --kill-v6d-sock ldbc.sock)
