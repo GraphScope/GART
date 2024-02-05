@@ -16,6 +16,11 @@
 #ifndef GART_APPS_PGX_UTILITY_H_
 #define GART_APPS_PGX_UTILITY_H_
 
+#include <stdio.h>
+
+// Non-blocking reads using FILE* handles
+int non_blocking_fgets(char* buffer, int size, FILE* file_stream);
+
 // parse the ini file
 void init_parse_ini(const char* file_name);
 

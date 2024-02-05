@@ -188,6 +188,9 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
   char cmd[1000];
 
+  int timeout_count = 0;
+  const int MAX_TIMEOUT = 8;
+
   // get username and database name from Postgres
   userid = GetUserId();
   username = GetUserNameFromId(userid, false);
@@ -241,8 +244,32 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   }
 
   // output to logs line by line
-  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
-    int char_written = fprintf(log_file, "%s", log_line);
+  // while (fgets(log_line, sizeof(log_line), fp) != NULL)
+  while (1) {
+    int char_written;
+    int read_stat;
+
+    CHECK_FOR_INTERRUPTS();
+
+    read_stat = non_blocking_fgets(log_line, sizeof(log_line), fp);
+    if (read_stat == -1) {
+      fprintf(log_file, "error status!\n");
+      fflush(log_file);
+      continue;
+    } else if (read_stat == 0) {
+      fprintf(log_file, "timeout!\n");
+      fflush(log_file);
+      ++timeout_count;
+      // if (timeout_count > MAX_TIMEOUT) {
+      //   fprintf(log_file, "timeout count exceeded!\n");
+      //   fflush(log_file);
+      //   break;
+      // }
+      continue;
+    }
+
+    char_written = fprintf(log_file, "%s\n", log_line);
+    fflush(log_file);
     sprintf(result, "%s\n%d: %s", result, char_written, log_line);
     if (char_written < 0) {
       sprintf(result, "Cannot write log file: %s\n", log_file_name);
@@ -250,11 +277,15 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
       PG_RETURN_TEXT_P(cstring_to_text(result));
       return (Datum) 0;
     }
+
+    fflush(log_file);
   }
-  fflush(log_file);
-  fclose(log_file);
 
   pclose(fp);
+
+  fprintf(log_file, "End the main loop!\n");
+  fflush(log_file);
+  fclose(log_file);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;

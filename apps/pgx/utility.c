@@ -19,6 +19,70 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 1024
+
+// This function reads from the file descriptor associated with file_stream
+// into buffer without blocking. It reads up to size-1 characters or until a
+// newline is encountered. It will return -1 on error, 0 on timeout, and the
+// number of bytes read on success (excluding the terminating null byte).
+int non_blocking_fgets(char* buffer, int size, FILE* file_stream) {
+  const int TIMEOUT_SEC = 5;  // 5-second timeout
+  struct timeval tv;
+  int ret = -1;
+
+  int filedes =
+      fileno(file_stream);  // Get the file descriptor from the file stream
+
+  // Initialize the file descriptor set
+  fd_set fds;
+  FD_ZERO(&fds);
+  FD_SET(filedes, &fds);
+
+  // Set the timeout duration
+  tv.tv_sec = TIMEOUT_SEC;
+  tv.tv_usec = 0;
+
+  // Check if the file descriptor is ready for reading
+  ret = select(filedes + 1, &fds, NULL, NULL, &tv);
+  if (ret == -1) {
+    perror("select");
+    return -1;
+  } else if (ret == 0) {
+    // Timeout: no data available after waiting for `TIMEOUT_SEC` seconds
+    printf("Timeout occurred! No data after %d seconds.\n", TIMEOUT_SEC);
+    return 0;
+  } else {
+    if (FD_ISSET(filedes, &fds)) {
+      // The file descriptor is ready for reading, perform a read operation
+      ssize_t read_bytes = read(filedes, buffer, size - 1);
+      if (read_bytes > 0) {
+        char* newline;
+
+        buffer[read_bytes] = '\0';  // Null-terminate the string
+
+        // Search for a newline character and replace it with a null byte
+        newline = strchr(buffer, '\n');
+        if (newline)
+          *newline = '\0';
+
+        return read_bytes;  // Return the number of bytes read
+      } else if (read_bytes == 0) {
+        // End of file reached
+        return 0;
+      } else {
+        // An error occurred during read
+        perror("read");
+        return -1;
+      }
+    }
+  }
+
+  return -1;  // This should not be reached
+}
 
 #define MAX_LINE_LENGTH 256
 #define MAX_SECTION 50
