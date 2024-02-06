@@ -11,3 +11,7 @@ for node in g:
     
 node = (4, 933)
 print(g[node])
+
+for node in g.nodes(data=True):
+    print(node)
+#print(g.nodes(data=True))
