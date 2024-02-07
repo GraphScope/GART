@@ -39,8 +39,20 @@ static char* read_file(FILE* fp);
 Datum pg_all_queries(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(pg_all_queries);
 
+Datum gart_set_config(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_set_config);
+
 Datum gart_get_connection(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_get_connection);
+
+Datum gart_define_graph(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_define_graph);
+
+Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_define_graph_by_sql);
+
+Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_define_graph_by_yaml);
 
 static void process_utility(PlannedStmt* pstmt, const char* queryString,
                             ProcessUtilityContext context, ParamListInfo params,
@@ -168,6 +180,20 @@ static inline void safe_text_to_cstring(text* src, char dst[]) {
   dst[VARSIZE_ANY_EXHDR(src)] = '\0';
 }
 
+char config_file_name[512] = {0};
+Datum gart_set_config(PG_FUNCTION_ARGS) {
+  char result[1024];
+  text* config_file_name_text;
+
+  config_file_name_text = PG_GETARG_TEXT_PP(0);
+  safe_text_to_cstring(config_file_name_text, config_file_name);
+
+  sprintf(result, "Set config file name: %s", config_file_name);
+
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+  return (Datum) 0;
+}
+
 Datum gart_get_connection(PG_FUNCTION_ARGS) {
   char result[2048];
 
@@ -176,9 +202,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   Oid databaseid;
   char* databasename;
 
-  text* config_file_name_text;
   text* password_text;
-  char config_file_name[512];
   char password[512];
 
   FILE* fp;
@@ -186,10 +210,17 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   char log_file_name[128];
   char log_line[1024];
 
-  char cmd[1000];
+  char cmd[1024];
+  char value_buf[1024];
 
   int timeout_count = 0;
   const int MAX_TIMEOUT = 8;
+
+  if (strlen(config_file_name) == 0) {
+    sprintf(result, "Config file name is not set.\n");
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
 
   // get username and database name from Postgres
   userid = GetUserId();
@@ -199,9 +230,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   databasename = get_database_name(databaseid);
 
   // parse arguments
-  config_file_name_text = PG_GETARG_TEXT_PP(0);
-  password_text = PG_GETARG_TEXT_PP(1);
-  safe_text_to_cstring(config_file_name_text, config_file_name);
+  password_text = PG_GETARG_TEXT_PP(0);
   safe_text_to_cstring(password_text, password);
 
   // parse ini file
@@ -224,13 +253,12 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  char value[1024];
-  find_value("path", "KAFKA_HOME", value);
-  fprintf(log_file, "C KAFKA_HOME = %s\n", value);
-  find_value("path", "GART_HOME", value);
-  fprintf(log_file, "C GART_HOME = %s\n", value);
+  find_value("path", "KAFKA_HOME", value_buf);
+  fprintf(log_file, "C KAFKA_HOME = %s\n", value_buf);
+  find_value("path", "GART_HOME", value_buf);
+  fprintf(log_file, "C GART_HOME = %s\n", value_buf);
 
-  sprintf(cmd, "sh %s/apps/pgx/run.sh %s %s %s", value, username, password,
+  sprintf(cmd, "sh %s/apps/pgx/run.sh %s %s %s", value_buf, username, password,
           databasename);
   fprintf(log_file, "Command: %s\n", cmd);
 
@@ -286,6 +314,45 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   fprintf(log_file, "End the main loop!\n");
   fflush(log_file);
   fclose(log_file);
+
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+  return (Datum) 0;
+}
+
+Datum gart_define_graph(PG_FUNCTION_ARGS) {
+  char* result = "Build graph successfully!";
+
+  if (strlen(config_file_name) == 0) {
+    sprintf(result, "Config file name is not set.\n");
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+  return (Datum) 0;
+}
+
+Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
+  char* result = "Build graph by SQL successfully!";
+
+  if (strlen(config_file_name) == 0) {
+    sprintf(result, "Config file name is not set.\n");
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+  return (Datum) 0;
+}
+
+Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
+  char* result = "Build graph by YAML successfully!";
+
+  if (strlen(config_file_name) == 0) {
+    sprintf(result, "Config file name is not set.\n");
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;
