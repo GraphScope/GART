@@ -20,6 +20,9 @@ import oracle.pgql.lang.PgqlException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import oracle.pgql.lang.Pgql;
 import oracle.pgql.lang.PgqlResult;
@@ -29,53 +32,55 @@ public class Main {
 
     public static void main(String[] args) throws PgqlException {
 
+        if (args.length < 3) {
+            System.out.println("Usage: pgql <yaml2sql/sql2yaml> <input_file> <output_file>");
+            return;
+        }
+
+        if (args[0].equals("yaml2sql")) {
+            yaml2sql(args[1], args[2]);
+        } else if (args[0].equals("sql2yaml")) {
+            sql2yaml(args[1], args[2]);
+        } else {
+            System.out.println("Usage: pgql <sql2yaml|yaml2sql> <input_file> <output_file>");
+        }
+    }
+
+    private static void sql2yaml(String input_sql, String output_yaml) {
         try (Pgql pgql = new Pgql()) {
+            String ddlString = new String(Files.readAllBytes(Paths.get(input_sql)), StandardCharsets.UTF_8);
 
-            // parse DDL
-            String ddlString = "CREATE PROPERTY GRAPH socialNetwork "
-                    + "  VERTEX TABLES ("
-                    + "    Person KEY (p_id)"
-                    + "      LABEL VPerson PROPERTIES (p_id AS id, p_name AS name, p_age AS age)"
-                    + "      LABEL Person_age PROPERTIES (p_age)"
-                    + "  )"
-                    + "  EDGE TABLES ("
-                    + "    Trans KEY (t_id)"
-                    + "      SOURCE KEY (P_ID1) REFERENCES Person (p_id)"
-                    + "      DESTINATION KEY (P_ID2) REFERENCES Person (p_id)"
-                    + "      LABEL Transfer PROPERTIES (t_data AS data)"
-                    + "  )";
-            PgqlResult result3 = pgql.parse(ddlString);
+            PgqlResult pgqlResult = pgql.parse(ddlString);
 
-            if (!result3.isQueryValid()) {
+            if (!pgqlResult.isQueryValid()) {
                 System.out.println(ddlString);
-                System.out.println(result3.getErrorMessages());
-
+                System.out.println(pgqlResult.getErrorMessages());
                 return;
             }
 
-            CreatePropertyGraph createPropertyGraph = (CreatePropertyGraph) result3.getPgqlStatement();
-            System.out.println(createPropertyGraph);
+            CreatePropertyGraph createPropertyGraph = (CreatePropertyGraph) pgqlResult.getPgqlStatement();
+            // System.out.println(createPropertyGraph);
 
-            String output = "file.yaml";
-            try {
-                FileWriter writer = new FileWriter(output);
-                YamlConverter yamlConventer = new YamlConverter(writer, createPropertyGraph);
-                yamlConventer.convert();
-            } catch (IOException ie) {
-                System.out.println("Error: " + ie.getMessage());
-            }
-
-            String input = "../vegito/test/schema/rgmapping-ldbc.yaml";
-            try {
-                FileReader reader = new FileReader(input);
-                PgqlConverter pgqlConverter = new PgqlConverter(reader);
-                CreatePropertyGraph ddl = pgqlConverter.convert();
-                System.out.println(ddl);
-            } catch (IOException ie) {
-                System.out.println("Error: " + ie.getMessage());
-            }
-
+            FileWriter writer = new FileWriter(output_yaml);
+            YamlConverter yamlConventer = new YamlConverter(writer, createPropertyGraph);
+            yamlConventer.convert();
+        } catch (IOException ie) {
+            System.out.println("Error: " + ie.getMessage());
+        } catch (PgqlException e) {
+            System.out.println("PSQL Parse Error: " + e.getMessage());
         }
+    }
 
+    private static void yaml2sql(String input_yaml, String output_yaml) {
+        try {
+            FileReader reader = new FileReader(input_yaml);
+            PgqlConverter pgqlConverter = new PgqlConverter(reader);
+            CreatePropertyGraph ddl = pgqlConverter.convert();
+            FileWriter writer = new FileWriter(output_yaml);
+            writer.write(ddl.toString());
+            writer.close();
+        } catch (IOException ie) {
+            System.out.println("IO Error: " + ie.getMessage());
+        }
     }
 }
