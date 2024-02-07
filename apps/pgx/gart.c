@@ -187,6 +187,7 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
 
   config_file_name_text = PG_GETARG_TEXT_PP(0);
   safe_text_to_cstring(config_file_name_text, config_file_name);
+  init_parse_ini(config_file_name);
 
   sprintf(result, "Set config file name: %s", config_file_name);
 
@@ -239,8 +240,6 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     PG_RETURN_TEXT_P(cstring_to_text(result));
     return (Datum) 0;
   }
-
-  init_parse_ini(config_file_name);
 
   find_value("log", "log_path", log_file_name);
 
@@ -320,39 +319,121 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 }
 
 Datum gart_define_graph(PG_FUNCTION_ARGS) {
-  char* result = "Build graph successfully!";
+  char result[512] = "Build graph successfully!";
+  char gart_yaml_path[1024];
+
+  FILE* output_yaml;
+  char input_sql[1024];
+  text* sql_text;
 
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
     PG_RETURN_TEXT_P(cstring_to_text(result));
     return (Datum) 0;
   }
+
+  sql_text = PG_GETARG_TEXT_PP(0);
+  safe_text_to_cstring(sql_text, input_sql);
+
+  find_value("gart", "rgmapping-file", gart_yaml_path);
+  output_yaml = fopen(gart_yaml_path, "wb");
+  if (output_yaml == NULL) {
+    sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  // Use JAVA converter to convert SQL to YAML
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;
 }
 
 Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
-  char* result = "Build graph by SQL successfully!";
+  char result[512] = "Build graph by SQL successfully!";
+  char gart_yaml_path[1024];
+
+  FILE *input_sql, *output_yaml;
+  char input_sql_path[1024];
+  text* sql_text;
+
+  char buffer[1024];
+  size_t bytes_read;
 
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
     PG_RETURN_TEXT_P(cstring_to_text(result));
     return (Datum) 0;
   }
+
+  sql_text = PG_GETARG_TEXT_PP(0);
+  safe_text_to_cstring(sql_text, input_sql_path);
+
+  input_sql = fopen(input_sql_path, "rb");
+  if (input_sql == NULL) {
+    sprintf(result, "Cannot open input SQL file: %s.\n", input_sql_path);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  find_value("gart", "rgmapping-file", gart_yaml_path);
+  output_yaml = fopen(gart_yaml_path, "wb");
+  if (output_yaml == NULL) {
+    sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
+    fclose(input_sql);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  // Use JAVA converter to convert SQL to YAML
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;
 }
 
 Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
-  char* result = "Build graph by YAML successfully!";
+  char result[512] = "Build graph by YAML successfully!";
+  char gart_yaml_path[1024];
+
+  FILE *input_yaml, *output_yaml;
+  char input_yaml_path[1024];
+  text* yaml_text;
+
+  char buffer[1024];
+  size_t bytes_read;
 
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
     PG_RETURN_TEXT_P(cstring_to_text(result));
     return (Datum) 0;
   }
+
+  yaml_text = PG_GETARG_TEXT_PP(0);
+  safe_text_to_cstring(yaml_text, input_yaml_path);
+
+  input_yaml = fopen(input_yaml_path, "rb");
+  if (input_yaml == NULL) {
+    sprintf(result, "Cannot open input YAML file: %s.\n", input_yaml_path);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  find_value("gart", "rgmapping-file", gart_yaml_path);
+  output_yaml = fopen(gart_yaml_path, "wb");
+  if (output_yaml == NULL) {
+    sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
+    fclose(input_yaml);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  // copy file
+  while ((bytes_read = fread(buffer, 1, sizeof(buffer), input_yaml)) > 0) {
+    fwrite(buffer, 1, bytes_read, output_yaml);
+  }
+
+  fclose(input_yaml);
+  fclose(output_yaml);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;

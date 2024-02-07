@@ -32,8 +32,10 @@ public class Main {
 
     public static void main(String[] args) throws PgqlException {
 
+        String errorMsg = "Usage: pgql <yaml2sql|sql2yaml|sql2yaml_str> <input_file> <output_file>";
+
         if (args.length < 3) {
-            System.out.println("Usage: pgql <yaml2sql/sql2yaml> <input_file> <output_file>");
+            System.out.println(errorMsg);
             return;
         }
 
@@ -41,14 +43,16 @@ public class Main {
             yaml2sql(args[1], args[2]);
         } else if (args[0].equals("sql2yaml")) {
             sql2yaml(args[1], args[2]);
+        } else if (args[0].equals("sql2yaml_str")) {
+            sql2yamlStr(args[1], args[2]);
         } else {
-            System.out.println("Usage: pgql <sql2yaml|yaml2sql> <input_file> <output_file>");
+            System.out.println(errorMsg);
         }
     }
 
-    private static void sql2yaml(String input_sql, String output_yaml) {
+    private static void sql2yaml(String inputSQL, String outputYAML) {
         try (Pgql pgql = new Pgql()) {
-            String ddlString = new String(Files.readAllBytes(Paths.get(input_sql)), StandardCharsets.UTF_8);
+            String ddlString = new String(Files.readAllBytes(Paths.get(inputSQL)), StandardCharsets.UTF_8);
 
             PgqlResult pgqlResult = pgql.parse(ddlString);
 
@@ -61,7 +65,7 @@ public class Main {
             CreatePropertyGraph createPropertyGraph = (CreatePropertyGraph) pgqlResult.getPgqlStatement();
             // System.out.println(createPropertyGraph);
 
-            FileWriter writer = new FileWriter(output_yaml);
+            FileWriter writer = new FileWriter(outputYAML);
             YamlConverter yamlConventer = new YamlConverter(writer, createPropertyGraph);
             yamlConventer.convert();
         } catch (IOException ie) {
@@ -71,12 +75,35 @@ public class Main {
         }
     }
 
-    private static void yaml2sql(String input_yaml, String output_yaml) {
+    private static void sql2yamlStr(String ddlString, String outputYAML) {
+        try (Pgql pgql = new Pgql()) {
+            PgqlResult pgqlResult = pgql.parse(ddlString);
+
+            if (!pgqlResult.isQueryValid()) {
+                System.out.println(ddlString);
+                System.out.println(pgqlResult.getErrorMessages());
+                return;
+            }
+
+            CreatePropertyGraph createPropertyGraph = (CreatePropertyGraph) pgqlResult.getPgqlStatement();
+            // System.out.println(createPropertyGraph);
+
+            FileWriter writer = new FileWriter(outputYAML);
+            YamlConverter yamlConventer = new YamlConverter(writer, createPropertyGraph);
+            yamlConventer.convert();
+        } catch (IOException ie) {
+            System.out.println("Error: " + ie.getMessage());
+        } catch (PgqlException e) {
+            System.out.println("PSQL Parse Error: " + e.getMessage());
+        }
+    }
+
+    private static void yaml2sql(String inputYAML, String outputYAML) {
         try {
-            FileReader reader = new FileReader(input_yaml);
+            FileReader reader = new FileReader(inputYAML);
             PgqlConverter pgqlConverter = new PgqlConverter(reader);
             CreatePropertyGraph ddl = pgqlConverter.convert();
-            FileWriter writer = new FileWriter(output_yaml);
+            FileWriter writer = new FileWriter(outputYAML);
             writer.write(ddl.toString());
             writer.close();
         } catch (IOException ie) {
