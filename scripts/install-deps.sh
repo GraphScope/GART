@@ -85,6 +85,10 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_
 make -j && sudo make install
 cd ../..
 
+# pgql-lang
+git clone https://github.com/oracle/pgql-lang.git
+(cd pgql-lang; sh install.sh)
+
 # Kafka
 wget https://archive.apache.org/dist/kafka/3.4.0/kafka_2.13-3.4.0.tgz
 tar -xzf kafka_2.13-3.4.0.tgz

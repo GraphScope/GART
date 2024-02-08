@@ -322,9 +322,14 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   char result[512] = "Build graph successfully!";
   char gart_yaml_path[1024];
 
-  FILE* output_yaml;
-  char input_sql[1024];
+  FILE *output_yaml, *fp;
+  char sql_str[4098];
   text* sql_text;
+
+  char gart_home_buffer[512];
+  char cmd[1024];
+  char buffer[1024];
+  int is_read = 0;
 
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
@@ -333,7 +338,7 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   }
 
   sql_text = PG_GETARG_TEXT_PP(0);
-  safe_text_to_cstring(sql_text, input_sql);
+  safe_text_to_cstring(sql_text, sql_str);
 
   find_value("gart", "rgmapping-file", gart_yaml_path);
   output_yaml = fopen(gart_yaml_path, "wb");
@@ -343,7 +348,34 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
+  find_value("path", "GART_HOME", gart_home_buffer);
+
   // Use JAVA converter to convert SQL to YAML
+  sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml_str %s %s)", gart_home_buffer,
+          sql_str, gart_yaml_path);
+  // sprintf(result, "Command: %s\n", cmd);
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    sprintf(result, "Cannot execute command: %s\n", cmd);
+    fclose(output_yaml);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+    // sprintf(result, "%s\n%s", result, buffer);
+    is_read = 1;
+  }
+
+  if (!is_read) {
+    sprintf(result, "Cannot read from command: %s\n", cmd);
+    fclose(output_yaml);
+    pclose(fp);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;
@@ -353,12 +385,14 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   char result[512] = "Build graph by SQL successfully!";
   char gart_yaml_path[1024];
 
-  FILE *input_sql, *output_yaml;
+  FILE *input_sql, *output_yaml, *fp;
   char input_sql_path[1024];
   text* sql_text;
 
+  char gart_home_buffer[512];
+  char cmd[1024];
   char buffer[1024];
-  size_t bytes_read;
+  int is_read = 0;
 
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
@@ -385,7 +419,36 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
+  find_value("path", "GART_HOME", gart_home_buffer);
+
   // Use JAVA converter to convert SQL to YAML
+  sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml %s %s)", gart_home_buffer,
+          input_sql_path, gart_yaml_path);
+  // sprintf(result, "Command: %s\n", cmd);
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    sprintf(result, "Cannot execute command: %s\n", cmd);
+    fclose(input_sql);
+    fclose(output_yaml);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+    // sprintf(result, "%s\n%s", result, buffer);
+    is_read = 1;
+  }
+
+  if (!is_read) {
+    sprintf(result, "Cannot read from command: %s\n", cmd);
+    fclose(input_sql);
+    fclose(output_yaml);
+    pclose(fp);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
+
+  pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
   return (Datum) 0;
