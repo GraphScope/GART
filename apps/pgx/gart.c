@@ -181,6 +181,10 @@ static inline void safe_text_to_cstring(text* src, char dst[]) {
 }
 
 char config_file_name[512] = {0};
+FILE* log_file;
+char log_file_name[128];
+char log_line[1024];
+
 Datum gart_set_config(PG_FUNCTION_ARGS) {
   char result[1024];
   text* config_file_name_text;
@@ -188,6 +192,18 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
   config_file_name_text = PG_GETARG_TEXT_PP(0);
   safe_text_to_cstring(config_file_name_text, config_file_name);
   init_parse_ini(config_file_name);
+
+  // prepare log file
+  find_value("log", "log_path", log_file_name);
+
+  // open file for writing logs
+  log_file = fopen(log_file_name, "w");
+  if (log_file == NULL) {
+    sprintf(result, "Cannot open log file: %s\n", log_file_name);
+    pclose(log_file);
+    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
+  }
 
   sprintf(result, "Set config file name: %s", config_file_name);
 
@@ -207,9 +223,6 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   char password[512];
 
   FILE* fp;
-  FILE* log_file;
-  char log_file_name[128];
-  char log_line[1024];
 
   char cmd[1024];
   char value_buf[1024];
@@ -237,17 +250,6 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   // parse ini file
   if (fopen(config_file_name, "r") == NULL) {
     sprintf(result, "Cannot open config file: %s.\n", config_file_name);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
-  }
-
-  find_value("log", "log_path", log_file_name);
-
-  // open file for writing logs
-  log_file = fopen(log_file_name, "w");
-  if (log_file == NULL) {
-    sprintf(result, "Cannot open log file: %s\n", log_file_name);
-    pclose(log_file);
     PG_RETURN_TEXT_P(cstring_to_text(result));
     return (Datum) 0;
   }
@@ -319,7 +321,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 }
 
 Datum gart_define_graph(PG_FUNCTION_ARGS) {
-  char result[512] = "Build graph successfully!";
+  char result[512] = "Build graph successfully!\n";
   char gart_yaml_path[1024];
 
   FILE *output_yaml, *fp;
@@ -339,6 +341,11 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
 
   sql_text = PG_GETARG_TEXT_PP(0);
   safe_text_to_cstring(sql_text, sql_str);
+  for (int i = 0; i < strlen(sql_str); ++i) {
+    if (sql_str[i] == '\n') {
+      sql_str[i] = ' ';
+    }
+  }
 
   find_value("gart", "rgmapping-file", gart_yaml_path);
   output_yaml = fopen(gart_yaml_path, "wb");
@@ -351,9 +358,10 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   find_value("path", "GART_HOME", gart_home_buffer);
 
   // Use JAVA converter to convert SQL to YAML
-  sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml_str %s %s)", gart_home_buffer,
-          sql_str, gart_yaml_path);
-  // sprintf(result, "Command: %s\n", cmd);
+  sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml_str '%s' %s)",
+          gart_home_buffer, sql_str, gart_yaml_path);
+  fprintf(log_file, "Command: %s\n", cmd);
+  fflush(log_file);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     sprintf(result, "Cannot execute command: %s\n", cmd);
@@ -363,7 +371,8 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   }
 
   while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-    // sprintf(result, "%s\n%s", result, buffer);
+    fprintf(log_file, "%s", buffer);
+    fflush(log_file);
     is_read = 1;
   }
 
@@ -382,7 +391,7 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
 }
 
 Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
-  char result[512] = "Build graph by SQL successfully!";
+  char result[512] = "Build graph by SQL successfully!\n";
   char gart_yaml_path[1024];
 
   FILE *input_sql, *output_yaml, *fp;
@@ -424,7 +433,8 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   // Use JAVA converter to convert SQL to YAML
   sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml %s %s)", gart_home_buffer,
           input_sql_path, gart_yaml_path);
-  // sprintf(result, "Command: %s\n", cmd);
+  fprintf(log_file, "Command: %s\n", cmd);
+  fflush(log_file);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     sprintf(result, "Cannot execute command: %s\n", cmd);
@@ -435,7 +445,8 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   }
 
   while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-    // sprintf(result, "%s\n%s", result, buffer);
+    fprintf(log_file, "%s", buffer);
+    fflush(log_file);
     is_read = 1;
   }
 
@@ -455,7 +466,7 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
 }
 
 Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
-  char result[512] = "Build graph by YAML successfully!";
+  char result[512] = "Build graph by YAML successfully!\n";
   char gart_yaml_path[1024];
 
   FILE *input_yaml, *output_yaml;
