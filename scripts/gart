@@ -467,3 +467,5 @@ done
 ./check_process.sh "$(declare -p pids)" &
 
 sleep 2 # wait for output
+
+echo "GART started completely"

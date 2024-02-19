@@ -53,7 +53,7 @@ int non_blocking_fgets(char* buffer, int size, FILE* file_stream) {
     return -1;
   } else if (ret == 0) {
     // Timeout: no data available after waiting for `TIMEOUT_SEC` seconds
-    printf("Timeout occurred! No data after %d seconds.\n", TIMEOUT_SEC);
+    // printf("Timeout occurred! No data after %d seconds.\n", TIMEOUT_SEC);
     return 0;
   } else {
     if (FD_ISSET(filedes, &fds)) {

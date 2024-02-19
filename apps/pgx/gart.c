@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "commands/dbcommands.h"
@@ -202,13 +203,11 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
     sprintf(result, "Cannot open log file: %s\n", log_file_name);
     pclose(log_file);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   sprintf(result, "Set config file name: %s", config_file_name);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
-  return (Datum) 0;
 }
 
 Datum gart_get_connection(PG_FUNCTION_ARGS) {
@@ -233,7 +232,6 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   // get username and database name from Postgres
@@ -251,7 +249,6 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   if (fopen(config_file_name, "r") == NULL) {
     sprintf(result, "Cannot open config file: %s.\n", config_file_name);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   find_value("path", "KAFKA_HOME", value_buf);
@@ -273,7 +270,6 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   }
 
   // output to logs line by line
-  // while (fgets(log_line, sizeof(log_line), fp) != NULL)
   while (1) {
     int char_written;
     int read_stat;
@@ -281,13 +277,18 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     CHECK_FOR_INTERRUPTS();
 
     read_stat = non_blocking_fgets(log_line, sizeof(log_line), fp);
+    if (strcmp(log_line, "GART started completely") == 0) {
+      fprintf(log_file, "Script Complete\n");
+      fflush(log_file);
+      break;
+    }
     if (read_stat == -1) {
       fprintf(log_file, "error status!\n");
       fflush(log_file);
       continue;
     } else if (read_stat == 0) {
-      fprintf(log_file, "timeout!\n");
-      fflush(log_file);
+      // fprintf(log_file, "timeout!\n");
+      // fflush(log_file);
       ++timeout_count;
       // if (timeout_count > MAX_TIMEOUT) {
       //   fprintf(log_file, "timeout count exceeded!\n");
@@ -304,7 +305,6 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
       sprintf(result, "Cannot write log file: %s\n", log_file_name);
       pclose(fp);
       PG_RETURN_TEXT_P(cstring_to_text(result));
-      return (Datum) 0;
     }
 
     fflush(log_file);
@@ -316,8 +316,9 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   fflush(log_file);
   fclose(log_file);
 
-  PG_RETURN_TEXT_P(cstring_to_text(result));
-  return (Datum) 0;
+  elog(INFO, "GART started completely: %s\n", result);
+
+  PG_RETURN_TEXT_P(cstring_to_text("GART started completely!"));
 }
 
 Datum gart_define_graph(PG_FUNCTION_ARGS) {
@@ -336,7 +337,6 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   sql_text = PG_GETARG_TEXT_PP(0);
@@ -352,7 +352,6 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   if (output_yaml == NULL) {
     sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   find_value("path", "GART_HOME", gart_home_buffer);
@@ -367,7 +366,6 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
     sprintf(result, "Cannot execute command: %s\n", cmd);
     fclose(output_yaml);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   while (fgets(buffer, sizeof(buffer), fp) != NULL) {
@@ -381,13 +379,11 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
     fclose(output_yaml);
     pclose(fp);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
-  return (Datum) 0;
 }
 
 Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
@@ -406,7 +402,6 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   sql_text = PG_GETARG_TEXT_PP(0);
@@ -416,7 +411,6 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   if (input_sql == NULL) {
     sprintf(result, "Cannot open input SQL file: %s.\n", input_sql_path);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   find_value("gart", "rgmapping-file", gart_yaml_path);
@@ -425,7 +419,6 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
     sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
     fclose(input_sql);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   find_value("path", "GART_HOME", gart_home_buffer);
@@ -441,7 +434,6 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
     fclose(input_sql);
     fclose(output_yaml);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   while (fgets(buffer, sizeof(buffer), fp) != NULL) {
@@ -456,13 +448,11 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
     fclose(output_yaml);
     pclose(fp);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
-  return (Datum) 0;
 }
 
 Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
@@ -479,7 +469,6 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
   if (strlen(config_file_name) == 0) {
     sprintf(result, "Config file name is not set.\n");
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   yaml_text = PG_GETARG_TEXT_PP(0);
@@ -489,7 +478,6 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
   if (input_yaml == NULL) {
     sprintf(result, "Cannot open input YAML file: %s.\n", input_yaml_path);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   find_value("gart", "rgmapping-file", gart_yaml_path);
@@ -498,7 +486,6 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
     sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
     fclose(input_yaml);
     PG_RETURN_TEXT_P(cstring_to_text(result));
-    return (Datum) 0;
   }
 
   // copy file
@@ -510,5 +497,4 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
   fclose(output_yaml);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
-  return (Datum) 0;
 }
