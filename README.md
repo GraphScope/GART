@@ -89,8 +89,7 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 - [librdkafka](https://github.com/confluentinc/librdkafka)
 - [Vineyard](https://github.com/v6d-io/v6d)
 - [Apach Kafka](https://kafka.apache.org/quickstart)
-- [Maxwell](https://github.com/zendesk/maxwell) or
-- [Debezium](https://github.com/debezium/debezium)
+- [Debezium](https://github.com/debezium/debezium) (preferred) or [Maxwell](https://github.com/zendesk/maxwell)
 
 ### Building
 ```shell

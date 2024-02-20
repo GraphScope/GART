@@ -5,13 +5,13 @@ g = DiGraph("localhost:50051")
 print("number of nodes:", len(g))
 
 for node in g:
-    #print(node, " in g is ", node in g)
+    # print(node, " in g is ", node in g)
     pass
-    #print(node)
-    
+    # print(node)
+
 node = (4, 933)
 print(g[node])
 
 for node in g.nodes(data=True):
     print(node)
-#print(g.nodes(data=True))
+# print(g.nodes(data=True))
