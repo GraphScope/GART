@@ -277,7 +277,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     CHECK_FOR_INTERRUPTS();
 
     read_stat = non_blocking_fgets(log_line, sizeof(log_line), fp);
-    if (strcmp(log_line, "GART started completely") == 0) {
+    if (strstr(log_line, "GART started completely")) {
       fprintf(log_file, "Script Complete\n");
       fflush(log_file);
       break;
