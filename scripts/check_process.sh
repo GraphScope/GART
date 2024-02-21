@@ -4,7 +4,9 @@
 
 # $1 format: declare -A pids=([key2]="value2" [key1]="value1" )
 
-eval "$1"
+v6d_sock=$1
+
+eval "$2"
 
 for process_name in ${!pids[@]}; do
     process_pid=${pids[$process_name]}
@@ -14,6 +16,8 @@ for process_name in ${!pids[@]}; do
         continue
     fi
 done
+
+echo "Check Process with v6d_sock: $v6d_sock"
 
 if [[ ${#pids[@]} -eq 0 ]]; then
     echo "No valid pids found"
@@ -30,7 +34,7 @@ while true; do
         # Check if the process is running
         if ! ps -p "$process_pid" > /dev/null; then
             echo "$process_name is not running"
-            ./stop-gart
+            ./stop-gart --kill-v6d-sock $v6d_sock --is-abnormal
         fi
     done
 

@@ -3,9 +3,10 @@
 KAFKA_HOME=$KAFKA_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o k:h? --long kill-v6d-sock:,help -- "$@")
+VALID_ARGS=$(getopt -o k:h? --long kill-v6d-sock:,is-abnormal,help -- "$@")
 
 v6d_sock=
+is_normal=true
 
 eval set -- "$VALID_ARGS"
 while [ : ]; do
@@ -13,6 +14,10 @@ while [ : ]; do
     -k | --kill-v6d-sock)
         v6d_sock=$2
         shift 2
+        ;;
+         --is-abnormal)     # hide from help
+        is_normal=false
+        shift
         ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
@@ -66,3 +71,9 @@ kill $(ps aux | grep '[k]afka' | awk '{print $2}') > /dev/null 2>&1
 kill $(ps aux | grep '[z]ookeeper' | awk '{print $2}') > /dev/null 2>&1
 
 sleep 3
+
+if [ "$is_normal" = false ]; then
+    echo "GART stopped abnormally."
+else
+    echo "GART stopped normally."
+fi

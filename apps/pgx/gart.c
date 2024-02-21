@@ -277,11 +277,21 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     CHECK_FOR_INTERRUPTS();
 
     read_stat = non_blocking_fgets(log_line, sizeof(log_line), fp);
-    if (strstr(log_line, "GART started completely")) {
-      fprintf(log_file, "Script Complete\n");
+
+    if (strstr(log_line, "GART started completely.")) {
+      fprintf(log_file, "GART script complete!\n");
       fflush(log_file);
+      sprintf(result, "GART started completely!\n");
       break;
     }
+
+    if (strstr(log_line, "GART stopped abnormally.")) {
+      fprintf(log_file, "GART stop\n");
+      fflush(log_file);
+      sprintf(result, "GART exit abnormally!\n");
+      break;
+    }
+
     if (read_stat == -1) {
       fprintf(log_file, "error status!\n");
       fflush(log_file);
@@ -300,7 +310,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
     char_written = fprintf(log_file, "%s\n", log_line);
     fflush(log_file);
-    sprintf(result, "%s\n%d: %s", result, char_written, log_line);
+    // sprintf(result, "%s\n%d: %s", result, char_written, log_line);
     if (char_written < 0) {
       sprintf(result, "Cannot write log file: %s\n", log_file_name);
       pclose(fp);
@@ -312,13 +322,13 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
   pclose(fp);
 
-  fprintf(log_file, "End the main loop!\n");
+  // fprintf(log_file, "End the main loop!\n");
   fflush(log_file);
   fclose(log_file);
 
   elog(INFO, "GART started completely: %s\n", result);
 
-  PG_RETURN_TEXT_P(cstring_to_text("GART started completely!"));
+  PG_RETURN_TEXT_P(cstring_to_text(result));
 }
 
 Datum gart_define_graph(PG_FUNCTION_ARGS) {

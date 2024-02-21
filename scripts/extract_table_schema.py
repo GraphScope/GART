@@ -99,7 +99,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
     }
 
     with open(rgmapping_file, "r", encoding="UTF-8") as f:
-        config = yaml.safe_load(f)
+        config = yaml.load(f, Loader=GSchemaLoader)
 
     vdefs = config["vertexMappings"]["vertex_types"]
     vtype_to_id = {}

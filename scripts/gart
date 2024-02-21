@@ -367,7 +367,7 @@ if [ $is_master == true ]; then
         fi
         if [ $i -eq 3 ]; then
             echo "Kafka: Reached max attempts, ERROR found"
-            ./stop-gart --kill-v6d-sock $v6d_sock
+            ./stop-gart --kill-v6d-sock $v6d_sock --is-abnormal
             exit 1
         fi
     done
@@ -464,8 +464,8 @@ for key in "${!pids[@]}"; do
     echo "    $key: ${pids[$key]}"
 done
 
-./check_process.sh "$(declare -p pids)" &
+./check_process.sh $v6d_sock "$(declare -p pids)" &
 
 sleep 2 # wait for output
 
-echo "GART started completely"
+echo "GART started completely."
