@@ -47,6 +47,9 @@ PG_FUNCTION_INFO_V1(gart_set_config);
 Datum gart_get_connection(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_get_connection);
 
+Datum gart_release_connection(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_release_connection);
+
 Datum gart_define_graph(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_define_graph);
 
@@ -256,8 +259,8 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   find_value("path", "GART_HOME", value_buf);
   elog(INFO, "GART_HOME: %s", value_buf);
 
-  sprintf(cmd, "sh %s/apps/pgx/run.sh %s %s %s", value_buf, username, password,
-          databasename);
+  sprintf(cmd, "sh %s/apps/pgx/run.sh -c %s -u %s -p %s -b %s", value_buf,
+          config_file_name, username, password, databasename);
   elog(INFO, "Command: %s", cmd);
 
   fflush(log_file);
@@ -315,6 +318,44 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   // fclose(log_file);
 
   elog(INFO, "gart_get_connection completely: %s", result);
+
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+}
+
+Datum gart_release_connection(PG_FUNCTION_ARGS) {
+  char result[512] = "Release connection successfully!\n";
+  FILE* fp;
+  char cmd[1024];
+  char buffer[1024];
+  int is_read = 0;
+
+  if (strlen(config_file_name) == 0) {
+    elog(ERROR, "Config file name is not set.");
+    return (Datum) 0;
+  }
+
+  find_value("path", "GART_HOME", buffer);
+  sprintf(cmd, "sh %s/apps/pgx/run.sh -c %s --stop", buffer, config_file_name);
+  elog(INFO, "Command: %s", cmd);
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    elog(ERROR, "Cannot execute command: %s", cmd);
+    return (Datum) 0;
+  }
+
+  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+    fprintf(log_file, "%s", buffer);
+    fflush(log_file);
+    is_read = 1;
+  }
+
+  if (!is_read) {
+    elog(ERROR, "Cannot read from command: %s", cmd);
+    pclose(fp);
+    return (Datum) 0;
+  }
+
+  pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
 }

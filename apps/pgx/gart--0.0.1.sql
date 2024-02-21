@@ -16,6 +16,11 @@ RETURNS SETOF TEXT
 AS 'MODULE_PATHNAME', 'gart_get_connection'
 LANGUAGE C STRICT VOLATILE;
 
+CREATE FUNCTION gart_release_connection()
+RETURNS SETOF TEXT
+AS 'MODULE_PATHNAME', 'gart_release_connection'
+LANGUAGE C STRICT VOLATILE;
+
 CREATE FUNCTION gart_define_graph(IN psql TEXT)
 RETURNS SETOF TEXT
 AS 'MODULE_PATHNAME', 'gart_define_graph'
