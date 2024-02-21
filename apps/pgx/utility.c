@@ -16,12 +16,16 @@
 #include "utility.h"
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
+
+#include "postgres.h"
+#include "utils/elog.h"
 
 #define BUFFER_SIZE 1024
 
@@ -49,7 +53,8 @@ int non_blocking_fgets(char* buffer, int size, FILE* file_stream) {
   // Check if the file descriptor is ready for reading
   ret = select(filedes + 1, &fds, NULL, NULL, &tv);
   if (ret == -1) {
-    perror("select");
+    const char* error_message = strerror(errno);
+    elog(WARNING, "[non_blocking_fgets] select() failed: %s", error_message);
     return -1;
   } else if (ret == 0) {
     // Timeout: no data available after waiting for `TIMEOUT_SEC` seconds
@@ -75,7 +80,8 @@ int non_blocking_fgets(char* buffer, int size, FILE* file_stream) {
         return 0;
       } else {
         // An error occurred during read
-        perror("read");
+        const char* error_message = strerror(errno);
+        elog(ERROR, "[non_blocking_fgets] read() failed: %s", error_message);
         return -1;
       }
     }
@@ -166,7 +172,7 @@ static int parse_ini_file(const char* file_name, char sections[][MAX_SECTION],
   section_heads[*num_section] = *num_key;
 
   if (file == NULL) {
-    perror("Error opening file");
+    elog(ERROR, "[parse_ini_file] Error opening file: %s", file_name);
     return 1;
   }
 

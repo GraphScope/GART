@@ -27,6 +27,7 @@
 #include "tcop/utility.h"
 #include "utility.h"
 #include "utils/builtins.h"
+#include "utils/elog.h"
 
 PG_MODULE_MAGIC;
 
@@ -182,7 +183,7 @@ static inline void safe_text_to_cstring(text* src, char dst[]) {
 }
 
 char config_file_name[512] = {0};
-FILE* log_file;
+FILE* log_file = NULL;
 char log_file_name[128];
 char log_line[1024];
 
@@ -198,11 +199,13 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
   find_value("log", "log_path", log_file_name);
 
   // open file for writing logs
+  if (log_file) {
+    fclose(log_file);
+  }
   log_file = fopen(log_file_name, "w");
   if (log_file == NULL) {
-    sprintf(result, "Cannot open log file: %s\n", log_file_name);
-    pclose(log_file);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Cannot open log file: %s", log_file_name);
+    return (Datum) 0;
   }
 
   sprintf(result, "Set config file name: %s", config_file_name);
@@ -226,12 +229,9 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   char cmd[1024];
   char value_buf[1024];
 
-  int timeout_count = 0;
-  const int MAX_TIMEOUT = 8;
-
   if (strlen(config_file_name) == 0) {
-    sprintf(result, "Config file name is not set.\n");
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Config file name is not set.");
+    return (Datum) 0;
   }
 
   // get username and database name from Postgres
@@ -247,26 +247,26 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
   // parse ini file
   if (fopen(config_file_name, "r") == NULL) {
-    sprintf(result, "Cannot open config file: %s.\n", config_file_name);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Cannot open config file: %s.", config_file_name);
+    return (Datum) 0;
   }
 
   find_value("path", "KAFKA_HOME", value_buf);
-  fprintf(log_file, "C KAFKA_HOME = %s\n", value_buf);
+  elog(INFO, "KAFKA_HOME: %s", value_buf);
   find_value("path", "GART_HOME", value_buf);
-  fprintf(log_file, "C GART_HOME = %s\n", value_buf);
+  elog(INFO, "GART_HOME: %s", value_buf);
 
   sprintf(cmd, "sh %s/apps/pgx/run.sh %s %s %s", value_buf, username, password,
           databasename);
-  fprintf(log_file, "Command: %s\n", cmd);
+  elog(INFO, "Command: %s", cmd);
 
   fflush(log_file);
 
   // execute command
   fp = popen(cmd, "r");
   if (fp == NULL) {
-    fprintf(stderr, "Execute command error: %s\n", cmd);
-    exit(1);
+    elog(ERROR, "Cannot execute command: %s", cmd);
+    return (Datum) 0;
   }
 
   // output to logs line by line
@@ -279,32 +279,21 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     read_stat = non_blocking_fgets(log_line, sizeof(log_line), fp);
 
     if (strstr(log_line, "GART started completely.")) {
-      fprintf(log_file, "GART script complete!\n");
-      fflush(log_file);
       sprintf(result, "GART started completely!\n");
       break;
     }
 
     if (strstr(log_line, "GART stopped abnormally.")) {
-      fprintf(log_file, "GART stop\n");
-      fflush(log_file);
-      sprintf(result, "GART exit abnormally!\n");
-      break;
+      elog(FATAL, "GART exit abnormally!");
+      pclose(fp);
+      return (Datum) 0;
     }
 
     if (read_stat == -1) {
-      fprintf(log_file, "error status!\n");
-      fflush(log_file);
+      // elog(WARNING, "error read status!");
       continue;
     } else if (read_stat == 0) {
-      // fprintf(log_file, "timeout!\n");
-      // fflush(log_file);
-      ++timeout_count;
-      // if (timeout_count > MAX_TIMEOUT) {
-      //   fprintf(log_file, "timeout count exceeded!\n");
-      //   fflush(log_file);
-      //   break;
-      // }
+      // timemout
       continue;
     }
 
@@ -312,9 +301,9 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     fflush(log_file);
     // sprintf(result, "%s\n%d: %s", result, char_written, log_line);
     if (char_written < 0) {
-      sprintf(result, "Cannot write log file: %s\n", log_file_name);
+      elog(ERROR, "Cannot write log file: %s", log_file_name);
       pclose(fp);
-      PG_RETURN_TEXT_P(cstring_to_text(result));
+      return (Datum) 0;
     }
 
     fflush(log_file);
@@ -322,11 +311,10 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
   pclose(fp);
 
-  // fprintf(log_file, "End the main loop!\n");
   fflush(log_file);
-  fclose(log_file);
+  // fclose(log_file);
 
-  elog(INFO, "GART started completely: %s\n", result);
+  elog(INFO, "gart_get_connection completely: %s", result);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
 }
@@ -345,8 +333,8 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   int is_read = 0;
 
   if (strlen(config_file_name) == 0) {
-    sprintf(result, "Config file name is not set.\n");
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Config file name is not set.");
+    return (Datum) 0;
   }
 
   sql_text = PG_GETARG_TEXT_PP(0);
@@ -360,8 +348,8 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   find_value("gart", "rgmapping-file", gart_yaml_path);
   output_yaml = fopen(gart_yaml_path, "wb");
   if (output_yaml == NULL) {
-    sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Cannot open output YAML file: %s.", gart_yaml_path);
+    return (Datum) 0;
   }
 
   find_value("path", "GART_HOME", gart_home_buffer);
@@ -369,13 +357,12 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   // Use JAVA converter to convert SQL to YAML
   sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml_str '%s' %s)",
           gart_home_buffer, sql_str, gart_yaml_path);
-  fprintf(log_file, "Command: %s\n", cmd);
-  fflush(log_file);
+  elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
-    sprintf(result, "Cannot execute command: %s\n", cmd);
+    elog(ERROR, "Cannot execute command: %s", cmd);
     fclose(output_yaml);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
   }
 
   while (fgets(buffer, sizeof(buffer), fp) != NULL) {
@@ -385,12 +372,13 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   }
 
   if (!is_read) {
-    sprintf(result, "Cannot read from command: %s\n", cmd);
+    elog(ERROR, "Cannot read from command: %s", cmd);
     fclose(output_yaml);
     pclose(fp);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
   }
 
+  fclose(output_yaml);
   pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
@@ -410,8 +398,8 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   int is_read = 0;
 
   if (strlen(config_file_name) == 0) {
-    sprintf(result, "Config file name is not set.\n");
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Config file name is not set.");
+    return (Datum) 0;
   }
 
   sql_text = PG_GETARG_TEXT_PP(0);
@@ -419,16 +407,16 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
 
   input_sql = fopen(input_sql_path, "rb");
   if (input_sql == NULL) {
-    sprintf(result, "Cannot open input SQL file: %s.\n", input_sql_path);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Cannot open input SQL file: %s.", input_sql_path);
+    return (Datum) 0;
   }
 
   find_value("gart", "rgmapping-file", gart_yaml_path);
   output_yaml = fopen(gart_yaml_path, "wb");
   if (output_yaml == NULL) {
-    sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
+    elog(ERROR, "Cannot open output YAML file: %s.", gart_yaml_path);
     fclose(input_sql);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
   }
 
   find_value("path", "GART_HOME", gart_home_buffer);
@@ -436,14 +424,13 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   // Use JAVA converter to convert SQL to YAML
   sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml %s %s)", gart_home_buffer,
           input_sql_path, gart_yaml_path);
-  fprintf(log_file, "Command: %s\n", cmd);
-  fflush(log_file);
+  elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
-    sprintf(result, "Cannot execute command: %s\n", cmd);
+    elog(ERROR, "Cannot execute command: %s", cmd);
     fclose(input_sql);
     fclose(output_yaml);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
   }
 
   while (fgets(buffer, sizeof(buffer), fp) != NULL) {
@@ -453,13 +440,15 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   }
 
   if (!is_read) {
-    sprintf(result, "Cannot read from command: %s\n", cmd);
+    elog(ERROR, "Cannot read from command: %s", cmd);
     fclose(input_sql);
     fclose(output_yaml);
     pclose(fp);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
   }
 
+  fclose(input_sql);
+  fclose(output_yaml);
   pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
@@ -477,8 +466,8 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
   size_t bytes_read;
 
   if (strlen(config_file_name) == 0) {
-    sprintf(result, "Config file name is not set.\n");
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Config file name is not set.");
+    return (Datum) 0;
   }
 
   yaml_text = PG_GETARG_TEXT_PP(0);
@@ -486,16 +475,16 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
 
   input_yaml = fopen(input_yaml_path, "rb");
   if (input_yaml == NULL) {
-    sprintf(result, "Cannot open input YAML file: %s.\n", input_yaml_path);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    elog(ERROR, "Cannot open input YAML file: %s.", input_yaml_path);
+    return (Datum) 0;
   }
 
   find_value("gart", "rgmapping-file", gart_yaml_path);
   output_yaml = fopen(gart_yaml_path, "wb");
   if (output_yaml == NULL) {
-    sprintf(result, "Cannot open output YAML file: %s.\n", gart_yaml_path);
+    elog(ERROR, "Cannot open output YAML file: %s.", gart_yaml_path);
     fclose(input_yaml);
-    PG_RETURN_TEXT_P(cstring_to_text(result));
+    return (Datum) 0;
   }
 
   // copy file
