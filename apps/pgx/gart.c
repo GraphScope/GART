@@ -55,6 +55,12 @@ PG_FUNCTION_INFO_V1(gart_define_graph_by_yaml);
 Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_get_lastest_epoch);
 
+Datum gart_launch_networkx_server(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_launch_networkx_server);
+
+Datum gart_run_networkx_app(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_run_networkx_app);
+
 static int nested_level = 0;
 static void write_file(const char* str);
 static char* read_file(FILE* fp);
@@ -143,7 +149,7 @@ Datum pg_all_queries(PG_FUNCTION_ARGS) {
   bool nulls[2] = {0};
   char pid[25];
   char* query;
-  FILE* fp;
+  FILE* fp = NULL;
 
   per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
   oldcontext = MemoryContextSwitchTo(per_query_ctx);
@@ -266,7 +272,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   text* password_text;
   char password[512];
 
-  FILE* fp;
+  FILE* fp = NULL;
 
   char log_line[1024];
   char cmd[1024];
@@ -358,7 +364,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
 Datum gart_release_connection(PG_FUNCTION_ARGS) {
   char result[512] = "Release connection successfully!\n";
-  FILE* fp;
+  FILE* fp = NULL;
   char cmd[1024];
   char log_line[1024];
   int is_read = 0;
@@ -568,9 +574,9 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
   char log_line[1024];
 
   int found = 0;
-  int epoch;
+  int epoch_num = -1;
 
-  FILE* fp;
+  FILE* fp = NULL;
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
@@ -593,7 +599,7 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
     fflush(log_file);
 
     if (found) {
-      epoch = atoi(log_line);
+      epoch_num = atoi(log_line);
       found = 0;
       break;
     }
@@ -602,7 +608,104 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
     }
   }
 
-  sprintf(result, "%d", epoch);
+  sprintf(result, "%d", epoch_num);
+
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+}
+
+Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
+  char result[512] = "Launch NetworkX server successfully!\n";
+
+  char cmd[1024];
+  char log_line[1024];
+  int is_read = 0;
+
+  FILE* fp = NULL;
+
+  // TODO: now the epoch_num is not used
+  volatile int epoch_num = PG_GETARG_INT32(0);
+
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
+    return (Datum) 0;
+  }
+
+  sprintf(cmd, "%s/apps/networkx/build/gart_networkx_server &",
+          config_gart_home);
+  elog(INFO, "Command: %s", cmd);
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    elog(ERROR, "Cannot execute command: %s", cmd);
+    return (Datum) 0;
+  }
+
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    fprintf(log_file, "%s", log_line);
+    fflush(log_file);
+    elog(INFO, "%s", log_line);
+    is_read = 1;
+
+    if (strstr(log_line, "Server listening on")) {
+      break;
+    }
+  }
+
+  if (!is_read) {
+    elog(ERROR, "Cannot read from command: %s", cmd);
+    pclose(fp);
+    return (Datum) 0;
+  }
+
+  pclose(fp);
+
+  // TODO: need to create a handle of NetworkX server
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+}
+
+Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
+  char result[512] = "Run NetworkX app successfully!\n";
+
+  char cmd[1024];
+  char log_line[1024];
+  int is_read = 0;
+
+  int server_handle;
+  text* script_file_text;
+  char script_file[256];
+  FILE* fp = NULL;
+
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
+    return (Datum) 0;
+  }
+
+  // TODO: server_handle is not used
+  server_handle = PG_GETARG_INT32(0);
+  script_file_text = PG_GETARG_TEXT_PP(1);
+  safe_text_to_cstring(script_file_text, script_file);
+
+  sprintf(cmd, "python3 %s", script_file);
+  elog(INFO, "Command: %s", cmd);
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    elog(ERROR, "Cannot execute command: %s", cmd);
+    return (Datum) 0;
+  }
+
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    fprintf(log_file, "%s", log_line);
+    fflush(log_file);
+    elog(INFO, "%s", log_line);
+    is_read = 1;
+  }
+
+  if (!is_read) {
+    elog(ERROR, "Cannot read from command: %s", cmd);
+    pclose(fp);
+    return (Datum) 0;
+  }
+
+  pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
 }

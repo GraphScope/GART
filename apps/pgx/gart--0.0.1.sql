@@ -40,3 +40,13 @@ CREATE FUNCTION gart_get_lastest_epoch()
 RETURNS SETOF TEXT
 AS 'MODULE_PATHNAME', 'gart_get_lastest_epoch'
 LANGUAGE C STRICT VOLATILE;
+
+CREATE FUNCTION gart_launch_networkx_server(IN epoch INT)
+RETURNS SETOF TEXT
+AS 'MODULE_PATHNAME', 'gart_launch_networkx_server'
+LANGUAGE C STRICT VOLATILE;
+
+CREATE FUNCTION gart_run_networkx_app(IN nx_handler INT, IN script TEXT)
+RETURNS SETOF TEXT
+AS 'MODULE_PATHNAME', 'gart_run_networkx_app'
+LANGUAGE C STRICT VOLATILE;
