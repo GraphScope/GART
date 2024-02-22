@@ -23,3 +23,20 @@ class AdjListDict(Mapping):
             results = dict(zip(dsts, dsts_data))
             for dst in results:
                 yield (src, dst, results[dst])
+                
+class NeighborDict(Mapping):
+    def __init__(self, graph):
+        self._graph = graph
+    
+    def __iter__(self):
+        for node in self._graph:
+            yield (node, self._graph.get_succ_neighbor_attr_pair(node))
+            
+    def __getitem__(self, key):
+        return self._graph.get_succ_neighbor_attr_pair(key)
+    
+    def __contains__(self, key):
+        return self._graph.has_node(key)
+    
+    def __len__(self):
+        return self._graph.number_of_nodes()

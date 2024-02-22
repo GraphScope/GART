@@ -10,6 +10,7 @@ from functools import lru_cache
 from reportviews import NodeView
 from reportviews import EdgeView
 from dict_factory import AdjListDict
+from dict_factory import NeighborDict
 from coreviews import AdjacencyView
 
 import networkx as nx
@@ -216,3 +217,8 @@ class DiGraph(object):
         response = self.stub.getData(pb2.Request(op=pb2.EDGE_DATA, args=arg))
         arc = OutArchive(response.result)
         return msgpack.unpackb(arc.get_bytes(), use_list=False)
+    
+    def adjacency(self):
+        """Returns an iterator over (node, adjacency dict) tuples for all nodes."""
+        return iter(NeighborDict(self))
+        

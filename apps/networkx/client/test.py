@@ -4,16 +4,17 @@ g = DiGraph("localhost:50051")
 
 print("number of nodes:", len(g))
 
-for node in g:
+#for node in g:
     # print(node, " in g is ", node in g)
-    pass
+#    pass
     # print(node)
 
 node = (4, 933)
 print(g[node])
 
-for node in g.nodes(data=True):
-    print(node)
+#for node in g.nodes(data=True):
+#    pass
+    #print(node)
 # print(g.nodes(data=True))
 
 node = (4, 933)
@@ -35,4 +36,3 @@ print(g[node][dst])
 
 # for edge in g.edges.data():
 #    print(edge)
-# >>>>>>> Make networkx SSSP run
