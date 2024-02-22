@@ -7,6 +7,9 @@ from functools import cached_property
 from functools import lru_cache
 
 from reportviews import NodeView
+from reportviews import EdgeView
+from dict_factory import AdjListDict
+from coreviews import AdjacencyView
 
 import networkx as nx
 
@@ -23,10 +26,11 @@ class DiGraph(object):
         self.graph = {} # store graph schema
         self._nodes = {}
         self.nodes_is_loaded = False
+        self._adj = AdjListDict(self)
         
     @cached_property
     def adj(self):
-        pass
+        return AdjacencyView(self._adj)
     
     @property
     def name(self):
@@ -64,13 +68,10 @@ class DiGraph(object):
     def __contains__(self, n):
         """Returns True if n is a node, False otherwise. Use: 'n in G'."""
         try:
-            if not self.nodes_is_loaded:
-                arg = json.dumps(n).encode("utf-8", errors="ignore")
-                response = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
-                arc = OutArchive(response.result)
-                return arc.get_bool()
-            else:
-                return n in self._nodes
+            arg = json.dumps(n).encode("utf-8", errors="ignore")
+            response = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
+            arc = OutArchive(response.result)
+            return arc.get_bool()
         except (TypeError, KeyError):
             return False
 
@@ -146,6 +147,76 @@ class DiGraph(object):
             arc = OutArchive(response.result)
             return arc.get_size()
         return len(self._nodes)
+        
+    def order(self):
+        return self.number_of_nodes()
+    
+    @lru_cache(1000)
+    def has_node(self, n):
+        """Returns True if the graph contains the node n."""
+        try:
+            arg = json.dumps(n).encode("utf-8", errors="ignore")
+            response = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
+            arc = OutArchive(response.result)
+            return arc.get_bool()
+        except (TypeError, KeyError):
+            return False
+        
+    @lru_cache(1000)
+    def has_successor(self, u, v):
+        """Returns True if the edge (u, v) is in the graph."""
+        edge = (u, v)
+        arg = json.dumps(edge).encode("utf-8", errors="ignore")
+        response = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
+        arc = OutArchive(response.result)
+        return arc.get_bool()
+    
+    @lru_cache(1000)
+    def has_predecessor(self, u, v):
+        """Returns True if the edge (u, v) is in the graph."""
+        edge = (v, u)
+        arg = json.dumps(edge).encode("utf-8", errors="ignore")
+        response = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
+        arc = OutArchive(response.result)
+        return arc.get_bool()
+    
+    @lru_cache(1000)
+    def neighbors(self, n):
+        """Returns an iterator over all neighbors of node n.
+        Notes
+        -----
+        neighbors() and successors() are the same.
+        """
+        return iter(self.get_successors(n))
+       
+    @lru_cache(1000)   
+    def successors(self, n):
+        """Returns an iterator over successor nodes of n."""
+        return iter(self.get_successors(n))
+       
+    @lru_cache(1000) 
+    def predecessors(self, n):
+        """Returns an iterator over predecessor nodes of n."""
+        return iter(self.get_predecessors(n))
+
+    @property
+    def edges(self):
+        return EdgeView(self)
+    
+    def number_of_edges(self, u=None, v=None):
+        return 1
+    
+    def get_edge_data(self, u, v, default=None):
+        """Returns the attribute dictionary associated with edge (u, v)."""
+        edge = (u, v)
+        arg = json.dumps(edge).encode("utf-8", errors="ignore")
+        response = self.stub.getData(pb2.Request(op=pb2.EDGE_DATA, args=arg))
+        arc = OutArchive(response.result)
+        return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        
+    
+        
+        
         
     
 

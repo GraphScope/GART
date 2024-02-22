@@ -30,25 +30,24 @@ import types_pb2_grpc as pb2_grpc
 channel = grpc.insecure_channel('localhost:50051')
 stub = pb2_grpc.QueryGraphServiceStub(channel)
 response = stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
-print(response)
 arc = OutArchive(response.result)
-print(arc.get_size())
+#print(arc.get_size())
 
 v_label = 0
-v_oid = 1
+v_oid = 0
 
 v = (v_label, v_oid)
 arg = json.dumps(v).encode("utf-8", errors="ignore")
 response = stub.getData(pb2.Request(op=pb2.SUCCS_BY_NODE, args=arg))
-print(response)
 arc = OutArchive(response.result)
 result = msgpack.unpackb(arc.get_bytes(), use_list=False)
-print(result)
+#print(result)
+
 
 response = stub.getData(pb2.Request(op=pb2.NODE_DATA, args=arg))
-print(response)
+print(response.result)
 arc = OutArchive(response.result)
-result = msgpack.loads(arc.get_bytes(), use_list=False)
+result = msgpack.unpackb(arc.get_bytes(), use_list=False)
 print("node data:")
 print(result)
 
@@ -82,4 +81,11 @@ response = stub.getData(pb2.Request(op=pb2.SUCC_ATTR_BY_NODE, args=arg))
 arc = OutArchive(response.result)
 result = msgpack.loads(arc.get_bytes(), use_list=False)
 print("edge prop:")
-print((type(result)))
+print(type(result[-1]))
+
+arg = json.dumps(edge).encode("utf-8", errors="ignore")
+response = stub.getData(pb2.Request(op=pb2.EDGE_DATA, args=arg))
+arc = OutArchive(response.result)
+result = msgpack.loads(arc.get_bytes(), use_list=False)
+print("edge prop:")
+print(result)

@@ -1,6 +1,8 @@
 from networkx.classes.reportviews import NodeView as _NodeView
 from networkx.classes.reportviews import NodeDataView as _NodeDataView
 
+from collections.abc import Mapping, Set
+
 class NodeView(_NodeView):
     __slots__ = (
         "_graph",
@@ -62,5 +64,92 @@ class NodeDataView(_NodeDataView):
     def __next__(self):
         node = next(self._iter)
         node_data = self._nodeview._graph.get_node_attr(node)
-        print((node, node_data))
         return (node, node_data)
+    
+class OutEdgeDataView:
+    def __init__(self, graph, nbunch=None, data=False, *, default=None):
+       self._graph = graph._graph
+       self._nbunch = nbunch
+       self._data = data
+       self._default = default
+    
+    def __len__(self):
+        if self._nbunch is None:
+            return self._graph.number_of_edges()
+        num = 0
+        for n in self._nbunch:
+            num += len(self._graph.successors(n))
+        return num
+        
+    
+    def __iter__(self):
+        if self._nbunch is None:
+            if self._data is False:
+                for src in self._graph:
+                    for dst in self._graph.successors(src):
+                        yield (src, dst)
+            else:
+                for src in self._graph:
+                    dsts = self._graph.get_successors(src)
+                    dsts_data = self._graph.get_succ_attr(src)
+                    results = dict(zip(dsts, dsts_data))
+                    for dst in results:
+                        yield (src, dst, results[dst])
+        
+        else:
+            if self._data is False:
+                for n in self._nbunch:
+                    for nbr in self._graph.successors(n):
+                        yield (n, nbr)
+            else:
+                for n in self._nbunch:
+                    dsts = self._graph.get_successors(n)
+                    dsts_data = self._graph.get_succ_attr(n)
+                    results = dict(zip(dsts, dsts_data))
+                    for dst in results:
+                        yield (n, dst, results[dst])
+                    
+    
+    def __contains__(self, e):
+        u, v = e[:2]
+        if self._nbunch is not None and u not in self._nbunch and v not in self._nbunch:
+            return False
+        return self._graph.has_successor(u, v)
+    
+class OutEdgeView(Set, Mapping):
+    """A EdgeView class for outward edges of a DiGraph"""
+    dataview = OutEdgeDataView
+    
+    def __init__(self, graph):
+        self._graph = graph
+        
+    # Set methods
+    def __len__(self):
+        return self._graph.number_of_edges()
+    
+    def __iter__(self):
+        for src in self._graph:
+            for dst in self._graph.successors(src):
+                yield (src, dst)
+                
+    def __contains__(self, e):
+        src, dst = e
+        return self._graph.has_successor(src, dst)
+    
+    def __getitem__(self, e):
+        return self._graph.get_edge_data(*e)
+    
+    def __call__(self, nbunch=None, data=False, *, default=None):
+        if nbunch is None and data is False:
+            return self
+        return self.dataview(self, nbunch, data, default=default)
+
+    def data(self, data=True, default=None, nbunch=None):
+        if nbunch is None and data is False:
+            return self
+        return self.dataview(self, nbunch, data, default=default)
+    
+class EdgeView(OutEdgeView):
+    def __len__(self):
+        return self._graph.number_of_edges()
+    
