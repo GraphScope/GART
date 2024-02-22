@@ -232,18 +232,18 @@ void init_parse_ini(const char* file_name) {
 #endif
 }
 
-void find_value(char* section, char* key, char* value) {
+int find_value(const char* section, const char* key, char* value) {
   for (int i = 0; i < num_section; i++) {
     if (strcmp(section, sections[i]) == 0) {
       for (int j = section_heads[i]; j < section_heads[i + 1]; j++) {
         if (strcmp(key, keys[j]) == 0) {
           strcpy(value, values[j]);
-          return;
+          return strlen(values[j]);
         }
       }
     }
   }
-  value = NULL;
+  return -1;
 }
 
 #if 0  // test

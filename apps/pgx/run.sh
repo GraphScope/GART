@@ -80,6 +80,7 @@ echo "real_time_log_path: $real_time_log_path"
 db_type=$(parse_ini "gart" "db-type" $config_file)
 rgmapping=$(parse_ini "gart" "rgmapping-file" $config_file)
 etcd_endpoints=$(parse_ini "gart" "etcd-endpoints" $config_file)
+etcd_prefix=$(parse_ini "gart" "etcd-prefix" $config_file)
 subgraph_num=$(parse_ini "gart" "subgraph-num" $config_file)
 enable_bulkload=$(parse_ini "gart" "enable-bulkload" $config_file)
 
@@ -89,9 +90,10 @@ echo "db_type: $db_type"
 echo "rgmapping: $rgmapping"
 echo "v6d_sock: $v6d_sock"
 echo "etcd_endpoints: $etcd_endpoints"
+echo "etcd_prefix: $etcd_prefix"
 echo "subgraph_num: $subgraph_num"
 echo "enable_bulkload: $enable_bulkload"
 
 (export KAFKA_HOME=$KAFKA_HOME; cd $GART_HOME/build; \
-./gart --db-type $db_type -u $username -p $password -b $db_name -r $rgmapping --v6d-sock $v6d_sock -e $etcd_endpoints --subgraph-num $subgraph_num --enable-bulkload $enable_bulkload 2>&1 \
+./gart --db-type $db_type -u $username -p $password -b $db_name -r $rgmapping --v6d-sock $v6d_sock -e $etcd_endpoints --etcd-prefix $etcd_prefix --subgraph-num $subgraph_num --enable-bulkload $enable_bulkload 2>&1 \
  | tee $real_time_log_path &)

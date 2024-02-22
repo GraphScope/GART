@@ -27,6 +27,7 @@ void init_parse_ini(const char* file_name);
 // find the value of the key in the section
 // if the section is NULL, find the value of the key in the global section
 // the max length of the value is 1024 (MAX_VALUE)
-void find_value(char* section, char* key, char* value);
+// return the length of the value, -1 if the key is not found
+int find_value(const char* section, const char* key, char* value);
 
 #endif  // GART_APPS_PGX_UTILITY_H_

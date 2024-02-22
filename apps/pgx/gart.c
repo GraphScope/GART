@@ -34,13 +34,6 @@ PG_MODULE_MAGIC;
 void _PG_init(void);
 void _PG_fini(void);
 
-static int nested_level = 0;
-static void write_file(const char* str);
-static char* read_file(FILE* fp);
-
-Datum pg_all_queries(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(pg_all_queries);
-
 Datum gart_set_config(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_set_config);
 
@@ -58,6 +51,16 @@ PG_FUNCTION_INFO_V1(gart_define_graph_by_sql);
 
 Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_define_graph_by_yaml);
+
+Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_get_lastest_epoch);
+
+static int nested_level = 0;
+static void write_file(const char* str);
+static char* read_file(FILE* fp);
+
+Datum pg_all_queries(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(pg_all_queries);
 
 static void process_utility(PlannedStmt* pstmt, const char* queryString,
                             ProcessUtilityContext context, ParamListInfo params,
@@ -185,31 +188,67 @@ static inline void safe_text_to_cstring(text* src, char dst[]) {
   dst[VARSIZE_ANY_EXHDR(src)] = '\0';
 }
 
-char config_file_name[512] = {0};
-FILE* log_file = NULL;
-char log_file_name[128];
-char log_line[1024];
+// config file and its content
+static int config_inited = 0;
+static char config_file_name[512] = {0};
+static char config_log_file_name[128];
+static char config_kafka_home[256];
+static char config_gart_home[256];
+static char config_gart_yaml_path[256];
+static char config_etcd_endpoints[256];
+static char config_etcd_prefix[64];
+static int config_subgraph_num;
+
+// handler for log file
+static FILE* log_file = NULL;
+
+static inline void safe_find_value(const char* section, const char* key,
+                                   char* value) {
+  if (find_value(section, key, value) < 0) {
+    elog(WARNING, "Cannot find [%s, %s] in config file: %s", section, key,
+         config_file_name);
+  } else {
+    elog(INFO, "[%s, %s]: %s", section, key, value);
+  }
+}
 
 Datum gart_set_config(PG_FUNCTION_ARGS) {
   char result[1024];
   text* config_file_name_text;
+  char config_buffer[256];
 
   config_file_name_text = PG_GETARG_TEXT_PP(0);
   safe_text_to_cstring(config_file_name_text, config_file_name);
   init_parse_ini(config_file_name);
 
   // prepare log file
-  find_value("log", "log_path", log_file_name);
+  safe_find_value("log", "log_path", config_log_file_name);
 
   // open file for writing logs
   if (log_file) {
     fclose(log_file);
   }
-  log_file = fopen(log_file_name, "w");
+  log_file = fopen(config_log_file_name, "w");
   if (log_file == NULL) {
-    elog(ERROR, "Cannot open log file: %s", log_file_name);
+    elog(ERROR, "Cannot open log file: %s", config_log_file_name);
     return (Datum) 0;
   }
+
+  // set config values
+  safe_find_value("path", "KAFKA_HOME", config_kafka_home);
+
+  safe_find_value("path", "GART_HOME", config_gart_home);
+
+  safe_find_value("gart", "rgmapping-file", config_gart_yaml_path);
+
+  safe_find_value("gart", "etcd-endpoints", config_etcd_endpoints);
+
+  safe_find_value("gart", "etcd-prefix", config_etcd_prefix);
+
+  safe_find_value("gart", "subgraph-num", config_buffer);
+  config_subgraph_num = atoi(config_buffer);
+
+  config_inited = 1;
 
   sprintf(result, "Set config file name: %s", config_file_name);
 
@@ -229,11 +268,11 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
   FILE* fp;
 
+  char log_line[1024];
   char cmd[1024];
-  char value_buf[1024];
 
-  if (strlen(config_file_name) == 0) {
-    elog(ERROR, "Config file name is not set.");
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
     return (Datum) 0;
   }
 
@@ -254,13 +293,8 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  find_value("path", "KAFKA_HOME", value_buf);
-  elog(INFO, "KAFKA_HOME: %s", value_buf);
-  find_value("path", "GART_HOME", value_buf);
-  elog(INFO, "GART_HOME: %s", value_buf);
-
-  sprintf(cmd, "sh %s/apps/pgx/run.sh -c %s -u %s -p %s -b %s", value_buf,
-          config_file_name, username, password, databasename);
+  sprintf(cmd, "sh %s/apps/pgx/run.sh -c %s -u %s -p %s -b %s",
+          config_gart_home, config_file_name, username, password, databasename);
   elog(INFO, "Command: %s", cmd);
 
   fflush(log_file);
@@ -304,7 +338,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     fflush(log_file);
     // sprintf(result, "%s\n%d: %s", result, char_written, log_line);
     if (char_written < 0) {
-      elog(ERROR, "Cannot write log file: %s", log_file_name);
+      elog(ERROR, "Cannot write log file: %s", config_log_file_name);
       pclose(fp);
       return (Datum) 0;
     }
@@ -326,16 +360,16 @@ Datum gart_release_connection(PG_FUNCTION_ARGS) {
   char result[512] = "Release connection successfully!\n";
   FILE* fp;
   char cmd[1024];
-  char buffer[1024];
+  char log_line[1024];
   int is_read = 0;
 
-  if (strlen(config_file_name) == 0) {
-    elog(ERROR, "Config file name is not set.");
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
     return (Datum) 0;
   }
 
-  find_value("path", "GART_HOME", buffer);
-  sprintf(cmd, "sh %s/apps/pgx/run.sh -c %s --stop", buffer, config_file_name);
+  sprintf(cmd, "sh %s/apps/pgx/run.sh -c %s --stop", config_gart_home,
+          config_file_name);
   elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
@@ -343,8 +377,8 @@ Datum gart_release_connection(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-    fprintf(log_file, "%s", buffer);
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    fprintf(log_file, "%s", log_line);
     fflush(log_file);
     is_read = 1;
   }
@@ -362,19 +396,17 @@ Datum gart_release_connection(PG_FUNCTION_ARGS) {
 
 Datum gart_define_graph(PG_FUNCTION_ARGS) {
   char result[512] = "Build graph successfully!\n";
-  char gart_yaml_path[1024];
 
   FILE *output_yaml, *fp;
   char sql_str[4098];
   text* sql_text;
 
-  char gart_home_buffer[512];
   char cmd[1024];
-  char buffer[1024];
+  char log_line[1024];
   int is_read = 0;
 
-  if (strlen(config_file_name) == 0) {
-    elog(ERROR, "Config file name is not set.");
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
     return (Datum) 0;
   }
 
@@ -386,18 +418,15 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
     }
   }
 
-  find_value("gart", "rgmapping-file", gart_yaml_path);
-  output_yaml = fopen(gart_yaml_path, "wb");
+  output_yaml = fopen(config_gart_yaml_path, "wb");
   if (output_yaml == NULL) {
-    elog(ERROR, "Cannot open output YAML file: %s.", gart_yaml_path);
+    elog(ERROR, "Cannot open output YAML file: %s.", config_gart_yaml_path);
     return (Datum) 0;
   }
 
-  find_value("path", "GART_HOME", gart_home_buffer);
-
   // Use JAVA converter to convert SQL to YAML
   sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml_str '%s' %s)",
-          gart_home_buffer, sql_str, gart_yaml_path);
+          config_gart_home, sql_str, config_gart_yaml_path);
   elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
@@ -406,8 +435,8 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-    fprintf(log_file, "%s", buffer);
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    fprintf(log_file, "%s", log_line);
     fflush(log_file);
     is_read = 1;
   }
@@ -427,19 +456,17 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
 
 Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   char result[512] = "Build graph by SQL successfully!\n";
-  char gart_yaml_path[1024];
 
   FILE *input_sql, *output_yaml, *fp;
   char input_sql_path[1024];
   text* sql_text;
 
-  char gart_home_buffer[512];
   char cmd[1024];
-  char buffer[1024];
+  char log_line[1024];
   int is_read = 0;
 
-  if (strlen(config_file_name) == 0) {
-    elog(ERROR, "Config file name is not set.");
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
     return (Datum) 0;
   }
 
@@ -452,19 +479,16 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  find_value("gart", "rgmapping-file", gart_yaml_path);
-  output_yaml = fopen(gart_yaml_path, "wb");
+  output_yaml = fopen(config_gart_yaml_path, "wb");
   if (output_yaml == NULL) {
-    elog(ERROR, "Cannot open output YAML file: %s.", gart_yaml_path);
+    elog(ERROR, "Cannot open output YAML file: %s.", config_gart_yaml_path);
     fclose(input_sql);
     return (Datum) 0;
   }
 
-  find_value("path", "GART_HOME", gart_home_buffer);
-
   // Use JAVA converter to convert SQL to YAML
-  sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml %s %s)", gart_home_buffer,
-          input_sql_path, gart_yaml_path);
+  sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml %s %s)", config_gart_home,
+          input_sql_path, config_gart_yaml_path);
   elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
@@ -474,8 +498,8 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-    fprintf(log_file, "%s", buffer);
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    fprintf(log_file, "%s", log_line);
     fflush(log_file);
     is_read = 1;
   }
@@ -497,17 +521,16 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
 
 Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
   char result[512] = "Build graph by YAML successfully!\n";
-  char gart_yaml_path[1024];
 
   FILE *input_yaml, *output_yaml;
   char input_yaml_path[1024];
   text* yaml_text;
 
-  char buffer[1024];
+  char log_line[1024];
   size_t bytes_read;
 
-  if (strlen(config_file_name) == 0) {
-    elog(ERROR, "Config file name is not set.");
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
     return (Datum) 0;
   }
 
@@ -520,21 +543,66 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  find_value("gart", "rgmapping-file", gart_yaml_path);
-  output_yaml = fopen(gart_yaml_path, "wb");
+  output_yaml = fopen(config_gart_yaml_path, "wb");
   if (output_yaml == NULL) {
-    elog(ERROR, "Cannot open output YAML file: %s.", gart_yaml_path);
+    elog(ERROR, "Cannot open output YAML file: %s.", config_gart_yaml_path);
     fclose(input_yaml);
     return (Datum) 0;
   }
 
   // copy file
-  while ((bytes_read = fread(buffer, 1, sizeof(buffer), input_yaml)) > 0) {
-    fwrite(buffer, 1, bytes_read, output_yaml);
+  while ((bytes_read = fread(log_line, 1, sizeof(log_line), input_yaml)) > 0) {
+    fwrite(log_line, 1, bytes_read, output_yaml);
   }
 
   fclose(input_yaml);
   fclose(output_yaml);
+
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+}
+
+Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
+  char result[512];
+  char etcd_key[256];
+  char cmd[1024];
+  char log_line[1024];
+
+  int found = 0;
+  int epoch;
+
+  FILE* fp;
+
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
+    return (Datum) 0;
+  }
+
+  // TODO: get latest epoch from etcd using partition id = 0
+  sprintf(etcd_key, "%sgart_latest_epoch_p%d", config_etcd_prefix, 0);
+  sprintf(cmd, "etcdctl --endpoints=%s get --prefix %s", config_etcd_endpoints,
+          etcd_key);
+
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    elog(ERROR, "Cannot execute command: %s", cmd);
+    return (Datum) 0;
+  }
+
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    fprintf(log_file, "%s", log_line);
+    fflush(log_file);
+
+    if (found) {
+      epoch = atoi(log_line);
+      found = 0;
+      break;
+    }
+    if (strstr(log_line, etcd_key)) {
+      found = 1;
+    }
+  }
+
+  sprintf(result, "%d", epoch);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
 }

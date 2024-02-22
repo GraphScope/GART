@@ -35,3 +35,8 @@ CREATE FUNCTION gart_define_graph_by_yaml(IN yaml_file TEXT)
 RETURNS SETOF TEXT
 AS 'MODULE_PATHNAME', 'gart_define_graph_by_yaml'
 LANGUAGE C STRICT VOLATILE;
+
+CREATE FUNCTION gart_get_lastest_epoch()
+RETURNS SETOF TEXT
+AS 'MODULE_PATHNAME', 'gart_get_lastest_epoch'
+LANGUAGE C STRICT VOLATILE;
