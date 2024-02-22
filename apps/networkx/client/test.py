@@ -15,7 +15,7 @@ print(g[node])
 for node in g.nodes(data=True):
     print(node)
 # print(g.nodes(data=True))
-    
+
 node = (4, 933)
 print(g[node])
 
@@ -28,11 +28,11 @@ print(g.adj[node])
 dst = (4, 24189255812047)
 print(g[node][dst])
 
-#for node in g.nodes(data=True):
+# for node in g.nodes(data=True):
 #    pass
-    #print(node)
-#print(g.nodes(data=True))
+# print(node)
+# print(g.nodes(data=True))
 
-#for edge in g.edges.data():
+# for edge in g.edges.data():
 #    print(edge)
->>>>>>> Make networkx SSSP run
+# >>>>>>> Make networkx SSSP run
