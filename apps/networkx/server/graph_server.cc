@@ -17,10 +17,16 @@
 #include <string>
 
 #include "server/graph_reporter.h"
+#include "server/graph_server_flags.h"
 
 int main(int argc, char** argv) {
-  gart::QueryGraphServiceImpl service(0, "127.0.0.1:23760", "gart_meta_");
-  std::string server_addr("127.0.0.1:50051");
+  /* parse arguments for whole system */
+  google::InitGoogleLogging(argv[0]);
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+  gart::QueryGraphServiceImpl service(0, FLAGS_etcd_endpoint,
+                                      FLAGS_meta_prefix);
+  std::string server_addr(FLAGS_server_addr);
   grpc::ServerBuilder builder;
   builder.AddListeningPort(server_addr, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);

@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include "postgres.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "postgres.h"
 
 #include "commands/dbcommands.h"
 #include "executor/executor.h"
@@ -583,7 +583,7 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  // TODO: get latest epoch from etcd using partition id = 0
+  // TODO(ssj): get latest epoch from etcd using partition id = 0
   sprintf(etcd_key, "%sgart_latest_epoch_p%d", config_etcd_prefix, 0);
   sprintf(cmd, "etcdctl --endpoints=%s get --prefix %s", config_etcd_endpoints,
           etcd_key);
@@ -622,7 +622,7 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
 
   FILE* fp = NULL;
 
-  // TODO: now the epoch_num is not used
+  // TODO(ssj): now the epoch_num is not used
   volatile int epoch_num = PG_GETARG_INT32(0);
 
   if (!config_inited) {
@@ -658,7 +658,7 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
 
   pclose(fp);
 
-  // TODO: need to create a handle of NetworkX server
+  // TODO(ssj): need to create a handle of NetworkX server
   PG_RETURN_TEXT_P(cstring_to_text(result));
 }
 
@@ -679,7 +679,7 @@ Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
     return (Datum) 0;
   }
 
-  // TODO: server_handle is not used
+  // TODO(ssj): server_handle is not used
   server_handle = PG_GETARG_INT32(0);
   script_file_text = PG_GETARG_TEXT_PP(1);
   safe_text_to_cstring(script_file_text, script_file);

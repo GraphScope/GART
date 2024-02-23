@@ -82,14 +82,25 @@ find_package(etcd-cpp-api REQUIRED)
 include_directories(${ETCD_CPP_INCLUDE_DIR})
 link_libraries(${ETCD_CPP_LIBRARIES})
 
+# find Boost
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
              context program_options regex thread)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 
+# find GFlags
+include("../../vegito/cmake/FindGFlags.cmake")
+if (GFLAGS_FOUND)
+    include_directories(${GFLAGS_INCLUDE_DIRS})
+    link_libraries(${GFLAGS_LIBRARIES})
+else ()
+    message(SEND_ERROR "gflags not found")
+endif ()
+
 file(GLOB SOURCES
-          "server/utils/*.cc" 
+          "server/utils/*.cc"
+          "server/graph_server_flags.cc"
           )
 
 add_executable(gart_networkx_server server/graph_server.cc ${PROTO_SOURCES} ${SOURCES})
