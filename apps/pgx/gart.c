@@ -58,6 +58,9 @@ PG_FUNCTION_INFO_V1(gart_get_lastest_epoch);
 Datum gart_launch_networkx_server(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_launch_networkx_server);
 
+Datum gart_stop_networkx_server(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_stop_networkx_server);
+
 Datum gart_run_networkx_app(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_run_networkx_app);
 
@@ -613,25 +616,42 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
   PG_RETURN_TEXT_P(cstring_to_text(result));
 }
 
+#define MAX_SERVER_NUM 16
+static int server_id_counter = 0;
+static char* server_addrs[MAX_SERVER_NUM];
+
 Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
-  char result[512] = "Launch NetworkX server successfully!\n";
+  char result[512];
 
   char cmd[1024];
   char log_line[1024];
   int is_read = 0;
 
+  text* server_addr_text;
   FILE* fp = NULL;
+  char* server_addr;
 
-  // TODO(ssj): now the epoch_num is not used
-  volatile int epoch_num = PG_GETARG_INT32(0);
+  int epoch_num = PG_GETARG_INT32(0);
+  server_addr_text = PG_GETARG_TEXT_PP(1);
+  server_addrs[server_id_counter] = (char*) malloc(256);
+  server_addr = server_addrs[server_id_counter];
+  safe_text_to_cstring(server_addr_text, server_addr);
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
     return (Datum) 0;
   }
 
-  sprintf(cmd, "%s/apps/networkx/build/gart_networkx_server &",
-          config_gart_home);
+  if (server_id_counter >= MAX_SERVER_NUM) {
+    elog(ERROR, "Too many NetworkX servers are launched!");
+    return (Datum) 0;
+  }
+
+  sprintf(cmd,
+          "%s/apps/networkx/build/gart_networkx_server --etcd_endpoint %s "
+          "--meta_prefix %s --read_epoch %d --server_addr %s &",
+          config_gart_home, config_etcd_endpoints, config_etcd_prefix,
+          epoch_num, server_addr);
   elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
@@ -658,7 +678,46 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
 
   pclose(fp);
 
-  // TODO(ssj): need to create a handle of NetworkX server
+  sprintf(result, "%d", server_id_counter++);
+
+  PG_RETURN_TEXT_P(cstring_to_text(result));
+}
+
+Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
+  char result[512] = "Stop NetworkX server successfully!\n";
+  char cmd[1024];
+
+  int server_id;
+  FILE* fp = NULL;
+
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
+    return (Datum) 0;
+  }
+
+  server_id = PG_GETARG_INT32(0);
+  if (server_id < 0 || server_id >= server_id_counter ||
+      server_addrs[server_id] == NULL) {
+    elog(ERROR, "Invalid server id: %d", server_id);
+    return (Datum) 0;
+  }
+
+  // kill $(pgrep -f ".*gart_networkx_server .* %s") > /dev/null 2>&1
+  sprintf(cmd, "kill $(pgrep -f \".*gart_networkx_server .* %s\")",
+          server_addrs[server_id]);
+  elog(INFO, "Command: %s", cmd);
+
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    elog(ERROR, "Cannot execute command: %s", cmd);
+    return (Datum) 0;
+  }
+
+  pclose(fp);
+
+  free(server_addrs[server_id]);
+  server_addrs[server_id] = NULL;
+
   PG_RETURN_TEXT_P(cstring_to_text(result));
 }
 
