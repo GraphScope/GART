@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SERVER_UTILS_DYNAMIC_H_
-#define SERVER_UTILS_DYNAMIC_H_
+#ifndef APPS_NETWORKX_SERVER_UTILS_DYNAMIC_H_
+#define APPS_NETWORKX_SERVER_UTILS_DYNAMIC_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -31,7 +31,7 @@
 // IWYU pragma: end_exports
 
 #include "grape/serialization/in_archive.h"
-#include "types.pb.h"
+#include "types.pb.h"  // NOLINT(build/include_subdir)
 
 namespace gart {
 
@@ -363,4 +363,4 @@ inline grape::InArchive& operator<<(grape::InArchive& archive,
 }
 }  // namespace grape
 
-#endif  // SERVER_UTILS_DYNAMIC_H_
+#endif  // APPS_NETWORKX_SERVER_UTILS_DYNAMIC_H_

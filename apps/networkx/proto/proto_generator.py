@@ -27,8 +27,10 @@ def gather_all_proto(proto_dir, suffix="*.proto"):
     pattern = os.path.join(proto_dir, suffix)
     return glob.glob(pattern)
 
+
 def gather_all_service_proto(proto_dir):
     return gather_all_proto(proto_dir, "*_service.proto")
+
 
 def create_path(path):
     """Utility function to create a path."""

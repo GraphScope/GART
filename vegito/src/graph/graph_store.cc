@@ -26,7 +26,7 @@ using std::vector;
 
 using std::to_string;
 
-using namespace gart::property;
+using namespace gart::property;  // NOLINT(build/namespaces)
 
 namespace {
 struct PropDef {

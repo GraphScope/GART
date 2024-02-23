@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef SERVER_UTILS_PROPERTY_CONVERTER_H_
-#define SERVER_UTILS_PROPERTY_CONVERTER_H_
+#ifndef APPS_NETWORKX_SERVER_UTILS_PROPERTY_CONVERTER_H_
+#define APPS_NETWORKX_SERVER_UTILS_PROPERTY_CONVERTER_H_
 
-#include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
-#include <vector>
 
+#include "fragment/gart_fragment.h"
 #include "server/utils/dynamic.h"
 
 namespace gart {
@@ -124,4 +124,4 @@ struct PropertyConverter {
   }
 };
 }  // namespace gart
-#endif  // SERVER_UTILS_PROPERTY_CONVERTER_H_
+#endif  // APPS_NETWORKX_SERVER_UTILS_PROPERTY_CONVERTER_H_

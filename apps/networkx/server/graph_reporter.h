@@ -17,24 +17,22 @@
 
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "etcd/Client.hpp"
 #include "grape/serialization/in_archive.h"
-#include "grpc/grpc.h"
 #include "grpcpp/security/server_credentials.h"
 #include "grpcpp/server.h"
 #include "grpcpp/server_builder.h"
-#include "grpcpp/server_context.h"
 
-#include "fragment/gart_fragment.h"
 #include "interfaces/fragment/types.h"
 #include "server/utils/dynamic.h"
 #include "server/utils/msgpack_utils.h"
 #include "server/utils/property_converter.h"
 
-#include "types.grpc.pb.h"
-#include "types.pb.h"
+#include "types.grpc.pb.h"  // NOLINT(build/include_subdir)
+#include "types.pb.h"       // NOLINT(build/include_subdir)
 
 namespace gart {
 using grpc::Server;

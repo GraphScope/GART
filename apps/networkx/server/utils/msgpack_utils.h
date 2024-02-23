@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SERVER_UTILS_MSGPACK_UTILS_H_
-#define SERVER_UTILS_MSGPACK_UTILS_H_
+#ifndef APPS_NETWORKX_SERVER_UTILS_MSGPACK_UTILS_H_
+#define APPS_NETWORKX_SERVER_UTILS_MSGPACK_UTILS_H_
 
 #include "msgpack.hpp"  // IWYU pragma: export
 
@@ -155,4 +155,4 @@ struct pack<gart::dynamic::Value> {
 }  // namespace msgpack
 // clang-format on
 
-#endif  // SERVER_UTILS_MSGPACK_UTILS_H_
+#endif  // APPS_NETWORKX_SERVER_UTILS_MSGPACK_UTILS_H_

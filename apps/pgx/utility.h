@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef GART_APPS_PGX_UTILITY_H_
-#define GART_APPS_PGX_UTILITY_H_
+#ifndef APPS_PGX_UTILITY_H_
+#define APPS_PGX_UTILITY_H_
 
 #include <stdio.h>
 
@@ -30,4 +30,4 @@ void init_parse_ini(const char* file_name);
 // return the length of the value, -1 if the key is not found
 int find_value(const char* section, const char* key, char* value);
 
-#endif  // GART_APPS_PGX_UTILITY_H_
+#endif  // APPS_PGX_UTILITY_H_

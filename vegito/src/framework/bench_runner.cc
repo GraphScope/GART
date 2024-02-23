@@ -35,7 +35,7 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-using namespace gart::property;
+using namespace gart::property;  // NOLINT(build/namespaces)
 
 namespace {
 inline vector<string_view> splitString(const string_view& str, char delimiter) {
@@ -482,7 +482,8 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
             "frag %d, vlabel %d, inner: %lu vertices, get_block_usage %lu, v6d "
             "usage %.2lf GB, limit %.2lf GB\n",
             p_id, i, graph->get_max_vertex_id(), graph->get_block_usage(),
-            double(usage) / (1 << 30), double(limit) / (1 << 30));
+            static_cast<double>(usage) / (1 << 30),
+            static_cast<double>(limit) / (1 << 30));
         fflush(stdout);
       } else {
         LOG(ERROR) << "empty pointer frag " << p_id << ", vlabel " << i;
@@ -495,7 +496,8 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
             "frag %d, vlabel %d, outer: %lu vertices, get_block_usage %lu, v6d "
             "usage %.2lf GB, limit %.2lf GB\n",
             p_id, i, ovg->get_max_vertex_id(), ovg->get_block_usage(),
-            double(usage) / (1 << 30), double(limit) / (1 << 30));
+            static_cast<double>(usage) / (1 << 30),
+            static_cast<double>(limit) / (1 << 30));
         fflush(stdout);
       }
     }
