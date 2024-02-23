@@ -752,6 +752,11 @@ Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
   }
 
   while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    size_t len = strlen(log_line);
+    if (len > 0 && log_line[len - 1] == '\n') {
+      log_line[len - 1] = '\0';
+    }
+
     fprintf(log_file, "%s", log_line);
     fflush(log_file);
     elog(INFO, "%s", log_line);
