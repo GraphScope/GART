@@ -222,7 +222,6 @@ static inline void safe_find_value(const char* section, const char* key,
 }
 
 Datum gart_set_config(PG_FUNCTION_ARGS) {
-  char result[1024];
   text* config_file_name_text;
   char config_buffer[256];
 
@@ -240,7 +239,7 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
   log_file = fopen(config_log_file_name, "w");
   if (log_file == NULL) {
     elog(ERROR, "Cannot open log file: %s", config_log_file_name);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   // set config values
@@ -259,14 +258,12 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
 
   config_inited = 1;
 
-  sprintf(result, "Set config file name: %s", config_file_name);
+  elog(INFO, "Set config file name: %s", config_file_name);
 
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(1);
 }
 
 Datum gart_get_connection(PG_FUNCTION_ARGS) {
-  char result[2048];
-
   Oid userid;
   char* username;
   Oid databaseid;
@@ -282,7 +279,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   // get username and database name from Postgres
@@ -299,7 +296,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   // parse ini file
   if (fopen(config_file_name, "r") == NULL) {
     elog(ERROR, "Cannot open config file: %s.", config_file_name);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   sprintf(cmd, "sh %s/apps/pgx/run.sh -c %s -u %s -p %s -b %s",
@@ -312,7 +309,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   fp = popen(cmd, "r");
   if (fp == NULL) {
     elog(ERROR, "Cannot execute command: %s", cmd);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   // output to logs line by line
@@ -325,7 +322,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     read_stat = non_blocking_fgets(log_line, sizeof(log_line), fp);
 
     if (strstr(log_line, "GART started completely.")) {
-      sprintf(result, "GART started completely!\n");
+      elog(INFO, "GART started completely!");
       break;
     }
 
@@ -360,13 +357,12 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
   fflush(log_file);
   // fclose(log_file);
 
-  elog(INFO, "gart_get_connection completely: %s", result);
+  elog(INFO, "gart_get_connection completely");
 
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(0);
 }
 
 Datum gart_release_connection(PG_FUNCTION_ARGS) {
-  char result[512] = "Release connection successfully!\n";
   FILE* fp = NULL;
   char cmd[1024];
   char log_line[1024];
@@ -374,7 +370,7 @@ Datum gart_release_connection(PG_FUNCTION_ARGS) {
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   sprintf(cmd, "sh %s/apps/pgx/run.sh -c %s --stop", config_gart_home,
@@ -383,7 +379,7 @@ Datum gart_release_connection(PG_FUNCTION_ARGS) {
   fp = popen(cmd, "r");
   if (fp == NULL) {
     elog(ERROR, "Cannot execute command: %s", cmd);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   while (fgets(log_line, sizeof(log_line), fp) != NULL) {
@@ -395,17 +391,15 @@ Datum gart_release_connection(PG_FUNCTION_ARGS) {
   if (!is_read) {
     elog(ERROR, "Cannot read from command: %s", cmd);
     pclose(fp);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   pclose(fp);
 
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(1);
 }
 
 Datum gart_define_graph(PG_FUNCTION_ARGS) {
-  char result[512] = "Build graph successfully!\n";
-
   FILE *output_yaml, *fp;
   char sql_str[4098];
   text* sql_text;
@@ -416,7 +410,7 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   sql_text = PG_GETARG_TEXT_PP(0);
@@ -430,7 +424,7 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   output_yaml = fopen(config_gart_yaml_path, "wb");
   if (output_yaml == NULL) {
     elog(ERROR, "Cannot open output YAML file: %s.", config_gart_yaml_path);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   // Use JAVA converter to convert SQL to YAML
@@ -441,7 +435,7 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   if (fp == NULL) {
     elog(ERROR, "Cannot execute command: %s", cmd);
     fclose(output_yaml);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   while (fgets(log_line, sizeof(log_line), fp) != NULL) {
@@ -454,18 +448,16 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
     elog(ERROR, "Cannot read from command: %s", cmd);
     fclose(output_yaml);
     pclose(fp);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   fclose(output_yaml);
   pclose(fp);
 
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(1);
 }
 
 Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
-  char result[512] = "Build graph by SQL successfully!\n";
-
   FILE *input_sql, *output_yaml, *fp;
   char input_sql_path[1024];
   text* sql_text;
@@ -476,7 +468,7 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   sql_text = PG_GETARG_TEXT_PP(0);
@@ -485,14 +477,14 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
   input_sql = fopen(input_sql_path, "rb");
   if (input_sql == NULL) {
     elog(ERROR, "Cannot open input SQL file: %s.", input_sql_path);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   output_yaml = fopen(config_gart_yaml_path, "wb");
   if (output_yaml == NULL) {
     elog(ERROR, "Cannot open output YAML file: %s.", config_gart_yaml_path);
     fclose(input_sql);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   // Use JAVA converter to convert SQL to YAML
@@ -504,7 +496,7 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
     elog(ERROR, "Cannot execute command: %s", cmd);
     fclose(input_sql);
     fclose(output_yaml);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   while (fgets(log_line, sizeof(log_line), fp) != NULL) {
@@ -518,19 +510,17 @@ Datum gart_define_graph_by_sql(PG_FUNCTION_ARGS) {
     fclose(input_sql);
     fclose(output_yaml);
     pclose(fp);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   fclose(input_sql);
   fclose(output_yaml);
   pclose(fp);
 
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(1);
 }
 
 Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
-  char result[512] = "Build graph by YAML successfully!\n";
-
   FILE *input_yaml, *output_yaml;
   char input_yaml_path[1024];
   text* yaml_text;
@@ -540,7 +530,7 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   yaml_text = PG_GETARG_TEXT_PP(0);
@@ -549,14 +539,14 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
   input_yaml = fopen(input_yaml_path, "rb");
   if (input_yaml == NULL) {
     elog(ERROR, "Cannot open input YAML file: %s.", input_yaml_path);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   output_yaml = fopen(config_gart_yaml_path, "wb");
   if (output_yaml == NULL) {
     elog(ERROR, "Cannot open output YAML file: %s.", config_gart_yaml_path);
     fclose(input_yaml);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   // copy file
@@ -566,12 +556,10 @@ Datum gart_define_graph_by_yaml(PG_FUNCTION_ARGS) {
 
   fclose(input_yaml);
   fclose(output_yaml);
-
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(1);
 }
 
 Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
-  char result[512];
   char etcd_key[256];
   char cmd[1024];
   char log_line[1024];
@@ -611,9 +599,7 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
     }
   }
 
-  sprintf(result, "%d", epoch_num);
-
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(epoch_num);
 }
 
 #define MAX_SERVER_NUM 16
@@ -621,8 +607,6 @@ static int server_id_counter = 0;
 static char* server_addrs[MAX_SERVER_NUM];
 
 Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
-  char result[512];
-
   char cmd[1024];
   char log_line[1024];
   int is_read = 0;
@@ -639,12 +623,12 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   if (server_id_counter >= MAX_SERVER_NUM) {
     elog(ERROR, "Too many NetworkX servers are launched!");
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   sprintf(cmd,
@@ -656,7 +640,7 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
   fp = popen(cmd, "r");
   if (fp == NULL) {
     elog(ERROR, "Cannot execute command: %s", cmd);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   while (fgets(log_line, sizeof(log_line), fp) != NULL) {
@@ -673,18 +657,15 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
   if (!is_read) {
     elog(ERROR, "Cannot read from command: %s", cmd);
     pclose(fp);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   pclose(fp);
 
-  sprintf(result, "%d", server_id_counter++);
-
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(server_id_counter++);
 }
 
 Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
-  char result[512] = "Stop NetworkX server successfully!\n";
   char cmd[1024];
 
   int server_id;
@@ -692,14 +673,14 @@ Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   server_id = PG_GETARG_INT32(0);
   if (server_id < 0 || server_id >= server_id_counter ||
       server_addrs[server_id] == NULL) {
     elog(ERROR, "Invalid server id: %d", server_id);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   // kill $(pgrep -f ".*gart_networkx_server .* %s") > /dev/null 2>&1
@@ -710,7 +691,7 @@ Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
   fp = popen(cmd, "r");
   if (fp == NULL) {
     elog(ERROR, "Cannot execute command: %s", cmd);
-    return (Datum) 0;
+    PG_RETURN_INT32(0);
   }
 
   pclose(fp);
@@ -718,7 +699,7 @@ Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
   free(server_addrs[server_id]);
   server_addrs[server_id] = NULL;
 
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  PG_RETURN_INT32(1);
 }
 
 Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
