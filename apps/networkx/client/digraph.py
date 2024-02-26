@@ -12,6 +12,7 @@ from reportviews import EdgeView
 from dict_factory import AdjListDict
 from dict_factory import NeighborDict
 from coreviews import AdjacencyView
+from networkx.classes.reportviews import DegreeView
 
 import networkx as nx
 
@@ -177,12 +178,16 @@ class DiGraph(object):
 
     @lru_cache(1000)
     def has_predecessor(self, u, v):
-        """Returns True if the edge (u, v) is in the graph."""
+        """Returns True if the edge (v, u) is in the graph."""
         edge = (v, u)
         arg = json.dumps(edge).encode("utf-8", errors="ignore")
         response = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
         arc = OutArchive(response.result)
         return arc.get_bool()
+    
+    def has_edge(self, u, v):
+        """Returns True if the edge (u, v) is in the graph."""
+        return self.has_successor(u, v)    
 
     @lru_cache(1000)
     def neighbors(self, n):
@@ -207,11 +212,21 @@ class DiGraph(object):
     def edges(self):
         return EdgeView(self)
 
+    @lru_cache(1000)
     def number_of_edges(self, u=None, v=None):
-        return 1
+        edges_num = 0
+        if u is None:
+            response = self.stub.getData(pb2.Request(op=pb2.EDGE_NUM, args=""))
+            arc = OutArchive(response.result)
+            edges_num = arc.get_size()
+        elif self.has_edge(u, v):
+            edges_num = 1
+        return edges_num
 
     def get_edge_data(self, u, v, default=None):
         """Returns the attribute dictionary associated with edge (u, v)."""
+        if not self.has_edge(u, v):
+            return default
         edge = (u, v)
         arg = json.dumps(edge).encode("utf-8", errors="ignore")
         response = self.stub.getData(pb2.Request(op=pb2.EDGE_DATA, args=arg))
@@ -221,4 +236,26 @@ class DiGraph(object):
     def adjacency(self):
         """Returns an iterator over (node, adjacency dict) tuples for all nodes."""
         return iter(NeighborDict(self))
+    
+    def size(self, weight=None):
+        if weight is None:
+            return self.number_of_edges() // 2
+        return sum(d for v, d in self.degree(weight=weight)) / 2
         
+    @property
+    def degree(self):
+        """A DegreeView for the Graph as G.degree or G.degree()."""
+        return DegreeView(self)
+         
+    
+    def nbunch_iter(self, nbunch=None):
+        if nbunch is None:
+            return self.__iter__()
+        elif nbunch in self:
+            return iter([nbunch])
+        else:
+            for n in nbunch:
+                if n in self:
+                    yield n
+                    
+    

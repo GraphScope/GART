@@ -86,6 +86,8 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       break;
     }
     case gart::rpc::EDGE_NUM: {
+      size_t edge_num = fragment_->GetEdgeNum();
+      *in_archive << edge_num;
       break;
     }
     case gart::rpc::HAS_NODE: {

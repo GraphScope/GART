@@ -54,12 +54,14 @@ class NodeDataView(_NodeDataView):
         data = self._data
         if data is False:
             return self._nodeview.__iter__()
-        if data is True:
+        elif data is True:
             return self
-        return (
-            (n, dd[data] if data in dd else self._default)
-            for n, dd in self._nodes.items()
-        )
+        for node in self._nodeview._graph:
+            node_data = self._nodeview._graph.get_node_attr(node)
+            if data in node_data:
+                yield (node, node_data[data])
+            else:
+                yield (node, self._default)
         
     def __next__(self):
         node = next(self._iter)
@@ -94,7 +96,10 @@ class OutEdgeDataView:
                     dsts_data = self._graph.get_succ_attr(src)
                     results = dict(zip(dsts, dsts_data))
                     for dst in results:
-                        yield (src, dst, results[dst])
+                        if self._data is True:
+                            yield (src, dst, results[dst])
+                        else:
+                            yield(src, dst, results[dst].setdefault(self._data, self._default))
         
         else:
             if self._data is False:
@@ -107,8 +112,10 @@ class OutEdgeDataView:
                     dsts_data = self._graph.get_succ_attr(n)
                     results = dict(zip(dsts, dsts_data))
                     for dst in results:
-                        yield (n, dst, results[dst])
-                    
+                        if self._data is True:
+                            yield(n, dst, results[dst])
+                        else:
+                            yield(n, dst, results[dst].setdefault(self._data, self._default))        
     
     def __contains__(self, e):
         u, v = e[:2]

@@ -17,12 +17,7 @@ class AdjListDict(Mapping):
         return self._graph.get_pred_neighbor_attr_pair(key)
     
     def __iter__(self):
-        for src in self._graph:
-            dsts = self._graph.get_successors(src)
-            dsts_data = self._graph.get_succ_attr(src)
-            results = dict(zip(dsts, dsts_data))
-            for dst in results:
-                yield (src, dst, results[dst])
+        return self._graph.__iter__()
                 
 class NeighborDict(Mapping):
     def __init__(self, graph):
