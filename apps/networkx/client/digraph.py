@@ -55,6 +55,12 @@ class DiGraph(object):
     def __str__(self):
         """Returns a short summary of the graph."""
         return "A digraph from GART storage."
+    
+    def is_multigraph(self):
+        return False
+    
+    def is_directed(self):
+        return True
 
     def _get_nodes(self):
         response_iterator = self.stub.getData(pb2.Request(op=pb2.NODES, args=""))
