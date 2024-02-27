@@ -32,7 +32,6 @@ while [ : ]; do
   esac
 done
 
-unset=false
 if [ -n "$KAFKA_HOME" ]; then
     echo "KAFKA_HOME: $KAFKA_HOME"
 else

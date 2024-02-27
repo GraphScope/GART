@@ -35,6 +35,7 @@ while true; do
         if ! ps -p "$process_pid" > /dev/null; then
             echo "$process_name is not running"
             ./stop-gart --kill-v6d-sock $v6d_sock --is-abnormal
+            exit 1
         fi
     done
 

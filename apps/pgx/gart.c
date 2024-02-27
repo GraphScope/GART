@@ -25,9 +25,11 @@
 #include "funcapi.h"
 #include "miscadmin.h"
 #include "tcop/utility.h"
-#include "utility.h"
 #include "utils/builtins.h"
 #include "utils/elog.h"
+#include "utils/resowner.h"
+
+#include "utility.h"
 
 PG_MODULE_MAGIC;
 
@@ -71,6 +73,9 @@ static char* read_file(FILE* fp);
 Datum pg_all_queries(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(pg_all_queries);
 
+static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
+                                bool isTopLevel, void* arg);
+
 static void process_utility(PlannedStmt* pstmt, const char* queryString,
                             ProcessUtilityContext context, ParamListInfo params,
                             QueryEnvironment* queryEnv, DestReceiver* dest,
@@ -79,12 +84,26 @@ static void process_utility(PlannedStmt* pstmt, const char* queryString,
 static void executor_run(QueryDesc* queryDesc, ScanDirection direction,
                          uint64 count, bool execute_once);
 
+static ProcessUtility_hook_type prev_utility_hook = NULL;
+static ExecutorRun_hook_type prev_executor_hook = NULL;
+
 void _PG_init(void) {
+  prev_utility_hook = ProcessUtility_hook;
+  prev_executor_hook = ExecutorRun_hook;
+
   ProcessUtility_hook = process_utility;
   ExecutorRun_hook = executor_run;
+
+  // TODO(SSJ): need to release resource when session exit
+  // RegisterResourceReleaseCallback(my_resource_cleanup, NULL);
 }
 
-void _PG_fini(void) {}
+void _PG_fini(void) {
+  ProcessUtility_hook = prev_utility_hook;
+  ExecutorRun_hook = prev_executor_hook;
+
+  // UnregisterResourceReleaseCallback(my_resource_cleanup, NULL);
+}
 
 static void write_file(const char* str) {
   FILE* fp = fopen("/tmp/log.stat", "a+");
@@ -665,11 +684,31 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
   PG_RETURN_INT32(server_id_counter++);
 }
 
-Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
+static int kill_networkx_server(int server_id) {
   char cmd[1024];
-
-  int server_id;
   FILE* fp = NULL;
+
+  // kill $(pgrep -f ".*gart_networkx_server .* %s") > /dev/null 2>&1
+  sprintf(cmd, "kill $(pgrep -f \".*gart_networkx_server .* %s\")",
+          server_addrs[server_id]);
+  elog(INFO, "Command: %s", cmd);
+
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    elog(ERROR, "Cannot execute command: %s", cmd);
+    return -1;
+  }
+
+  pclose(fp);
+
+  free(server_addrs[server_id]);
+  server_addrs[server_id] = NULL;
+
+  return 0;
+}
+
+Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
+  int server_id;
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
@@ -683,21 +722,9 @@ Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
     PG_RETURN_INT32(0);
   }
 
-  // kill $(pgrep -f ".*gart_networkx_server .* %s") > /dev/null 2>&1
-  sprintf(cmd, "kill $(pgrep -f \".*gart_networkx_server .* %s\")",
-          server_addrs[server_id]);
-  elog(INFO, "Command: %s", cmd);
-
-  fp = popen(cmd, "r");
-  if (fp == NULL) {
-    elog(ERROR, "Cannot execute command: %s", cmd);
+  if (kill_networkx_server(server_id) < 0) {
     PG_RETURN_INT32(0);
   }
-
-  pclose(fp);
-
-  free(server_addrs[server_id]);
-  server_addrs[server_id] = NULL;
 
   PG_RETURN_INT32(1);
 }
@@ -753,4 +780,22 @@ Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
   pclose(fp);
 
   PG_RETURN_TEXT_P(cstring_to_text(result));
+}
+
+static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
+                                bool isTopLevel, void* arg) {
+  if (phase == RESOURCE_RELEASE_AFTER_LOCKS) {
+    if (log_file) {
+      fprintf(log_file, "Session Exit");
+      fflush(log_file);
+      fclose(log_file);
+      log_file = NULL;
+    }
+
+    for (int i = 0; i < server_id_counter; ++i) {
+      if (server_addrs[i]) {
+        kill_networkx_server(i);
+      }
+    }
+  }
 }
