@@ -18,7 +18,7 @@ syntax = "proto3";
 package gart.rpc;
 
 service QueryGraphService{
-    rpc getData (Request) returns (Response){}
+    rpc getData (Request) returns (stream Response);
 }
 
 // For simulating networkx reporting functionalities

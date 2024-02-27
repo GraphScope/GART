@@ -51,6 +51,8 @@ using oid_t = GraphType::oid_t;
 using vid_t = GraphType::vid_t;
 using vertex_t = GraphType::vertex_t;
 
+#define MESSAGE_CHUNK_SIZE static_cast<size_t>(1024 * 2024 * 1024 * 2)  // 2GB
+
 class QueryGraphServiceImpl final : public QueryGraphService::Service {
  public:
   QueryGraphServiceImpl(int read_epoch, std::string etcd_endpoint,
@@ -75,7 +77,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
 
   Status getData(grpc::ServerContext* context,
                  const gart::rpc::Request* request,
-                 gart::rpc::Response* response) override {
+                 grpc::ServerWriter<gart::rpc::Response>* writer) override {
     auto op = request->op();
     std::string args = request->args();
     auto in_archive = std::make_unique<grape::InArchive>();
@@ -165,9 +167,16 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       std::cout << "Unknown op: " << op << std::endl;
     }
     }
-    response->mutable_result()->assign(
-        in_archive->GetBuffer(),
-        in_archive->GetBuffer() + in_archive->GetSize());
+    auto msg_buffer = in_archive->GetBuffer();
+    for (size_t idx = 0; idx < in_archive->GetSize();
+         idx += MESSAGE_CHUNK_SIZE) {
+      gart::rpc::Response response;
+      response.mutable_result()->assign(
+          msg_buffer + idx,
+          msg_buffer + idx +
+              std::min(MESSAGE_CHUNK_SIZE, in_archive->GetSize() - idx));
+      writer->Write(response);
+    }
     return Status::OK;
   }
 

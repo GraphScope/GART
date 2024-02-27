@@ -57,8 +57,11 @@ class DiGraph(object):
         return "A digraph from GART storage."
 
     def _get_nodes(self):
-        response = self.stub.getData(pb2.Request(op=pb2.NODES, args=""))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.NODES, args=""))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         result = msgpack.unpackb(arc.get_bytes(), use_list=False)
         # result is a tuple of tuples
         # (label, oid)
@@ -75,8 +78,11 @@ class DiGraph(object):
         """Returns True if n is a node, False otherwise. Use: 'n in G'."""
         try:
             arg = json.dumps(n).encode("utf-8", errors="ignore")
-            response = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
-            arc = OutArchive(response.result)
+            response_iterator = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
+            total_response = bytes()
+            for response in response_iterator:
+                total_response += response.result
+            arc = OutArchive(total_response)
             return arc.get_bool()
         except (TypeError, KeyError):
             return False
@@ -84,8 +90,11 @@ class DiGraph(object):
     def __len__(self):
         """Returns the number of nodes in the graph. Use: 'len(G)'."""
         if not self.nodes_is_loaded:
-            response = self.stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
-            arc = OutArchive(response.result)
+            response_iterator = self.stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
+            total_response = bytes()
+            for response in response_iterator:
+                total_response += response.result
+            arc = OutArchive(total_response)
             return arc.get_size()
         return len(self._nodes)
 
@@ -97,36 +106,51 @@ class DiGraph(object):
     @lru_cache(1000)
     def get_node_attr(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response = self.stub.getData(pb2.Request(op=pb2.NODE_DATA, args=arg))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.NODE_DATA, args=arg))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         return msgpack.unpackb(arc.get_bytes(), use_list=False)
 
     @lru_cache(1000)
     def get_successors(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response = self.stub.getData(pb2.Request(op=pb2.SUCCS_BY_NODE, args=arg))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.SUCCS_BY_NODE, args=arg))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         return msgpack.unpackb(arc.get_bytes(), use_list=False)
 
     @lru_cache(1000)
     def get_succ_attr(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response = self.stub.getData(pb2.Request(op=pb2.SUCC_ATTR_BY_NODE, args=arg))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.SUCC_ATTR_BY_NODE, args=arg))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         return msgpack.unpackb(arc.get_bytes(), use_list=False)
 
     @lru_cache(1000)
     def get_predecessors(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response = self.stub.getData(pb2.Request(op=pb2.PREDS_BY_NODE, args=arg))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.PREDS_BY_NODE, args=arg))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         return msgpack.unpackb(arc.get_bytes(), use_list=False)
 
     @lru_cache(1000)
     def get_pred_attr(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response = self.stub.getData(pb2.Request(op=pb2.PRED_ATTR_BY_NODE, args=arg))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.PRED_ATTR_BY_NODE, args=arg))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         return msgpack.unpackb(arc.get_bytes(), use_list=False)
 
     @lru_cache(1000)
@@ -148,8 +172,11 @@ class DiGraph(object):
     def number_of_nodes(self):
         """Returns the number of nodes in the graph."""
         if not self.nodes_is_loaded:
-            response = self.stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
-            arc = OutArchive(response.result)
+            response_iterator = self.stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
+            total_response = bytes()
+            for response in response_iterator:
+                total_response += response.result
+            arc = OutArchive(total_response)
             return arc.get_size()
         return len(self._nodes)
 
@@ -161,8 +188,11 @@ class DiGraph(object):
         """Returns True if the graph contains the node n."""
         try:
             arg = json.dumps(n).encode("utf-8", errors="ignore")
-            response = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
-            arc = OutArchive(response.result)
+            response_iterator = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
+            total_response = bytes()
+            for response in response_iterator:
+                total_response += response.result
+            arc = OutArchive(total_response)
             return arc.get_bool()
         except (TypeError, KeyError):
             return False
@@ -172,8 +202,11 @@ class DiGraph(object):
         """Returns True if the edge (u, v) is in the graph."""
         edge = (u, v)
         arg = json.dumps(edge).encode("utf-8", errors="ignore")
-        response = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         return arc.get_bool()
 
     @lru_cache(1000)
@@ -181,8 +214,11 @@ class DiGraph(object):
         """Returns True if the edge (v, u) is in the graph."""
         edge = (v, u)
         arg = json.dumps(edge).encode("utf-8", errors="ignore")
-        response = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         return arc.get_bool()
     
     def has_edge(self, u, v):
@@ -216,8 +252,11 @@ class DiGraph(object):
     def number_of_edges(self, u=None, v=None):
         edges_num = 0
         if u is None:
-            response = self.stub.getData(pb2.Request(op=pb2.EDGE_NUM, args=""))
-            arc = OutArchive(response.result)
+            response_iterator = self.stub.getData(pb2.Request(op=pb2.EDGE_NUM, args=""))
+            total_response = bytes()
+            for response in response_iterator:
+                total_response += response.result
+            arc = OutArchive(total_response)
             edges_num = arc.get_size()
         elif self.has_edge(u, v):
             edges_num = 1
@@ -229,8 +268,11 @@ class DiGraph(object):
             return default
         edge = (u, v)
         arg = json.dumps(edge).encode("utf-8", errors="ignore")
-        response = self.stub.getData(pb2.Request(op=pb2.EDGE_DATA, args=arg))
-        arc = OutArchive(response.result)
+        response_iterator = self.stub.getData(pb2.Request(op=pb2.EDGE_DATA, args=arg))
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
         return msgpack.unpackb(arc.get_bytes(), use_list=False)
     
     def adjacency(self):
