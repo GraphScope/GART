@@ -9,12 +9,6 @@ pkg_root = os.path.dirname(os.path.abspath(__file__))
 def find_core_packages(root):
     pkgs = []
     for pkg in find_packages(root):
-        print("##########")
-        print(pkg)
-        if 'contrib' in pkg and not pkg.endswith('.contrib'):
-            continue
-        if 'drivers' in pkg and not pkg.endswith('.drivers'):
-            continue
         pkgs.append(pkg)
     return pkgs
 
