@@ -41,7 +41,7 @@ RETURNS INTEGER
 AS 'MODULE_PATHNAME', 'gart_get_lastest_epoch'
 LANGUAGE C STRICT VOLATILE;
 
-CREATE FUNCTION gart_launch_networkx_server(IN epoch INT, IN server_addr TEXT)
+CREATE FUNCTION gart_launch_networkx_server(IN epoch INT, IN hostname TEXT, IN port INT)
 RETURNS INTEGER
 AS 'MODULE_PATHNAME', 'gart_launch_networkx_server'
 LANGUAGE C STRICT VOLATILE;

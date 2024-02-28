@@ -229,6 +229,7 @@ static int config_subgraph_num;
 
 // handler for log file
 static FILE* log_file = NULL;
+static FILE* nx_server_info_file = NULL;
 
 static inline void safe_find_value(const char* section, const char* key,
                                    char* value) {
@@ -244,6 +245,8 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
   text* config_file_name_text;
   char config_buffer[256];
 
+  const char* nx_info_filename = "/opt/postgresql/nx_server_info";
+
   config_file_name_text = PG_GETARG_TEXT_PP(0);
   safe_text_to_cstring(config_file_name_text, config_file_name);
   init_parse_ini(config_file_name);
@@ -258,6 +261,21 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
   log_file = fopen(config_log_file_name, "w");
   if (log_file == NULL) {
     elog(ERROR, "Cannot open log file: %s", config_log_file_name);
+    PG_RETURN_INT32(0);
+  }
+
+  // open file for writing NetworkX server info
+  if (nx_server_info_file) {
+    fclose(nx_server_info_file);
+  }
+  nx_server_info_file = fopen(nx_info_filename, "r+");
+
+  if (nx_server_info_file == NULL) {
+    nx_server_info_file = fopen(nx_info_filename, "w+");
+  }
+
+  if (nx_server_info_file == NULL) {
+    elog(ERROR, "Cannot open NetworkX server info file: %s", nx_info_filename);
     PG_RETURN_INT32(0);
   }
 
@@ -622,23 +640,33 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
 }
 
 #define MAX_SERVER_NUM 16
+
+// index: server_id
+static struct {
+  char* server_host;
+  int server_port;
+} server_info[MAX_SERVER_NUM];
+
 static int server_id_counter = 0;
-static char* server_addrs[MAX_SERVER_NUM];
 
 Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
   char cmd[1024];
   char log_line[1024];
   int is_read = 0;
 
-  text* server_addr_text;
+  text* server_host_text;
   FILE* fp = NULL;
-  char* server_addr;
+  char* server_host;
+  int server_port;
 
   int epoch_num = PG_GETARG_INT32(0);
-  server_addr_text = PG_GETARG_TEXT_PP(1);
-  server_addrs[server_id_counter] = (char*) malloc(256);
-  server_addr = server_addrs[server_id_counter];
-  safe_text_to_cstring(server_addr_text, server_addr);
+  server_host_text = PG_GETARG_TEXT_PP(1);
+  server_info[server_id_counter].server_host = (char*) malloc(256);
+  server_host = server_info[server_id_counter].server_host;
+  safe_text_to_cstring(server_host_text, server_host);
+
+  server_port = PG_GETARG_INT32(2);
+  server_info[server_id_counter].server_port = server_port;
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
@@ -652,9 +680,9 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
 
   sprintf(cmd,
           "%s/apps/networkx/build/gart_networkx_server --etcd_endpoint %s "
-          "--meta_prefix %s --read_epoch %d --server_addr %s &",
+          "--meta_prefix %s --read_epoch %d --server_addr %s:%d &",
           config_gart_home, config_etcd_endpoints, config_etcd_prefix,
-          epoch_num, server_addr);
+          epoch_num, server_host, server_port);
   elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
@@ -689,8 +717,9 @@ static int kill_networkx_server(int server_id) {
   FILE* fp = NULL;
 
   // kill $(pgrep -f ".*gart_networkx_server .* %s") > /dev/null 2>&1
-  sprintf(cmd, "kill $(pgrep -f \".*gart_networkx_server .* %s\")",
-          server_addrs[server_id]);
+  sprintf(cmd, "kill $(pgrep -f \".*gart_networkx_server .* %s:%d\")",
+          server_info[server_id].server_host,
+          server_info[server_id].server_port);
   elog(INFO, "Command: %s", cmd);
 
   fp = popen(cmd, "r");
@@ -701,8 +730,8 @@ static int kill_networkx_server(int server_id) {
 
   pclose(fp);
 
-  free(server_addrs[server_id]);
-  server_addrs[server_id] = NULL;
+  free(server_info[server_id].server_host);
+  server_info[server_id].server_host = NULL;
 
   return 0;
 }
@@ -717,7 +746,7 @@ Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
 
   server_id = PG_GETARG_INT32(0);
   if (server_id < 0 || server_id >= server_id_counter ||
-      server_addrs[server_id] == NULL) {
+      server_info[server_id].server_host == NULL) {
     elog(ERROR, "Invalid server id: %d", server_id);
     PG_RETURN_INT32(0);
   }
@@ -793,7 +822,7 @@ static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
     }
 
     for (int i = 0; i < server_id_counter; ++i) {
-      if (server_addrs[i]) {
+      if (server_info[i].server_host) {
         kill_networkx_server(i);
       }
     }
