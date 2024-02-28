@@ -22,7 +22,8 @@ from archieve import OutArchive
 import msgpack
 import json
 
-sys.path.insert(1, "../proto")
+#sys.path.insert(1, "../proto")
+sys.path.insert(1, "./proto")
 
 import types_pb2 as pb2
 import types_pb2_grpc as pb2_grpc

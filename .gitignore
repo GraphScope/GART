@@ -131,3 +131,5 @@ interfaces/grin/include/
 
 # tmp directory
 tmp/
+
+apps/networkx/client/dist/

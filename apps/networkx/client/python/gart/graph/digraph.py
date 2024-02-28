@@ -1,28 +1,28 @@
 import sys
 import grpc
-from archieve import OutArchive
+from gart.graph.archieve import OutArchive
 import msgpack
 import json
 import os
 from functools import cached_property
 from functools import lru_cache
 
-from reportviews import NodeView
-from reportviews import EdgeView
-from dict_factory import AdjListDict
-from dict_factory import NeighborDict
-from coreviews import AdjacencyView
-from networkx.classes.reportviews import DegreeView
+from gart.graph.reportviews import NodeView
+from gart.graph.reportviews import EdgeView
+from gart.graph.dict_factory import AdjListDict
+from gart.graph.dict_factory import NeighborDict
+from gart.graph.coreviews import AdjacencyView
 
+from networkx.classes.reportviews import DegreeView
 import networkx as nx
 
-current_file_path = os.path.realpath(__file__)
-current_dir_path = os.path.dirname(current_file_path)
+#current_file_path = os.path.realpath(__file__)
+#current_dir_path = os.path.dirname(current_file_path)
 
-sys.path.insert(1, current_dir_path + "/../proto")
+#sys.path.insert(1, current_dir_path + "/../proto")
 
-import types_pb2 as pb2
-import types_pb2_grpc as pb2_grpc
+import gart.proto.types_pb2 as pb2
+import gart.proto.types_pb2_grpc as pb2_grpc
 
 
 class DiGraph(object):
