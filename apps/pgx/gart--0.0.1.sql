@@ -55,3 +55,15 @@ CREATE FUNCTION gart_run_networkx_app(IN server_handler INT, IN script TEXT)
 RETURNS SETOF TEXT
 AS 'MODULE_PATHNAME', 'gart_run_networkx_app'
 LANGUAGE C STRICT VOLATILE;
+
+CREATE TYPE server_info_type AS (
+    id INT,
+    hostname TEXT,
+    port INT,
+    read_epoch INT
+);
+
+CREATE FUNCTION gart_show_networkx_server_info()
+RETURNS SETOF server_info_type
+AS 'MODULE_PATHNAME', 'gart_show_networkx_server_info'
+LANGUAGE C STRICT VOLATILE;

@@ -20,6 +20,7 @@
 
 #include "postgres.h"
 
+#include "catalog/pg_type.h"
 #include "commands/dbcommands.h"
 #include "executor/executor.h"
 #include "funcapi.h"
@@ -65,6 +66,9 @@ PG_FUNCTION_INFO_V1(gart_stop_networkx_server);
 
 Datum gart_run_networkx_app(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_run_networkx_app);
+
+Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_show_networkx_server_info);
 
 static int nested_level = 0;
 static void write_file(const char* str);
@@ -278,6 +282,8 @@ Datum gart_set_config(PG_FUNCTION_ARGS) {
     elog(ERROR, "Cannot open NetworkX server info file: %s", nx_info_filename);
     PG_RETURN_INT32(0);
   }
+
+  init_server_info(nx_server_info_file);
 
   // set config values
   safe_find_value("path", "KAFKA_HOME", config_kafka_home);
@@ -639,16 +645,9 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
   PG_RETURN_INT32(epoch_num);
 }
 
-#define MAX_SERVER_NUM 16
+#define MAX_HOSTNAME_LEN 126
 
 // index: server_id
-static struct {
-  char* server_host;
-  int server_port;
-} server_info[MAX_SERVER_NUM];
-
-static int server_id_counter = 0;
-
 Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
   char cmd[1024];
   char log_line[1024];
@@ -656,25 +655,17 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
 
   text* server_host_text;
   FILE* fp = NULL;
-  char* server_host;
-  int server_port;
+  char server_host[MAX_HOSTNAME_LEN + 1];
+  int epoch_num, server_port, server_id;
 
-  int epoch_num = PG_GETARG_INT32(0);
+  epoch_num = PG_GETARG_INT32(0);
   server_host_text = PG_GETARG_TEXT_PP(1);
-  server_info[server_id_counter].server_host = (char*) malloc(256);
-  server_host = server_info[server_id_counter].server_host;
   safe_text_to_cstring(server_host_text, server_host);
 
   server_port = PG_GETARG_INT32(2);
-  server_info[server_id_counter].server_port = server_port;
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    PG_RETURN_INT32(0);
-  }
-
-  if (server_id_counter >= MAX_SERVER_NUM) {
-    elog(ERROR, "Too many NetworkX servers are launched!");
     PG_RETURN_INT32(0);
   }
 
@@ -689,6 +680,9 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
     elog(ERROR, "Cannot execute command: %s", cmd);
     PG_RETURN_INT32(0);
   }
+
+  server_id =
+      add_server_info(nx_server_info_file, server_host, server_port, epoch_num);
 
   while (fgets(log_line, sizeof(log_line), fp) != NULL) {
     fprintf(log_file, "%s", log_line);
@@ -709,17 +703,28 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
 
   pclose(fp);
 
-  PG_RETURN_INT32(server_id_counter++);
+  PG_RETURN_INT32(server_id);
 }
 
 static int kill_networkx_server(int server_id) {
   char cmd[1024];
   FILE* fp = NULL;
+  char hostname[MAX_HOSTNAME_LEN + 1];
+  int port;
+
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
+    return -1;
+  }
+
+  if (!get_server_info(nx_server_info_file, server_id, hostname, &port, NULL)) {
+    elog(ERROR, "Cannot find server info for server id: %d", server_id);
+    return -1;
+  }
 
   // kill $(pgrep -f ".*gart_networkx_server .* %s") > /dev/null 2>&1
-  sprintf(cmd, "kill $(pgrep -f \".*gart_networkx_server .* %s:%d\")",
-          server_info[server_id].server_host,
-          server_info[server_id].server_port);
+  sprintf(cmd, "kill $(pgrep -f \".*gart_networkx_server .* %s:%d\")", hostname,
+          port);
   elog(INFO, "Command: %s", cmd);
 
   fp = popen(cmd, "r");
@@ -730,8 +735,10 @@ static int kill_networkx_server(int server_id) {
 
   pclose(fp);
 
-  free(server_info[server_id].server_host);
-  server_info[server_id].server_host = NULL;
+  if (!delete_server_info(nx_server_info_file, server_id)) {
+    elog(ERROR, "Cannot delete server info for server id: %d", server_id);
+    return -1;
+  }
 
   return 0;
 }
@@ -745,8 +752,7 @@ Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
   }
 
   server_id = PG_GETARG_INT32(0);
-  if (server_id < 0 || server_id >= server_id_counter ||
-      server_info[server_id].server_host == NULL) {
+  if (server_id < 0) {
     elog(ERROR, "Invalid server id: %d", server_id);
     PG_RETURN_INT32(0);
   }
@@ -821,10 +827,77 @@ static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
       log_file = NULL;
     }
 
-    for (int i = 0; i < server_id_counter; ++i) {
-      if (server_info[i].server_host) {
-        kill_networkx_server(i);
-      }
+    // TODO(SSJ): kill all NetworkX servers
+    // for (int i = 0; i < server_id_counter; ++i) {
+    //   if (server_info[i].server_host) {
+    //     kill_networkx_server(i);
+    //   }
+    // }
+  }
+}
+
+Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
+  FuncCallContext* funcctx;
+  TupleDesc tuple_desc;
+  HeapTuple tuple;
+  Datum values[4];
+  bool nulls[4] = {false, false, false, false};
+
+  int server_id_num = get_next_server_id();
+  int* server_id_ptr;
+
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
+    SRF_RETURN_DONE(funcctx);
+  }
+
+  // First call, setup context
+  if (SRF_IS_FIRSTCALL()) {
+    MemoryContext oldcontext;
+    funcctx = SRF_FIRSTCALL_INIT();
+    oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
+
+    // Define the tuple descriptor for our result type
+    tuple_desc = CreateTemplateTupleDesc(4);
+    TupleDescInitEntry(tuple_desc, (AttrNumber) 1, "id", INT4OID, -1, 0);
+    TupleDescInitEntry(tuple_desc, (AttrNumber) 2, "hostname", TEXTOID, -1, 0);
+    TupleDescInitEntry(tuple_desc, (AttrNumber) 3, "port", INT4OID, -1, 0);
+    TupleDescInitEntry(tuple_desc, (AttrNumber) 4, "read_epoch", INT4OID, -1,
+                       0);
+    funcctx->tuple_desc = BlessTupleDesc(tuple_desc);
+
+    // Initialize the function call context
+    funcctx->user_fctx =
+        MemoryContextAlloc(funcctx->multi_call_memory_ctx, sizeof(int));
+    *(int*) (funcctx->user_fctx) = 0;  // Start with server ID 0
+    funcctx->max_calls = server_id_num;
+
+    MemoryContextSwitchTo(oldcontext);
+  }
+
+  funcctx = SRF_PERCALL_SETUP();
+  server_id_ptr = (int*) (funcctx->user_fctx);
+
+  while (*server_id_ptr < funcctx->max_calls) {
+    char hostname[MAX_HOSTNAME_LEN + 1];
+    int port, epoch;
+
+    if (get_server_info(nx_server_info_file, *server_id_ptr, hostname, &port,
+                        &epoch)) {
+      values[0] = Int32GetDatum(*server_id_ptr);
+      values[1] = CStringGetTextDatum(hostname);
+      values[2] = Int32GetDatum(port);
+      values[3] = Int32GetDatum(epoch);
+
+      tuple = heap_form_tuple(funcctx->tuple_desc, values, nulls);
+
+      (*server_id_ptr)++;
+
+      SRF_RETURN_NEXT(funcctx, HeapTupleGetDatum(tuple));
+    } else {
+      (*server_id_ptr)++;
     }
   }
+
+  SRF_RETURN_DONE(funcctx);
 }
