@@ -3,7 +3,7 @@ Shortest path algorithms for unweighted graphs.
 """
 import warnings
 
-from digraph import DiGraph
+from gart import DiGraph
 
 import networkx as nx
 

@@ -1,4 +1,4 @@
-from digraph import DiGraph
+from gart import DiGraph
 
 g = DiGraph("localhost:50051")
 
