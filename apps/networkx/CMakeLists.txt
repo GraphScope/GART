@@ -42,7 +42,7 @@ endif()
 
 # Generate proto
 execute_process(COMMAND python3 ./proto/proto_generator.py "${CMAKE_CURRENT_SOURCE_DIR}/build" --cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-execute_process(COMMAND python3 ./proto/proto_generator.py "${CMAKE_CURRENT_SOURCE_DIR}/proto" --python WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND python3 ./proto/proto_generator.py "${CMAKE_CURRENT_SOURCE_DIR}/client/python/src/gart/proto" --python WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB PROTO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/build/*.cc)
 

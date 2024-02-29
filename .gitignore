@@ -61,6 +61,7 @@ __pycache__/
 *.egg-info/
 *.eggs
 python/*.eggs
+*.whl
 
 # coordinator
 coordinator/proto

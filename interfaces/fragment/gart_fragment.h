@@ -628,7 +628,7 @@ class GartFragment {
       computeEdgeNum();
     }
     size_t total_num = 0;
-    for (size_t idx = 0; idx < edge_label_num_; ++idx) {
+    for (int idx = 0; idx < edge_label_num_; ++idx) {
       total_num += tenums_[idx];
     }
     return total_num;

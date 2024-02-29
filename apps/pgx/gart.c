@@ -72,7 +72,7 @@ static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
                                 bool isTopLevel, void* arg);
 
 void _PG_init(void) {
-  // TODO(SSJ): need to release resource when session exit
+  // TODO(ssj): need to release resource when session exit
   // RegisterResourceReleaseCallback(my_resource_cleanup, NULL);
 }
 
@@ -637,6 +637,9 @@ Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
   int is_read = 0;
 
   int server_handle;
+  char hostname[MAX_HOSTNAME_LEN + 1];
+  int port, read_epoch;
+
   text* script_file_text;
   char script_file[256];
   FILE* fp = NULL;
@@ -650,6 +653,15 @@ Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
   server_handle = PG_GETARG_INT32(0);
   script_file_text = PG_GETARG_TEXT_PP(1);
   safe_text_to_cstring(script_file_text, script_file);
+
+  if (!get_server_info(nx_server_info_file, server_handle, hostname, &port,
+                       &read_epoch)) {
+    elog(ERROR, "Cannot find server info for server id: %d", server_handle);
+    return (Datum) 0;
+  }
+
+  elog(INFO, "Run NetworkX app on server %s:%d using read epoch %d", hostname,
+       port, read_epoch);
 
   sprintf(cmd, "python3 %s", script_file);
   elog(INFO, "Command: %s", cmd);
@@ -692,7 +704,7 @@ static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
       log_file = NULL;
     }
 
-    // TODO(SSJ): kill all NetworkX servers
+    // TODO(ssj): kill all NetworkX servers
     // for (int i = 0; i < server_id_counter; ++i) {
     //   if (server_info[i].server_host) {
     //     kill_networkx_server(i);

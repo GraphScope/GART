@@ -51,7 +51,7 @@ using oid_t = GraphType::oid_t;
 using vid_t = GraphType::vid_t;
 using vertex_t = GraphType::vertex_t;
 
-#define MESSAGE_CHUNK_SIZE static_cast<size_t>(1024 * 2024 * 1024 * 2)  // 2GB
+#define MESSAGE_CHUNK_SIZE static_cast<size_t>(1024ll * 2024 * 1024 * 2)  // 2GB
 
 class QueryGraphServiceImpl final : public QueryGraphService::Service {
  public:
