@@ -51,13 +51,11 @@ using oid_t = GraphType::oid_t;
 using vid_t = GraphType::vid_t;
 using vertex_t = GraphType::vertex_t;
 
-#define MESSAGE_CHUNK_SIZE static_cast<size_t>(1024ll * 2024 * 1024 * 2)  // 2GB
+#define MESSAGE_CHUNK_SIZE static_cast<size_t>(1024ll * 1024 * 1024 * 2)  // 2GB
 
 class QueryGraphServiceImpl final : public QueryGraphService::Service {
  public:
-  QueryGraphServiceImpl(int read_epoch, std::string etcd_endpoint,
-                        std::string meta_prefix) {
-    read_epoch_ = read_epoch;
+  QueryGraphServiceImpl(std::string etcd_endpoint, std::string meta_prefix) {
     fragment_ = std::make_shared<GraphType>();
     std::shared_ptr<etcd::Client> etcd_client =
         std::make_shared<etcd::Client>(etcd_endpoint);
@@ -65,6 +63,12 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
     etcd::Response response = etcd_client->get(schema_key).get();
     assert(response.is_ok());
     std::string graph_schema_str = response.value().as_string();
+
+    std::string latest_epoch_str = meta_prefix + "gart_latest_epoch_p0";
+    response = etcd_client->get(latest_epoch_str).get();
+    assert(response.is_ok());
+    read_epoch_ = std::stoull(response.value().as_string());
+
     schema_key = meta_prefix + "gart_blob_m" + std::to_string(0) + "_p0" +
                  "_e" + std::to_string(read_epoch_);
     response = etcd_client->get(schema_key).get();

@@ -40,9 +40,8 @@ else()
     set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
 endif()
 
-# Generate proto
+# Generate proto for cpp
 execute_process(COMMAND python3 ./proto/proto_generator.py "${CMAKE_CURRENT_SOURCE_DIR}/build" --cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-execute_process(COMMAND python3 ./proto/proto_generator.py "${CMAKE_CURRENT_SOURCE_DIR}/client/python/src/gart/proto" --python WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB PROTO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/build/*.cc)
 
@@ -105,3 +104,7 @@ file(GLOB SOURCES
 
 add_executable(gart_networkx_server server/graph_server.cc ${PROTO_SOURCES} ${SOURCES})
 target_link_libraries(gart_networkx_server ${GRPC_LIBRARIES} ${Protobuf_LIBRARIES} ${MPI_CXX_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
+
+# build client wheel and install it
+execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/client/python/setup.py build_proto sdist bdist_wheel WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python)
+execute_process(COMMAND pip install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python)

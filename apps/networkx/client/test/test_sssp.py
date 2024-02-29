@@ -7,6 +7,7 @@ from gart import DiGraph
 
 import networkx as nx
 
+
 def single_source_shortest_path_length(G, source, cutoff=None):
     """Compute the shortest path lengths from source to all reachable nodes.
 
@@ -83,8 +84,9 @@ def _single_shortest_path_length(adj, firstlevel, cutoff):
             if len(seen) == n:
                 return
 
+
 g = DiGraph("localhost:50051")
-length = single_source_shortest_path_length(g, (0,0))
+length = single_source_shortest_path_length(g, (0, 0))
 for node in length:
     print(f"{node}: {length[node]}")
 print("len of length:", len(length))

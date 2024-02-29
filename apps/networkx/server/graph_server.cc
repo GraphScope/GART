@@ -24,16 +24,14 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  gart::QueryGraphServiceImpl service(FLAGS_read_epoch, FLAGS_etcd_endpoint,
-                                      FLAGS_meta_prefix);
+  gart::QueryGraphServiceImpl service(FLAGS_etcd_endpoint, FLAGS_meta_prefix);
 
   grpc::ServerBuilder builder;
   builder.AddListeningPort(FLAGS_server_addr,
                            grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
   std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
-  std::cout << "Server listening on " << FLAGS_server_addr
-            << " with read epoch " << FLAGS_read_epoch << std::endl;
+  std::cout << "Server listening on " << FLAGS_server_addr << std::endl;
   server->Wait();
 
   return 0;

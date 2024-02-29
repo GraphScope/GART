@@ -6,6 +6,7 @@ import networkx as nx
 
 from gart import DiGraph
 
+
 def _weight_function(G, weight):
     """Returns a function that returns the weight of an edge.
 
@@ -44,6 +45,7 @@ def _weight_function(G, weight):
     if G.is_multigraph():
         return lambda u, v, d: min(attr.get(weight, 1) for attr in d.values())
     return lambda u, v, data: data.get(weight, 1)
+
 
 def _dijkstra_multisource(
     G, sources, weight, pred=None, paths=None, cutoff=None, target=None
@@ -147,6 +149,7 @@ def _dijkstra_multisource(
     # by the caller via the pred and paths objects passed as arguments.
     return dist
 
+
 def multi_source_dijkstra_path_length(G, sources, cutoff=None, weight="weight"):
     if not sources:
         raise ValueError("sources must not be empty")
@@ -156,11 +159,13 @@ def multi_source_dijkstra_path_length(G, sources, cutoff=None, weight="weight"):
     weight = _weight_function(G, weight)
     return _dijkstra_multisource(G, sources, weight, cutoff=cutoff)
 
+
 def single_source_dijkstra_path_length(G, source, cutoff=None, weight="weight"):
     return multi_source_dijkstra_path_length(G, {source}, cutoff=cutoff, weight=weight)
 
+
 g = DiGraph("localhost:50051")
-length = single_source_dijkstra_path_length(g, (0,0), weight="wa_work_from")
+length = single_source_dijkstra_path_length(g, (0, 0), weight="wa_work_from")
 
 for node in length:
     print(f"{node}: {length[node]}")

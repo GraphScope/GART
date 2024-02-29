@@ -16,11 +16,6 @@ from gart.coreviews import AdjacencyView
 from networkx.classes.reportviews import DegreeView
 import networkx as nx
 
-#current_file_path = os.path.realpath(__file__)
-#current_dir_path = os.path.dirname(current_file_path)
-
-#sys.path.insert(1, current_dir_path + "/../proto")
-
 import gart.proto.types_pb2 as pb2
 import gart.proto.types_pb2_grpc as pb2_grpc
 
@@ -55,10 +50,10 @@ class DiGraph(object):
     def __str__(self):
         """Returns a short summary of the graph."""
         return "A digraph from GART storage."
-    
+
     def is_multigraph(self):
         return False
-    
+
     def is_directed(self):
         return True
 
@@ -84,7 +79,9 @@ class DiGraph(object):
         """Returns True if n is a node, False otherwise. Use: 'n in G'."""
         try:
             arg = json.dumps(n).encode("utf-8", errors="ignore")
-            response_iterator = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
+            response_iterator = self.stub.getData(
+                pb2.Request(op=pb2.HAS_NODE, args=arg)
+            )
             total_response = bytes()
             for response in response_iterator:
                 total_response += response.result
@@ -122,7 +119,9 @@ class DiGraph(object):
     @lru_cache(1000)
     def get_successors(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.SUCCS_BY_NODE, args=arg))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.SUCCS_BY_NODE, args=arg)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -132,7 +131,9 @@ class DiGraph(object):
     @lru_cache(1000)
     def get_succ_attr(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.SUCC_ATTR_BY_NODE, args=arg))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.SUCC_ATTR_BY_NODE, args=arg)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -142,7 +143,9 @@ class DiGraph(object):
     @lru_cache(1000)
     def get_predecessors(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.PREDS_BY_NODE, args=arg))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.PREDS_BY_NODE, args=arg)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -152,7 +155,9 @@ class DiGraph(object):
     @lru_cache(1000)
     def get_pred_attr(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.PRED_ATTR_BY_NODE, args=arg))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.PRED_ATTR_BY_NODE, args=arg)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -194,7 +199,9 @@ class DiGraph(object):
         """Returns True if the graph contains the node n."""
         try:
             arg = json.dumps(n).encode("utf-8", errors="ignore")
-            response_iterator = self.stub.getData(pb2.Request(op=pb2.HAS_NODE, args=arg))
+            response_iterator = self.stub.getData(
+                pb2.Request(op=pb2.HAS_NODE, args=arg)
+            )
             total_response = bytes()
             for response in response_iterator:
                 total_response += response.result
@@ -226,10 +233,10 @@ class DiGraph(object):
             total_response += response.result
         arc = OutArchive(total_response)
         return arc.get_bool()
-    
+
     def has_edge(self, u, v):
         """Returns True if the edge (u, v) is in the graph."""
-        return self.has_successor(u, v)    
+        return self.has_successor(u, v)
 
     @lru_cache(1000)
     def neighbors(self, n):
@@ -280,22 +287,21 @@ class DiGraph(object):
             total_response += response.result
         arc = OutArchive(total_response)
         return msgpack.unpackb(arc.get_bytes(), use_list=False)
-    
+
     def adjacency(self):
         """Returns an iterator over (node, adjacency dict) tuples for all nodes."""
         return iter(NeighborDict(self))
-    
+
     def size(self, weight=None):
         if weight is None:
             return self.number_of_edges() // 2
         return sum(d for v, d in self.degree(weight=weight)) / 2
-        
+
     @property
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree()."""
         return DegreeView(self)
-         
-    
+
     def nbunch_iter(self, nbunch=None):
         if nbunch is None:
             return self.__iter__()
@@ -305,5 +311,3 @@ class DiGraph(object):
             for n in nbunch:
                 if n in self:
                     yield n
-                    
-    

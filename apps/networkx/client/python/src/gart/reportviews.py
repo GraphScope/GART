@@ -3,6 +3,7 @@ from networkx.classes.reportviews import NodeDataView as _NodeDataView
 
 from collections.abc import Mapping, Set
 
+
 class NodeView(_NodeView):
     __slots__ = (
         "_graph",
@@ -26,19 +27,19 @@ class NodeView(_NodeView):
 
     def __iter__(self):
         return self._graph.__iter__()
-    
+
     # DataView method
     def __call__(self, data=False, default=None):
         if data is False:
             return self
         return NodeDataView(self, data, default)
-    
+
     def data(self, data=True, default=None):
         if data is False:
             return self
         return NodeDataView(self, data, default)
-    
-    
+
+
 class NodeDataView(_NodeDataView):
     def __init__(self, nodeview, data=False, default=None):
         self._data = data
@@ -46,7 +47,7 @@ class NodeDataView(_NodeDataView):
         self._nodeview = nodeview
         self._index = 0
         self._iter = self._nodeview.__iter__()
-        
+
     def __len__(self):
         return self._nodeview._graph.number_of_nodes()
 
@@ -62,19 +63,20 @@ class NodeDataView(_NodeDataView):
                 yield (node, node_data[data])
             else:
                 yield (node, self._default)
-        
+
     def __next__(self):
         node = next(self._iter)
         node_data = self._nodeview._graph.get_node_attr(node)
         return (node, node_data)
-    
+
+
 class OutEdgeDataView:
     def __init__(self, graph, nbunch=None, data=False, *, default=None):
-       self._graph = graph._graph
-       self._nbunch = nbunch
-       self._data = data
-       self._default = default
-    
+        self._graph = graph._graph
+        self._nbunch = nbunch
+        self._data = data
+        self._default = default
+
     def __len__(self):
         if self._nbunch is None:
             return self._graph.number_of_edges()
@@ -82,8 +84,7 @@ class OutEdgeDataView:
         for n in self._nbunch:
             num += len(self._graph.successors(n))
         return num
-        
-    
+
     def __iter__(self):
         if self._nbunch is None:
             if self._data is False:
@@ -99,8 +100,12 @@ class OutEdgeDataView:
                         if self._data is True:
                             yield (src, dst, results[dst])
                         else:
-                            yield(src, dst, results[dst].setdefault(self._data, self._default))
-        
+                            yield (
+                                src,
+                                dst,
+                                results[dst].setdefault(self._data, self._default),
+                            )
+
         else:
             if self._data is False:
                 for n in self._nbunch:
@@ -113,39 +118,45 @@ class OutEdgeDataView:
                     results = dict(zip(dsts, dsts_data))
                     for dst in results:
                         if self._data is True:
-                            yield(n, dst, results[dst])
+                            yield (n, dst, results[dst])
                         else:
-                            yield(n, dst, results[dst].setdefault(self._data, self._default))        
-    
+                            yield (
+                                n,
+                                dst,
+                                results[dst].setdefault(self._data, self._default),
+                            )
+
     def __contains__(self, e):
         u, v = e[:2]
         if self._nbunch is not None and u not in self._nbunch and v not in self._nbunch:
             return False
         return self._graph.has_successor(u, v)
-    
+
+
 class OutEdgeView(Set, Mapping):
     """A EdgeView class for outward edges of a DiGraph"""
+
     dataview = OutEdgeDataView
-    
+
     def __init__(self, graph):
         self._graph = graph
-        
+
     # Set methods
     def __len__(self):
         return self._graph.number_of_edges()
-    
+
     def __iter__(self):
         for src in self._graph:
             for dst in self._graph.successors(src):
                 yield (src, dst)
-                
+
     def __contains__(self, e):
         src, dst = e
         return self._graph.has_successor(src, dst)
-    
+
     def __getitem__(self, e):
         return self._graph.get_edge_data(*e)
-    
+
     def __call__(self, nbunch=None, data=False, *, default=None):
         if nbunch is None and data is False:
             return self
@@ -155,8 +166,8 @@ class OutEdgeView(Set, Mapping):
         if nbunch is None and data is False:
             return self
         return self.dataview(self, nbunch, data, default=default)
-    
+
+
 class EdgeView(OutEdgeView):
     def __len__(self):
         return self._graph.number_of_edges()
-    

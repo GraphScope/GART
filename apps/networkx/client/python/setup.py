@@ -5,6 +5,8 @@ import sys
 import subprocess
 
 pkg_root = os.path.dirname(os.path.abspath(__file__))
+
+
 class BuildProto(Command):
     description = "build protobuf file"
     user_options = []
@@ -21,7 +23,7 @@ class BuildProto(Command):
             os.path.join(
                 pkg_root,
                 "..",
-                '..',
+                "..",
                 "proto",
                 "proto_generator.py",
             ),
@@ -34,9 +36,10 @@ class BuildProto(Command):
             env=os.environ.copy(),
         )
 
+
 setup(
     name="gart",
-    version='0.1',
+    version="0.1",
     description="GART: Graph Analysis on Relational Transactional Datasets",
     long_description="",
     long_description_content_type="text/markdown",
@@ -44,10 +47,10 @@ setup(
     author_email="graphscope@alibaba-inc.com",
     url="https://github.com/GraphScope/GART",
     license="Apache License 2.0",
-    #package_dir={'': 'python'},
-    #packages=find_core_packages('python'),
-    packages=find_packages(where='src'),
-    package_dir={'': 'src'},
+    # package_dir={'': 'python'},
+    # packages=find_core_packages('python'),
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     package_data={},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -66,7 +69,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
     ],
-    keywords="Graph, Large-Scale, Distributed Computing",
+    keywords="Graph, Relational, Transactional, Analysis, GART",
     setup_requires=[
         "setuptools_scm>=5.0.0,<8",
     ],

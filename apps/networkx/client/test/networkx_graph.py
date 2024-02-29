@@ -22,33 +22,33 @@ from archieve import OutArchive
 import msgpack
 import json
 
-#sys.path.insert(1, "../proto")
+# sys.path.insert(1, "../proto")
 sys.path.insert(1, "./proto")
 
 import types_pb2 as pb2
 import types_pb2_grpc as pb2_grpc
 
-channel = grpc.insecure_channel('localhost:50055')
+channel = grpc.insecure_channel("localhost:50055")
 stub = pb2_grpc.QueryGraphServiceStub(channel)
-#response = stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
-#arc = OutArchive(response.result)
-#print(arc.get_size())
+# response = stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
+# arc = OutArchive(response.result)
+# print(arc.get_size())
 
 response_iterator = stub.getData(pb2.Request(op=pb2.NODES, args=""))
 total_result = bytes()
 idx = 0
 for response in response_iterator:
-    print("idx : "  + str(idx))
+    print("idx : " + str(idx))
     idx += 1
     total_result += response.result
-    #print(type(response.result))
-    #arc = OutArchive(response.result)
-    #result = msgpack.unpackb(arc.get_bytes(), use_list=False)
-    #print(result)
-    #break
+    # print(type(response.result))
+    # arc = OutArchive(response.result)
+    # result = msgpack.unpackb(arc.get_bytes(), use_list=False)
+    # print(result)
+    # break
 arc = OutArchive(total_result)
 result = msgpack.unpackb(arc.get_bytes(), use_list=False)
-#print(result) 
+# print(result)
 
 exit()
 v_label = 0
@@ -59,8 +59,7 @@ arg = json.dumps(v).encode("utf-8", errors="ignore")
 response = stub.getData(pb2.Request(op=pb2.SUCCS_BY_NODE, args=arg))
 arc = OutArchive(response.result)
 result = msgpack.unpackb(arc.get_bytes(), use_list=False)
-#print(result)
-
+# print(result)
 
 
 response = stub.getData(pb2.Request(op=pb2.NODE_DATA, args=arg))
@@ -80,7 +79,7 @@ response_size = len(response_bytes)
 print(f"The size of the gRPC response is: {response_size} bytes")
 arc = OutArchive(response.result)
 result = msgpack.unpackb(arc.get_bytes(), use_list=False)
-#print(result)
+# print(result)
 
 src_label = 4
 src_oid = 933

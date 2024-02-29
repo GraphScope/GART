@@ -19,5 +19,3 @@ DEFINE_string(etcd_endpoint, "http://127.0.0.1:23760",
               "etcd endpoint for schema.");
 DEFINE_string(meta_prefix, "gart_meta_", "meta prefix for etcd.");
 DEFINE_string(server_addr, "127.0.0.1:50051", "server address.");
-
-DEFINE_int32(read_epoch, 0, "read epoch for graph server.");

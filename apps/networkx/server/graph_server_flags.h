@@ -23,6 +23,4 @@ DECLARE_string(etcd_endpoint);
 DECLARE_string(meta_prefix);
 DECLARE_string(server_addr);
 
-DECLARE_int32(read_epoch);
-
 #endif  // APPS_NETWORKX_SERVER_GRAPH_SERVER_FLAGS_H_

@@ -4,15 +4,15 @@ g = DiGraph("localhost:50051")
 
 print("number of nodes:", len(g))
 
-#for node in g:
-    # print(node, " in g is ", node in g)
+# for node in g:
+# print(node, " in g is ", node in g)
 #    pass
-    # print(node)
+# print(node)
 
 node = (4, 933)
 print(g[node])
 
-#for node in g.nodes(data="org_id", default="default"):
+# for node in g.nodes(data="org_id", default="default"):
 #    pass
 #    print(node)
 # print(g.nodes(data=True))
@@ -34,10 +34,10 @@ print(g._adj[node][dst])
 # print(node)
 # print(g.nodes(data=True))
 
-#for edge in g.edges(data="wa_work_from", default="default"):
+# for edge in g.edges(data="wa_work_from", default="default"):
 #    print(edge)
 
-#for src in g.adjacency():
+# for src in g.adjacency():
 #    print(src)
 for src in g.degree(weight="span"):
     print(src)
