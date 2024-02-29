@@ -5,19 +5,6 @@ import sys
 import subprocess
 
 pkg_root = os.path.dirname(os.path.abspath(__file__))
-
-def find_core_packages(root):
-    pkgs = []
-    for pkg in find_packages(root):
-        print('######', pkg)
-        pkgs.append(pkg)
-    return pkgs
-
-def package_data():
-    artifacts = [
-    ]
-    return artifacts
-
 class BuildProto(Command):
     description = "build protobuf file"
     user_options = []
@@ -38,7 +25,7 @@ class BuildProto(Command):
                 "proto",
                 "proto_generator.py",
             ),
-            os.path.join(pkg_root, "gart", "proto"),
+            os.path.join(pkg_root, "src", "gart", "proto"),
             "--python",
         ]
         print(" ".join(cmd))
