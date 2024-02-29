@@ -42,7 +42,7 @@ int find_value(const char* section, const char* key, char* value);
 
 int init_server_info(FILE* file);
 
-int get_next_server_id();
+int get_next_server_id(void);
 
 // add server information to the file
 // return the server_id of the server
