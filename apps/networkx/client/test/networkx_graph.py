@@ -16,19 +16,15 @@
 # limitations under the License.
 #
 
-import sys
 import grpc
-from archieve import OutArchive
+from gart.archieve import OutArchive
 import msgpack
 import json
 
-# sys.path.insert(1, "../proto")
-sys.path.insert(1, "./proto")
+from gart.proto import types_pb2 as pb2
+from gart.proto import types_pb2_grpc as pb2_grpc
 
-import types_pb2 as pb2
-import types_pb2_grpc as pb2_grpc
-
-channel = grpc.insecure_channel("localhost:50055")
+channel = grpc.insecure_channel("localhost:50051")
 stub = pb2_grpc.QueryGraphServiceStub(channel)
 # response = stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
 # arc = OutArchive(response.result)

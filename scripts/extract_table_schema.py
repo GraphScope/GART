@@ -10,7 +10,7 @@ import yaml
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Launch database schema extracter",
+        description="Launch database schema extractor",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 

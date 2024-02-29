@@ -1,43 +1,63 @@
+import argparse
 from gart import DiGraph
 
-g = DiGraph("localhost:50051")
 
-print("number of nodes:", len(g))
+def get_parser():
+    parser = argparse.ArgumentParser(
+        description="NX Client Test",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
-# for node in g:
-# print(node, " in g is ", node in g)
-#    pass
-# print(node)
+    parser.add_argument(
+        "--host", default="127.0.0.1", help="NetworkX server host address"
+    )
+    parser.add_argument("--port", default=50051, help="NetworkX server port")
 
-node = (4, 933)
-print(g[node])
+    return parser
 
-# for node in g.nodes(data="org_id", default="default"):
-#    pass
-#    print(node)
-# print(g.nodes(data=True))
 
-node = (4, 933)
-print(g[node])
+if __name__ == "__main__":
+    args = get_parser().parse_args()
 
-print(g._adj[node])
+    hostname = f"{args.host}:{args.port}"
+    g = DiGraph(hostname)
 
-print(len(g[node]) == len(g._adj[node]))
+    print("number of nodes:", len(g))
 
-node = (0, 1)
-print(g.adj[node])
-dst = (4, 24189255812047)
-print(g._adj[node][dst])
+    # for node in g:
+    # print(node, " in g is ", node in g)
+    #    pass
+    # print(node)
 
-# for node in g.nodes(data=True):
-#    pass
-# print(node)
-# print(g.nodes(data=True))
+    node = (4, 933)
+    print(g[node])
 
-# for edge in g.edges(data="wa_work_from", default="default"):
-#    print(edge)
+    # for node in g.nodes(data="org_id", default="default"):
+    #    pass
+    #    print(node)
+    # print(g.nodes(data=True))
 
-# for src in g.adjacency():
-#    print(src)
-for src in g.degree(weight="span"):
-    print(src)
+    node = (4, 933)
+    print(g[node])
+
+    print(g._adj[node])
+
+    print(len(g[node]) == len(g._adj[node]))
+
+    node = (0, 1)
+    print(g.adj[node])
+    dst = (4, 24189255812047)
+    print(g._adj[node][dst])
+
+    # for node in g.nodes(data=True):
+    #    pass
+    # print(node)
+    # print(g.nodes(data=True))
+
+    # for edge in g.edges(data="wa_work_from", default="default"):
+    #    print(edge)
+
+    # for src in g.adjacency():
+    #    print(src)
+    for src in g.degree(weight="span"):
+        print(src)
