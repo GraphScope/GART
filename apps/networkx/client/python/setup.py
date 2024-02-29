@@ -9,6 +9,7 @@ pkg_root = os.path.dirname(os.path.abspath(__file__))
 def find_core_packages(root):
     pkgs = []
     for pkg in find_packages(root):
+        print('######', pkg)
         pkgs.append(pkg)
     return pkgs
 
@@ -33,10 +34,11 @@ class BuildProto(Command):
             os.path.join(
                 pkg_root,
                 "..",
+                '..',
                 "proto",
                 "proto_generator.py",
             ),
-            os.path.join(pkg_root, "python", "gart", "proto"),
+            os.path.join(pkg_root, "gart", "proto"),
             "--python",
         ]
         print(" ".join(cmd))
@@ -55,11 +57,11 @@ setup(
     author_email="graphscope@alibaba-inc.com",
     url="https://github.com/GraphScope/GART",
     license="Apache License 2.0",
-    package_dir={'': 'python'},
-    packages=find_core_packages('python'),
-    package_data={
-        'gart': package_data(),
-    },
+    #package_dir={'': 'python'},
+    #packages=find_core_packages('python'),
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
+    package_data={},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -84,7 +86,6 @@ setup(
     cmdclass={
         "build_proto": BuildProto,
     },
-    py_modules=[],
     project_urls={
         "Documentation": "https://github.com/GraphScope/GART",
         "Source": "https://github.com/GraphScope/GART",

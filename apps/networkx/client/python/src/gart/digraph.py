@@ -1,17 +1,17 @@
 import sys
 import grpc
-from gart.graph.archieve import OutArchive
 import msgpack
 import json
 import os
 from functools import cached_property
 from functools import lru_cache
 
-from gart.graph.reportviews import NodeView
-from gart.graph.reportviews import EdgeView
-from gart.graph.dict_factory import AdjListDict
-from gart.graph.dict_factory import NeighborDict
-from gart.graph.coreviews import AdjacencyView
+from gart.archieve import OutArchive
+from gart.reportviews import NodeView
+from gart.reportviews import EdgeView
+from gart.dict_factory import AdjListDict
+from gart.dict_factory import NeighborDict
+from gart.coreviews import AdjacencyView
 
 from networkx.classes.reportviews import DegreeView
 import networkx as nx

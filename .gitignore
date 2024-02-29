@@ -132,4 +132,4 @@ interfaces/grin/include/
 # tmp directory
 tmp/
 
-apps/networkx/client/dist/
+apps/networkx/client/python/dist/
