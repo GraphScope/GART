@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "postgres.h"
@@ -67,6 +68,9 @@ PG_FUNCTION_INFO_V1(gart_run_networkx_app);
 
 Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_show_networkx_server_info);
+
+Datum gart_run_sssp(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_run_sssp);
 
 static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
                                 bool isTopLevel, void* arg);
@@ -536,9 +540,9 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
 
   sprintf(cmd,
           "%s/apps/networkx/build/gart_networkx_server --etcd_endpoint %s "
-          "--meta_prefix %s --read_epoch %d --server_addr %s:%d &",
+          "--meta_prefix %s --server_addr %s:%d &",
           config_gart_home, config_etcd_endpoints, config_etcd_prefix,
-          epoch_num, server_host, server_port);
+          server_host, server_port);
   elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
@@ -777,4 +781,71 @@ Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
   }
 
   SRF_RETURN_DONE(funcctx);
+}
+
+Datum gart_run_sssp(PG_FUNCTION_ARGS) {
+  char result[512] = "Run NetworkX app successfully!\n";
+
+  char cmd[1024];
+  char log_line[1024];
+  int is_read = 0;
+
+  int server_handle;
+  char hostname[MAX_HOSTNAME_LEN + 1];
+  int port;
+
+  text* script_file_text;
+  char script_file[256];
+  FILE* fp = NULL;
+
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
+    return (Datum) 0;
+  }
+
+  server_handle = PG_GETARG_INT32(0);
+  script_file_text = PG_GETARG_TEXT_PP(1);
+  safe_text_to_cstring(script_file_text, script_file);
+
+  if (!get_server_info(nx_server_info_file, server_handle, hostname, &port,
+                       NULL)) {
+    elog(ERROR, "Cannot find server info for server id: %d", server_handle);
+    return (Datum) 0;
+  }
+
+  elog(INFO, "Run SSSP algorithm on server %s:%d", hostname, port);
+
+  sprintf(cmd,
+          "python3 %s/apps/networkx/client/test/algorithm.py --host %s "
+          "--port %d --output %s %s",
+          config_gart_home, hostname, port, "/opt/postgresql/sssp.out", "sssp");
+  elog(INFO, "Command: %s", cmd);
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    elog(ERROR, "Cannot execute command: %s", cmd);
+    return (Datum) 0;
+  }
+
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    size_t len = strlen(log_line);
+    if (len > 0 && log_line[len - 1] == '\n') {
+      log_line[len - 1] = '\0';
+    }
+
+    fprintf(log_file, "%s", log_line);
+    fflush(log_file);
+    elog(INFO, "%s", log_line);
+    is_read = 1;
+  }
+
+  if (!is_read) {
+    elog(ERROR, "Cannot read from command: %s", cmd);
+    pclose(fp);
+    return (Datum) 0;
+  }
+
+  pclose(fp);
+
+  // TODO(ssj): read result from file
+  return (Datum) 0;
 }

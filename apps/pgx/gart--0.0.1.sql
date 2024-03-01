@@ -62,3 +62,13 @@ CREATE FUNCTION gart_show_networkx_server_info()
 RETURNS SETOF server_info_type
 AS 'MODULE_PATHNAME', 'gart_show_networkx_server_info'
 LANGUAGE C STRICT VOLATILE;
+
+CREATE TYPE sssp_result_type AS (
+    dst_node TEXT,
+    distance INT
+);
+
+CREATE FUNCTION gart_run_sssp(IN server_handler INT, IN src_node TEXT)
+RETURNS SETOF sssp_result_type
+AS 'MODULE_PATHNAME', 'gart_run_sssp'
+LANGUAGE C STRICT VOLATILE;
