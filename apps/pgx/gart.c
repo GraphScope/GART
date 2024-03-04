@@ -727,11 +727,6 @@ Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
   int server_id_num = get_next_server_id();
   int* server_id_ptr;
 
-  if (!config_inited) {
-    elog(ERROR, "Config file is not set.");
-    SRF_RETURN_DONE(funcctx);
-  }
-
   // First call, setup context
   if (SRF_IS_FIRSTCALL()) {
     MemoryContext oldcontext;
@@ -757,6 +752,11 @@ Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
   }
 
   funcctx = SRF_PERCALL_SETUP();
+  if (!config_inited) {
+    elog(ERROR, "Config file is not set.");
+    SRF_RETURN_DONE(funcctx);
+  }
+
   server_id_ptr = (int*) (funcctx->user_fctx);
 
   while (*server_id_ptr < funcctx->max_calls) {
@@ -784,8 +784,6 @@ Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
 }
 
 Datum gart_run_sssp(PG_FUNCTION_ARGS) {
-  char result[512] = "Run NetworkX app successfully!\n";
-
   char cmd[1024];
   char log_line[1024];
   int is_read = 0;
@@ -794,58 +792,109 @@ Datum gart_run_sssp(PG_FUNCTION_ARGS) {
   char hostname[MAX_HOSTNAME_LEN + 1];
   int port;
 
-  text* script_file_text;
-  char script_file[256];
+  text* src_node_text;
+  char src_node[32];
   FILE* fp = NULL;
 
-  if (!config_inited) {
-    elog(ERROR, "Config file is not set.");
-    return (Datum) 0;
-  }
+  const char* result_file = "/opt/postgresql/sssp.out";
 
-  server_handle = PG_GETARG_INT32(0);
-  script_file_text = PG_GETARG_TEXT_PP(1);
-  safe_text_to_cstring(script_file_text, script_file);
+  // used for reading result from file
+  FuncCallContext* funcctx;
+  TupleDesc tuple_desc;
+  HeapTuple tuple;
+  Datum values[2];
+  bool nulls[2] = {false, false};
 
-  if (!get_server_info(nx_server_info_file, server_handle, hostname, &port,
-                       NULL)) {
-    elog(ERROR, "Cannot find server info for server id: %d", server_handle);
-    return (Datum) 0;
-  }
+  // First call, setup context
+  if (SRF_IS_FIRSTCALL()) {
+    MemoryContext oldcontext;
 
-  elog(INFO, "Run SSSP algorithm on server %s:%d", hostname, port);
+    funcctx = SRF_FIRSTCALL_INIT();
+    oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
 
-  sprintf(cmd,
-          "python3 %s/apps/networkx/client/test/algorithm.py --host %s "
-          "--port %d --output %s %s",
-          config_gart_home, hostname, port, "/opt/postgresql/sssp.out", "sssp");
-  elog(INFO, "Command: %s", cmd);
-  fp = popen(cmd, "r");
-  if (fp == NULL) {
-    elog(ERROR, "Cannot execute command: %s", cmd);
-    return (Datum) 0;
-  }
+    // Define the tuple descriptor for our result type
+    tuple_desc = CreateTemplateTupleDesc(2);
+    TupleDescInitEntry(tuple_desc, (AttrNumber) 1, "dst_node", TEXTOID, -1, 0);
+    TupleDescInitEntry(tuple_desc, (AttrNumber) 2, "distance", INT4OID, -1, 0);
+    funcctx->tuple_desc = BlessTupleDesc(tuple_desc);
 
-  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
-    size_t len = strlen(log_line);
-    if (len > 0 && log_line[len - 1] == '\n') {
-      log_line[len - 1] = '\0';
+    MemoryContextSwitchTo(oldcontext);
+
+    if (!config_inited) {
+      elog(ERROR, "Config file is not set.");
+      SRF_RETURN_DONE(funcctx);
     }
 
-    fprintf(log_file, "%s", log_line);
-    fflush(log_file);
-    elog(INFO, "%s", log_line);
-    is_read = 1;
-  }
+    server_handle = PG_GETARG_INT32(0);
+    src_node_text = PG_GETARG_TEXT_PP(1);
+    safe_text_to_cstring(src_node_text, src_node);
 
-  if (!is_read) {
-    elog(ERROR, "Cannot read from command: %s", cmd);
+    if (!get_server_info(nx_server_info_file, server_handle, hostname, &port,
+                         NULL)) {
+      elog(ERROR, "Cannot find server info for server id: %d", server_handle);
+      SRF_RETURN_DONE(funcctx);
+    }
+
+    elog(INFO, "Run SSSP algorithm on server %s:%d", hostname, port);
+
+    sprintf(cmd,
+            "python3 %s/apps/networkx/client/test/algorithm.py --host %s "
+            "--port %d --output %s %s --source \"%s\"",
+            config_gart_home, hostname, port, result_file, "sssp", src_node);
+    elog(INFO, "Command: %s", cmd);
+    fp = popen(cmd, "r");
+    if (fp == NULL) {
+      elog(ERROR, "Cannot execute command: %s", cmd);
+      SRF_RETURN_DONE(funcctx);
+    }
+
+    while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+      size_t len = strlen(log_line);
+      if (len > 0 && log_line[len - 1] == '\n') {
+        log_line[len - 1] = '\0';
+      }
+
+      fprintf(log_file, "%s", log_line);
+      fflush(log_file);
+      elog(INFO, "%s", log_line);
+      is_read = 1;
+    }
+
+    if (!is_read) {
+      elog(ERROR, "Cannot read from command: %s", cmd);
+      pclose(fp);
+      SRF_RETURN_DONE(funcctx);
+    }
+
     pclose(fp);
-    return (Datum) 0;
+
+    // read result from file
+    fp = fopen(result_file, "r");
+    if (fp == NULL) {
+      elog(ERROR, "Cannot open result file: %s", result_file);
+      return (Datum) 0;
+    }
+
+    funcctx->user_fctx = fp;
   }
 
-  pclose(fp);
+  funcctx = SRF_PERCALL_SETUP();
+  fp = (FILE*) funcctx->user_fctx;
 
-  // TODO(ssj): read result from file
-  return (Datum) 0;
+  while (fgets(log_line, sizeof(log_line), fp) != NULL) {
+    char dst_node[32];
+    int label, id, distance;
+
+    if (sscanf(log_line, "(%d, %d): %d\n", &label, &id, &distance) == 3) {
+      sprintf(dst_node, "(%d, %d)", label, id);
+      values[0] = CStringGetTextDatum(dst_node);
+      values[1] = Int32GetDatum(distance);
+
+      tuple = heap_form_tuple(funcctx->tuple_desc, values, nulls);
+
+      SRF_RETURN_NEXT(funcctx, HeapTupleGetDatum(tuple));
+    }
+  }
+
+  SRF_RETURN_DONE(funcctx);
 }

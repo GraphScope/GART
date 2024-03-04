@@ -44,7 +44,15 @@ if __name__ == "__main__":
     g = DiGraph(f"{args.host}:{args.port}")
 
     if args.algorithm.lower() == "sssp":
-        source = ast.literal_eval(args.source)
+        try:
+            source = ast.literal_eval(args.source)
+        except (ValueError, SyntaxError) as e:
+            print(
+                f"Error: The provided source is not a valid Python literal: {args.source}"
+            )
+            print(f"Details: {e}")
+            source = (0, 0)
+
         print(f"Running Single Source Shortest Path algorithm on {source} ...")
         length = nx.single_source_shortest_path_length(g, source)
 
