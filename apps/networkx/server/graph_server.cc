@@ -29,6 +29,8 @@ int main(int argc, char** argv) {
   grpc::ServerBuilder builder;
   builder.AddListeningPort(FLAGS_server_addr,
                            grpc::InsecureServerCredentials());
+  // Increase the maximum send message size as 100MB
+  builder.SetMaxSendMessageSize(1024 * 1024 * 100);
   builder.RegisterService(&service);
   std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
   std::cout << "Server listening on " << FLAGS_server_addr << std::endl;

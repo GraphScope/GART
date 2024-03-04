@@ -105,6 +105,11 @@ file(GLOB SOURCES
 add_executable(gart_networkx_server server/graph_server.cc ${PROTO_SOURCES} ${SOURCES})
 target_link_libraries(gart_networkx_server ${GRPC_LIBRARIES} ${Protobuf_LIBRARIES} ${MPI_CXX_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
 
-# build client wheel and install it
-execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/client/python/setup.py build_proto sdist bdist_wheel WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python)
-execute_process(COMMAND pip install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python)
+add_custom_target(install_python
+        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/client/python/setup.py build_proto sdist bdist_wheel WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
+        COMMAND pip install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
+        COMMENT "Install python client"
+        VERBATIM)
+
+# execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/client/python/setup.py build_proto sdist bdist_wheel WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python)
+# execute_process(COMMAND pip install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python)

@@ -82,7 +82,7 @@ class OutEdgeDataView:
             return self._graph.number_of_edges()
         num = 0
         for n in self._nbunch:
-            num += len(self._graph.successors(n))
+            num += len(self._graph.get_successors(n))
         return num
 
     def __iter__(self):
@@ -131,6 +131,57 @@ class OutEdgeDataView:
         if self._nbunch is not None and u not in self._nbunch and v not in self._nbunch:
             return False
         return self._graph.has_successor(u, v)
+    
+
+class InEdgeDataView(OutEdgeDataView):   
+    def __len__(self):
+        if self._nbunch is None:
+            return self._graph.number_of_edges()
+        num = 0
+        for n in self._nbunch:
+            num += len(self._graph.get_predecessors(n))
+        return num
+
+    def __iter__(self):
+        if self._nbunch is None:
+            if self._data is False:
+                for dst in self._graph:
+                    for src in self._graph.predecessors(dst):
+                        yield (src, dst)
+            else:
+                for dst in self._graph:
+                    srcs = self._graph.get_predecessors(dst)
+                    srcs_data = self._graph.get_pred_attr(dst)
+                    results = dict(zip(srcs, srcs_data))
+                    for src in results:
+                        if self._data is True:
+                            yield (src, dst, results[src])
+                        else:
+                            yield (
+                                src,
+                                dst,
+                                results[src].setdefault(self._data, self._default),
+                            )
+
+        else:
+            if self._data is False:
+                for n in self._nbunch:
+                    for nbr in self._graph.predecessors(n):
+                        yield (nbr, n)
+            else:
+                for n in self._nbunch:
+                    srcs = self._graph.get_predecessors(n)
+                    srcs_data = self._graph.get_pred_attr(n)
+                    results = dict(zip(srcs, srcs_data))
+                    for src in results:
+                        if self._data is True:
+                            yield (src, n, results[src])
+                        else:
+                            yield (
+                                src,
+                                n,
+                                results[src].setdefault(self._data, self._default),
+                            )
 
 
 class OutEdgeView(Set, Mapping):
@@ -171,3 +222,19 @@ class OutEdgeView(Set, Mapping):
 class EdgeView(OutEdgeView):
     def __len__(self):
         return self._graph.number_of_edges()
+    
+    
+class InEdgeView(EdgeView):
+    dataview = InEdgeDataView
+     
+    def __iter__(self):
+        for dst in self._graph:
+            for src in self._graph.predecessors(dst):
+                yield (src, dst)
+    
+    
+        
+    
+    
+    
+    

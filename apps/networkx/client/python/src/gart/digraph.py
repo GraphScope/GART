@@ -9,6 +9,7 @@ from functools import lru_cache
 from gart.archieve import OutArchive
 from gart.reportviews import NodeView
 from gart.reportviews import EdgeView
+from gart.reportviews import InEdgeView
 from gart.dict_factory import AdjListDict
 from gart.dict_factory import NeighborDict
 from gart.coreviews import AdjacencyView
@@ -22,16 +23,30 @@ import gart.proto.types_pb2_grpc as pb2_grpc
 
 class DiGraph(object):
     def __init__(self, service_port):
-        channel = grpc.insecure_channel(service_port)
+        # Increase the maximum message size the client can receive
+        channel_options = [
+            ('grpc.max_receive_message_length', 1024 * 1024 * 100)  # 100MB
+        ]
+        channel = grpc.insecure_channel(service_port, options=channel_options)
         self.stub = pb2_grpc.QueryGraphServiceStub(channel)
         self.graph = {}  # store graph schema
         self._nodes = {}
         self.nodes_is_loaded = False
         self._adj = AdjListDict(self)
+        self._succ = self._adj
+        self._pred = AdjListDict(self, pred=True)
 
     @cached_property
     def adj(self):
         return AdjacencyView(self._adj)
+    
+    @cached_property
+    def succ(self):
+        return AdjacencyView(self._succ)
+    
+    @cached_property
+    def pred(self):
+        return AdjacencyView(self._pred)
 
     @property
     def name(self):
@@ -260,6 +275,14 @@ class DiGraph(object):
     @property
     def edges(self):
         return EdgeView(self)
+    
+    @property
+    def out_edges(self):
+        return EdgeView(self)
+    
+    @property
+    def in_edges(self):
+        return InEdgeView(self)
 
     @lru_cache(1000)
     def number_of_edges(self, u=None, v=None):
@@ -301,13 +324,15 @@ class DiGraph(object):
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree()."""
         return DegreeView(self)
-
+    
     def nbunch_iter(self, nbunch=None):
         if nbunch is None:
             return self.__iter__()
-        elif nbunch in self:
-            return iter([nbunch])
         else:
+            try:
+                iter(nbunch)
+            except TypeError:
+                nbunch = [nbunch]
             for n in nbunch:
                 if n in self:
                     yield n
