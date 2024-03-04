@@ -14,7 +14,9 @@ from gart.dict_factory import AdjListDict
 from gart.dict_factory import NeighborDict
 from gart.coreviews import AdjacencyView
 
-from networkx.classes.reportviews import DegreeView
+from networkx.classes.reportviews import DiDegreeView
+from networkx.classes.reportviews import InDegreeView
+from networkx.classes.reportviews import OutDegreeView
 import networkx as nx
 
 import gart.proto.types_pb2 as pb2
@@ -25,7 +27,7 @@ class DiGraph(object):
     def __init__(self, service_port):
         # Increase the maximum message size the client can receive
         channel_options = [
-            ('grpc.max_receive_message_length', 1024 * 1024 * 100)  # 100MB
+            ('grpc.max_receive_message_length', 1024 * 1024 * 100 + 1024 * 2024)  # 101MB
         ]
         channel = grpc.insecure_channel(service_port, options=channel_options)
         self.stub = pb2_grpc.QueryGraphServiceStub(channel)
@@ -323,7 +325,15 @@ class DiGraph(object):
     @property
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree()."""
-        return DegreeView(self)
+        return DiDegreeView(self)
+    
+    @property
+    def in_degree(self):
+        return InDegreeView(self)
+        
+    @property
+    def out_degree(self):
+        return OutDegreeView(self)
     
     def nbunch_iter(self, nbunch=None):
         if nbunch is None:

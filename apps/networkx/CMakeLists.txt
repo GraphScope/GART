@@ -110,6 +110,3 @@ add_custom_target(install_python
         COMMAND pip install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
         COMMENT "Install python client"
         VERBATIM)
-
-# execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/client/python/setup.py build_proto sdist bdist_wheel WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python)
-# execute_process(COMMAND pip install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python)
