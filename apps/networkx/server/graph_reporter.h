@@ -99,10 +99,15 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
     case gart::rpc::HAS_NODE: {
       gart::dynamic::Value node;
       gart::dynamic::Parse(args, node);
-      label_id_t label_id = node[0].GetInt();
-      oid_t oid = node[1].GetInt64();
-      vid_t gid;
-      bool is_exist = fragment_->Oid2Gid(label_id, oid, gid);
+      bool is_exist = false;
+      if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
+        std::cout << "Invalid node format: " << args << std::endl;
+      } else {
+        label_id_t label_id = node[0].GetInt();
+        oid_t oid = node[1].GetInt64();
+        vid_t gid;
+        is_exist = fragment_->Oid2Gid(label_id, oid, gid);
+      }
       *in_archive << is_exist;
       break;
     }
@@ -111,11 +116,18 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       // dst_oid))
       gart::dynamic::Value edge;
       dynamic::Parse(args, edge);
-      label_id_t src_label_id = edge[0][0].GetInt();
-      label_id_t dst_label_id = edge[1][0].GetInt();
-      oid_t src_oid = edge[0][1].GetInt64();
-      oid_t dst_oid = edge[1][1].GetInt64();
-      bool result = hasEdge(src_label_id, src_oid, dst_label_id, dst_oid);
+      bool result = false;
+      if (edge.Size() != 2 || !edge[0].IsArray() || !edge[1].IsArray() ||
+          edge[0].Size() != 2 || edge[1].Size() != 2 || !edge[0][0].IsNumber() || 
+          !edge[0][1].IsNumber() || !edge[1][0].IsNumber() || !edge[1][1].IsNumber()) {
+        std::cout << "Invalid edge format: " << args << std::endl;
+      } else {
+        label_id_t src_label_id = edge[0][0].GetInt();
+        label_id_t dst_label_id = edge[1][0].GetInt();
+        oid_t src_oid = edge[0][1].GetInt64();
+        oid_t dst_oid = edge[1][1].GetInt64();
+        result = hasEdge(src_label_id, src_oid, dst_label_id, dst_oid);
+      }
       *in_archive << result;
       break;
     }
@@ -123,6 +135,10 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       // the input node format: (label_id, oid)
       gart::dynamic::Value node;
       gart::dynamic::Parse(args, node);
+      if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
+        std::cout << "Invalid node format: " << args << std::endl;
+        break;
+      }
       label_id_t label_id = node[0].GetInt();
       // in gart, oid is a uint64_t
       oid_t oid = node[1].GetInt64();
@@ -134,6 +150,12 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       // dst_oid))
       gart::dynamic::Value edge;
       dynamic::Parse(args, edge);
+      if (edge.Size() != 2 || !edge[0].IsArray() || !edge[1].IsArray() ||
+          edge[0].Size() != 2 || edge[1].Size() != 2 || !edge[0][0].IsNumber() || 
+          !edge[0][1].IsNumber() || !edge[1][0].IsNumber() || !edge[1][1].IsNumber()) {
+        std::cout << "Invalid edge format: " << args << std::endl;
+        break;
+      }
       label_id_t src_label_id = edge[0][0].GetInt();
       label_id_t dst_label_id = edge[1][0].GetInt();
       oid_t src_oid = edge[0][1].GetInt64();
@@ -146,6 +168,10 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       // the input node format: (label_id, oid)
       gart::dynamic::Value node;
       gart::dynamic::Parse(args, node);
+      if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
+        std::cout << "Invalid node format: " << args << std::endl;
+        break;
+      }
       label_id_t label_id = node[0].GetInt();
       // in gart, oid is a uint64_t
       oid_t oid = node[1].GetInt64();
@@ -157,6 +183,10 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       // the input node format: (label_id, oid)
       gart::dynamic::Value node;
       gart::dynamic::Parse(args, node);
+      if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
+        std::cout << "Invalid node format: " << args << std::endl;
+        break;
+      }
       label_id_t label_id = node[0].GetInt();
       // in gart, oid is a uint64_t
       oid_t oid = node[1].GetInt64();
