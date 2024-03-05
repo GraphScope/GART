@@ -36,14 +36,14 @@ RETURNS INTEGER
 AS 'MODULE_PATHNAME', 'gart_get_lastest_epoch'
 LANGUAGE C STRICT VOLATILE;
 
-CREATE FUNCTION gart_launch_networkx_server(IN epoch INT, IN hostname TEXT, IN port INT)
+CREATE FUNCTION gart_launch_graph_server(IN hostname TEXT, IN port INT)
 RETURNS INTEGER
-AS 'MODULE_PATHNAME', 'gart_launch_networkx_server'
+AS 'MODULE_PATHNAME', 'gart_launch_graph_server'
 LANGUAGE C STRICT VOLATILE;
 
-CREATE FUNCTION gart_stop_networkx_server(IN server_handler INT)
+CREATE FUNCTION gart_stop_graph_server(IN server_handler INT)
 RETURNS INTEGER
-AS 'MODULE_PATHNAME', 'gart_stop_networkx_server'
+AS 'MODULE_PATHNAME', 'gart_stop_graph_server'
 LANGUAGE C STRICT VOLATILE;
 
 CREATE FUNCTION gart_run_networkx_app(IN server_handler INT, IN script TEXT)
@@ -54,13 +54,12 @@ LANGUAGE C STRICT VOLATILE;
 CREATE TYPE server_info_type AS (
     id INT,
     hostname TEXT,
-    port INT,
-    read_epoch INT
+    port INT
 );
 
-CREATE FUNCTION gart_show_networkx_server_info()
+CREATE FUNCTION gart_show_graph_server_info()
 RETURNS SETOF server_info_type
-AS 'MODULE_PATHNAME', 'gart_show_networkx_server_info'
+AS 'MODULE_PATHNAME', 'gart_show_graph_server_info'
 LANGUAGE C STRICT VOLATILE;
 
 CREATE TYPE sssp_result_type AS (

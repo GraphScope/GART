@@ -57,17 +57,17 @@ PG_FUNCTION_INFO_V1(gart_define_graph_by_yaml);
 Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_get_lastest_epoch);
 
-Datum gart_launch_networkx_server(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(gart_launch_networkx_server);
+Datum gart_launch_graph_server(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_launch_graph_server);
 
-Datum gart_stop_networkx_server(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(gart_stop_networkx_server);
+Datum gart_stop_graph_server(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_stop_graph_server);
 
 Datum gart_run_networkx_app(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_run_networkx_app);
 
-Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(gart_show_networkx_server_info);
+Datum gart_show_graph_server_info(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gart_show_graph_server_info);
 
 Datum gart_run_sssp(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(gart_run_sssp);
@@ -517,7 +517,7 @@ Datum gart_get_lastest_epoch(PG_FUNCTION_ARGS) {
 #define MAX_HOSTNAME_LEN 126
 
 // index: server_id
-Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
+Datum gart_launch_graph_server(PG_FUNCTION_ARGS) {
   char cmd[1024];
   char log_line[1024];
   int is_read = 0;
@@ -525,13 +525,12 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
   text* server_host_text;
   FILE* fp = NULL;
   char server_host[MAX_HOSTNAME_LEN + 1];
-  int epoch_num, server_port, server_id;
+  int server_port, server_id;
 
-  epoch_num = PG_GETARG_INT32(0);
-  server_host_text = PG_GETARG_TEXT_PP(1);
+  server_host_text = PG_GETARG_TEXT_PP(0);
   safe_text_to_cstring(server_host_text, server_host);
 
-  server_port = PG_GETARG_INT32(2);
+  server_port = PG_GETARG_INT32(1);
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
@@ -550,8 +549,7 @@ Datum gart_launch_networkx_server(PG_FUNCTION_ARGS) {
     PG_RETURN_INT32(0);
   }
 
-  server_id =
-      add_server_info(nx_server_info_file, server_host, server_port, epoch_num);
+  server_id = add_server_info(nx_server_info_file, server_host, server_port);
 
   while (fgets(log_line, sizeof(log_line), fp) != NULL) {
     fprintf(log_file, "%s", log_line);
@@ -586,7 +584,7 @@ static int kill_networkx_server(int server_id) {
     return -1;
   }
 
-  if (!get_server_info(nx_server_info_file, server_id, hostname, &port, NULL)) {
+  if (!get_server_info(nx_server_info_file, server_id, hostname, &port)) {
     elog(ERROR, "Cannot find server info for server id: %d", server_id);
     return -1;
   }
@@ -612,7 +610,7 @@ static int kill_networkx_server(int server_id) {
   return 0;
 }
 
-Datum gart_stop_networkx_server(PG_FUNCTION_ARGS) {
+Datum gart_stop_graph_server(PG_FUNCTION_ARGS) {
   int server_id;
 
   if (!config_inited) {
@@ -642,7 +640,7 @@ Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
 
   int server_handle;
   char hostname[MAX_HOSTNAME_LEN + 1];
-  int port, read_epoch;
+  int port;
 
   text* script_file_text;
   char script_file[256];
@@ -658,14 +656,12 @@ Datum gart_run_networkx_app(PG_FUNCTION_ARGS) {
   script_file_text = PG_GETARG_TEXT_PP(1);
   safe_text_to_cstring(script_file_text, script_file);
 
-  if (!get_server_info(nx_server_info_file, server_handle, hostname, &port,
-                       &read_epoch)) {
+  if (!get_server_info(nx_server_info_file, server_handle, hostname, &port)) {
     elog(ERROR, "Cannot find server info for server id: %d", server_handle);
     return (Datum) 0;
   }
 
-  elog(INFO, "Run NetworkX app on server %s:%d using read epoch %d", hostname,
-       port, read_epoch);
+  elog(INFO, "Run NetworkX app on server %s:%d", hostname, port);
 
   sprintf(cmd, "python3 %s", script_file);
   elog(INFO, "Command: %s", cmd);
@@ -717,12 +713,13 @@ static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
   }
 }
 
-Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
+Datum gart_show_graph_server_info(PG_FUNCTION_ARGS) {
+#define NUM_COLS 3
   FuncCallContext* funcctx;
   TupleDesc tuple_desc;
   HeapTuple tuple;
-  Datum values[4];
-  bool nulls[4] = {false, false, false, false};
+  Datum values[NUM_COLS];
+  bool nulls[NUM_COLS] = {false, false, false};
 
   int server_id_num = get_next_server_id();
   int* server_id_ptr;
@@ -734,12 +731,11 @@ Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
     oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
 
     // Define the tuple descriptor for our result type
-    tuple_desc = CreateTemplateTupleDesc(4);
+    tuple_desc = CreateTemplateTupleDesc(NUM_COLS);
     TupleDescInitEntry(tuple_desc, (AttrNumber) 1, "id", INT4OID, -1, 0);
     TupleDescInitEntry(tuple_desc, (AttrNumber) 2, "hostname", TEXTOID, -1, 0);
     TupleDescInitEntry(tuple_desc, (AttrNumber) 3, "port", INT4OID, -1, 0);
-    TupleDescInitEntry(tuple_desc, (AttrNumber) 4, "read_epoch", INT4OID, -1,
-                       0);
+
     funcctx->tuple_desc = BlessTupleDesc(tuple_desc);
 
     // Initialize the function call context
@@ -761,14 +757,12 @@ Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
 
   while (*server_id_ptr < funcctx->max_calls) {
     char hostname[MAX_HOSTNAME_LEN + 1];
-    int port, epoch;
+    int port;
 
-    if (get_server_info(nx_server_info_file, *server_id_ptr, hostname, &port,
-                        &epoch)) {
+    if (get_server_info(nx_server_info_file, *server_id_ptr, hostname, &port)) {
       values[0] = Int32GetDatum(*server_id_ptr);
       values[1] = CStringGetTextDatum(hostname);
       values[2] = Int32GetDatum(port);
-      values[3] = Int32GetDatum(epoch);
 
       tuple = heap_form_tuple(funcctx->tuple_desc, values, nulls);
 
@@ -781,6 +775,7 @@ Datum gart_show_networkx_server_info(PG_FUNCTION_ARGS) {
   }
 
   SRF_RETURN_DONE(funcctx);
+#undef NUM_COLS
 }
 
 Datum gart_run_sssp(PG_FUNCTION_ARGS) {
@@ -829,8 +824,7 @@ Datum gart_run_sssp(PG_FUNCTION_ARGS) {
     src_node_text = PG_GETARG_TEXT_PP(1);
     safe_text_to_cstring(src_node_text, src_node);
 
-    if (!get_server_info(nx_server_info_file, server_handle, hostname, &port,
-                         NULL)) {
+    if (!get_server_info(nx_server_info_file, server_handle, hostname, &port)) {
       elog(ERROR, "Cannot find server info for server id: %d", server_handle);
       SRF_RETURN_DONE(funcctx);
     }

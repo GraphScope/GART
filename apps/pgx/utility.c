@@ -251,13 +251,13 @@ typedef struct {
   int server_id;
   char hostname[MAX_HOSTNAME_LEN + 1];
   int port;
-  int read_epoch;
   int valid;  // 0 for invalid, 1 for valid
 } ServerInfo;
 
 // Format for server info in the file
-// <server_id> <hostname> <port> <read_epoch> <valid>
-#define SERVER_INFO_FORMAT "%d %s %d %d %d\n"
+// <server_id> <hostname> <port> <valid>
+#define SERVER_INFO_FORMAT "%d %s %d %d\n"
+#define SERVER_INFO_CNT 4  // Number of fields in the format
 
 static int next_server_id = 0;
 
@@ -269,7 +269,7 @@ int init_server_info(FILE* file) {
 
   rewind(file);
   while (fscanf(file, SERVER_INFO_FORMAT, &info.server_id, info.hostname,
-                &info.port, &info.read_epoch, &info.valid) == 5) {
+                &info.port, &info.valid) == SERVER_INFO_CNT) {
     if (info.server_id > max_server_id) {
       max_server_id = info.server_id;
     }
@@ -279,34 +279,30 @@ int init_server_info(FILE* file) {
   return 0;
 }
 
-int add_server_info(FILE* file, const char* hostname, int port,
-                    int read_epoch) {
-  ServerInfo info = {next_server_id, "", port, read_epoch, 1};
+int add_server_info(FILE* file, const char* hostname, int port) {
+  ServerInfo info = {next_server_id, "", port, 1};
 
   fseek(file, 0, SEEK_END);
 
   strncpy(info.hostname, hostname, sizeof(info.hostname) - 1);
   fprintf(file, SERVER_INFO_FORMAT, info.server_id, info.hostname, info.port,
-          info.read_epoch, info.valid);
+          info.valid);
   fflush(file);
 
   return next_server_id++;
 }
 
-int get_server_info(FILE* file, int server_id, char* hostname, int* port,
-                    int* read_epoch) {
+int get_server_info(FILE* file, int server_id, char* hostname, int* port) {
   ServerInfo info;
 
   rewind(file);
   while (fscanf(file, SERVER_INFO_FORMAT, &info.server_id, info.hostname,
-                &info.port, &info.read_epoch, &info.valid) == 5) {
+                &info.port, &info.valid) == SERVER_INFO_CNT) {
     if (info.server_id == server_id && info.valid) {
       if (hostname)
         strcpy(hostname, info.hostname);
       if (port)
         *port = info.port;
-      if (read_epoch)
-        *read_epoch = info.read_epoch;
       return 1;
     }
   }
@@ -322,7 +318,7 @@ int delete_server_info(FILE* file, int server_id) {
 
   rewind(file);
   while (fscanf(file, SERVER_INFO_FORMAT, &info.server_id, info.hostname,
-                &info.port, &info.read_epoch, &info.valid) == 5) {
+                &info.port, &info.valid) == SERVER_INFO_CNT) {
     if (info.server_id == server_id) {
       if (!info.valid) {
         fclose(temp_file);
@@ -332,7 +328,7 @@ int delete_server_info(FILE* file, int server_id) {
       success = 1;
     }
     fprintf(temp_file, SERVER_INFO_FORMAT, info.server_id, info.hostname,
-            info.port, info.read_epoch, info.valid);
+            info.port, info.valid);
   }
 
   // Copy temporary file contents back to the original file

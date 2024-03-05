@@ -46,12 +46,11 @@ int get_next_server_id(void);
 
 // add server information to the file
 // return the server_id of the server
-int add_server_info(FILE* file, const char* hostname, int port, int read_epoch);
+int add_server_info(FILE* file, const char* hostname, int port);
 
 // find the server information in the file
 // return 0 if the server_id is not found, 1 if the server_id is found
-int get_server_info(FILE* file, int server_id, char* hostname, int* port,
-                    int* read_epoch);
+int get_server_info(FILE* file, int server_id, char* hostname, int* port);
 
 // delete the server information in the file
 // return 0 if the server_id is not found, 1 if the server_id is found
