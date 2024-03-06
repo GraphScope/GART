@@ -9,10 +9,27 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 
-add_subdirectory(converter)
-add_subdirectory(vegito)
-add_subdirectory(pgql)
-# add_subdirectory(apps/analytical_engine apps)
+### Set up compiler flags ###
+option(ADD_CONVERTER "Option to add converter" ON)
+option(ADD_VEGITO "Option to add Vegito" ON)
+option(ADD_PGQL "Option to add PGQL" ON)
+option(ADD_GAE_ENGINE "Option to add GAE engine" OFF)
+
+if (ADD_CONVERTER)
+    add_subdirectory(converter)
+endif()
+
+if (ADD_VEGITO)
+    add_subdirectory(vegito)
+endif()
+
+if (ADD_PGQL)
+    add_subdirectory(pgql)
+endif()
+
+if (ADD_GAE_ENGINE)
+    add_subdirectory(apps/analytical_engine apps)
+endif()
 
 ### Copy test schema ###
 file(COPY ${CMAKE_SOURCE_DIR}/vegito/test/schema DESTINATION ${CMAKE_BINARY_DIR})
