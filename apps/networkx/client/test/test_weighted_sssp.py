@@ -4,7 +4,7 @@ from itertools import count
 
 import networkx as nx
 
-from gart import DiGraph
+from gart import DiGraph, Client
 
 
 def _weight_function(G, weight):
@@ -164,7 +164,9 @@ def single_source_dijkstra_path_length(G, source, cutoff=None, weight="weight"):
     return multi_source_dijkstra_path_length(G, {source}, cutoff=cutoff, weight=weight)
 
 
-g = DiGraph("localhost:50051")
+client = Client("localhost:50051")
+version = client.get_latest_version()
+g = client.get_graph(version)
 length = single_source_dijkstra_path_length(g, (0, 0), weight="wa_work_from")
 
 for node in length:

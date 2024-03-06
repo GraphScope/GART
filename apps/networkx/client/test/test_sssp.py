@@ -3,7 +3,7 @@ Shortest path algorithms for unweighted graphs.
 """
 import warnings
 
-from gart import DiGraph
+from gart import DiGraph, Client
 
 import networkx as nx
 
@@ -84,8 +84,9 @@ def _single_shortest_path_length(adj, firstlevel, cutoff):
             if len(seen) == n:
                 return
 
-
-g = DiGraph("localhost:50051")
+client = Client("localhost:50051")
+version = client.get_latest_version()
+g = client.get_graph(version)
 length = single_source_shortest_path_length(g, (0, 0))
 for node in length:
     print(f"{node}: {length[node]}")

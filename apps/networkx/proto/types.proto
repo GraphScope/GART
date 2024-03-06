@@ -42,12 +42,14 @@ enum ReportType {
   PRED_ATTR_BY_NODE = 16;
   NODES = 17;
   NODES_GID = 18;
+  LATEST_GRAPH_VERSION = 19;
 }
 
 //
 message Request {
   ReportType op = 1;
-  string args=2;
+  int64 version = 2;
+  string args = 3;
 }
 
 message Response {

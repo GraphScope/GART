@@ -24,13 +24,10 @@ import gart.proto.types_pb2_grpc as pb2_grpc
 
 
 class DiGraph(object):
-    def __init__(self, service_port):
+    def __init__(self, version, stub):
         # Increase the maximum message size the client can receive
-        channel_options = [
-            ('grpc.max_receive_message_length', 1024 * 1024 * 100 + 1024 * 2024)  # 101MB
-        ]
-        channel = grpc.insecure_channel(service_port, options=channel_options)
-        self.stub = pb2_grpc.QueryGraphServiceStub(channel)
+        self._version = version
+        self.stub = stub
         self.graph = {}  # store graph schema
         self._nodes = {}
         self.nodes_is_loaded = False
@@ -41,11 +38,11 @@ class DiGraph(object):
     @cached_property
     def adj(self):
         return AdjacencyView(self._adj)
-    
+
     @cached_property
     def succ(self):
         return AdjacencyView(self._succ)
-    
+
     @cached_property
     def pred(self):
         return AdjacencyView(self._pred)
@@ -75,7 +72,9 @@ class DiGraph(object):
         return True
 
     def _get_nodes(self):
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.NODES, args=""))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.NODES, args="", version=self._version)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -97,7 +96,7 @@ class DiGraph(object):
         try:
             arg = json.dumps(n).encode("utf-8", errors="ignore")
             response_iterator = self.stub.getData(
-                pb2.Request(op=pb2.HAS_NODE, args=arg)
+                pb2.Request(op=pb2.HAS_NODE, args=arg, version=self._version)
             )
             total_response = bytes()
             for response in response_iterator:
@@ -110,7 +109,9 @@ class DiGraph(object):
     def __len__(self):
         """Returns the number of nodes in the graph. Use: 'len(G)'."""
         if not self.nodes_is_loaded:
-            response_iterator = self.stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
+            response_iterator = self.stub.getData(
+                pb2.Request(op=pb2.NODE_NUM, args="", version=self._version)
+            )
             total_response = bytes()
             for response in response_iterator:
                 total_response += response.result
@@ -126,7 +127,9 @@ class DiGraph(object):
     @lru_cache(1000)
     def get_node_attr(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.NODE_DATA, args=arg))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.NODE_DATA, args=arg, version=self._version)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -137,7 +140,7 @@ class DiGraph(object):
     def get_successors(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
         response_iterator = self.stub.getData(
-            pb2.Request(op=pb2.SUCCS_BY_NODE, args=arg)
+            pb2.Request(op=pb2.SUCCS_BY_NODE, args=arg, version=self._version)
         )
         total_response = bytes()
         for response in response_iterator:
@@ -149,7 +152,7 @@ class DiGraph(object):
     def get_succ_attr(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
         response_iterator = self.stub.getData(
-            pb2.Request(op=pb2.SUCC_ATTR_BY_NODE, args=arg)
+            pb2.Request(op=pb2.SUCC_ATTR_BY_NODE, args=arg, version=self._version)
         )
         total_response = bytes()
         for response in response_iterator:
@@ -161,7 +164,7 @@ class DiGraph(object):
     def get_predecessors(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
         response_iterator = self.stub.getData(
-            pb2.Request(op=pb2.PREDS_BY_NODE, args=arg)
+            pb2.Request(op=pb2.PREDS_BY_NODE, args=arg, version=self._version)
         )
         total_response = bytes()
         for response in response_iterator:
@@ -173,7 +176,7 @@ class DiGraph(object):
     def get_pred_attr(self, n):
         arg = json.dumps(n).encode("utf-8", errors="ignore")
         response_iterator = self.stub.getData(
-            pb2.Request(op=pb2.PRED_ATTR_BY_NODE, args=arg)
+            pb2.Request(op=pb2.PRED_ATTR_BY_NODE, args=arg, version=self._version)
         )
         total_response = bytes()
         for response in response_iterator:
@@ -200,7 +203,9 @@ class DiGraph(object):
     def number_of_nodes(self):
         """Returns the number of nodes in the graph."""
         if not self.nodes_is_loaded:
-            response_iterator = self.stub.getData(pb2.Request(op=pb2.NODE_NUM, args=""))
+            response_iterator = self.stub.getData(
+                pb2.Request(op=pb2.NODE_NUM, args="", version=self._version)
+            )
             total_response = bytes()
             for response in response_iterator:
                 total_response += response.result
@@ -217,7 +222,7 @@ class DiGraph(object):
         try:
             arg = json.dumps(n).encode("utf-8", errors="ignore")
             response_iterator = self.stub.getData(
-                pb2.Request(op=pb2.HAS_NODE, args=arg)
+                pb2.Request(op=pb2.HAS_NODE, args=arg, version=self._version)
             )
             total_response = bytes()
             for response in response_iterator:
@@ -232,7 +237,9 @@ class DiGraph(object):
         """Returns True if the edge (u, v) is in the graph."""
         edge = (u, v)
         arg = json.dumps(edge).encode("utf-8", errors="ignore")
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.HAS_EDGE, args=arg, version=self._version)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -244,7 +251,9 @@ class DiGraph(object):
         """Returns True if the edge (v, u) is in the graph."""
         edge = (v, u)
         arg = json.dumps(edge).encode("utf-8", errors="ignore")
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.HAS_EDGE, args=arg))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.HAS_EDGE, args=arg, version=self._version)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -277,11 +286,11 @@ class DiGraph(object):
     @property
     def edges(self):
         return EdgeView(self)
-    
+
     @property
     def out_edges(self):
         return EdgeView(self)
-    
+
     @property
     def in_edges(self):
         return InEdgeView(self)
@@ -290,7 +299,9 @@ class DiGraph(object):
     def number_of_edges(self, u=None, v=None):
         edges_num = 0
         if u is None:
-            response_iterator = self.stub.getData(pb2.Request(op=pb2.EDGE_NUM, args=""))
+            response_iterator = self.stub.getData(
+                pb2.Request(op=pb2.EDGE_NUM, args="", version=self._version)
+            )
             total_response = bytes()
             for response in response_iterator:
                 total_response += response.result
@@ -306,7 +317,9 @@ class DiGraph(object):
             return default
         edge = (u, v)
         arg = json.dumps(edge).encode("utf-8", errors="ignore")
-        response_iterator = self.stub.getData(pb2.Request(op=pb2.EDGE_DATA, args=arg))
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.EDGE_DATA, args=arg, version=self._version)
+        )
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
@@ -326,15 +339,15 @@ class DiGraph(object):
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree()."""
         return DiDegreeView(self)
-    
+
     @property
     def in_degree(self):
         return InDegreeView(self)
-        
+
     @property
     def out_degree(self):
         return OutDegreeView(self)
-    
+
     def nbunch_iter(self, nbunch=None):
         if nbunch is None:
             return self.__iter__()

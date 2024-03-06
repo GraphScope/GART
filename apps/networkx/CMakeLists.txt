@@ -102,6 +102,7 @@ file(GLOB SOURCES
           "server/graph_server_flags.cc"
           )
 
+set_source_files_properties(${PROTO_SOURCES} PROPERTIES COMPILE_FLAGS -Wno-array-bounds)
 add_executable(gart_networkx_server server/graph_server.cc ${PROTO_SOURCES} ${SOURCES})
 target_link_libraries(gart_networkx_server ${GRPC_LIBRARIES} ${Protobuf_LIBRARIES} ${MPI_CXX_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
 

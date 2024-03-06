@@ -131,9 +131,9 @@ class OutEdgeDataView:
         if self._nbunch is not None and u not in self._nbunch and v not in self._nbunch:
             return False
         return self._graph.has_successor(u, v)
-    
 
-class InEdgeDataView(OutEdgeDataView):   
+
+class InEdgeDataView(OutEdgeDataView):
     def __len__(self):
         if self._nbunch is None:
             return self._graph.number_of_edges()
@@ -222,19 +222,12 @@ class OutEdgeView(Set, Mapping):
 class EdgeView(OutEdgeView):
     def __len__(self):
         return self._graph.number_of_edges()
-    
-    
+
+
 class InEdgeView(EdgeView):
     dataview = InEdgeDataView
-     
+
     def __iter__(self):
         for dst in self._graph:
             for src in self._graph.predecessors(dst):
                 yield (src, dst)
-    
-    
-        
-    
-    
-    
-    
