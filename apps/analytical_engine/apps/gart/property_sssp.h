@@ -23,6 +23,7 @@ limitations under the License.
 #include "core/app/app_base.h"
 #include "core/context/gart_vertex_data_context.h"
 #include "core/utils/gart_vertex_array.h"
+#include "interfaces/fragment/types.h"
 
 namespace gs {
 
@@ -34,15 +35,18 @@ template <typename FRAG_T>
 class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
   using vid_t = typename FRAG_T::vid_t;
   using oid_t = typename FRAG_T::oid_t;
+  using label_id_t = typename FRAG_T::label_id_t;
 
  public:
   explicit PropertySSSPContext(const FRAG_T& fragment)
       : gs::GartLabeledVertexDataContext<FRAG_T>(fragment) {}
 
-  void Init(grape::DefaultMessageManager& messages, oid_t src_oid) {
+  void Init(grape::DefaultMessageManager& messages, label_id_t label_id,
+            oid_t src_oid) {
     auto& frag = this->fragment();
     auto vertex_label_num = frag.vertex_label_num();
-    source_id = src_oid;
+    this->label_id = label_id;
+    this->source_id = src_oid;
     result.resize(vertex_label_num);
     updated.resize(vertex_label_num);
     updated_next.resize(vertex_label_num);
@@ -73,6 +77,7 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
   std::vector<gart::GartVertexArray<gart::vid_t, int>> result;
   std::vector<gart::GartVertexArray<gart::vid_t, int>> updated;
   std::vector<gart::GartVertexArray<gart::vid_t, int>> updated_next;
+  label_id_t label_id;
   oid_t source_id;
 };
 
@@ -95,7 +100,11 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
     auto e_label_num = frag.edge_label_num();
     bool is_native = false;
     vertex_t src_vertex;
-    is_native = frag.InnerVertexGid2Vertex(ctx.source_id, src_vertex);
+    if (!frag.Oid2Gid(ctx.label_id, ctx.source_id, src_vertex)) {
+      std::cout << "source vertex not found" << std::endl;
+      return;
+    }
+    is_native = frag.IsInnerVertex(src_vertex);
     if (is_native) {
       auto src_label = frag.vertex_label(src_vertex);
       ctx.result[src_label][src_vertex] = 0;
