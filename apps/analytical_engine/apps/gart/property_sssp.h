@@ -68,7 +68,9 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
       while (vertices_iter.valid()) {
         auto v = vertices_iter.vertex();
         auto v_data = result[v_label][v];
-        os << frag.GetId(v) << " " << v_data << std::endl;
+        if (v_data != std::numeric_limits<int>::max()) {
+          os << v_label << "\t" << frag.GetId(v) << "\t" << v_data << std::endl;
+        }
         vertices_iter.next();
       }
     }
