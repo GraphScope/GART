@@ -169,6 +169,6 @@ version = client.get_latest_version()
 g = client.get_graph(version)
 length = single_source_dijkstra_path_length(g, (0, 0), weight="wa_work_from")
 
-for node in length:
-    print(f"{node}: {length[node]}")
-print("len of length:", len(length))
+for node in g:
+    if node in length:
+       print(f"{node}: {length[node]}")

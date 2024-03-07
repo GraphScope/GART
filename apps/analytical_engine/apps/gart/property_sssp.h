@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <algorithm>
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "core/app/app_base.h"
@@ -42,11 +43,12 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
       : gs::GartLabeledVertexDataContext<FRAG_T>(fragment) {}
 
   void Init(grape::DefaultMessageManager& messages, label_id_t label_id,
-            oid_t src_oid) {
+            oid_t src_oid, std::string weight_name) {
     auto& frag = this->fragment();
     auto vertex_label_num = frag.vertex_label_num();
     this->label_id = label_id;
     this->source_id = src_oid;
+    this->weight_name = weight_name;
     result.resize(vertex_label_num);
     updated.resize(vertex_label_num);
     updated_next.resize(vertex_label_num);
@@ -81,6 +83,7 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
   std::vector<gart::GartVertexArray<gart::vid_t, int>> updated_next;
   label_id_t label_id;
   oid_t source_id;
+  std::string weight_name;
 };
 
 template <typename FRAG_T>
@@ -112,10 +115,14 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
       ctx.result[src_label][src_vertex] = 0;
       for (auto e_label = 0; e_label < e_label_num; e_label++) {
         auto edge_iter = frag.GetOutgoingAdjList(src_vertex, e_label);
+        auto prop_id = frag.GetEdgePropId(e_label, ctx.weight_name);
         while (edge_iter.valid()) {
           auto dst_vertex = edge_iter.neighbor();
           auto dst_label = frag.vertex_label(dst_vertex);
-          int e_data = edge_iter.template get_data<int>(0);
+          int e_data = 1;
+          if (prop_id != -1) {
+            e_data = edge_iter.template get_data<int>(prop_id);
+          }
           ctx.result[dst_label][dst_vertex] =
               std::min(ctx.result[dst_label][dst_vertex], e_data);
           if (frag.IsInnerVertex(dst_vertex)) {
@@ -138,6 +145,7 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
     auto e_label_num = frag.edge_label_num();
     int val;
     vertex_t v;
+    bool require_force_continue = false;
     while (messages.GetMessage<fragment_t, int>(frag, v, val)) {
       auto v_label = frag.vertex_label(v);
       if (ctx.result[v_label][v] > val) {
@@ -162,15 +170,20 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
         int dist_src = ctx.result[v_label][src];
         for (auto e_label = 0; e_label < e_label_num; e_label++) {
           auto edge_iter = frag.GetOutgoingAdjList(src, e_label);
+          auto prop_id = frag.GetEdgePropId(e_label, ctx.weight_name);
           while (edge_iter.valid()) {
             auto dst = edge_iter.neighbor();
             auto dst_label = frag.vertex_label(dst);
-            int e_data = edge_iter.template get_data<int>(0);
+            int e_data = 1;
+            if (prop_id != -1) {
+              e_data = edge_iter.template get_data<int>(prop_id);
+            }
             int new_dist_dst = dist_src + e_data;
             if (new_dist_dst < ctx.result[dst_label][dst]) {
               ctx.result[dst_label][dst] = new_dist_dst;
               if (frag.IsInnerVertex(dst)) {
                 ctx.updated[dst_label][dst] = true;
+                require_force_continue = true;
               } else {
                 messages.SyncStateOnOuterVertex(frag, dst, new_dist_dst);
               }
@@ -180,6 +193,10 @@ class PropertySSSP : public AppBase<FRAG_T, PropertySSSPContext<FRAG_T>> {
         }
         inner_vertices_iter.next();
       }
+    }
+
+    if (require_force_continue) {
+      messages.ForceContinue();
     }
   }
 };

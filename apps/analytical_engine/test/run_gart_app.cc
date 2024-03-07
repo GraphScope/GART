@@ -62,7 +62,7 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
 
   worker->Init(comm_spec, spec);
   MPI_Barrier(comm_spec.comm());
-  worker->Query(0, 0);
+  worker->Query(0, 0, "wa_work_from");
 
   std::ofstream ostream;
   output_file_stream(ostream, out_prefix, fragment->fid());
