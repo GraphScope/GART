@@ -27,7 +27,9 @@ max_wal_senders = 1  # larger than 0
 
 EOT
 
+sudo apt-get install postgresql-server-dev-$PSQL_VERSION
+
 sudo /etc/init.d/postgresql restart
 
-# pg_ctlcluster 12 main start
+# pg_ctlcluster 16 main start
 # use: sudo -u postgres -i psql
