@@ -241,7 +241,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     if (strstr(log_line, "GART stopped abnormally.")) {
       elog(FATAL, "GART exit abnormally!");
       pclose(fp);
-      return (Datum) 0;
+      PG_RETURN_INT32(0);
     }
 
     if (read_stat == -1) {
@@ -258,7 +258,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
     if (char_written < 0) {
       elog(ERROR, "Cannot write log file: %s", config_log_file_name);
       pclose(fp);
-      return (Datum) 0;
+      PG_RETURN_INT32(0);
     }
 
     fflush(log_file);
@@ -271,7 +271,7 @@ Datum gart_get_connection(PG_FUNCTION_ARGS) {
 
   elog(INFO, "gart_get_connection completely");
 
-  PG_RETURN_INT32(0);
+  PG_RETURN_INT32(1);
 }
 
 Datum gart_release_connection(PG_FUNCTION_ARGS) {
@@ -534,7 +534,7 @@ Datum gart_launch_graph_server(PG_FUNCTION_ARGS) {
 
   if (!config_inited) {
     elog(ERROR, "Config file is not set.");
-    PG_RETURN_INT32(0);
+    return (Datum) 0;
   }
 
   sprintf(cmd,
@@ -546,7 +546,7 @@ Datum gart_launch_graph_server(PG_FUNCTION_ARGS) {
   fp = popen(cmd, "r");
   if (fp == NULL) {
     elog(ERROR, "Cannot execute command: %s", cmd);
-    PG_RETURN_INT32(0);
+    return (Datum) 0;
   }
 
   server_id = add_server_info(nx_server_info_file, server_host, server_port);
@@ -565,7 +565,7 @@ Datum gart_launch_graph_server(PG_FUNCTION_ARGS) {
   if (!is_read) {
     elog(ERROR, "Cannot read from command: %s", cmd);
     pclose(fp);
-    PG_RETURN_INT32(0);
+    return (Datum) 0;
   }
 
   pclose(fp);

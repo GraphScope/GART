@@ -11,7 +11,7 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 # Update the package lists:
 sudo apt-get update
 
-export PSQL_VERSION=12
+export PSQL_VERSION=16
 
 # Install the specific version of PostgreSQL.
 # If you want a latest version, use 'postgresql' instead of 'postgresql-$PSQL_VERSION':

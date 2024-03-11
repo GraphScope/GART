@@ -90,14 +90,22 @@ git clone https://github.com/oracle/pgql-lang.git
 (cd pgql-lang; sh install.sh)
 
 # Kafka
-wget https://archive.apache.org/dist/kafka/3.4.0/kafka_2.13-3.4.0.tgz
-tar -xzf kafka_2.13-3.4.0.tgz
-rm kafka_2.13-3.4.0.tgz
-mv kafka_2.13-3.4.0 kafka
-export KAFKA_HOME=`pwd`/kafka
+KAFKA_VERSION=3.7.0
+KAFKA_SACALE_VERSION=2.13
+KAFKA_PKG_NAME=kafka_$KAFKA_SACALE_VERSION-$KAFKA_VERSION
+wget https://dlcdn.apache.org/kafka/$KAFKA_VERSION/$KAFKA_PKG_NAME.tgz
+tar -xzf $KAFKA_PKG_NAME.tgz
+rm $KAFKA_PKG_NAME.tgz
+export KAFKA_HOME=`pwd`/$KAFKA_PKG_NAME
 export KAFKA_CONFIG=$KAFKA_HOME/config
 export KAFKA_PLUGIN=$KAFKA_HOME/connect
+export KAFKA_LOGS=$KAFKA_HOME/logs
+mkdir -p $KAFKA_PLUGIN  # we need to mkdir connect plugins for Kafka
 echo "delete.topic.enable=true" >> $KAFKA_CONFIG/server.properties
+#write config for kafka connect
+echo "plugin.path=$KAFKA_PLUGIN" >> $KAFKA_CONFIG/connect-standalone.properties
+mkdir -p $KAFKA_LOGS
+sudo chmod -R 774 $KAFKA_LOGS # we need to change the permission of logs for PostgreSQL Extension
 
 # Maxwell
 wget https://github.com/zendesk/maxwell/releases/download/v1.40.0/maxwell-1.40.0.tar.gz
@@ -107,22 +115,21 @@ mv maxwell-1.40.0 maxwell
 export MAXWELL_HOME=`pwd`/maxwell
 
 # Debezium
-# we need to mkdir connect plugins for kafka
-mkdir -p $KAFKA_PLUGIN
+DEBEZIUM_VERSION=2.5.2.Final
 # mysql connector
-wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/2.3.0.Final/debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
-tar zxvf debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
-rm debezium-connector-mysql-2.3.0.Final-plugin.tar.gz
+wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/$DEBEZIUM_VERSION/debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
+tar zxvf debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
+rm debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
 mv debezium-connector-mysql/* $KAFKA_PLUGIN
+rm -rf debezium-connector-mysql
 #postgresql connector
-wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/2.3.0.Final/debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
-tar zxvf debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
-rm debezium-connector-postgres-2.3.0.Final-plugin.tar.gz
+wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/$DEBEZIUM_VERSION/debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
+tar zxvf debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
+rm debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
 mv debezium-connector-postgres/* $KAFKA_PLUGIN
+rm -rf debezium-connector-postgres
 #link kafka connect plugins
 ln -s $KAFKA_PLUGIN/*.jar $KAFKA_HOME/libs/
-#write config for kafka connect
-echo "plugin.path=$KAFKA_PLUGIN" >> $KAFKA_CONFIG/connect-standalone.properties
 
 COMM_CONFIG=$(cat <<EOT
 database.server.id=1
@@ -140,6 +147,9 @@ key.converter=org.apache.kafka.connect.json.JsonConverter
 value.converter=org.apache.kafka.connect.json.JsonConverter
 key.converter.schemas.enable=false
 value.converter.schemas.enable=false
+
+database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
+schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 EOT
 )
 
@@ -147,14 +157,12 @@ EOT
 cat << EOT >> $KAFKA_CONFIG/connect-debezium-mysql.properties
 name=test-connector
 connector.class=io.debezium.connector.mysql.MySqlConnector
-database.hostname=<mysql host>
-database.port=<mysql port>
+database.hostname=<mysql host, e.g., 127.0.0.1>
+database.port=<mysql port, e.g., 3306>
 database.user=<mysql user>
 database.password=<mysql password>
 database.include.list=<which databse is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
-database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
-schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
 snapshot.mode=<if enable buldload, set as "initial", otherwise set as "never">
 
 $COMM_CONFIG
@@ -165,15 +173,13 @@ EOT
 cat << EOT >> $KAFKA_CONFIG/connect-debezium-postgresql.properties
 name=test-connector
 connector.class=io.debezium.connector.postgresql.PostgresConnector
-database.hostname=<postgresql host>
-database.port=<postgresql port>
+database.hostname=<postgresql host, e.g., 127.0.0.1>
+database.port=<postgresql port, e.g., 5432>
 database.user=<postgresql user>
 database.password=<postgresql password>
 database.dbname=<which databse is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
-database.history.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
-schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., localhost:9092>
-snapshot.mode=<if enable buldload, set as "initial", otherwise set as "never">
+snapshot.mode=<if enable buldload, set as "always", otherwise set as "never">
 
 slot.name=debezium
 plugin.name=pgoutput

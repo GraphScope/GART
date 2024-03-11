@@ -159,7 +159,6 @@ simepleEdgeTables = [
     "forum_hastag",
     "person_hasinterest",
     "person_islocationin",
-    "forum_hasmember",
 ]
 
 simpleEdgeTableDDL = {
@@ -167,7 +166,8 @@ simpleEdgeTableDDL = {
 }
 
 propertyEdgeTables = {
-    "knows": "pk_creation_date VARCHAR(255),",
+    "forum_hasmember": "fo_hm_join_date VARCHAR(255),",
+    "knows": "kn_creation_date VARCHAR(255),",
     "likes_comment": "likes_co_creation_date VARCHAR(255),",
     "likes_post": "likes_po_creation_date VARCHAR(255),",
     "studyat": "sa_class_year INT,",
