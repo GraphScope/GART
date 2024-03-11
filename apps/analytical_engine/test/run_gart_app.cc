@@ -41,7 +41,7 @@ inline void output_file_stream(std::ofstream& os, const std::string& dir,
     exit(-1);
   }
   std::string output_path = grape::GetResultFilename(dir, fid);
-  std::cout << "output_path: " << output_path << std::endl;
+  // std::cout << "output_path: " << output_path << std::endl;
 
   os.open(output_path);
   if (os.fail()) {
@@ -62,7 +62,7 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
 
   worker->Init(comm_spec, spec);
   MPI_Barrier(comm_spec.comm());
-  worker->Query(0, 0, "wa_work_from");
+  worker->Query(FLAGS_sssp_source_label_id, FLAGS_sssp_source_oid, FLAGS_sssp_weight_name);
 
   std::ofstream ostream;
   output_file_stream(ostream, out_prefix, fragment->fid());
@@ -166,8 +166,6 @@ int main(int argc, char** argv) {
       std::cout << "No valid epoch to process" << std::endl;
       MPI_Barrier(comm_spec.comm());
     } else {
-      std::cout << "read_epoch " << write_epoch << " fid " << comm_spec.fid()
-                << std::endl;
       schema_key = FLAGS_meta_prefix + "gart_blob_m" + std::to_string(0) +
                    "_p" + std::to_string(comm_spec.fid()) + "_e" +
                    std::to_string(write_epoch);
@@ -181,21 +179,15 @@ int main(int argc, char** argv) {
 
       MPI_Barrier(comm_spec.comm());
 
-      std::cout << "start to run sssp " << std::endl;
-
-      RunPropertySSSP(fragment, comm_spec, "./output_property_sssp");
-
-      MPI_Barrier(comm_spec.comm());
-
-      std::cout << "start to run wcc " << std::endl;
-
-      RunPropertyWCC(fragment, comm_spec, "./output_property_wcc");
-
-      MPI_Barrier(comm_spec.comm());
-
-      std::cout << "start to run pagereank " << std::endl;
-
-      RunPropertyPageRank(fragment, comm_spec, "./output_property_pr");
+      if (FLAGS_app_name == "sssp") {
+        RunPropertySSSP(fragment, comm_spec, "./output_property_sssp");
+      } else if (FLAGS_app_name == "wcc") {
+        RunPropertyWCC(fragment, comm_spec, "./output_property_wcc");
+      } else if (FLAGS_app_name == "pr") {
+        RunPropertyPageRank(fragment, comm_spec, "./output_property_pr");
+      } else {
+        LOG(ERROR) << "Unknown app name: " << fLS::FLAGS_app_name;
+      }
 
       MPI_Barrier(comm_spec.comm());
     }

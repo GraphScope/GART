@@ -20,6 +20,7 @@ class Client:
         ]
         channel = grpc.insecure_channel(service_port, options=channel_options)
         self.stub = pb2_grpc.QueryGraphServiceStub(channel)
+        self._known_version = -1
 
     def get_latest_version(self):
         response_iterator = self.stub.getData(
@@ -29,7 +30,31 @@ class Client:
         for response in response_iterator:
             total_response += response.result
         arc = OutArchive(total_response)
-        return arc.get_size()
+        version = arc.get_size()
+        self._known_version = version
+        return version
 
     def get_graph(self, version):
+        if version > self._known_version:
+            latest_version = self.get_latest_version()
+            self._known_version = latest_version
+            if version > latest_version:
+                raise ValueError(f"Version {version} does not exist")
         return DiGraph(version, self.stub)
+
+    def run_sssp(self, graph, source_node, weight=None):
+        if weight is None:
+            n = (source_node, "")
+        else:
+            n = (source_node, weight)
+        arg = json.dumps(n).encode("utf-8", errors="ignore")
+        response_iterator = self.stub.getData(
+            pb2.Request(op=pb2.RUN_GAE_SSSP, args=arg, version=graph._version)
+        )
+        total_response = bytes()
+        for response in response_iterator:
+            total_response += response.result
+        arc = OutArchive(total_response)
+        tmp = msgpack.unpackb(arc.get_bytes(), use_list=False)
+        result = {(d["label_id"], d["oid"]): d["distance"] for d in tmp}
+        return result

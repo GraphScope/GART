@@ -15,6 +15,7 @@
 #ifndef APPS_NETWORKX_SERVER_GRAPH_REPORTER_H_
 #define APPS_NETWORKX_SERVER_GRAPH_REPORTER_H_
 
+#include <array>
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -56,6 +57,7 @@ using vertex_t = GraphType::vertex_t;
 class QueryGraphServiceImpl final : public QueryGraphService::Service {
  public:
   QueryGraphServiceImpl(std::string etcd_endpoint, std::string meta_prefix) {
+    etcd_endpoint_ = etcd_endpoint;
     meta_prefix_ = meta_prefix;
     etcd_client_ = std::make_shared<etcd::Client>(etcd_endpoint);
     std::string schema_key = meta_prefix + "gart_schema_p0";
@@ -113,7 +115,8 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
         bool is_exist = false;
-        if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
+        if (!node.IsArray() || node.Size() != 2 || !node[0].IsNumber() ||
+            !node[1].IsNumber()) {
           std::cerr << "Invalid node format: " << args << std::endl;
         } else {
           label_id_t label_id = node[0].GetInt();
@@ -130,8 +133,8 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         gart::dynamic::Value edge;
         dynamic::Parse(args, edge);
         bool result = false;
-        if (edge.Size() != 2 || !edge[0].IsArray() || !edge[1].IsArray() ||
-            edge[0].Size() != 2 || edge[1].Size() != 2 ||
+        if (!edge.IsArray() || edge.Size() != 2 || !edge[0].IsArray() ||
+            !edge[1].IsArray() || edge[0].Size() != 2 || edge[1].Size() != 2 ||
             !edge[0][0].IsNumber() || !edge[0][1].IsNumber() ||
             !edge[1][0].IsNumber() || !edge[1][1].IsNumber()) {
           std::cerr << "Invalid edge format: " << args << std::endl;
@@ -150,7 +153,8 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         // the input node format: (label_id, oid)
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
-        if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
+        if (!node.IsArray() || node.Size() != 2 || !node[0].IsNumber() ||
+            !node[1].IsNumber()) {
           std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
@@ -165,8 +169,8 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         // dst_oid))
         gart::dynamic::Value edge;
         dynamic::Parse(args, edge);
-        if (edge.Size() != 2 || !edge[0].IsArray() || !edge[1].IsArray() ||
-            edge[0].Size() != 2 || edge[1].Size() != 2 ||
+        if (!edge.IsArray() || edge.Size() != 2 || !edge[0].IsArray() ||
+            !edge[1].IsArray() || edge[0].Size() != 2 || edge[1].Size() != 2 ||
             !edge[0][0].IsNumber() || !edge[0][1].IsNumber() ||
             !edge[1][0].IsNumber() || !edge[1][1].IsNumber()) {
           std::cerr << "Invalid edge format: " << args << std::endl;
@@ -185,7 +189,8 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         // the input node format: (label_id, oid)
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
-        if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
+        if (!node.IsArray() || node.Size() != 2 || !node[0].IsNumber() ||
+            !node[1].IsNumber()) {
           std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
@@ -200,7 +205,8 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         // the input node format: (label_id, oid)
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
-        if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
+        if (!node.IsArray() || node.Size() != 2 || !node[0].IsNumber() ||
+            !node[1].IsNumber()) {
           std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
@@ -212,6 +218,35 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       }
       case gart::rpc::NODES: {
         getNodeList(fragment, *in_archive);
+        break;
+      }
+      case gart::rpc::RUN_GAE_SSSP: {
+        gart::dynamic::Value cmd;
+        gart::dynamic::Parse(args, cmd);
+        label_id_t label_id = cmd[0][0].GetInt();
+        oid_t source_id = cmd[0][1].GetInt64();
+        std::string weight_name = cmd[1].GetString();
+        std::string bin_path = "../../../build/apps/run_gart_app";
+        std::string gae_cmd =
+            "mpirun -n 1 " + bin_path + " --etcd_endpoint " + etcd_endpoint_ +
+            " --read_epoch " + std::to_string(version) + " --meta_prefix " +
+            meta_prefix_ + " --app_name sssp --sssp_source_label_id " +
+            std::to_string(label_id) + " --sssp_source_oid " +
+            std::to_string(source_id) + " --sssp_weight_name " + weight_name;
+        if (weight_name.empty()) {
+          gae_cmd = "mpirun -n 1 " + bin_path + " --etcd_endpoint " +
+                    etcd_endpoint_ + " --read_epoch " +
+                    std::to_string(version) + " --meta_prefix " + meta_prefix_ +
+                    " --app_name sssp --sssp_source_label_id " +
+                    std::to_string(label_id) + " --sssp_source_oid " +
+                    std::to_string(source_id);
+        }
+        std::string result = ExecuteExternalProgram(gae_cmd);
+        gart::dynamic::Value result_json;
+        gart::dynamic::Parse(result, result_json);
+        msgpack::sbuffer sbuf;
+        msgpack::pack(&sbuf, result_json);
+        *in_archive << sbuf;
         break;
       }
       default: {
@@ -237,6 +272,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
   std::shared_ptr<etcd::Client> etcd_client_;
   json graph_schema_;
   std::string meta_prefix_;
+  std::string etcd_endpoint_;
 
   size_t getLatestEpoch() {
     std::string latest_epoch_str = meta_prefix_ + "gart_latest_epoch_p0";
@@ -431,6 +467,25 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
     msgpack::sbuffer sbuf;
     msgpack::pack(&sbuf, data_array);
     arc << sbuf;
+  }
+
+  // for execute GAE and get the result
+  std::string ExecuteExternalProgram(const std::string& command) {
+    std::array<char, 128> buffer;
+    std::string result;
+
+    // Open a pipe to read the output of the executed command
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"),
+                                                  pclose);
+    if (!pipe) {
+      throw std::runtime_error("popen() failed!");
+    }
+
+    // Read the output a line at a time
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+      result += buffer.data();
+    }
+    return result;
   }
 };
 }  // namespace gart

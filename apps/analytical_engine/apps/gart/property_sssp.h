@@ -21,6 +21,8 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "vineyard/common/util/json.h"
+
 #include "core/app/app_base.h"
 #include "core/context/gart_vertex_data_context.h"
 #include "core/utils/gart_vertex_array.h"
@@ -65,17 +67,34 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     auto v_label_num = frag.vertex_label_num();
+    std::vector<std::tuple<label_id_t, oid_t, int>> result_vec;
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
       auto vertices_iter = frag.InnerVertices(v_label);
       while (vertices_iter.valid()) {
         auto v = vertices_iter.vertex();
         auto v_data = result[v_label][v];
         if (v_data != std::numeric_limits<int>::max()) {
-          os << v_label << "\t" << frag.GetId(v) << "\t" << v_data << std::endl;
+          result_vec.push_back(std::make_tuple(v_label, frag.GetId(v), v_data));
         }
         vertices_iter.next();
       }
     }
+
+    vineyard::json result_json;
+
+    for (const auto& tup : result_vec) {
+        // You can use get<n>(tup) to access the nth element of the tuple
+        nlohmann::json jsonObj;
+        jsonObj["label_id"] = std::get<0>(tup);
+        jsonObj["oid"] = std::get<1>(tup);
+        jsonObj["distance"] = std::get<2>(tup);
+
+        // Add the JSON object to the array
+        result_json.push_back(jsonObj);
+    }
+
+    std::string json_str = result_json.dump();
+    std::cout << json_str;
   }
 
   std::vector<gart::GartVertexArray<gart::vid_t, int>> result;
