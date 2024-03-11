@@ -60,9 +60,22 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
     etcd_client_ = std::make_shared<etcd::Client>(etcd_endpoint);
     std::string schema_key = meta_prefix + "gart_schema_p0";
     etcd::Response response = etcd_client_->get(schema_key).get();
-    assert(response.is_ok());
+    if (!response.is_ok()) {
+      std::cerr << "Failed to get graph schema from etcd by the key: "
+                << schema_key << std::endl;
+      exit(-1);
+    }
     std::string graph_schema_str = response.value().as_string();
-    graph_schema_ = json::parse(graph_schema_str);
+    if (graph_schema_str.empty()) {
+      std::cerr << "Empty graph schema" << std::endl;
+      exit(-1);
+    }
+    try {
+      graph_schema_ = json::parse(graph_schema_str);
+    } catch (std::exception& e) {
+      std::cerr << "Failed to parse graph schema: " << e.what() << std::endl;
+      exit(-1);
+    }
   }
 
   Status getData(grpc::ServerContext* context,
@@ -101,7 +114,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         gart::dynamic::Parse(args, node);
         bool is_exist = false;
         if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
-          std::cout << "Invalid node format: " << args << std::endl;
+          std::cerr << "Invalid node format: " << args << std::endl;
         } else {
           label_id_t label_id = node[0].GetInt();
           oid_t oid = node[1].GetInt64();
@@ -121,7 +134,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
             edge[0].Size() != 2 || edge[1].Size() != 2 ||
             !edge[0][0].IsNumber() || !edge[0][1].IsNumber() ||
             !edge[1][0].IsNumber() || !edge[1][1].IsNumber()) {
-          std::cout << "Invalid edge format: " << args << std::endl;
+          std::cerr << "Invalid edge format: " << args << std::endl;
         } else {
           label_id_t src_label_id = edge[0][0].GetInt();
           label_id_t dst_label_id = edge[1][0].GetInt();
@@ -138,7 +151,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
         if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
-          std::cout << "Invalid node format: " << args << std::endl;
+          std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
         label_id_t label_id = node[0].GetInt();
@@ -156,7 +169,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
             edge[0].Size() != 2 || edge[1].Size() != 2 ||
             !edge[0][0].IsNumber() || !edge[0][1].IsNumber() ||
             !edge[1][0].IsNumber() || !edge[1][1].IsNumber()) {
-          std::cout << "Invalid edge format: " << args << std::endl;
+          std::cerr << "Invalid edge format: " << args << std::endl;
           break;
         }
         label_id_t src_label_id = edge[0][0].GetInt();
@@ -173,7 +186,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
         if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
-          std::cout << "Invalid node format: " << args << std::endl;
+          std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
         label_id_t label_id = node[0].GetInt();
@@ -188,7 +201,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
         if (node.Size() != 2 || !node[0].IsNumber() || !node[1].IsNumber()) {
-          std::cout << "Invalid node format: " << args << std::endl;
+          std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
         label_id_t label_id = node[0].GetInt();
@@ -202,7 +215,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         break;
       }
       default: {
-        std::cout << "Unknown op: " << op << std::endl;
+        std::cerr << "Unknown op: " << op << std::endl;
       }
       }
     }
