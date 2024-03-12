@@ -17,7 +17,6 @@ from gart.coreviews import AdjacencyView
 from networkx.classes.reportviews import DiDegreeView
 from networkx.classes.reportviews import InDegreeView
 from networkx.classes.reportviews import OutDegreeView
-import networkx as nx
 
 import gart.proto.types_pb2 as pb2
 import gart.proto.types_pb2_grpc as pb2_grpc
@@ -115,8 +114,11 @@ class DiGraph(object):
             total_response = bytes()
             for response in response_iterator:
                 total_response += response.result
-            arc = OutArchive(total_response)
-            return arc.get_size()
+            try:
+                arc = OutArchive(total_response)
+                return arc.get_size()
+            except TypeError:
+                return 0
         return len(self._nodes)
 
     def __getitem__(self, n):
@@ -133,8 +135,11 @@ class DiGraph(object):
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        try:
+            arc = OutArchive(total_response)
+            return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        except TypeError:
+            return {}
 
     @lru_cache(1000)
     def get_successors(self, n):
@@ -145,8 +150,11 @@ class DiGraph(object):
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        try:
+            arc = OutArchive(total_response)
+            return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        except TypeError:
+            return ()
 
     @lru_cache(1000)
     def get_succ_attr(self, n):
@@ -157,8 +165,11 @@ class DiGraph(object):
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        try:
+            arc = OutArchive(total_response)
+            return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        except TypeError:
+            return ()
 
     @lru_cache(1000)
     def get_predecessors(self, n):
@@ -169,8 +180,11 @@ class DiGraph(object):
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        try:
+            arc = OutArchive(total_response)
+            return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        except TypeError:
+            return ()
 
     @lru_cache(1000)
     def get_pred_attr(self, n):
@@ -181,8 +195,11 @@ class DiGraph(object):
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        try:
+            arc = OutArchive(total_response)
+            return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        except TypeError:
+            return ()
 
     @lru_cache(1000)
     def get_pred_neighbor_attr_pair(self, n):
@@ -209,8 +226,11 @@ class DiGraph(object):
             total_response = bytes()
             for response in response_iterator:
                 total_response += response.result
-            arc = OutArchive(total_response)
-            return arc.get_size()
+            try:
+                arc = OutArchive(total_response)
+                return arc.get_size()
+            except TypeError:
+                return 0
         return len(self._nodes)
 
     def order(self):
@@ -243,8 +263,11 @@ class DiGraph(object):
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        return arc.get_bool()
+        try:
+            arc = OutArchive(total_response)
+            return arc.get_bool()
+        except TypeError:
+            return False
 
     @lru_cache(1000)
     def has_predecessor(self, u, v):
@@ -257,8 +280,11 @@ class DiGraph(object):
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        return arc.get_bool()
+        try:
+            arc = OutArchive(total_response)
+            return arc.get_bool()
+        except TypeError:
+            return False
 
     def has_edge(self, u, v):
         """Returns True if the edge (u, v) is in the graph."""
@@ -305,8 +331,11 @@ class DiGraph(object):
             total_response = bytes()
             for response in response_iterator:
                 total_response += response.result
-            arc = OutArchive(total_response)
-            edges_num = arc.get_size()
+            try:
+                arc = OutArchive(total_response)
+                edges_num = arc.get_size()
+            except TypeError:
+                edges_num = 0
         elif self.has_edge(u, v):
             edges_num = 1
         return edges_num
@@ -323,8 +352,11 @@ class DiGraph(object):
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        try:
+            arc = OutArchive(total_response)
+            return msgpack.unpackb(arc.get_bytes(), use_list=False)
+        except TypeError:
+            return {}
 
     def adjacency(self):
         """Returns an iterator over (node, adjacency dict) tuples for all nodes."""

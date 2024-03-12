@@ -54,7 +54,10 @@ class Client:
         total_response = bytes()
         for response in response_iterator:
             total_response += response.result
-        arc = OutArchive(total_response)
-        tmp = msgpack.unpackb(arc.get_bytes(), use_list=False)
-        result = {(d["label_id"], d["oid"]): d["distance"] for d in tmp}
-        return result
+        try:
+            arc = OutArchive(total_response)
+            tmp = msgpack.unpackb(arc.get_bytes(), use_list=False)
+            result = {(d["label_id"], d["oid"]): d["distance"] for d in tmp}
+            return result
+        except TypeError:
+            raise ValueError("Failed to execute GAE SSSP")

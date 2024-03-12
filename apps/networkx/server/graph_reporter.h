@@ -226,7 +226,7 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         label_id_t label_id = cmd[0][0].GetInt();
         oid_t source_id = cmd[0][1].GetInt64();
         std::string weight_name = cmd[1].GetString();
-        std::string bin_path = "../../../build/apps/run_gart_app";
+        std::string bin_path = "./apps/run_gart_app";
         std::string gae_cmd =
             "mpirun -n 1 " + bin_path + " --etcd_endpoint " + etcd_endpoint_ +
             " --read_epoch " + std::to_string(version) + " --meta_prefix " +
