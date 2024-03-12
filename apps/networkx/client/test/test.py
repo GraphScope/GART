@@ -1,5 +1,6 @@
 import argparse
-from gart import DiGraph
+from gart import Client
+import time
 
 
 def get_parser():
@@ -20,7 +21,10 @@ if __name__ == "__main__":
     args = get_parser().parse_args()
 
     hostname = f"{args.host}:{args.port}"
-    g = DiGraph(hostname)
+
+    client = Client(hostname)
+    version = client.get_latest_version()
+    g = client.get_graph(version)
 
     print("number of nodes:", len(g))
 
@@ -29,8 +33,15 @@ if __name__ == "__main__":
     #    pass
     # print(node)
 
-    node = (4, 933)
-    print(g[node])
+    node = (0, 0)
+    # print(g[node])
+
+    start = time.time()
+    length = client.run_sssp(g, node, "wa_work_from")
+    print(len(length))
+    print("SSSP took", 1000 * (time.time() - start), " ms")
+
+    exit(0)
 
     # for node in g.nodes(data="org_id", default="default"):
     #    pass

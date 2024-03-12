@@ -89,14 +89,13 @@ class DefaultWorker {
   template <class... Args>
   void Query(Args&&... args) {
     double t = grape::GetCurrentTime();
+    double start_t = grape::GetCurrentTime();
 
     auto& graph = context_->fragment();
 
     MPI_Barrier(comm_spec_.comm());
 
     context_->Init(messages_, std::forward<Args>(args)...);
-
-    int round = 0;
 
     messages_.Start();
 
@@ -107,15 +106,14 @@ class DefaultWorker {
     messages_.FinishARound();
 
     if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-      VLOG(1) << "[Coordinator]: Finished PEval, time: "
-              << grape::GetCurrentTime() - t << " sec";
+      std::cout << "[Coordinator]: Finished PEval, time: "
+                << 1000 * (grape::GetCurrentTime() - t) << " ms" << std::endl;
     }
 
     int step = 1;
 
     while (!messages_.ToTerminate()) {
       t = grape::GetCurrentTime();
-      round++;
       messages_.StartARound();
 
       app_->IncEval(graph, *context_, messages_);
@@ -123,8 +121,9 @@ class DefaultWorker {
       messages_.FinishARound();
 
       if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-        VLOG(1) << "[Coordinator]: Finished IncEval - " << step
-                << ", time: " << grape::GetCurrentTime() - t << " sec";
+        std::cout << "[Coordinator]: Finished IncEval - " << step
+                  << ", time: " << 1000 * (grape::GetCurrentTime() - t) << " ms"
+                  << std::endl;
       }
       ++step;
     }
@@ -133,6 +132,10 @@ class DefaultWorker {
 
     messages_.Finalize();
     finishQuery();
+
+    std::cout << "[Coordinator]: Finished Query, time: "
+              << 1000 * (grape::GetCurrentTime() - start_t) << " ms"
+              << std::endl;
   }
 
   std::shared_ptr<context_t> GetContext() { return context_; }

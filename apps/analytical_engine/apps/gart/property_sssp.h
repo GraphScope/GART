@@ -83,18 +83,18 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
     vineyard::json result_json;
 
     for (const auto& tup : result_vec) {
-        // You can use get<n>(tup) to access the nth element of the tuple
-        nlohmann::json jsonObj;
-        jsonObj["label_id"] = std::get<0>(tup);
-        jsonObj["oid"] = std::get<1>(tup);
-        jsonObj["distance"] = std::get<2>(tup);
+      // You can use get<n>(tup) to access the nth element of the tuple
+      nlohmann::json jsonObj;
+      jsonObj["label_id"] = std::get<0>(tup);
+      jsonObj["oid"] = std::get<1>(tup);
+      jsonObj["distance"] = std::get<2>(tup);
 
-        // Add the JSON object to the array
-        result_json.push_back(jsonObj);
+      // Add the JSON object to the array
+      result_json.push_back(jsonObj);
     }
 
     std::string json_str = result_json.dump();
-    std::cout << json_str;
+    // std::cout << json_str;
   }
 
   std::vector<gart::GartVertexArray<gart::vid_t, int>> result;
