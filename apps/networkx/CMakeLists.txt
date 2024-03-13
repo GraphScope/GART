@@ -112,9 +112,12 @@ add_custom_target(install_python
         COMMENT "Install python client"
         VERBATIM)
 
+add_custom_target(create_build_dir 
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/../analytical_engine/build"
+    )
+
 add_custom_target(install_gae
-        COMMAND mkdir -p build; cd build WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../analytical_engine/
-        COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../analytical_engine/build
+        COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../analytical_engine/build DEPENDS create_build_dir
         COMMAND make run_gart_app -j WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../analytical_engine/build
         COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/build/apps/
         COMMAND cp run_gart_app ${CMAKE_CURRENT_SOURCE_DIR}/build/apps/ WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../analytical_engine/build
