@@ -75,7 +75,8 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
         auto v = vertices_iter.vertex();
         auto v_data = result[v_label][v];
         if (v_data != std::numeric_limits<int>::max()) {
-          result_vec.push_back(std::make_tuple(v_label_str, frag.GetId(v), v_data));
+          result_vec.push_back(
+              std::make_tuple(v_label_str, frag.GetId(v), v_data));
         }
         vertices_iter.next();
       }
