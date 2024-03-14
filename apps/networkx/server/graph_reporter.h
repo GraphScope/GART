@@ -115,11 +115,12 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
         bool is_exist = false;
-        if (!node.IsArray() || node.Size() != 2 || !node[0].IsNumber() ||
+        if (!node.IsArray() || node.Size() != 2 || !node[0].IsString() ||
             !node[1].IsNumber()) {
           std::cerr << "Invalid node format: " << args << std::endl;
         } else {
-          label_id_t label_id = node[0].GetInt();
+          std::string label = node[0].GetString();
+          label_id_t label_id = fragment->GetVertexLabelId(label);
           oid_t oid = node[1].GetInt64();
           vid_t gid;
           is_exist = fragment->Oid2Gid(label_id, oid, gid);
@@ -135,12 +136,14 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         bool result = false;
         if (!edge.IsArray() || edge.Size() != 2 || !edge[0].IsArray() ||
             !edge[1].IsArray() || edge[0].Size() != 2 || edge[1].Size() != 2 ||
-            !edge[0][0].IsNumber() || !edge[0][1].IsNumber() ||
-            !edge[1][0].IsNumber() || !edge[1][1].IsNumber()) {
+            !edge[0][0].IsString() || !edge[0][1].IsNumber() ||
+            !edge[1][0].IsString() || !edge[1][1].IsNumber()) {
           std::cerr << "Invalid edge format: " << args << std::endl;
         } else {
-          label_id_t src_label_id = edge[0][0].GetInt();
-          label_id_t dst_label_id = edge[1][0].GetInt();
+          std::string src_label = edge[0][0].GetString();
+          label_id_t src_label_id = fragment->GetVertexLabelId(src_label);
+          std::string dst_label = edge[1][0].GetString();
+          label_id_t dst_label_id = fragment->GetVertexLabelId(dst_label);
           oid_t src_oid = edge[0][1].GetInt64();
           oid_t dst_oid = edge[1][1].GetInt64();
           result =
@@ -150,15 +153,16 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         break;
       }
       case gart::rpc::NODE_DATA: {
-        // the input node format: (label_id, oid)
+        // the input node format: (label_str, oid)
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
-        if (!node.IsArray() || node.Size() != 2 || !node[0].IsNumber() ||
+        if (!node.IsArray() || node.Size() != 2 || !node[0].IsString() ||
             !node[1].IsNumber()) {
           std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
-        label_id_t label_id = node[0].GetInt();
+        std::string label = node[0].GetString();
+        label_id_t label_id = fragment->GetVertexLabelId(label);
         // in gart, oid is a uint64_t
         oid_t oid = node[1].GetInt64();
         getNodeData(fragment, label_id, oid, *in_archive);
@@ -171,13 +175,15 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         dynamic::Parse(args, edge);
         if (!edge.IsArray() || edge.Size() != 2 || !edge[0].IsArray() ||
             !edge[1].IsArray() || edge[0].Size() != 2 || edge[1].Size() != 2 ||
-            !edge[0][0].IsNumber() || !edge[0][1].IsNumber() ||
-            !edge[1][0].IsNumber() || !edge[1][1].IsNumber()) {
+            !edge[0][0].IsString() || !edge[0][1].IsNumber() ||
+            !edge[1][0].IsString() || !edge[1][1].IsNumber()) {
           std::cerr << "Invalid edge format: " << args << std::endl;
           break;
         }
-        label_id_t src_label_id = edge[0][0].GetInt();
-        label_id_t dst_label_id = edge[1][0].GetInt();
+        std::string src_label = edge[0][0].GetString();
+        label_id_t src_label_id = fragment->GetVertexLabelId(src_label);
+        std::string dst_label = edge[1][0].GetString();
+        label_id_t dst_label_id = fragment->GetVertexLabelId(dst_label);
         oid_t src_oid = edge[0][1].GetInt64();
         oid_t dst_oid = edge[1][1].GetInt64();
         getEdgeData(fragment, src_label_id, src_oid, dst_label_id, dst_oid,
@@ -189,12 +195,13 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         // the input node format: (label_id, oid)
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
-        if (!node.IsArray() || node.Size() != 2 || !node[0].IsNumber() ||
+        if (!node.IsArray() || node.Size() != 2 || !node[0].IsString() ||
             !node[1].IsNumber()) {
           std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
-        label_id_t label_id = node[0].GetInt();
+        std::string label = node[0].GetString();
+        label_id_t label_id = fragment->GetVertexLabelId(label);
         // in gart, oid is a uint64_t
         oid_t oid = node[1].GetInt64();
         getNeighborsList(fragment, label_id, oid, op, *in_archive);
@@ -205,12 +212,13 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         // the input node format: (label_id, oid)
         gart::dynamic::Value node;
         gart::dynamic::Parse(args, node);
-        if (!node.IsArray() || node.Size() != 2 || !node[0].IsNumber() ||
+        if (!node.IsArray() || node.Size() != 2 || !node[0].IsString() ||
             !node[1].IsNumber()) {
           std::cerr << "Invalid node format: " << args << std::endl;
           break;
         }
-        label_id_t label_id = node[0].GetInt();
+        std::string label = node[0].GetString();
+        label_id_t label_id = fragment->GetVertexLabelId(label);
         // in gart, oid is a uint64_t
         oid_t oid = node[1].GetInt64();
         getNeighborsAttrList(fragment, label_id, oid, op, *in_archive);
@@ -223,24 +231,25 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       case gart::rpc::RUN_GAE_SSSP: {
         gart::dynamic::Value cmd;
         gart::dynamic::Parse(args, cmd);
-        label_id_t label_id = cmd[0][0].GetInt();
+        std::string label = cmd[0][0].GetString();
         oid_t source_id = cmd[0][1].GetInt64();
         std::string weight_name = cmd[1].GetString();
         std::string bin_path = "./apps/run_gart_app";
         std::string gae_cmd =
             "mpirun -n 1 " + bin_path + " --etcd_endpoint " + etcd_endpoint_ +
             " --read_epoch " + std::to_string(version) + " --meta_prefix " +
-            meta_prefix_ + " --app_name sssp --sssp_source_label_id " +
-            std::to_string(label_id) + " --sssp_source_oid " +
+            meta_prefix_ + " --app_name sssp --sssp_source_label " +
+            label + " --sssp_source_oid " +
             std::to_string(source_id) + " --sssp_weight_name " + weight_name;
         if (weight_name.empty()) {
           gae_cmd = "mpirun -n 1 " + bin_path + " --etcd_endpoint " +
                     etcd_endpoint_ + " --read_epoch " +
                     std::to_string(version) + " --meta_prefix " + meta_prefix_ +
-                    " --app_name sssp --sssp_source_label_id " +
-                    std::to_string(label_id) + " --sssp_source_oid " +
+                    " --app_name sssp --sssp_source_label " +
+                    label + " --sssp_source_oid " +
                     std::to_string(source_id);
         }
+        std::cout << "GAE cmd: " << gae_cmd << std::endl;
         std::string result = ExecuteExternalProgram(gae_cmd);
         gart::dynamic::Value result_json;
         gart::dynamic::Parse(result, result_json);
@@ -313,7 +322,8 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
       }
       while (edge_iter.valid()) {
         vertex_t dst = edge_iter.neighbor();
-        label_id_t dst_label = fragment->vertex_label(dst);
+        label_id_t dst_label_id = fragment->vertex_label(dst);
+        std::string dst_label = fragment->GetVertexLabelName(dst_label_id);
         oid_t dst_oid = fragment->GetId(dst);
         id_array.PushBack(dynamic::Value(rapidjson::kArrayType)
                               .PushBack(dst_label)
@@ -350,12 +360,13 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
     gart::dynamic::Value id_array(rapidjson::kArrayType);
     auto vertex_label_num = fragment->vertex_label_num();
     for (auto v_label = 0; v_label < vertex_label_num; v_label++) {
+      std::string v_label_str = fragment->GetVertexLabelName(v_label);
       auto vertices_iter = fragment->InnerVertices(v_label);
       while (vertices_iter.valid()) {
         auto v = vertices_iter.vertex();
         auto v_oid = fragment->GetId(v);
         id_array.PushBack(dynamic::Value(rapidjson::kArrayType)
-                              .PushBack(v_label)
+                              .PushBack(v_label_str)
                               .PushBack(v_oid));
         vertices_iter.next();
       }

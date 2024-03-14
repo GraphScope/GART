@@ -44,11 +44,11 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
   explicit PropertySSSPContext(const FRAG_T& fragment)
       : gs::GartLabeledVertexDataContext<FRAG_T>(fragment) {}
 
-  void Init(grape::DefaultMessageManager& messages, label_id_t label_id,
+  void Init(grape::DefaultMessageManager& messages, std::string label,
             oid_t src_oid, std::string weight_name) {
     auto& frag = this->fragment();
     auto vertex_label_num = frag.vertex_label_num();
-    this->label_id = label_id;
+    this->label_id = frag.GetVertexLabelId(label);
     this->source_id = src_oid;
     this->weight_name = weight_name;
     result.resize(vertex_label_num);
@@ -67,14 +67,15 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     auto v_label_num = frag.vertex_label_num();
-    std::vector<std::tuple<label_id_t, oid_t, int>> result_vec;
+    std::vector<std::tuple<std::string, oid_t, int>> result_vec;
     for (auto v_label = 0; v_label < v_label_num; v_label++) {
+      std::string v_label_str = frag.GetVertexLabelName(v_label);
       auto vertices_iter = frag.InnerVertices(v_label);
       while (vertices_iter.valid()) {
         auto v = vertices_iter.vertex();
         auto v_data = result[v_label][v];
         if (v_data != std::numeric_limits<int>::max()) {
-          result_vec.push_back(std::make_tuple(v_label, frag.GetId(v), v_data));
+          result_vec.push_back(std::make_tuple(v_label_str, frag.GetId(v), v_data));
         }
         vertices_iter.next();
       }
@@ -94,7 +95,7 @@ class PropertySSSPContext : public gs::GartLabeledVertexDataContext<FRAG_T> {
     }
 
     std::string json_str = result_json.dump();
-    // std::cout << json_str;
+    std::cout << json_str;
   }
 
   std::vector<gart::GartVertexArray<gart::vid_t, int>> result;

@@ -22,6 +22,6 @@ DEFINE_string(etcd_endpoint, "http://127.0.0.1:2379",
 DEFINE_int32(read_epoch, 0, "read epoch for graph reader.");
 DEFINE_string(meta_prefix, "gart_meta_", "meta prefix for etcd.");
 DEFINE_string(app_name, "sssp", "gart app name.");
-DEFINE_int32(sssp_source_label_id, 0, "source label id for sssp.");
+DEFINE_string(sssp_source_label, "", "source label id for sssp.");
 DEFINE_int32(sssp_source_oid, 0, "source oid for sssp.");
 DEFINE_string(sssp_weight_name, "", "weight name for sssp.");

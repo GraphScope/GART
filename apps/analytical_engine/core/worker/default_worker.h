@@ -105,10 +105,10 @@ class DefaultWorker {
 
     messages_.FinishARound();
 
-    if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-      std::cout << "[Coordinator]: Finished PEval, time: "
-                << 1000 * (grape::GetCurrentTime() - t) << " ms" << std::endl;
-    }
+    // if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
+    //  std::cout << "[Coordinator]: Finished PEval, time: "
+    //            << 1000 * (grape::GetCurrentTime() - t) << " ms" << std::endl;
+    // }
 
     int step = 1;
 
@@ -120,11 +120,11 @@ class DefaultWorker {
 
       messages_.FinishARound();
 
-      if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-        std::cout << "[Coordinator]: Finished IncEval - " << step
-                  << ", time: " << 1000 * (grape::GetCurrentTime() - t) << " ms"
-                  << std::endl;
-      }
+      // if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
+      //  std::cout << "[Coordinator]: Finished IncEval - " << step
+      //            << ", time: " << 1000 * (grape::GetCurrentTime() - t) << " ms"
+      //            << std::endl;
+      //}
       ++step;
     }
 
@@ -133,9 +133,9 @@ class DefaultWorker {
     messages_.Finalize();
     finishQuery();
 
-    std::cout << "[Coordinator]: Finished Query, time: "
-              << 1000 * (grape::GetCurrentTime() - start_t) << " ms"
-              << std::endl;
+    // std::cout << "[Coordinator]: Finished Query, time: "
+    //          << 1000 * (grape::GetCurrentTime() - start_t) << " ms"
+    //          << std::endl;
   }
 
   std::shared_ptr<context_t> GetContext() { return context_; }

@@ -62,7 +62,7 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
 
   worker->Init(comm_spec, spec);
   MPI_Barrier(comm_spec.comm());
-  worker->Query(FLAGS_sssp_source_label_id, FLAGS_sssp_source_oid,
+  worker->Query(FLAGS_sssp_source_label, FLAGS_sssp_source_oid,
                 FLAGS_sssp_weight_name);
 
   std::ofstream ostream;
@@ -194,10 +194,10 @@ int main(int argc, char** argv) {
 
       MPI_Barrier(comm_spec.comm());
 
-      if (comm_spec.fid() == 0) {
-        std::cout << "Finished, time: " << 1000 * (grape::GetCurrentTime() - t)
-                  << " ms" << std::endl;
-      }
+      // if (comm_spec.fid() == 0) {
+      //  std::cout << "Finished, time: " << 1000 * (grape::GetCurrentTime() - t)
+      //            << " ms" << std::endl;
+      // }
     }
   }
   grape::FinalizeMPIComm();

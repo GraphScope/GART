@@ -167,7 +167,7 @@ def single_source_dijkstra_path_length(G, source, cutoff=None, weight="weight"):
 client = Client("localhost:50051")
 version = client.get_latest_version()
 g = client.get_graph(version)
-length = single_source_dijkstra_path_length(g, (0, 0), weight="wa_work_from")
+length = single_source_dijkstra_path_length(g, ('organisation', 0), weight="wa_work_from")
 
 for node in g:
     if node in length:

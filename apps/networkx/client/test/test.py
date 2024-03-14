@@ -33,7 +33,7 @@ if __name__ == "__main__":
     #    pass
     # print(node)
 
-    node = (0, 0)
+    node = ('organisation', 0)
     # print(g[node])
 
     start = time.time()
@@ -48,16 +48,16 @@ if __name__ == "__main__":
     #    print(node)
     # print(g.nodes(data=True))
 
-    node = (4, 933)
+    node = ('person', 933)
     print(g[node])
 
     print(g._adj[node])
 
     print(len(g[node]) == len(g._adj[node]))
 
-    node = (0, 1)
+    node = ('organisation', 1)
     print(g.adj[node])
-    dst = (4, 24189255812047)
+    dst = ('person', 24189255812047)
     print(g._adj[node][dst])
 
     # for node in g.nodes(data=True):

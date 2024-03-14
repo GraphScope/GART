@@ -22,7 +22,7 @@ DECLARE_string(etcd_endpoint);
 DECLARE_int32(read_epoch);
 DECLARE_string(meta_prefix);
 DECLARE_string(app_name);
-DECLARE_int32(sssp_source_label_id);
+DECLARE_string(sssp_source_label);
 DECLARE_int32(sssp_source_oid);
 DECLARE_string(sssp_weight_name);
 
