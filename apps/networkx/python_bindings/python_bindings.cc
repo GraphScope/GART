@@ -18,15 +18,15 @@
 #include <future>
 #include <string_view>
 
+#include "grape/utils/vertex_array.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "vineyard/common/util/json.h"
 
-#include "fragment_builder.h"
-#include "grape/utils/vertex_array.h"
 #include "interfaces/fragment/gart_fragment.h"
 #include "interfaces/fragment/iterator.h"
 #include "interfaces/fragment/types.h"
+#include "python_bindings/fragment_builder.h"
 
 namespace py = pybind11;
 

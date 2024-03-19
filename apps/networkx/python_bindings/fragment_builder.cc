@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-#include "fragment_builder.h"
+
+#include "python_bindings/fragment_builder.h"
 
 FragmentBuilder::FragmentBuilder(std::string etcd_endpoint,
                                  std::string meta_prefix, int read_epoch) {

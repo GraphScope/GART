@@ -39,12 +39,12 @@ link_libraries(${ETCD_CPP_LIBRARIES})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../vegito/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../..)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../networkx)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # Find pybind11
 find_package(pybind11 REQUIRED)
 
-# Add your module (the name here should match the module name given in PYBIND11_MODULE)
 pybind11_add_module(local_gart SHARED python_bindings.cc fragment_builder.cc)
 
 execute_process(COMMAND python -c "import site; print(site.getsitepackages()[0])"
