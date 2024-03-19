@@ -44,6 +44,7 @@ enum ReportType {
   NODES_GID = 18;
   LATEST_GRAPH_VERSION = 19;
   RUN_GAE_SSSP = 20;
+  CONNECT_INFO = 21;
 }
 
 //

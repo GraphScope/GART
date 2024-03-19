@@ -106,11 +106,24 @@ set_source_files_properties(${PROTO_SOURCES} PROPERTIES COMPILE_FLAGS -Wno-array
 add_executable(gart_networkx_server server/graph_server.cc ${PROTO_SOURCES} ${SOURCES})
 target_link_libraries(gart_networkx_server ${GRPC_LIBRARIES} ${Protobuf_LIBRARIES} ${MPI_CXX_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
 
+add_custom_target(create_pybind_build_dir 
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/python_bindings/build"
+    )
+
+add_custom_target(install_pybind
+    COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python_bindings/build DEPENDS create_pybind_build_dir
+    COMMAND make -j WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python_bindings/build
+    COMMAND make install WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python_bindings/build
+    )
+
+
 add_custom_target(install_python
         COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/client/python/setup.py build_proto sdist bdist_wheel WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
         COMMAND pip install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
         COMMENT "Install python client"
-        VERBATIM)
+        VERBATIM
+        )
+
 
 add_custom_target(create_build_dir 
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/../analytical_engine/build"

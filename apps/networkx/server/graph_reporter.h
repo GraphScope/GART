@@ -88,6 +88,20 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
     if (op == gart::rpc::LATEST_GRAPH_VERSION) {
       size_t latest_version = getLatestEpoch();
       *in_archive << latest_version;
+    } else if (op == gart::rpc::CONNECT_INFO) {
+      gart::dynamic::Value ref_data(rapidjson::kObjectType);
+      rapidjson::Value etcd_endpoint(etcd_endpoint_,
+                                     dynamic::Value::allocator_);
+      ref_data.AddMember(
+          rapidjson::Value("etcd_endpoint", dynamic::Value::allocator_).Move(),
+          etcd_endpoint, dynamic::Value::allocator_);
+      rapidjson::Value meta_prefix(meta_prefix_, dynamic::Value::allocator_);
+      ref_data.AddMember(
+          rapidjson::Value("meta_prefix", dynamic::Value::allocator_).Move(),
+          meta_prefix, dynamic::Value::allocator_);
+      msgpack::sbuffer sbuf;
+      msgpack::pack(&sbuf, ref_data);
+      *in_archive << sbuf;
     } else {
       std::shared_ptr<GraphType> fragment;
       size_t version = request->version();
@@ -238,18 +252,16 @@ class QueryGraphServiceImpl final : public QueryGraphService::Service {
         std::string gae_cmd =
             "mpirun -n 1 " + bin_path + " --etcd_endpoint " + etcd_endpoint_ +
             " --read_epoch " + std::to_string(version) + " --meta_prefix " +
-            meta_prefix_ + " --app_name sssp --sssp_source_label " +
-            label + " --sssp_source_oid " +
-            std::to_string(source_id) + " --sssp_weight_name " + weight_name;
+            meta_prefix_ + " --app_name sssp --sssp_source_label " + label +
+            " --sssp_source_oid " + std::to_string(source_id) +
+            " --sssp_weight_name " + weight_name;
         if (weight_name.empty()) {
           gae_cmd = "mpirun -n 1 " + bin_path + " --etcd_endpoint " +
                     etcd_endpoint_ + " --read_epoch " +
                     std::to_string(version) + " --meta_prefix " + meta_prefix_ +
-                    " --app_name sssp --sssp_source_label " +
-                    label + " --sssp_source_oid " +
-                    std::to_string(source_id);
+                    " --app_name sssp --sssp_source_label " + label +
+                    " --sssp_source_oid " + std::to_string(source_id);
         }
-        std::cout << "GAE cmd: " << gae_cmd << std::endl;
         std::string result = ExecuteExternalProgram(gae_cmd);
         gart::dynamic::Value result_json;
         gart::dynamic::Parse(result, result_json);

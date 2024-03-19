@@ -4,6 +4,7 @@ import json
 
 from gart.archieve import OutArchive
 from gart.digraph import DiGraph
+from gart.local_graph import LocalDiGraph
 
 import gart.proto.types_pb2 as pb2
 import gart.proto.types_pb2_grpc as pb2_grpc
@@ -21,6 +22,15 @@ class Client:
         channel = grpc.insecure_channel(service_port, options=channel_options)
         self.stub = pb2_grpc.QueryGraphServiceStub(channel)
         self._known_version = -1
+
+        self.local_deployment = False
+
+        if (
+            service_port.startswith("localhost")
+            or service_port.startswith("127.0.0.1")
+            or service_port.startswith("0.0.0.0")
+        ):
+            self.local_deployment = True
 
     def get_latest_version(self):
         response_iterator = self.stub.getData(
@@ -40,6 +50,18 @@ class Client:
             self._known_version = latest_version
             if version > latest_version:
                 raise ValueError(f"Version {version} does not exist")
+        if self.local_deployment:
+            response_iterator = self.stub.getData(
+                pb2.Request(op=pb2.CONNECT_INFO, args="")
+            )
+            total_response = bytes()
+            for response in response_iterator:
+                total_response += response.result
+            arc = OutArchive(total_response)
+            result = msgpack.unpackb(arc.get_bytes(), use_list=False)
+            etcd_endpoint = result["etcd_endpoint"]
+            meta_prefix = result["meta_prefix"]
+            return LocalDiGraph(etcd_endpoint, meta_prefix, version)
         return DiGraph(version, self.stub)
 
     def run_sssp(self, graph, source_node, weight=None):
