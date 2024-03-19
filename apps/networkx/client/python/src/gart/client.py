@@ -26,9 +26,9 @@ class Client:
         self.local_deployment = False
 
         if (
-            service_port.startswith("localhost")
-            or service_port.startswith("127.0.0.1")
-            or service_port.startswith("0.0.0.0")
+            "localhost" in service_port
+            or "127.0.0.1" in service_port
+            or "::1" in service_port
         ):
             self.local_deployment = True
 
