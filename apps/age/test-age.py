@@ -67,8 +67,12 @@ filtered_shortest_path = {
     k: v for k, v in shortest_path.items() if v != 9223372036854775807
 }
 
-# print(filtered_shortest_path)
+# Graph.print_shortest_path(previous_nodes, shortest_path, start_node=start_node, target_node="21990232555650")
 
-# Graph.print_shortest_path(
-#     previous_nodes, shortest_path, start_node=start_node, target_node="21990232555650"
-# )
+time2 = time.time()
+previous_nodes2, shortest_path2 = Graph.dijkstra_algorithm(graph=graph, start_node="0")
+filtered_shortest_path2 = {
+    k: v for k, v in shortest_path2.items() if v != 9223372036854775807
+}
+end2 = time.time()
+print("Time2:", end2 - time2, "sec")
