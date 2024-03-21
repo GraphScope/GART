@@ -470,7 +470,7 @@ string SchemaImpl::get_json4gie(int pid) {
   return graph_schema.dump();
 }
 
-void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
+void GraphStore::put_blob_json_etcd(uint64_t write_epoch) {
   using json = vineyard::json;
   json blob_schema;
   blob_schema["ipc_socket"] = gart::framework::config.getIPCScoket();
@@ -478,6 +478,7 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) const {
   blob_schema["fid"] = local_pid_;
   blob_schema["fnum"] = local_pnum_;
   blob_schema["epoch"] = write_epoch;
+  blob_schema["instance_id"] = array_allocator_.get_client()->instance_id();
   blob_schema["vertex_label_num"] = blob_schemas_.size();
   blob_schema["string_buffer_object_id"] =
       string_buffer_manager_.get_buffer_oid();

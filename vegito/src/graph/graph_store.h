@@ -160,7 +160,7 @@ class GraphStore {
 
   void update_blob(uint64_t blob_epoch);
 
-  void put_blob_json_etcd(uint64_t write_epoch) const;
+  void put_blob_json_etcd(uint64_t write_epoch);
 
   void put_schema();
 

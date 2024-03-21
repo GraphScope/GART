@@ -1167,7 +1167,7 @@ int main() {
   std::string meta_prefix = "";
   int fragment_per_machine = 1;
 
-  std::string uri_str = "gart://127.0.0.1:23760?read_epoch=0&total_partition_num=4&local_partition_num=1&start_partition_id=0&meta_prefix=gart_meta_";
+  std::string uri_str = "gart://127.0.0.1:23760?read_epoch=0&meta_prefix=gart_meta_";
   /*
       "gart://"
       "127.0.0.1:23799?read_epoch=4&total_partition_num=2&local_partition_num="

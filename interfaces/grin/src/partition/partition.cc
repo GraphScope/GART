@@ -32,17 +32,50 @@ GRIN_PARTITIONED_GRAPH grin_get_partitioned_graph_from_storage(
   URI config(uri_str);
   std::string protocol = config.getProtocol();
   assert(protocol == "gart");
+
   std::string etcd_endpoint = config.getEtcdEndpoint();
   pg->etcd_endpoint = etcd_endpoint;
+
   auto params = config.getParams();
-  pg->total_partition_num = std::stoul(params["total_partition_num"]);
-  auto start_partition_id = std::stoul(params["start_partition_id"]);
-  auto local_partition_num = std::stoul(params["local_partition_num"]);
-  for (uint32_t idx = 0; idx < local_partition_num; ++idx) {
-    pg->local_partition_list.push_back(start_partition_id + idx);
-  }
   pg->read_epoch = std::stoi(params["read_epoch"]);
   pg->meta_prefix = params["meta_prefix"];
+
+  std::shared_ptr<etcd::Client> etcd_client =
+      std::make_shared<etcd::Client>(etcd_endpoint);
+
+  std::string schema_key = pg->meta_prefix + "gart_blob_m" + std::to_string(0) +
+                           "_p" + std::to_string(0) + "_e" +
+                           std::to_string(pg->read_epoch);
+  etcd::Response response = etcd_client->get(schema_key).get();
+  assert(response.is_ok());
+  std::string graph_blob_config_str = response.value().as_string();
+
+  vineyard::json graph_blob_config =
+      vineyard::json::parse(graph_blob_config_str);
+  pg->total_partition_num = graph_blob_config["fnum"].get<uint64_t>();
+
+  std::string v6d_socket = graph_blob_config["ipc_socket"].get<std::string>();
+
+  vineyard::Client v6d_client;
+  VINEYARD_CHECK_OK(v6d_client.Connect(v6d_socket));
+
+  for (size_t idx = 0; idx < pg->total_partition_num; idx++) {
+    schema_key = pg->meta_prefix + "gart_blob_m" + std::to_string(0) + "_p" +
+                 std::to_string(idx) + "_e" + std::to_string(pg->read_epoch);
+    response = etcd_client->get(schema_key).get();
+    assert(response.is_ok());
+    graph_blob_config_str = response.value().as_string();
+    graph_blob_config = vineyard::json::parse(graph_blob_config_str);
+
+    vineyard::InstanceID instance_id =
+        graph_blob_config["instance_id"].get<uint64_t>();
+    vineyard::InstanceID self_instance_id = v6d_client.instance_id();
+    if (instance_id != self_instance_id) {
+      continue;
+    }
+    pg->local_partition_list.push_back(idx);
+  }
+
   return pg;
 }
 
