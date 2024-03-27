@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "etcd/Client.hpp"
 #include "glog/logging.h"
 #include "vineyard/common/util/json.h"
 #include "yaml-cpp/yaml.h"
@@ -103,22 +104,26 @@ string LogEntry::to_string() const {
   return base;
 }
 
-gart::Status TxnLogParser::init(const string& rgmapping_file,
+gart::Status TxnLogParser::init(const string& etcd_endpoint, const string& etcd_prefix,
                                 int subgraph_num) {
   subgraph_num_ = subgraph_num;
 
-  ifstream rg_mapping_file_stream(rgmapping_file);
-  if (!rg_mapping_file_stream.is_open()) {
-    LOG(ERROR) << "RGMapping file (" << rgmapping_file << ") open failed."
-               << "Not exist or permission denied.";
-    return gart::Status::OpenFileError();
+  std::shared_ptr<etcd::Client> etcd_client =
+        std::make_shared<etcd::Client>(etcd_endpoint);
+
+  std::string rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml";
+  etcd::Response response = etcd_client->get(rg_mapping_key).get();
+  if (!response.is_ok()) {
+    LOG(ERROR) << "RGMapping file get failed.";
+    return gart::Status::GraphSchemaConfigError();
   }
+  std::string rg_mapping_str = response.value().as_string();
 
   YAML::Node rg_mapping;
   try {
-    rg_mapping = YAML::LoadFile(rgmapping_file);
+    rg_mapping = YAML::Load(rg_mapping_str);
   } catch (YAML::ParserException& e) {
-    LOG(ERROR) << "RGMapping file (" << rgmapping_file << ") parse failed."
+    LOG(ERROR) << "RGMapping file parse failed."
                << "Error message: " << e.what();
     return gart::Status::GraphSchemaConfigError();
   }

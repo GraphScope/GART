@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
       FLAGS_write_kafka_broker_list, FLAGS_write_kafka_topic);
   KafkaOutputStream ostream(producer);
 
-  TxnLogParser parser(FLAGS_rg_mapping_file_path, FLAGS_subgraph_num);
+  TxnLogParser parser(FLAGS_etcd_endpoint, FLAGS_etcd_prefix, FLAGS_subgraph_num);
 
   int log_count = 0;
   bool is_timeout = false;

@@ -24,6 +24,11 @@ include_directories(${VINEYARD_INCLUDE_DIRS})
 find_package(yaml-cpp REQUIRED)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 
+# find etcd-cpp-api
+find_package(etcd-cpp-api REQUIRED)
+include_directories(${ETCD_CPP_INCLUDE_DIR})
+link_libraries(${ETCD_CPP_LIBRARIES})
+
 include("../vegito/cmake/FindRdkafka.cmake")
 if (NOT RDKAFKA_FOUND)
   message(SEND_ERROR "rdkafka not found")

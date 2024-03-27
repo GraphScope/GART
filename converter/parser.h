@@ -89,8 +89,8 @@ class LogEntry {
 
 class TxnLogParser {
  public:
-  TxnLogParser(const std::string& rgmapping_file, int subgraph_num) {
-    GART_CHECK_OK(init(rgmapping_file, subgraph_num));
+  TxnLogParser(const std::string& etcd_endpoint, const std::string& etcd_prefix, int subgraph_num) {
+    GART_CHECK_OK(init(etcd_endpoint, etcd_prefix, subgraph_num));
   }
 
   gart::Status parse(LogEntry& out, const std::string& log_str, int epoch);
@@ -104,7 +104,7 @@ class TxnLogParser {
 
   void set_gid(const vineyard::json& oid, int vlabel, int64_t gid);
 
-  gart::Status init(const std::string& rgmapping_file, int subgraph_num);
+  gart::Status init(const std::string& etcd_endpoint, const std::string& etcd_prefix, int subgraph_num);
 
   void fill_vertex(LogEntry& out, const vineyard::json& log);
 

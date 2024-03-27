@@ -294,12 +294,15 @@ class LocalDiGraph(object):
         src_label_str = u[0]
         src_label = self.graph.get_vertex_label_id(src_label_str)
         src_oid = u[1]
+        exist, src_vertex = self.graph.oid2gid(src_label, src_oid)
+        if not exist:
+            return False
         dst_label_str = v[0]
         dst_label = self.graph.get_vertex_label_id(dst_label_str)
         dst_oid = v[1]
         e_label_num = self.graph.edge_label_num()
         for e_label_id in range(e_label_num):
-            edge_iter = self.graph.get_outgoing_adjList(src_label, src_oid, e_label_id)
+            edge_iter = self.graph.get_outgoing_adjList(src_vertex, e_label_id)
             while edge_iter.valid():
                 dst_vertex = edge_iter.neighbor()
                 if self.graph.vertex_label(dst_vertex) != dst_label:

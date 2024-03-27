@@ -15,7 +15,6 @@ db_name="ldbc"
 user=
 password=
 rgmapping_file="schema/rgmapping-ldbc.yaml"
-table_schema_file="schema/db_schema.json"
 v6d_sock="/var/run/vineyard.sock"
 v6d_size="750G"
 etcd_endpoint="http://127.0.0.1:2379"
@@ -54,10 +53,6 @@ while [ : ]; do
         ;;
     -r | --rgmapping-file)
         rgmapping_file=$2
-        shift 2
-        ;;
-    -t | --table-schema-file)
-        table_schema_file=$2
         shift 2
         ;;
          --v6d-sock)
@@ -109,7 +104,6 @@ while [ : ]; do
         echo "  -u, --user:              database user"
         echo "  -p, --password:          database password"
         echo "  -r, --rgmapping-file:    rgmapping file path (default: schema/rgmapping-ldbc.yaml)"
-        echo "  -t, --table-schema-file: table schema file path (default: schema/db_schema.json)"
         echo "      --v6d-sock:          vineyard socket path (default: /var/run/vineyard.sock)"
         echo "      --v6d-size:          vineyard size (default: 110G)"
         echo "      --use-debezium:      if use Debezium to parse txn logs (default: 1)"
@@ -140,7 +134,6 @@ function make_absolute_path() {
 
 v6d_sock=$(make_absolute_path "$v6d_sock")
 rgmapping_file=$(make_absolute_path "$rgmapping_file")
-table_schema_file=$(make_absolute_path "$table_schema_file")
 
 # set default port
 if [ !$set_port ] && [ "$db_type" == "postgresql" ]; then
@@ -276,7 +269,6 @@ echo "    db-name: $db_name"
 echo "    user: $user"
 echo "    password: $password"
 echo "    rgmapping-file: $rgmapping_file"
-echo "    table-schema-file: $table_schema_file"
 echo "    v6d-sock: $v6d_sock"
 echo "    v6d-size: $v6d_size"
 echo "    use-debezium: $use_debezium"
@@ -300,28 +292,7 @@ echo "Stop previous GART"
 echo "Clean etcd"
 etcdctl --endpoints=$etcd_endpoint del --prefix $etcd_prefix > /dev/null 2>&1
 
-####################### Extract Schema #######################
-if [ $is_master == true ]; then
-    echo "Start extracting schema"
-    num_row=$(
-    ./scripts/extract_table_schema.py \
-        --host $db_host --port $db_port --db $db_name \
-        --user $user --password $password --db_type $db_type\
-        --rgmapping_file $rgmapping_file --output $table_schema_file
-    )
-    if [ $num_row -eq 0 ] && $enable_bulkload; then
-        echo "No tuples found in the database, skip bulk load"
-        enable_bulkload=false
-    fi
-fi
-
 declare -A pids     # array to store pids and comments
-
-################### Bulk Load Initialize ######################
-if [ "$use_debezium" == 1 ] && $enable_bulkload; then
-    rm /tmp/connect.offsets 1 > /dev/null 2>&1
-    echo "Remove /tmp/connect.offsets for bulk load"
-fi
 
 ####################### Vineyard #######################
 if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
@@ -329,6 +300,28 @@ if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
     # TODO: etcd_cmd user for PostgreSQL Extension
     vineyardd --etcd_cmd=/usr/local/bin/etcd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
     pids["Vineyard"]=$!
+fi
+
+####################### Extract Schema #######################
+if [ $is_master == true ]; then
+    echo "Start extracting schema"
+    num_row=$(
+    ./scripts/extract_table_schema.py \
+        --host $db_host --port $db_port --db $db_name \
+        --user $user --password $password --db_type $db_type\
+        --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
+        --etcd_prefix $etcd_prefix
+    )
+    if [ $num_row -eq 0 ] && $enable_bulkload; then
+        echo "No tuples found in the database, skip bulk load"
+        enable_bulkload=false
+    fi
+fi
+
+################### Bulk Load Initialize ######################
+if [ "$use_debezium" == 1 ] && $enable_bulkload; then
+    rm /tmp/connect.offsets 1 > /dev/null 2>&1
+    echo "Remove /tmp/connect.offsets for bulk load"
 fi
 
 ####################### Capturer: Zookeeper and Kafka #######################
@@ -431,12 +424,14 @@ if [ $is_master == true ]; then
     if [ "$use_debezium" == 1 ]; then
         echo "    Use Debezium converter"
         $CONVENTER_HOME/binlog_convert_debezium \
-            --rg_mapping_file_path $rgmapping_file \
+            --etcd_endpoint $etcd_endpoint \
+            --etcd_prefix $etcd_prefix \
             --subgraph_num $subgraph_num --logs_per_epoch 10000 \
             --enable_bulkload=$enable_bulkload &
     else
         echo "    Use Maxwell converter"
-        $CONVENTER_HOME/binlog_convert_maxwell --rg_mapping_file_path $rgmapping_file \
+        $CONVENTER_HOME/binlog_convert_maxwell  --etcd_endpoint $etcd_endpoint \
+            --etcd_prefix $etcd_prefix \
             --subgraph_num $subgraph_num --logs_per_epoch 10000 &
     fi
     pids["Converter"]=$!
@@ -453,8 +448,6 @@ for ((i=$start_slot; i<$start_slot + $slot; i++)); do
     $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
     --etcd_endpoint $etcd_endpoint --meta_prefix $etcd_prefix \
     --kafka_broker_list $kafka_server \
-    --schema_file_path $rgmapping_file \
-    --table_schema_file_path $table_schema_file \
     --subgraph_num $subgraph_num --subgraph_id $i &
     pids["Vegito-$i"]=$!
 done

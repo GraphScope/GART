@@ -6,6 +6,7 @@ import argparse
 import json
 from sqlalchemy import create_engine
 import yaml
+import etcd3
 
 
 def get_parser():
@@ -18,6 +19,8 @@ def get_parser():
     parser.add_argument("--port", default=3306, help="Database server port")
     parser.add_argument("--user", help="Database user")
     parser.add_argument("--password", help="Database password")
+    parser.add_argument("--etcd_endpoint", help="Etcd endpoint")
+    parser.add_argument("--etcd_prefix", default="", help="Etcd endpoint")
     parser.add_argument("--db", default="ldbc", help="Database name")
     parser.add_argument(
         "--db_type", default="mysql", help="Database type: mysql, postgresql"
@@ -27,17 +30,6 @@ def get_parser():
         "--rgmapping_file",
         default="schema/rgmapping-ldbc.yaml",
         help="Config file (RGMapping)",
-    )
-    parser.add_argument(
-        "--output",
-        default="schema/db_schema.json",
-        help="Output file (database schema)",
-    )
-
-    parser.add_argument(
-        "--output_yaml",
-        default="schema/graph.yaml",
-        help="Output YAML file (graph schema)",
     )
 
     return parser
@@ -55,7 +47,7 @@ GSchemaLoader.add_constructor(
 )
 
 
-def exetract_schema(cursor, rgmapping_file, database, db_type, output):
+def exetract_schema(cursor, rgmapping_file, database, db_type, etcd_endpoint, etcd_prefix):
     with open(rgmapping_file, "r", encoding="UTF-8") as f:
         config = yaml.load(f, Loader=GSchemaLoader)
     tables = (
@@ -83,14 +75,22 @@ def exetract_schema(cursor, rgmapping_file, database, db_type, output):
         cursor.execute(sql)
         results = cursor.fetchall()
         sum_row += results[0][0]
-    with open(output, "w", encoding="UTF-8") as f:
-        json.dump(schema, f, indent=4)
+        
+    index = etcd_endpoint.find(":")
+    etcd_host = etcd_endpoint[:index]
+    etcd_port = int(etcd_endpoint[index+1:])
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+    etcd_client.put(etcd_prefix + 'gart_table_schema', json.dumps(schema))
 
     return schema, sum_row
 
 
 # schema: {table_name: [(column_name, column_type), ...]}
-def produce_graph_schema(schema, rgmapping_file, output_yaml):
+def produce_graph_schema(schema, rgmapping_file, etcd_endpoint, etcd_prefix):
+    index = etcd_endpoint.find(":")
+    etcd_host = etcd_endpoint[:index]
+    etcd_port = int(etcd_endpoint[index+1:])
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
     result = {
         "name": "LDBC",
         "storeType": "gart",
@@ -100,6 +100,7 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
 
     with open(rgmapping_file, "r", encoding="UTF-8") as f:
         config = yaml.load(f, Loader=GSchemaLoader)
+        etcd_client.put(etcd_prefix + 'gart_rg_mapping_yaml', yaml.dump(config, sort_keys=False))
 
     vdefs = config["vertexMappings"]["vertex_types"]
     vtype_to_id = {}
@@ -186,9 +187,8 @@ def produce_graph_schema(schema, rgmapping_file, output_yaml):
         element["vertexTypePairRelations"] = [relation]
         result["schema"]["edgeTypes"].append(element)
         idx += 1
-
-    with open(output_yaml, "w", encoding="UTF-8") as f:
-        yaml.dump(result, f, sort_keys=False)
+        
+    etcd_client.put(etcd_prefix + 'gart_graph_schema_yaml', yaml.dump(result, sort_keys=False))
 
 
 if __name__ == "__main__":
@@ -206,6 +206,10 @@ if __name__ == "__main__":
 
     if not isinstance(args.db, str) or len(args.db) == 0:
         print("Please specify the database name with --password")
+        unset = True
+    
+    if not isinstance(args.etcd_endpoint, str) or len(args.etcd_endpoint) == 0:
+        print("Please specify the etcd endpoint with --etcd_endpoint")
         unset = True
 
     if not isinstance(args.db_type, str) or args.db_type not in ["mysql", "postgresql"]:
@@ -240,10 +244,10 @@ if __name__ == "__main__":
     cursor = conn.cursor()
 
     schema, sum_row = exetract_schema(
-        cursor, args.rgmapping_file, args.db, args.db_type, args.output
+        cursor, args.rgmapping_file, args.db, args.db_type, args.etcd_endpoint, args.etcd_prefix
     )
     conn.close()
 
-    produce_graph_schema(schema, args.rgmapping_file, args.output_yaml)
+    produce_graph_schema(schema, args.rgmapping_file, args.etcd_endpoint, args.etcd_prefix)
 
     print(sum_row)

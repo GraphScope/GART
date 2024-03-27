@@ -26,7 +26,8 @@ DECLARE_string(write_kafka_topic);
 
 DECLARE_int32(logs_per_epoch);
 
-DECLARE_string(rg_mapping_file_path);
+DECLARE_string(etcd_endpoint);
+DECLARE_string(etcd_prefix);
 
 DECLARE_int32(subgraph_num);
 DECLARE_bool(enable_bulkload);

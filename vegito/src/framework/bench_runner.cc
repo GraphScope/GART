@@ -24,6 +24,7 @@
 
 #include "framework/bench_runner.h"
 #include "graph/graph_ops.h"
+#include "system_flags.h"
 #include "util/bitset.h"
 
 using std::ifstream;
@@ -62,40 +63,44 @@ inline vector<string_view> splitString(const string_view& str, char delimiter) {
 namespace gart {
 namespace framework {
 
-Status init_graph_schema(string graph_schema_path, string table_schema_path,
+Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
                          graph::GraphStore* graph_store,
                          graph::RGMapping* rg_map) {
   using json = vineyard::json;
 
-  ifstream graph_schema_file(graph_schema_path);
-  if (!graph_schema_file.is_open()) {
-    LOG(ERROR) << "graph schema file (" << graph_schema_path << ") open failed."
-               << "Not exist or permission denied.";
-    return Status::OpenFileError();
+  std::shared_ptr<etcd::Client> etcd_client =
+        std::make_shared<etcd::Client>(etcd_endpoint);
+
+  std::string rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml";
+  etcd::Response response = etcd_client->get(rg_mapping_key).get();
+  if (!response.is_ok()) {
+    LOG(ERROR) << "RGMapping file get failed.";
+    return gart::Status::GraphSchemaConfigError();
+  }
+  std::string rg_mapping_str = response.value().as_string();
+
+  std::string table_schema_key = etcd_prefix + "gart_table_schema";
+  response = etcd_client->get(table_schema_key).get();
+  if (!response.is_ok()) {
+    LOG(ERROR) << "Table schema file get failed.";
+    return gart::Status::TableConfigError();
   }
 
-  ifstream table_schema_file(table_schema_path);
-  if (!table_schema_file.is_open()) {
-    LOG(ERROR) << "table schema file (" << table_schema_path << ") open failed."
-               << "Not exist or permission denied.";
-    return Status::OpenFileError();
-  }
+  std::string table_schema_str = response.value().as_string();
 
   YAML::Node config;
   try {
-    config = YAML::LoadFile(graph_schema_path);
+    config = YAML::Load(rg_mapping_str);
   } catch (YAML::ParserException& e) {
-    LOG(ERROR) << "Parse graph schema file (" << graph_schema_path
-               << ") failed: " << e.what();
+    LOG(ERROR) << "Parse graph schema file failed: " << e.what();
     return Status::GraphSchemaConfigError();
   }
 
   json table_schema;
   try {
-    table_schema = json::parse(table_schema_file);
+    table_schema = json::parse(table_schema_str);
   } catch (json::parse_error& e) {
-    LOG(ERROR) << "Parse table schema file (" << table_schema_path
-               << ") failed: " << e.what();
+    LOG(ERROR) << "Parse table schema failed: " << e.what();
     return Status::TableConfigError();
   }
 
@@ -229,8 +234,7 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
 
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx].size() != 2) {
-          LOG(ERROR) << "Table schema file (" << table_schema_path
-                     << ") format error. " << "Table name" << table_name
+          LOG(ERROR) << "Table schema format error. " << "Table name" << table_name
                      << "Column index " << col_idx << " has "
                      << required_table_schema[col_idx].size() << " columns.";
           assert(false);
@@ -278,8 +282,7 @@ Status init_graph_schema(string graph_schema_path, string table_schema_path,
       }
 
       if (prop_dtype == "") {
-        LOG(ERROR) << "Table schema file (" << table_schema_path
-                   << ") format error. " << "Table name " << table_name
+        LOG(ERROR) << "Table schema format error. " << "Table name " << table_name
                    << " Column name " << prop_table_col_name << " not found.";
         assert(false);
       }
@@ -595,8 +598,8 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
   graph_stores_[p_id] = new graph::GraphStore(
       p_id, gart::framework::config.getServerID(), total_partitions);
   rg_maps_[p_id] = new graph::RGMapping(p_id);
-  GART_CHECK_OK(init_graph_schema(FLAGS_schema_file_path,
-                                  FLAGS_table_schema_file_path,
+  GART_CHECK_OK(init_graph_schema(FLAGS_etcd_endpoint,
+                                  FLAGS_meta_prefix,
                                   graph_stores_[p_id], rg_maps_[p_id]));
   graph_stores_[p_id]->put_schema();
   graph_stores_[p_id]->put_schema4gie();

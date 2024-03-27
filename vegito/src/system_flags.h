@@ -26,9 +26,6 @@ DECLARE_string(etcd_endpoint);
 DECLARE_string(meta_prefix);
 DECLARE_string(v6d_ipc_socket);
 
-DECLARE_string(schema_file_path);
-DECLARE_string(table_schema_file_path);
-
 DECLARE_int32(subgraph_num);
 DECLARE_int32(subgraph_id);
 
