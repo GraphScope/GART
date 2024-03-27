@@ -33,7 +33,9 @@ if __name__ == "__main__":
     #    pass
     # print(node)
 
-    node = ('organisation', 0)
+    node = ("organisation", 0)
+
+    exit(0)
     # print(g[node])
 
     start = time.time()
@@ -41,23 +43,21 @@ if __name__ == "__main__":
     print(len(length))
     print("SSSP took", 1000 * (time.time() - start), " ms")
 
-    exit(0)
-
     # for node in g.nodes(data="org_id", default="default"):
     #    pass
     #    print(node)
     # print(g.nodes(data=True))
 
-    node = ('person', 933)
+    node = ("person", 933)
     print(g[node])
 
     print(g._adj[node])
 
     print(len(g[node]) == len(g._adj[node]))
 
-    node = ('organisation', 1)
+    node = ("organisation", 1)
     print(g.adj[node])
-    dst = ('person', 24189255812047)
+    dst = ("person", 24189255812047)
     print(g._adj[node][dst])
 
     # for node in g.nodes(data=True):

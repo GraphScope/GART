@@ -166,7 +166,18 @@ class SegGraph {
     return rg_map->get_edge_meta(static_cast<int>(label)).edge_prop_size;
   }
 
-  bool is_edge_undirected(label_t label) { return edge_is_undirected[label]; }
+  inline bool is_edge_undirected(label_t label) const {
+    if (label >= edge_is_undirected.size()) {
+      // std::cout << "label: " << label << " size: " <<
+      // edge_is_undirected.size()
+      //           << std::endl;
+      return false;
+    }
+
+    if (edge_is_undirected[label])
+      std::cout << "label: " << label << " is undirected" << std::endl;
+    return edge_is_undirected[label];
+  }
 
   /**
    * Analytics interface
