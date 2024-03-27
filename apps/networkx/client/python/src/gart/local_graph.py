@@ -29,6 +29,7 @@ class LocalDiGraph(object):
         self._adj = AdjListDict(self)
         self._succ = self._adj
         self._pred = AdjListDict(self, pred=True)
+        self._version = version
 
     @cached_property
     def adj(self):
