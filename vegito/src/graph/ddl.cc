@@ -80,7 +80,7 @@ void RGMapping::define_1n_edge(int edge_label, int src_vlabel, int dst_vlabel,
   meta.undirected = undirected;
   meta.edge_prop_size = edge_prop_size;
 
-  vlabel2elabel_[{src_vlabel, dst_vlabel}] = edge_label;
+  vlabel2elabel_.insert({{src_vlabel, dst_vlabel}, edge_label});
 }
 
 void RGMapping::define_nn_edge(int edge_label, int src_vlabel, int dst_vlabel,
@@ -100,7 +100,7 @@ void RGMapping::define_nn_edge(int edge_label, int src_vlabel, int dst_vlabel,
   meta.undirected = undirected;
   meta.edge_prop_size = edge_prop_size;
 
-  vlabel2elabel_[{src_vlabel, dst_vlabel}] = edge_label;
+  vlabel2elabel_.insert({{src_vlabel, dst_vlabel}, edge_label});
 }
 
 void RGMapping::add_eprop(int edge_label, int prop_id, int col_id) {}

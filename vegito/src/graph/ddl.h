@@ -80,9 +80,9 @@ class RGMapping {
 
   inline const std::vector<EdgeMeta>& get_edge_metas() const { return edges_; }
 
-  inline int get_elabel_from_vlabel(int src_vlabel, int dst_vlabel) {
-    return vlabel2elabel_[{src_vlabel, dst_vlabel}];
-  }
+  // inline int get_elabel_from_vlabel(int src_vlabel, int dst_vlabel) {
+  //   return vlabel2elabel_[{src_vlabel, dst_vlabel}];
+  // }
 
   inline const EdgeMeta& get_edge_meta(int elabel) const {
     assert(elabel < edges_.size());
@@ -188,7 +188,7 @@ class RGMapping {
   std::vector<EdgeMeta> edges_;
 
   // <src_vlabel, dst_vlabel> -> elabel
-  std::map<std::pair<int, int>, int> vlabel2elabel_;
+  std::multimap<std::pair<int, int>, int> vlabel2elabel_;
 
   size_t vertex_label_num_ = 0;
 

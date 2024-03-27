@@ -1,6 +1,8 @@
 import argparse
-from gart import Client
+import sys
 import time
+
+from gart import Client
 
 
 def get_parser():
@@ -35,7 +37,7 @@ if __name__ == "__main__":
 
     node = ("organisation", 0)
 
-    exit(0)
+    sys.exit(0)
     # print(g[node])
 
     start = time.time()
