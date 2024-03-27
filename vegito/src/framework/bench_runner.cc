@@ -69,7 +69,7 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
   using json = vineyard::json;
 
   std::shared_ptr<etcd::Client> etcd_client =
-        std::make_shared<etcd::Client>(etcd_endpoint);
+      std::make_shared<etcd::Client>(etcd_endpoint);
 
   std::string rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml";
   etcd::Response response = etcd_client->get(rg_mapping_key).get();
@@ -234,9 +234,10 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
 
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx].size() != 2) {
-          LOG(ERROR) << "Table schema format error. " << "Table name" << table_name
-                     << "Column index " << col_idx << " has "
-                     << required_table_schema[col_idx].size() << " columns.";
+          LOG(ERROR) << "Table schema format error. "
+                     << "Table name" << table_name << "Column index " << col_idx
+                     << " has " << required_table_schema[col_idx].size()
+                     << " columns.";
           assert(false);
         }
         if (required_table_schema[col_idx][0].get<string>() ==
@@ -282,8 +283,9 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
       }
 
       if (prop_dtype == "") {
-        LOG(ERROR) << "Table schema format error. " << "Table name " << table_name
-                   << " Column name " << prop_table_col_name << " not found.";
+        LOG(ERROR) << "Table schema format error. "
+                   << "Table name " << table_name << " Column name "
+                   << prop_table_col_name << " not found.";
         assert(false);
       }
 
@@ -598,8 +600,7 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
   graph_stores_[p_id] = new graph::GraphStore(
       p_id, gart::framework::config.getServerID(), total_partitions);
   rg_maps_[p_id] = new graph::RGMapping(p_id);
-  GART_CHECK_OK(init_graph_schema(FLAGS_etcd_endpoint,
-                                  FLAGS_meta_prefix,
+  GART_CHECK_OK(init_graph_schema(FLAGS_etcd_endpoint, FLAGS_meta_prefix,
                                   graph_stores_[p_id], rg_maps_[p_id]));
   graph_stores_[p_id]->put_schema();
   graph_stores_[p_id]->put_schema4gie();

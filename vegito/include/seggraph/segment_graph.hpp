@@ -167,7 +167,7 @@ class SegGraph {
   }
 
   inline bool is_edge_undirected(label_t label) const {
-    if (label >= edge_is_undirected.size()) {
+    if (unlikely(label >= edge_is_undirected.size())) {
       std::cout << "[ERROR] label: " << label
                 << " size: " << edge_is_undirected.size() << std::endl;
       return false;

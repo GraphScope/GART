@@ -27,6 +27,5 @@ DEFINE_string(etcd_endpoint, "http://127.0.0.1:2379",
 DEFINE_string(meta_prefix, "gart_meta_", "meta prefix for etcd.");
 DEFINE_string(v6d_ipc_socket, "/var/run/vineyard.sock", "Vineyard IPC socket.");
 
-
 DEFINE_int32(subgraph_num, 1, "total subgraph number.");
 DEFINE_int32(subgraph_id, 0, "subgraph id.");
