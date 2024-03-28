@@ -20,7 +20,7 @@ def get_parser():
     parser.add_argument("--user", help="Database user")
     parser.add_argument("--password", help="Database password")
     parser.add_argument("--etcd_endpoint", help="Etcd endpoint")
-    parser.add_argument("--etcd_prefix", default="", help="Etcd endpoint")
+    parser.add_argument("--etcd_prefix", default="", help="Etcd prefix")
     parser.add_argument("--db", default="ldbc", help="Database name")
     parser.add_argument(
         "--db_type", default="mysql", help="Database type: mysql, postgresql"

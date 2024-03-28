@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,hostfile:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,role:,hostfile:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -25,6 +25,7 @@ use_debezium=1
 db_type="postgresql"
 enable_bulkload=false
 hostfile=
+role="all"
 
 set_port=false
 eval set -- "$VALID_ARGS"
@@ -91,6 +92,10 @@ while [ : ]; do
         subgraph_num=$2
         shift 2
         ;;
+         --role)
+        role=$2
+        shift 2
+        ;;
          --hostfile)
         hostfile=$2
         shift 2
@@ -112,6 +117,7 @@ while [ : ]; do
         echo "      --etcd-prefix:       etcd meta prefix (default: gart_meta_)"
         echo "  -k, --kafka-server:      kafka bootstrap server (default: 127.0.0.1:9092)"
         echo "      --subgraph-num:      number of sub graphs (default: 1)"
+        echo "      --role:              the role of running this script (default: all)"
         echo "      --hostfile:          hostfile for distributed deployment"
         echo "  -h, --help:              help"
         exit 0
@@ -159,26 +165,34 @@ if [ "$use_debezium" == 0 ] && [ "$db_type" != "mysql" ]; then
     exit 1
 fi
 
-# check environment variables
-unset=false
-if [ -n "$KAFKA_HOME" ]; then
-    echo "    KAFKA_HOME: $KAFKA_HOME"
-else
-    echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
-    unset=true
+if [ "$role" != "all" ] && [ "$role" != "capturer" ] && [ "$role" != "converter" ] && [ "$role" != "writer" ]; then
+    echo "Invalid value for 'role': $role"
+    exit 1
 fi
 
-if [ "$use_debezium" == 0 ]; then
-    if [ -n "$MAXWELL_HOME" ]; then
-        echo "    MAXWELL_HOME: $MAXWELL_HOME"
+# check environment variables
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then   
+    unset=false
+    if [ -n "$KAFKA_HOME" ]; then
+        echo "    KAFKA_HOME: $KAFKA_HOME"
     else
-        echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
+        echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
         unset=true
     fi
-fi
 
-if [ "$unset" = true ]; then
-    exit 1
+
+    if [ "$use_debezium" == 0 ]; then
+        if [ -n "$MAXWELL_HOME" ]; then
+            echo "    MAXWELL_HOME: $MAXWELL_HOME"
+        else
+            echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
+            unset=true
+        fi
+    fi
+
+    if [ $unset == true ]; then
+        exit 1
+    fi
 fi
 
 # check a host is local host or not
@@ -284,181 +298,206 @@ echo "    start-slot: $start_slot"
 echo "    my-slot: $slot"
 echo "    master-hostname: $master_hostname"
 
-##################### Stop Previous GART ######################
-echo "Stop previous GART"
-./stop-gart --kill-v6d-sock $v6d_sock
+if [ "$role" == "all" ]; then
+    ##################### Stop Previous GART ######################
+    echo "Stop previous GART"
+    ./stop-gart --kill-v6d-sock $v6d_sock
+    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
-####################### Clean Etcd #######################
-echo "Clean etcd"
-etcdctl --endpoints=$etcd_endpoint del --prefix $etcd_prefix > /dev/null 2>&1
+    ####################### Clean Etcd #######################
+    echo "Clean etcd"
+    etcdctl --endpoints=$etcd_endpoint del --prefix $etcd_prefix > /dev/null 2>&1
+fi
 
 declare -A pids     # array to store pids and comments
 
 ####################### Vineyard #######################
-if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
+if ! pgrep -f "vineyardd .* $v6d_sock" > /dev/null 2>&1; then
+    if [ -e "$v6d_sock" ]; then
+        echo "Remove existing vineyard socket $v6d_sock"
+        rm $v6d_sock
+    fi
     echo "Start to launch vineyardd on $v6d_sock"
     # TODO: etcd_cmd user for PostgreSQL Extension
     vineyardd --etcd_cmd=/usr/local/bin/etcd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
     pids["Vineyard"]=$!
 fi
 
+
 ####################### Extract Schema #######################
-if [ $is_master == true ]; then
-    echo "Start extracting schema"
-    num_row=$(
-    ./scripts/extract_table_schema.py \
-        --host $db_host --port $db_port --db $db_name \
-        --user $user --password $password --db_type $db_type\
-        --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
-        --etcd_prefix $etcd_prefix
-    )
-    if [ $num_row -eq 0 ] && $enable_bulkload; then
-        echo "No tuples found in the database, skip bulk load"
-        enable_bulkload=false
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
+    if [ $is_master == true ]; then
+        echo "Start extracting schema"
+        num_row=$(
+        ./scripts/extract_table_schema.py \
+            --host $db_host --port $db_port --db $db_name \
+            --user $user --password $password --db_type $db_type\
+            --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
+            --etcd_prefix $etcd_prefix
+        )
+        if [ $num_row -eq 0 ] && $enable_bulkload; then
+            echo "No tuples found in the database, skip bulk load"
+            enable_bulkload=false
+        fi
     fi
 fi
 
 ################### Bulk Load Initialize ######################
-if [ "$use_debezium" == 1 ] && $enable_bulkload; then
-    rm /tmp/connect.offsets 1 > /dev/null 2>&1
-    echo "Remove /tmp/connect.offsets for bulk load"
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
+    if [ "$use_debezium" == 1 ] && $enable_bulkload; then
+        rm /tmp/connect.offsets 1 > /dev/null 2>&1
+        echo "Remove /tmp/connect.offsets for bulk load"
+    fi
 fi
 
 ####################### Capturer: Zookeeper and Kafka #######################
-if [ $is_master == true ]; then
-    KAFKA_BIN=$KAFKA_HOME/bin
-    KAFKA_CONFIG=$KAFKA_HOME/config
-    KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
+    if [ $is_master == true ]; then
+        KAFKA_BIN=$KAFKA_HOME/bin
+        KAFKA_CONFIG=$KAFKA_HOME/config
+        KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
 
-    echo "Start Zookeeper and Kafka"
-    $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-    # pids["Zookeeper"]=$!  # TODO(SSJ): check if Zookeeper is started
-    sleep 3
+        echo "Start Zookeeper and Kafka"
+        $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+        # pids["Zookeeper"]=$!  # TODO(SSJ): check if Zookeeper is started
+        sleep 3
 
-    $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-    # pids["Kafka"]=$!  # TODO(SSJ): check if Kafka is started
-    sleep 5
+        $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+        # pids["Kafka"]=$!  # TODO(SSJ): check if Kafka is started
+        sleep 5
 
-    # check Kafka failure
-    for i in {1..3}
-    do
-        if grep -q "ERROR" "$KAFKA_LOG"; then
-            if [ $i -ne 1 ]; then
-                echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
-                sleep 10
+        # check Kafka failure
+        for i in {1..3}
+        do
+            if grep -q "ERROR" "$KAFKA_LOG"; then
+                if [ $i -ne 1 ]; then
+                    echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
+                    sleep 10
+                fi
+
+                $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+                #pids["Zookeeper"]=$!
+                sleep 3
+
+                $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+                #pids["Kafka"]=$!
+                sleep 5
+            else
+                break
             fi
+            if [ $i -eq 3 ]; then
+                echo "Kafka: Reached max attempts, ERROR found"
+                ./stop-gart --kill-v6d-sock $v6d_sock --is-abnormal
+                exit 1
+            fi
+        done
 
-            $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-            #pids["Zookeeper"]=$!
-            sleep 3
+        echo "    Clean topics: binlog & unified_log"
+        $KAFKA_BIN/kafka-topics.sh --delete --topic 'binlog.*' --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+        $KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
 
-            $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-            #pids["Kafka"]=$!
-            sleep 5
-        else
-            break
-        fi
-        if [ $i -eq 3 ]; then
-            echo "Kafka: Reached max attempts, ERROR found"
-            ./stop-gart --kill-v6d-sock $v6d_sock --is-abnormal
-            exit 1
-        fi
-    done
+        sleep 2
 
-    echo "    Clean topics: binlog & unified_log"
-    $KAFKA_BIN/kafka-topics.sh --delete --topic 'binlog.*' --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
-    $KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+        #TODO: hard code: replication-factor
 
-    sleep 2
+        echo "    Create topic: binlog"
+        $KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
 
-    #TODO: hard code: replication-factor
+        echo "    Create topic: unified_log"
+        $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
 
-    echo "    Create topic: binlog"
-    $KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
-
-    echo "    Create topic: unified_log"
-    $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
-
-    # $KAFKA_BIN/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
+        # $KAFKA_BIN/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
+    fi
 fi
 
 
 ####################### Capturer: Maxwell #######################
-if [ "$use_debezium" == 0 ]; then
-    if [ $is_master == true ]; then
-        MAXWELL_BIN=$MAXWELL_HOME/bin
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
+    if [ "$use_debezium" == 0 ]; then
+        if [ $is_master == true ]; then
+            MAXWELL_BIN=$MAXWELL_HOME/bin
 
-        echo "Start Maxwell"
-        $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog > /dev/null 2>&1 &
+            echo "Start Maxwell"
+            $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog > /dev/null 2>&1 &
 
-        pids["Maxwell"]=$!
-        sleep 3
+            pids["Maxwell"]=$!
+            sleep 3
+        fi
     fi
 fi
 
 ####################### Capturer: Debezium #######################
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
 # TODO(wanglei): add distributed deployment of debezium
-if [ "$use_debezium" == 1 ]; then
-    if [ $is_master == true ]; then
-        unset CLASSPATH
-        echo "Start Debezium"
-        if [ "$db_type" == "mysql" ]; then
-            echo "    Start Debezium connector for MySQL"
-            $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-mysql.properties > /dev/null 2>&1 &
-        elif [ "$db_type" == "postgresql" ]; then
-            echo "    Start Debezium connector for PostgreSQL"
-            $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-postgresql.properties > /dev/null 2>&1 &
+    if [ "$use_debezium" == 1 ]; then
+        if [ $is_master == true ]; then
+            unset CLASSPATH
+            echo "Start Debezium"
+            if [ "$db_type" == "mysql" ]; then
+                echo "    Start Debezium connector for MySQL"
+                $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-mysql.properties > /dev/null 2>&1 &
+            elif [ "$db_type" == "postgresql" ]; then
+                echo "    Start Debezium connector for PostgreSQL"
+                $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-postgresql.properties > /dev/null 2>&1 &
+            fi
+            pids["Debezium"]=$!
+            sleep 5
         fi
-        pids["Debezium"]=$!
-        sleep 5
     fi
 fi
 
 ####################### Converter #######################
-if [ $is_master == true ]; then
-    CONVENTER_HOME=./converter
-    echo "Start Converter"
-    # For bool flags, = is necessary,
-    # since --enable_bulkload will be parsed as --enable_bulkload=true,
-    # and --no_enable_bulkload will be parsed as --enable_bulkload=false
-    if [ "$use_debezium" == 1 ]; then
-        echo "    Use Debezium converter"
-        $CONVENTER_HOME/binlog_convert_debezium \
-            --etcd_endpoint $etcd_endpoint \
-            --etcd_prefix $etcd_prefix \
-            --subgraph_num $subgraph_num --logs_per_epoch 10000 \
-            --enable_bulkload=$enable_bulkload &
-    else
-        echo "    Use Maxwell converter"
-        $CONVENTER_HOME/binlog_convert_maxwell  --etcd_endpoint $etcd_endpoint \
-            --etcd_prefix $etcd_prefix \
-            --subgraph_num $subgraph_num --logs_per_epoch 10000 &
+if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
+    if [ $is_master == true ]; then
+        CONVENTER_HOME=./converter
+        echo "Start Converter"
+        # For bool flags, = is necessary,
+        # since --enable_bulkload will be parsed as --enable_bulkload=true,
+        # and --no_enable_bulkload will be parsed as --enable_bulkload=false
+        if [ "$use_debezium" == 1 ]; then
+            echo "    Use Debezium converter"
+            $CONVENTER_HOME/binlog_convert_debezium \
+                --etcd_endpoint $etcd_endpoint \
+                --etcd_prefix $etcd_prefix \
+                --subgraph_num $subgraph_num --logs_per_epoch 10000 \
+                --enable_bulkload=$enable_bulkload &
+        else
+            echo "    Use Maxwell converter"
+            $CONVENTER_HOME/binlog_convert_maxwell  --etcd_endpoint $etcd_endpoint \
+                --etcd_prefix $etcd_prefix \
+                --subgraph_num $subgraph_num --logs_per_epoch 10000 &
+        fi
+        pids["Converter"]=$!
+        sleep 2
     fi
-    pids["Converter"]=$!
-    sleep 2
 fi
 
 ####################### Writer (VEGITO) #######################
+if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
+    WRITER_HOME=./vegito
 
-WRITER_HOME=./vegito
+    echo "Start Writer"
 
-echo "Start Writer"
-
-for ((i=$start_slot; i<$start_slot + $slot; i++)); do
-    $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
-    --etcd_endpoint $etcd_endpoint --meta_prefix $etcd_prefix \
-    --kafka_broker_list $kafka_server \
-    --subgraph_num $subgraph_num --subgraph_id $i &
-    pids["Vegito-$i"]=$!
-done
+    for ((i=$start_slot; i<$start_slot + $slot; i++)); do
+        $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
+        --etcd_endpoint $etcd_endpoint --meta_prefix $etcd_prefix \
+        --kafka_broker_list $kafka_server \
+        --subgraph_num $subgraph_num --subgraph_id $i &
+        pids["Vegito-$i"]=$!
+    done
+fi
 
 echo "Process IDs:"
 for key in "${!pids[@]}"; do
     echo "    $key: ${pids[$key]}"
 done
 
-./check_process.sh $v6d_sock "$(declare -p pids)" &
+echo "Role $role started."
 
-sleep 2 # wait for output
+if [ "$role" == "all" ]; then
+    ./check_process.sh $v6d_sock "$(declare -p pids)" &
 
-echo "GART started completely."
+    sleep 2 # wait for output
+
+    echo "GART started completely."
+fi
