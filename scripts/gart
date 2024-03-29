@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,table-schema-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,role:,hostfile:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,role:,start-slot:,num-slot:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -26,6 +26,8 @@ db_type="postgresql"
 enable_bulkload=false
 hostfile=
 role="all"
+start_slot=
+num_slot=
 
 set_port=false
 eval set -- "$VALID_ARGS"
@@ -100,6 +102,14 @@ while [ : ]; do
         hostfile=$2
         shift 2
         ;;
+         --start-slot)
+        start_slot=$2
+        shift 2
+        ;;
+         --num-slot)
+        num_slot=$2
+        shift 2
+        ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
         echo "      --db-type:           type of data source: postgresql, mysql (default: postgresql)"
@@ -117,8 +127,10 @@ while [ : ]; do
         echo "      --etcd-prefix:       etcd meta prefix (default: gart_meta_)"
         echo "  -k, --kafka-server:      kafka bootstrap server (default: 127.0.0.1:9092)"
         echo "      --subgraph-num:      number of sub graphs (default: 1)"
-        echo "      --role:              the role of running this script (default: all)"
+        echo "      --role:              the role of running this script: capturer, converter, writer or all (default: all)"
         echo "      --hostfile:          hostfile for distributed deployment"
+        echo "      --start-slot:        the start slot of subgraph on this machine"
+        echo "      --num-slot:          the number of slots on this machine"
         echo "  -h, --help:              help"
         exit 0
         ;;
@@ -195,85 +207,108 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     fi
 fi
 
-# check a host is local host or not
-function is_local_host() {
-    local_ips=$(hostname -I)
-
-    for ip in ${local_ips[@]}; do
-        if echo "$1" | grep -qE "(^| )($ip|localhost|127\.0\.0\.1)( |$)"; then
-            echo "true"
-            return
-        fi
-    done
-    echo "false"
-}
-
-# check and parse the hostfile if exists
-start_slot=0
-hosts=()
-is_master=true
-slot=$subgraph_num
-if [ -n "$hostfile" ]; then
-    if [ ! -f "$hostfile" ]; then
-        echo "Hostfile $hostfile does not exist"
-        exit 1
+if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
+    if [ "$role" == "all" ]; then
+        start_slot=0
+        num_slot=$subgraph_num
     fi
-
-    slot=0
-    # check format
-    line_number=0
-    while read -r line; do
-        line_number=$((line_number+1))
-
-        if ! echo "$line" | grep -qE '^(\S+)\s+slots=[0-9]+$'; then
-          echo "Hostfile format is invalid at line $line_number: $line"
-          exit 1
+    if [ "$role" == "writer" ]; then
+        if [ ! -n "$start_slot" ] && [ ! -n "$num_slot" ]; then
+            start_slot=0
+            num_slot=$subgraph_num
+        elif [ -n "$start_slot" ] && [ ! -n "$num_slot" ]; then
+            echo "Please set both start-slot and num-slot"
+            exit 1
+        elif [ ! -n "$start_slot" ] && [ -n "$num_slot" ]; then
+            echo "Please set both start-slot and num-slot"
+            exit 1
+        else 
+            echo "    Run Writer as given slot info"
         fi
-    done < $hostfile
-
-    # parse hostfile
-    sum_cores=0
-    while read -r line; do
-        hostname=$(echo "$line" | awk '{print $1}')
-        slot=$(echo "$line" | awk '{print substr($2, 7)}') # remove "slots="
-
-        tuple=("${hostname}:${slot}")
-        hosts+=("${tuple[@]}")
-        sum_cores=$((sum_cores+slot))
-    done < $hostfile
-
-    if [ $sum_cores -ne $subgraph_num ]; then
-        echo "The number of slots in hostfile is not equal to subgraph number"
-        exit 1
     fi
+    echo "    Start slot: $start_slot"
+    echo "    Number of slots: $num_slot"
 fi
 
-i=0
-found_mac=false
-master_hostname="127.0.0.1"
-for item in ${hosts[@]}; do
-    for pair in $item; do
-        hostname=$(echo $pair | cut -d ':' -f1)
-        slot=$(echo $pair | cut -d ':' -f2)
-        #echo "Host: $hostname, Slot: $slot"
-        if [ $i -eq 0 ]; then
-            master_hostname=$hostname
-        fi
+# check a host is local host or not
+# function is_local_host() {
+#     local_ips=$(hostname -I)
 
-        if [ $(is_local_host "$hostname") == "true" ]; then
-            #echo "Start to launch subgraph $i on $hostname"
-            if [ $i -ne 0 ]; then
-                is_master=false
-            fi
-            found_mac=true
-        else
-            if [ $found_mac == false ]; then
-                start_slot=$((start_slot+slot))
-            fi
-        fi
-    done
-    i=$((i+1))
-done
+#     for ip in ${local_ips[@]}; do
+#         if echo "$1" | grep -qE "(^| )($ip|localhost|127\.0\.0\.1)( |$)"; then
+#             echo "true"
+#             return
+#         fi
+#     done
+#     echo "false"
+# }
+
+# check and parse the hostfile if exists
+# start_slot=0
+# hosts=()
+# is_master=true
+# slot=$subgraph_num
+# if [ -n "$hostfile" ]; then
+#     if [ ! -f "$hostfile" ]; then
+#         echo "Hostfile $hostfile does not exist"
+#         exit 1
+#     fi
+
+#     slot=0
+#     # check format
+#     line_number=0
+#     while read -r line; do
+#         line_number=$((line_number+1))
+
+#         if ! echo "$line" | grep -qE '^(\S+)\s+slots=[0-9]+$'; then
+#           echo "Hostfile format is invalid at line $line_number: $line"
+#           exit 1
+#         fi
+#     done < $hostfile
+
+#     # parse hostfile
+#     sum_cores=0
+#     while read -r line; do
+#         hostname=$(echo "$line" | awk '{print $1}')
+#         slot=$(echo "$line" | awk '{print substr($2, 7)}') # remove "slots="
+
+#         tuple=("${hostname}:${slot}")
+#         hosts+=("${tuple[@]}")
+#         sum_cores=$((sum_cores+slot))
+#     done < $hostfile
+
+#     if [ $sum_cores -ne $subgraph_num ]; then
+#         echo "The number of slots in hostfile is not equal to subgraph number"
+#         exit 1
+#     fi
+# fi
+
+# i=0
+# found_mac=false
+# master_hostname="127.0.0.1"
+# for item in ${hosts[@]}; do
+#     for pair in $item; do
+#         hostname=$(echo $pair | cut -d ':' -f1)
+#         slot=$(echo $pair | cut -d ':' -f2)
+#         #echo "Host: $hostname, Slot: $slot"
+#         if [ $i -eq 0 ]; then
+#             master_hostname=$hostname
+#         fi
+
+#         if [ $(is_local_host "$hostname") == "true" ]; then
+#             #echo "Start to launch subgraph $i on $hostname"
+#             if [ $i -ne 0 ]; then
+#                 is_master=false
+#             fi
+#             found_mac=true
+#         else
+#             if [ $found_mac == false ]; then
+#                 start_slot=$((start_slot+slot))
+#             fi
+#         fi
+#     done
+#     i=$((i+1))
+# done
 
 echo "Arguments:"
 echo "    db-type: $db_type"
@@ -292,17 +327,14 @@ echo "    etcd-prefix: $etcd_prefix"
 echo "    kafka-server: $kafka_server"
 echo "    subgraph-num: $subgraph_num"
 echo "    hostfile: $hostfile"
-
-echo "    is-master: $is_master"
 echo "    start-slot: $start_slot"
-echo "    my-slot: $slot"
-echo "    master-hostname: $master_hostname"
+echo "    num-slot: $num_slot"
+echo "    role: $role"
 
 if [ "$role" == "all" ]; then
     ##################### Stop Previous GART ######################
     echo "Stop previous GART"
     ./stop-gart --kill-v6d-sock $v6d_sock
-    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
     ####################### Clean Etcd #######################
     echo "Clean etcd"
@@ -326,19 +358,17 @@ fi
 
 ####################### Extract Schema #######################
 if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
-    if [ $is_master == true ]; then
-        echo "Start extracting schema"
-        num_row=$(
-        ./scripts/extract_table_schema.py \
-            --host $db_host --port $db_port --db $db_name \
-            --user $user --password $password --db_type $db_type\
-            --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
-            --etcd_prefix $etcd_prefix
-        )
-        if [ $num_row -eq 0 ] && $enable_bulkload; then
-            echo "No tuples found in the database, skip bulk load"
-            enable_bulkload=false
-        fi
+    echo "Start extracting schema"
+    num_row=$(
+    ./scripts/extract_table_schema.py \
+        --host $db_host --port $db_port --db $db_name \
+        --user $user --password $password --db_type $db_type\
+        --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
+        --etcd_prefix $etcd_prefix
+    )
+    if [ $num_row -eq 0 ] && $enable_bulkload; then
+        echo "No tuples found in the database, skip bulk load"
+        enable_bulkload=false
     fi
 fi
 
@@ -352,77 +382,72 @@ fi
 
 ####################### Capturer: Zookeeper and Kafka #######################
 if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
-    if [ $is_master == true ]; then
-        KAFKA_BIN=$KAFKA_HOME/bin
-        KAFKA_CONFIG=$KAFKA_HOME/config
-        KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
+    KAFKA_BIN=$KAFKA_HOME/bin
+    KAFKA_CONFIG=$KAFKA_HOME/config
+    KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
 
-        echo "Start Zookeeper and Kafka"
-        $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-        # pids["Zookeeper"]=$!  # TODO(SSJ): check if Zookeeper is started
-        sleep 3
+    echo "Start Zookeeper and Kafka"
+    $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+    # pids["Zookeeper"]=$!  # TODO(SSJ): check if Zookeeper is started
+    sleep 3
 
-        $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-        # pids["Kafka"]=$!  # TODO(SSJ): check if Kafka is started
-        sleep 5
+    $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+    # pids["Kafka"]=$!  # TODO(SSJ): check if Kafka is started
+    sleep 5
 
-        # check Kafka failure
-        for i in {1..3}
-        do
-            if grep -q "ERROR" "$KAFKA_LOG"; then
-                if [ $i -ne 1 ]; then
-                    echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
-                    sleep 10
-                fi
-
-                $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-                #pids["Zookeeper"]=$!
-                sleep 3
-
-                $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-                #pids["Kafka"]=$!
-                sleep 5
-            else
-                break
+    # check Kafka failure
+    for i in {1..3}
+    do
+        if grep -q "ERROR" "$KAFKA_LOG"; then
+            if [ $i -ne 1 ]; then
+                echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
+                sleep 10
             fi
-            if [ $i -eq 3 ]; then
-                echo "Kafka: Reached max attempts, ERROR found"
-                ./stop-gart --kill-v6d-sock $v6d_sock --is-abnormal
-                exit 1
-            fi
-        done
 
-        echo "    Clean topics: binlog & unified_log"
-        $KAFKA_BIN/kafka-topics.sh --delete --topic 'binlog.*' --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
-        $KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+            $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
+            #pids["Zookeeper"]=$!
+            sleep 3
 
-        sleep 2
+            $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
+            #pids["Kafka"]=$!
+            sleep 5
+        else
+            break
+        fi
+        if [ $i -eq 3 ]; then
+            echo "Kafka: Reached max attempts, ERROR found"
+            ./stop-gart --kill-v6d-sock $v6d_sock --is-abnormal
+            exit 1
+        fi
+    done
 
-        #TODO: hard code: replication-factor
+    echo "    Clean topics: binlog & unified_log"
+    $KAFKA_BIN/kafka-topics.sh --delete --topic 'binlog.*' --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
+    $KAFKA_BIN/kafka-topics.sh --delete --topic unified_log --bootstrap-server 127.0.0.1:9092 > /dev/null 2>&1
 
-        echo "    Create topic: binlog"
-        $KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
+    sleep 2
 
-        echo "    Create topic: unified_log"
-        $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
+    #TODO: hard code: replication-factor
 
-        # $KAFKA_BIN/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
-    fi
+    echo "    Create topic: binlog"
+    $KAFKA_BIN/kafka-topics.sh --create --topic binlog --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
+
+    echo "    Create topic: unified_log"
+    $KAFKA_BIN/kafka-topics.sh --create --topic unified_log --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1 > /dev/null 2>&1
+    # $KAFKA_BIN/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
 fi
 
 
 ####################### Capturer: Maxwell #######################
 if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     if [ "$use_debezium" == 0 ]; then
-        if [ $is_master == true ]; then
-            MAXWELL_BIN=$MAXWELL_HOME/bin
+        MAXWELL_BIN=$MAXWELL_HOME/bin
 
-            echo "Start Maxwell"
-            $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog > /dev/null 2>&1 &
+        echo "Start Maxwell"
+        $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog > /dev/null 2>&1 &
 
-            pids["Maxwell"]=$!
-            sleep 3
-        fi
+        pids["Maxwell"]=$!
+        sleep 3
     fi
 fi
 
@@ -430,46 +455,43 @@ fi
 if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
 # TODO(wanglei): add distributed deployment of debezium
     if [ "$use_debezium" == 1 ]; then
-        if [ $is_master == true ]; then
-            unset CLASSPATH
-            echo "Start Debezium"
-            if [ "$db_type" == "mysql" ]; then
-                echo "    Start Debezium connector for MySQL"
-                $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-mysql.properties > /dev/null 2>&1 &
-            elif [ "$db_type" == "postgresql" ]; then
-                echo "    Start Debezium connector for PostgreSQL"
-                $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-postgresql.properties > /dev/null 2>&1 &
-            fi
-            pids["Debezium"]=$!
-            sleep 5
+        unset CLASSPATH
+        echo "Start Debezium"
+        if [ "$db_type" == "mysql" ]; then
+            echo "    Start Debezium connector for MySQL"
+            $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-mysql.properties > /dev/null 2>&1 &
+        elif [ "$db_type" == "postgresql" ]; then
+            echo "    Start Debezium connector for PostgreSQL"
+            $KAFKA_BIN/connect-standalone.sh $KAFKA_CONFIG/connect-standalone.properties $KAFKA_CONFIG/connect-debezium-postgresql.properties > /dev/null 2>&1 &
         fi
+        pids["Debezium"]=$!
+        sleep 5
     fi
 fi
 
 ####################### Converter #######################
 if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
-    if [ $is_master == true ]; then
-        CONVENTER_HOME=./converter
-        echo "Start Converter"
-        # For bool flags, = is necessary,
-        # since --enable_bulkload will be parsed as --enable_bulkload=true,
-        # and --no_enable_bulkload will be parsed as --enable_bulkload=false
-        if [ "$use_debezium" == 1 ]; then
-            echo "    Use Debezium converter"
-            $CONVENTER_HOME/binlog_convert_debezium \
-                --etcd_endpoint $etcd_endpoint \
-                --etcd_prefix $etcd_prefix \
-                --subgraph_num $subgraph_num --logs_per_epoch 10000 \
-                --enable_bulkload=$enable_bulkload &
-        else
-            echo "    Use Maxwell converter"
-            $CONVENTER_HOME/binlog_convert_maxwell  --etcd_endpoint $etcd_endpoint \
-                --etcd_prefix $etcd_prefix \
-                --subgraph_num $subgraph_num --logs_per_epoch 10000 &
-        fi
-        pids["Converter"]=$!
-        sleep 2
+    CONVENTER_HOME=./converter
+    echo "Start Converter"
+    # For bool flags, = is necessary,
+    # since --enable_bulkload will be parsed as --enable_bulkload=true,
+    # and --no_enable_bulkload will be parsed as --enable_bulkload=false
+    if [ "$use_debezium" == 1 ]; then
+        echo "    Use Debezium converter"
+        $CONVENTER_HOME/binlog_convert_debezium \
+            --etcd_endpoint $etcd_endpoint \
+            --etcd_prefix $etcd_prefix \
+            --subgraph_num $subgraph_num --logs_per_epoch 10000 \
+            --enable_bulkload=$enable_bulkload &
+    else
+        echo "    Use Maxwell converter"
+        $CONVENTER_HOME/binlog_convert_maxwell  --etcd_endpoint $etcd_endpoint \
+            --etcd_prefix $etcd_prefix \
+            --subgraph_num $subgraph_num --logs_per_epoch 10000 &
     fi
+    pids["Converter"]=$!
+    sleep 2
+    
 fi
 
 ####################### Writer (VEGITO) #######################
@@ -478,7 +500,7 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
 
     echo "Start Writer"
 
-    for ((i=$start_slot; i<$start_slot + $slot; i++)); do
+    for ((i=$start_slot; i<$start_slot + $num_slot; i++)); do
         $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
         --etcd_endpoint $etcd_endpoint --meta_prefix $etcd_prefix \
         --kafka_broker_list $kafka_server \
