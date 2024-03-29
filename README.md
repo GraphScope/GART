@@ -1,6 +1,6 @@
 # GART: Graph Analysis on Relational Transactional Datasets
 
-GART is an in-memory system extended from HTAP systems for hybrid transactional and graph analytical processing (HTGAP).
+GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for in-line graph processing.
 
 ## Table of Contents
 - [What is GART](#what-is-gart)
@@ -33,7 +33,7 @@ In detail, the workflow of GART can be broken into the following steps:
 - **1. Preprocess (Capture & Parser)**:
 GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use [Debezium](https://debezium.io/) (for MySQL, PostgreSQL, ...) or [Maxwell](https://github.com/zendesk/maxwell) (only for MySQL) as the log capture.
 
-  The sample format of TxnLog is as follows (Debezium style, only necessary information):
+    The sample format of an inserted tuple of TxnLog is as follows (Debezium style, only necessary information):
   ```
   {
     "before": null,
@@ -64,10 +64,10 @@ GART applies the graph data changes on the graph store. The graph store is dynam
 
 ## Features
 
-GART should fulfill two unique goals not encountered by HTAP systems.
+Compared to current solutions that provide graph interfaces on relational data, GART has three main features:
 
 ### Transparent Data Model Conversion
-To adapt to rich workloads flexibility, GART proposes transparent data model conversion by graph extraction interfaces, which define rules of relational-graph mapping.
+To adapt to rich workload flexibility, GART proposes transparent data model conversion by graph extraction interfaces, which define rules of relational-graph mapping.
 
 We provide a sample definition file called [rgmapping-ldbc.yaml](vegito/test/schema/rgmapping-ldbc.yaml).
 
@@ -76,6 +76,14 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 1. an efficient and mutable compressed sparse row (CSR) representation to guarantee the locality of scanning edges;
 2. a coarse-grained MVCC to reduce the temporal and spatial overhead of versioning;
 3. a flexible property storage to efficiently run various GAP workloads.
+
+Please refer to [our paper](https://www.usenix.org/conference/atc23/presentation/shen) for specific technical implementation details.
+
+### Service-Oriented Deployment Model
+GART acts as a service to synchronize database changes to the graph store.
+When pulled up as a service on its own, users can try out the full power of GART and different graph computation engines on the graph store.
+At the same time, GART also provides a front-end, used as a database plug-in, currently supported as PostgreSQL extension.
+Users can invoke GART's functions in the database client, such as RGMapping definitions, graph computation on the graph store, etc.
 
 ## Deployment
 
@@ -117,37 +125,7 @@ docker run -it --name gart0 gart
 ### Configure Data Source
 
 Before running GART, we need to configure the data source to capture its logs.
-Currently, we have supported MySQL and PostgreSQL as the relational data source.
-
-#### MySQL
-- MySQL configuration file `/etc/mysql/my.cnf`:
-    ```
-    [mysqld]
-    # Prefix of the binlogs
-    log-bin=mysql-bin
-
-    # Binlog Format: row-based logging, maxwell needs binlog_format=row
-    binlog_format=row
-    binlog_row_image=full
-
-    # The databases captured. GART will capture all databases if not specified.
-    binlog-do-db=ldbc  # change the name to your database
-    binlog-do-db=...   # change the name to your database
-    ```
-
-- Create a MySQL user for the log capture ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md) or [Debezium](https://debezium.io/documentation/reference/stable/connectors/mysql.html#mysql-creating-user)):
-    ```
-    # Create a user call "maxwell" with password "123456"
-    # The host name part of the account name, if omitted, defaults to '%'.
-    CREATE USER 'maxwell'@'localhost' IDENTIFIED BY '123456';
-
-    # Grant necesarry privileges
-    # PrivilegesRELOAD and SHOW DATABASES are only used for Debezium
-    GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'maxwell'@'localhost';
-
-    # Grant privileges on the database "maxwell", only used for Maxwell
-    GRANT ALL ON maxwell.* TO 'maxwell'@'localhost';
-    ```
+Currently, we have supported PostgreSQL and MySQL as the relational data source.
 
 #### PostgreSQL
 - The PostgreSQL configuration file is in the directory `/etc/postgresql/<postgresql_version>/main/`
@@ -185,6 +163,36 @@ Currently, we have supported MySQL and PostgreSQL as the relational data source.
     sudo /etc/init.d/postgresql restart
     ```
 
+#### MySQL
+- MySQL configuration file `/etc/mysql/my.cnf`:
+    ```
+    [mysqld]
+    # Prefix of the binlogs
+    log-bin=mysql-bin
+
+    # Binlog Format: row-based logging, only maxwell needs binlog_format=row
+    binlog_format=row
+    binlog_row_image=full
+
+    # The databases captured. GART will capture all databases if not specified.
+    binlog-do-db=ldbc  # change the name to your database
+    binlog-do-db=...   # change the name to your database
+    ```
+
+- Create a MySQL user for the log capture ([Maxwell](https://github.com/zendesk/maxwell/blob/master/docs/docs/quickstart.md) or [Debezium](https://debezium.io/documentation/reference/stable/connectors/mysql.html#mysql-creating-user)):
+    ```
+    # Create a user call "dbuser" with password "123456"
+    # The host name part of the account name, if omitted, defaults to '%'.
+    CREATE USER 'dbuser'@'localhost' IDENTIFIED BY '123456';
+
+    # Grant necesarry privileges
+    # PrivilegesRELOAD and SHOW DATABASES are only used for Debezium
+    GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'dbuser'@'localhost';
+
+    # Grant privileges on the database "dbuser", only used for Maxwell
+    GRANT ALL ON maxwell.* TO 'dbuser'@'localhost';
+    ```
+
 #### User-defined Data Source
 Please refer to [Usage of GART Storage](./docs/storage.md).
 
@@ -203,10 +211,10 @@ You can launch GART by the `gart` script under the `build` directory, like:
 ```
 export KAFKA_HOME=/path/to/kafka
 export MAXWELL_HOME=/path/to/maxwell # if you use Maxwell as log capturer
-./gart --user maxwell --password 123456
+./gart --user dbuser --password 123456
 ```
 
-The arguments of `--user` and `--password` is the user name and the password in the database for Maxwell.
+The arguments of `--user` and `--password` is the user name and the password in the database.
 
 The full usage of `gart` can be shown as:
 
@@ -249,7 +257,7 @@ You can stop GART by:
     export KAFKA_HOME=/path/to/kafka
 
     cd build
-    ./gart --user maxwell --password 123456 --db-name ldbc --v6d-sock /tmp/ldbc.sock --etcd-endpoint 127.0.0.1:23760
+    ./gart --user dbuser --password 123456 --db-name ldbc --v6d-sock /tmp/ldbc.sock --etcd-endpoint 127.0.0.1:23760
     ```
 
 - Start transactional data insertion
