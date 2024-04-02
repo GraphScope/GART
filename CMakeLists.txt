@@ -113,7 +113,7 @@ install(TARGETS util_header
 )
 
 ### check format ###
-file(GLOB_RECURSE FILES_NEED_FORMAT "vegito/*.cc" "vegito/*.h" "vegito/*.cpp" "vegito/*.hpp")
+file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h" "*.cpp" "*.hpp")
 
 add_custom_target(clformat
         COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
