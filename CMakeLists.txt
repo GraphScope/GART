@@ -40,7 +40,8 @@ file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/gart gart SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/stop-gart stop-gart SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/check_process.sh check_process.sh SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py scripts/extract_table_schema.py SYMBOLIC)
-
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/distributed_deployment.py scripts/distributed_deployment.py SYMBOLIC)
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/launch_etcd.py scripts/launch_etcd.py SYMBOLIC)
 ### install headers ###
 
 set(CMAKE_INSTALL_INCLUDE_DIR "/usr/local/include")
@@ -112,7 +113,7 @@ install(TARGETS util_header
 )
 
 ### check format ###
-file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h" "*.cpp" "*.hpp")
+file(GLOB_RECURSE FILES_NEED_FORMAT "vegito/*.cc" "vegito/*.h" "vegito/*.cpp" "vegito/*.hpp")
 
 add_custom_target(clformat
         COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}

@@ -188,6 +188,9 @@ gart::Status TxnLogParser::init(const string& etcd_endpoint, const string& etcd_
   for (auto idx = 0; idx < vlabel_num_; ++idx) {
     vertex_nums_per_fragment_[idx].resize(subgraph_num_, 0);
   }
+
+  auto response_task = etcd_client->put(etcd_prefix + "converter_is_up", "True").get();
+  assert(response_task.is_ok());
   return gart::Status::OK();
 }
 

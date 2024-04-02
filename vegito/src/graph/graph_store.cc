@@ -216,6 +216,10 @@ void GraphStore::put_schema() {
           ->put(latest_epoch, to_string(numeric_limits<uint64_t>::max()))
           .get();
   assert(response_task.is_ok());
+  schema_key =
+      FLAGS_meta_prefix + "writer_" + to_string(get_local_pid()) + "_is_up";
+  response_task = etcd_client_->put(schema_key, "True").get();
+  assert(response_task.is_ok());
 }
 
 void GraphStore::put_schema4gie() {

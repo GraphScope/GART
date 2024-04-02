@@ -1,0 +1,30 @@
+{
+    "db_host": "127.0.0.1",
+    "db_port": 5432,
+    "db_type": "postgresql",
+    "db_name": "ldbc",
+    "db_user": "dbuser",
+    "db_password": "123456",
+    "rgmapping_file": "/path/to/rgmapping.yaml",
+    "v6d_socket": "/tmp/ldbc.sock",
+    "v6d_size": "750G",
+    "etcd_endpoint": "http://127.0.0.1:23760",
+    "etcd_prefix": "gart_meta_",
+    "kafka_server": "127.0.0.1:9092",
+    "total_subgraph_num": 2,
+    "gart_bin_path": "/path/to/GART/build/",
+    "enable_bulkload": 1,
+    "capturer_host": "127.0.0.1",
+    "converter_host": "127.0.0.1",
+    "kafka_path": "/path/to/kafka",
+    "writer_hosts": [
+        {
+            "subgraph_id": 0,
+            "host": "127.0.0.1"
+        },
+        {
+            "subgraph_id": 1,
+            "host": "127.0.0.1"
+        }
+    ]
+}

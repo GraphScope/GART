@@ -7,6 +7,7 @@ import json
 from sqlalchemy import create_engine
 import yaml
 import etcd3
+from urllib.parse import urlparse
 
 
 def get_parser():
@@ -28,8 +29,11 @@ def get_parser():
 
     parser.add_argument(
         "--rgmapping_file",
-        default="schema/rgmapping-ldbc.yaml",
+        default="",
         help="Config file (RGMapping)",
+    )
+    parser.add_argument(
+        "--rg_mapping_from_etcd", default=0, help="Input RGMapping from etcd"
     )
 
     return parser
@@ -47,9 +51,22 @@ GSchemaLoader.add_constructor(
 )
 
 
-def exetract_schema(cursor, rgmapping_file, database, db_type, etcd_endpoint, etcd_prefix):
-    with open(rgmapping_file, "r", encoding="UTF-8") as f:
-        config = yaml.load(f, Loader=GSchemaLoader)
+def extract_schema(
+    cursor, rgmapping_file, database, db_type, etcd_endpoint, etcd_prefix
+):
+    if not etcd_endpoint.startswith(("http://", "https://")):
+        etcd_endpoint = "http://" + etcd_endpoint
+    parsed_url = urlparse(etcd_endpoint)
+    etcd_host = parsed_url.netloc.split(":")[0]
+    etcd_port = parsed_url.port
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+    if len(rgmapping_file) == 0:
+        rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml"
+        rg_mapping_str = etcd_client.get(rg_mapping_key)[0].decode("utf-8")
+        config = yaml.load(rg_mapping_str, Loader=GSchemaLoader)
+    else:
+        with open(rgmapping_file, "r", encoding="UTF-8") as f:
+            config = yaml.load(f, Loader=GSchemaLoader)
     tables = (
         config["vertexMappings"]["vertex_types"] + config["edgeMappings"]["edge_types"]
     )
@@ -75,21 +92,19 @@ def exetract_schema(cursor, rgmapping_file, database, db_type, etcd_endpoint, et
         cursor.execute(sql)
         results = cursor.fetchall()
         sum_row += results[0][0]
-        
-    index = etcd_endpoint.find(":")
-    etcd_host = etcd_endpoint[:index]
-    etcd_port = int(etcd_endpoint[index+1:])
-    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
-    etcd_client.put(etcd_prefix + 'gart_table_schema', json.dumps(schema))
+
+    etcd_client.put(etcd_prefix + "gart_table_schema", json.dumps(schema))
 
     return schema, sum_row
 
 
 # schema: {table_name: [(column_name, column_type), ...]}
 def produce_graph_schema(schema, rgmapping_file, etcd_endpoint, etcd_prefix):
-    index = etcd_endpoint.find(":")
-    etcd_host = etcd_endpoint[:index]
-    etcd_port = int(etcd_endpoint[index+1:])
+    if not etcd_endpoint.startswith(("http://", "https://")):
+        etcd_endpoint = "http://" + etcd_endpoint
+    parsed_url = urlparse(etcd_endpoint)
+    etcd_host = parsed_url.netloc.split(":")[0]
+    etcd_port = parsed_url.port
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
     result = {
         "name": "LDBC",
@@ -97,10 +112,16 @@ def produce_graph_schema(schema, rgmapping_file, etcd_endpoint, etcd_prefix):
         "xCsrParams": {"Ordering": "by_src"},
         "schema": {"vertexTypes": [], "edgeTypes": []},
     }
-
-    with open(rgmapping_file, "r", encoding="UTF-8") as f:
-        config = yaml.load(f, Loader=GSchemaLoader)
-        etcd_client.put(etcd_prefix + 'gart_rg_mapping_yaml', yaml.dump(config, sort_keys=False))
+    if len(rgmapping_file) == 0:
+        rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml"
+        rg_mapping_str = etcd_client.get(rg_mapping_key)[0].decode("utf-8")
+        config = yaml.load(rg_mapping_str, Loader=GSchemaLoader)
+    else:
+        with open(rgmapping_file, "r", encoding="UTF-8") as f:
+            config = yaml.load(f, Loader=GSchemaLoader)
+            etcd_client.put(
+                etcd_prefix + "gart_rg_mapping_yaml", yaml.dump(config, sort_keys=False)
+            )
 
     vdefs = config["vertexMappings"]["vertex_types"]
     vtype_to_id = {}
@@ -187,8 +208,10 @@ def produce_graph_schema(schema, rgmapping_file, etcd_endpoint, etcd_prefix):
         element["vertexTypePairRelations"] = [relation]
         result["schema"]["edgeTypes"].append(element)
         idx += 1
-        
-    etcd_client.put(etcd_prefix + 'gart_graph_schema_yaml', yaml.dump(result, sort_keys=False))
+
+    etcd_client.put(
+        etcd_prefix + "gart_graph_schema_yaml", yaml.dump(result, sort_keys=False)
+    )
 
 
 if __name__ == "__main__":
@@ -207,7 +230,7 @@ if __name__ == "__main__":
     if not isinstance(args.db, str) or len(args.db) == 0:
         print("Please specify the database name with --password")
         unset = True
-    
+
     if not isinstance(args.etcd_endpoint, str) or len(args.etcd_endpoint) == 0:
         print("Please specify the etcd endpoint with --etcd_endpoint")
         unset = True
@@ -242,12 +265,20 @@ if __name__ == "__main__":
         exit(1)
     conn = engine.raw_connection()
     cursor = conn.cursor()
-
-    schema, sum_row = exetract_schema(
-        cursor, args.rgmapping_file, args.db, args.db_type, args.etcd_endpoint, args.etcd_prefix
+    if args.rg_mapping_from_etcd == 1 or args.rg_mapping_from_etcd == "1":
+        args.rgmapping_file = ""
+    schema, sum_row = extract_schema(
+        cursor,
+        args.rgmapping_file,
+        args.db,
+        args.db_type,
+        args.etcd_endpoint,
+        args.etcd_prefix,
     )
     conn.close()
 
-    produce_graph_schema(schema, args.rgmapping_file, args.etcd_endpoint, args.etcd_prefix)
+    produce_graph_schema(
+        schema, args.rgmapping_file, args.etcd_endpoint, args.etcd_prefix
+    )
 
     print(sum_row)

@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,role:,start-slot:,num-slot:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,role:,start-slot:,num-slot:,rg-from-etcd:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -28,6 +28,7 @@ hostfile=
 role="all"
 start_slot=
 num_slot=
+rg_from_etcd=0
 
 set_port=false
 eval set -- "$VALID_ARGS"
@@ -108,6 +109,10 @@ while [ : ]; do
         ;;
          --num-slot)
         num_slot=$2
+        shift 2
+        ;;
+         --rg-from-etcd)
+        rg_from_etcd=$2
         shift 2
         ;;
     -h | --help | ?)
@@ -230,86 +235,6 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
     echo "    Number of slots: $num_slot"
 fi
 
-# check a host is local host or not
-# function is_local_host() {
-#     local_ips=$(hostname -I)
-
-#     for ip in ${local_ips[@]}; do
-#         if echo "$1" | grep -qE "(^| )($ip|localhost|127\.0\.0\.1)( |$)"; then
-#             echo "true"
-#             return
-#         fi
-#     done
-#     echo "false"
-# }
-
-# check and parse the hostfile if exists
-# start_slot=0
-# hosts=()
-# is_master=true
-# slot=$subgraph_num
-# if [ -n "$hostfile" ]; then
-#     if [ ! -f "$hostfile" ]; then
-#         echo "Hostfile $hostfile does not exist"
-#         exit 1
-#     fi
-
-#     slot=0
-#     # check format
-#     line_number=0
-#     while read -r line; do
-#         line_number=$((line_number+1))
-
-#         if ! echo "$line" | grep -qE '^(\S+)\s+slots=[0-9]+$'; then
-#           echo "Hostfile format is invalid at line $line_number: $line"
-#           exit 1
-#         fi
-#     done < $hostfile
-
-#     # parse hostfile
-#     sum_cores=0
-#     while read -r line; do
-#         hostname=$(echo "$line" | awk '{print $1}')
-#         slot=$(echo "$line" | awk '{print substr($2, 7)}') # remove "slots="
-
-#         tuple=("${hostname}:${slot}")
-#         hosts+=("${tuple[@]}")
-#         sum_cores=$((sum_cores+slot))
-#     done < $hostfile
-
-#     if [ $sum_cores -ne $subgraph_num ]; then
-#         echo "The number of slots in hostfile is not equal to subgraph number"
-#         exit 1
-#     fi
-# fi
-
-# i=0
-# found_mac=false
-# master_hostname="127.0.0.1"
-# for item in ${hosts[@]}; do
-#     for pair in $item; do
-#         hostname=$(echo $pair | cut -d ':' -f1)
-#         slot=$(echo $pair | cut -d ':' -f2)
-#         #echo "Host: $hostname, Slot: $slot"
-#         if [ $i -eq 0 ]; then
-#             master_hostname=$hostname
-#         fi
-
-#         if [ $(is_local_host "$hostname") == "true" ]; then
-#             #echo "Start to launch subgraph $i on $hostname"
-#             if [ $i -ne 0 ]; then
-#                 is_master=false
-#             fi
-#             found_mac=true
-#         else
-#             if [ $found_mac == false ]; then
-#                 start_slot=$((start_slot+slot))
-#             fi
-#         fi
-#     done
-#     i=$((i+1))
-# done
-
 echo "Arguments:"
 echo "    db-type: $db_type"
 echo "    db-host: $db_host"
@@ -344,15 +269,38 @@ fi
 declare -A pids     # array to store pids and comments
 
 ####################### Vineyard #######################
-if ! pgrep -f "vineyardd .* $v6d_sock" > /dev/null 2>&1; then
-    if [ -e "$v6d_sock" ]; then
-        echo "Remove existing vineyard socket $v6d_sock"
-        rm $v6d_sock
+if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
+    echo "Start Vineyard"
+    if ! pgrep -f "vineyardd .* $v6d_sock" > /dev/null 2>&1; then
+        if [ -e "$v6d_sock" ]; then
+            echo "Remove existing vineyard socket $v6d_sock"
+            rm $v6d_sock
+        fi
+        echo "Start to launch vineyardd on $v6d_sock"
+        # TODO: etcd_cmd user for PostgreSQL Extension
+        vineyardd --etcd_cmd=/usr/local/bin/etcd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
+        pids["Vineyard"]=$!
+        sleep 5
     fi
-    echo "Start to launch vineyardd on $v6d_sock"
-    # TODO: etcd_cmd user for PostgreSQL Extension
-    vineyardd --etcd_cmd=/usr/local/bin/etcd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
-    pids["Vineyard"]=$!
+fi
+
+####################### Etcd #######################
+if [ "$role" == "capturer" ] || [ "$role" == "converter" ]; then
+    echo "Start to launch Etcd by role $role"
+    if ! pgrep -f "etcd .*$etcd_endpoint" > /dev/null 2>&1; then
+        echo "Start to launch etcd on $etcd_endpoint"
+        etcd_status=$(
+        python ./scripts/launch_etcd.py --etcd_endpoint $etcd_endpoint
+        )
+        if [ $etcd_status -eq 1 ]; then
+            echo "Etcd is launched successfully"
+        else
+            echo "Failed to launch etcd"
+            exit 1
+        fi
+    else
+        echo "Etcd is already running"
+    fi
 fi
 
 
@@ -364,7 +312,7 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
         --host $db_host --port $db_port --db $db_name \
         --user $user --password $password --db_type $db_type\
         --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
-        --etcd_prefix $etcd_prefix
+        --etcd_prefix $etcd_prefix --rg_mapping_from_etcd $rg_from_etcd
     )
     if [ $num_row -eq 0 ] && $enable_bulkload; then
         echo "No tuples found in the database, skip bulk load"
@@ -448,6 +396,15 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
 
         pids["Maxwell"]=$!
         sleep 3
+        process_count=$(
+            ps aux | grep '[m]axwell.Maxwell' | wc -l | awk '{print $1}'
+        )
+        if [ $process_count -gt 0 ]; then
+            export ETCDCTL_API=3
+            etcd_prefix=$etcd_prefix
+            etcd_key=$etcd_prefix"capturer_is_up"
+            etcdctl --endpoints=$etcd_endpoint put $etcd_key "True"
+        fi
     fi
 fi
 
@@ -466,6 +423,15 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
         fi
         pids["Debezium"]=$!
         sleep 5
+        process_count=$(
+            ps aux | grep '[d]ebezium-api' | wc -l | awk '{print $1}'
+        )
+        if [ $process_count -gt 0 ]; then
+            export ETCDCTL_API=3
+            etcd_prefix=$etcd_prefix
+            etcd_key=$etcd_prefix"capturer_is_up"
+            etcdctl --endpoints=$etcd_endpoint put $etcd_key "True"
+        fi
     fi
 fi
 
