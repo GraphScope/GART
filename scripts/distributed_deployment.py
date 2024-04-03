@@ -5,6 +5,7 @@ import yaml
 import time
 from urllib.parse import urlparse
 import requests
+import socket
 
 import etcd3
 import paramiko
@@ -17,7 +18,6 @@ def get_parser():
     )
 
     parser.add_argument("--config_file", help="Configuration file path")
-    parser.add_argument("--rg_mapping_file", help="RG Mapping file path")
     return parser
 
 
@@ -28,6 +28,15 @@ def is_etcd_running(host, port):
         return response.status_code == 200 and response.json().get("health") == "true"
     except requests.exceptions.RequestException:
         return False
+    
+def check_port(host, port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind((host, port))
+            return True  
+        except socket.error as e:
+            print(f"Port {port} is already in use: {e}")
+            return False  
 
 
 if __name__ == "__main__":
@@ -40,17 +49,15 @@ if __name__ == "__main__":
         print("Please specify the GART configuration with --config_file")
         unset = True
 
-    if not isinstance(args.rg_mapping_file, str) or len(args.rg_mapping_file) == 0:
-        print("Please specify the RG Mapping file with --rg_mapping_file")
-        unset = True
-
     if unset:
         sys.exit(1)
 
     with open(args.config_file, "r", encoding="UTF-8") as f:
         config = json.load(f)
 
-    with open(args.rg_mapping_file, "r", encoding="UTF-8") as f:
+    rg_mapping_file = config["rgmapping_file"]
+    
+    with open(rg_mapping_file, "r", encoding="UTF-8") as f:
         rg_mapping = yaml.safe_load(f)
 
     v6d_socket = config["v6d_socket"]
@@ -68,7 +75,13 @@ if __name__ == "__main__":
     if is_etcd_running(etcd_host, etcd_port):
         print("Etcd is already running.")
     else:
-        etcd_command = f"nohup etcd --listen-client-urls http://{etcd_host}:{etcd_port} --advertise-client-urls http://{etcd_host}:{etcd_port} --listen-peer-urls http://{etcd_host}:{etcd_port+1} --initial-cluster default=http://{etcd_host}:{etcd_port+1} --initial-advertise-peer-urls http://{etcd_host}:{etcd_port+1} --data-dir default.etcd >etcd.log 2>&1 &"
+        etcd_peer_port = etcd_port + 1
+        while etcd_peer_port < 65535:
+            if check_port(etcd_host, etcd_peer_port):
+                break
+            etcd_peer_port += 1
+            
+        etcd_command = f"nohup etcd --listen-client-urls http://{etcd_host}:{etcd_port} --advertise-client-urls http://{etcd_host}:{etcd_port} --listen-peer-urls http://{etcd_host}:{etcd_peer_port} --initial-cluster default=http://{etcd_host}:{etcd_peer_port} --initial-advertise-peer-urls http://{etcd_host}:{etcd_peer_port} --data-dir default.etcd >etcd.log 2>&1 &"
         ssh.connect(etcd_host)
         ssh.exec_command(etcd_command)
 

@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import requests
 import time
 import subprocess
+import socket
 
 
 def get_parser():
@@ -13,6 +14,15 @@ def get_parser():
 
     parser.add_argument("--etcd_endpoint", help="Etcd endpoint")
     return parser
+
+def check_port(host, port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind((host, port))
+            return True  
+        except socket.error as e:
+            print(f"Port {port} is already in use: {e}")
+            return False  
 
 
 if __name__ == "__main__":
@@ -25,6 +35,21 @@ if __name__ == "__main__":
     parsed_url = urlparse(etcd_endpoint)
     etcd_host = parsed_url.netloc.split(":")[0]
     etcd_port = parsed_url.port
+    
+    if not check_port(etcd_host, etcd_port):
+        print(0)
+        exit(0)
+        
+    etcd_peer_port = etcd_port + 1
+    
+    while etcd_peer_port < 65535:
+        if check_port(etcd_host, etcd_peer_port):
+            break
+        etcd_peer_port += 1
+        
+    if etcd_peer_port == 65535:
+        print(0)
+        exit(0)
 
     etcd_command = [
         "etcd",
@@ -33,11 +58,11 @@ if __name__ == "__main__":
         "--advertise-client-urls",
         f"http://{etcd_host}:{etcd_port}",
         "--listen-peer-urls",
-        f"http://{etcd_host}:{etcd_port+1}",
+        f"http://{etcd_host}:{etcd_peer_port}",
         "--initial-cluster",
-        f"default=http://{etcd_host}:{etcd_port+1}",
+        f"default=http://{etcd_host}:{etcd_peer_port}",
         "--initial-advertise-peer-urls",
-        f"http://{etcd_host}:{etcd_port+1}",
+        f"http://{etcd_host}:{etcd_peer_port}",
         "--data-dir",
         "default.etcd",
     ]
