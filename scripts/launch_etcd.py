@@ -4,6 +4,7 @@ import requests
 import time
 import subprocess
 import socket
+import sys
 
 
 def get_parser():
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     
     if not check_port(etcd_host, etcd_port):
         print(0)
-        exit(0)
+        sys.exit(0)
         
     etcd_peer_port = etcd_port + 1
     
@@ -49,7 +50,7 @@ if __name__ == "__main__":
         
     if etcd_peer_port == 65535:
         print(0)
-        exit(0)
+        sys.exit(0)
 
     etcd_command = [
         "etcd",

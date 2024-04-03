@@ -28,6 +28,7 @@ def is_etcd_running(host, port):
         return response.status_code == 200 and response.json().get("health") == "true"
     except requests.exceptions.RequestException:
         return False
+    return False
     
 def check_port(host, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -81,7 +82,18 @@ if __name__ == "__main__":
                 break
             etcd_peer_port += 1
             
-        etcd_command = f"nohup etcd --listen-client-urls http://{etcd_host}:{etcd_port} --advertise-client-urls http://{etcd_host}:{etcd_port} --listen-peer-urls http://{etcd_host}:{etcd_peer_port} --initial-cluster default=http://{etcd_host}:{etcd_peer_port} --initial-advertise-peer-urls http://{etcd_host}:{etcd_peer_port} --data-dir default.etcd >etcd.log 2>&1 &"
+        if etcd_peer_port == 65535:
+            print("No available port for etcd peer.")
+            sys.exit(1)
+            
+        etcd_command = (
+            f"nohup etcd --listen-client-urls http://{etcd_host}:{etcd_port} "
+            f"--advertise-client-urls http://{etcd_host}:{etcd_port} "
+            f"--listen-peer-urls http://{etcd_host}:{etcd_peer_port} "
+            f"--initial-cluster default=http://{etcd_host}:{etcd_peer_port} "
+            f"--initial-advertise-peer-urls http://{etcd_host}:{etcd_peer_port} "
+            f"--data-dir default.etcd >etcd.log 2>&1 &"
+        )
         ssh.connect(etcd_host)
         ssh.exec_command(etcd_command)
 
@@ -151,7 +163,27 @@ if __name__ == "__main__":
                 time_elapsed += check_interval
 
     # Command to start capturer in the background
-    start_capturer_cmd = f"export KAFKA_HOME={kafka_path}; cd {gart_bin_path}/; nohup {gart_bin_path}/gart --db-host {db_host} --db-port {db_port} --db-name {db_name} --db-type {db_type} -u {db_user} -p {db_password} --v6d-sock {v6d_socket} --v6d-size {v6d_size} -e {etcd_endpoint} --etcd-prefix {etcd_prefix} --kafka-server {kafka_server} --subgraph-num {total_subgraph_num} --enable-bulkload {enable_bulkload} --rg-from-etcd 1 --role capturer >capturer.log 2>&1 &"
+    start_capturer_cmd = (
+        f"export KAFKA_HOME={kafka_path}; "
+        f"cd {gart_bin_path}/; "
+        f"nohup {gart_bin_path}/gart "
+        f"--db-host {db_host} "
+        f"--db-port {db_port} "
+        f"--db-name {db_name} "
+        f"--db-type {db_type} "
+        f"-u {db_user} "
+        f"-p {db_password} "
+        f"--v6d-sock {v6d_socket} "
+        f"--v6d-size {v6d_size} "
+        f"-e {etcd_endpoint} "
+        f"--etcd-prefix {etcd_prefix} "
+        f"--kafka-server {kafka_server} "
+        f"--subgraph-num {total_subgraph_num} "
+        f"--enable-bulkload {enable_bulkload} "
+        f"--rg-from-etcd 1 "
+        f"--role capturer "
+        f">capturer.log 2>&1 &"
+    )
     ssh.exec_command(start_capturer_cmd)
 
     capturer_status = check_status("capturer")
@@ -166,7 +198,24 @@ if __name__ == "__main__":
     # Launch the converter
     converter_host = config["converter_host"]
     ssh.connect(converter_host)
-    start_converter_cmd = f"cd {gart_bin_path}/; nohup {gart_bin_path}/gart --db-host {db_host} --db-port {db_port} --db-name {db_name} --db-type {db_type} -u {db_user} -p {db_password} --v6d-sock {v6d_socket} --v6d-size {v6d_size} -e {etcd_endpoint} --etcd-prefix {etcd_prefix} --kafka-server {kafka_server} --subgraph-num {total_subgraph_num} --enable-bulkload {enable_bulkload} --role converter >converter.log 2>&1 &"
+    start_converter_cmd = (
+        f"cd {gart_bin_path}/; "
+        f"nohup {gart_bin_path}/gart "
+        f"--db-host {db_host} "
+        f"--db-port {db_port} "
+        f"--db-name {db_name} "
+        f"--db-type {db_type} "
+        f"-u {db_user} "
+        f"-p {db_password} "
+        f"--v6d-sock {v6d_socket} "
+        f"--v6d-size {v6d_size} "
+        f"-e {etcd_endpoint} "
+        f"--etcd-prefix {etcd_prefix} "
+        f"--kafka-server {kafka_server} "
+        f"--subgraph-num {total_subgraph_num} "
+        f"--enable-bulkload {enable_bulkload} "
+        f"--role converter >converter.log 2>&1 &"
+    )
 
     ssh.exec_command(start_converter_cmd)
 
@@ -185,7 +234,28 @@ if __name__ == "__main__":
         writer_host = writer_hosts[idx]["host"]
         subgraph_id = writer_hosts[idx]["subgraph_id"]
         ssh.connect(writer_host)
-        start_writer_cmd = f"cd {gart_bin_path}/; nohup {gart_bin_path}/gart --db-host {db_host} --db-port {db_port} --db-name {db_name} --db-type {db_type} -u {db_user} -p {db_password} --v6d-sock {v6d_socket} --v6d-size {v6d_size} -e {etcd_endpoint} --etcd-prefix {etcd_prefix} --kafka-server {kafka_server} --subgraph-num {total_subgraph_num} --enable-bulkload {enable_bulkload} --role writer --start-slot {subgraph_id} --num-slot 1 >writer_{subgraph_id}.log 2>&1 &"
+        start_writer_cmd = (
+            f"cd {gart_bin_path}/; "
+            f"nohup {gart_bin_path}/gart "
+            f"--db-host {db_host} "
+            f"--db-port {db_port} "
+            f"--db-name {db_name} "
+            f"--db-type {db_type} "
+            f"-u {db_user} "
+            f"-p {db_password} "
+            f"--v6d-sock {v6d_socket} "
+            f"--v6d-size {v6d_size} "
+            f"-e {etcd_endpoint} "
+            f"--etcd-prefix {etcd_prefix} "
+            f"--kafka-server {kafka_server} "
+            f"--subgraph-num {total_subgraph_num} "
+            f"--enable-bulkload {enable_bulkload} "
+            f"--role writer "
+            f"--start-slot {subgraph_id} "
+            f"--num-slot 1 "
+            f">writer_{subgraph_id}.log 2>&1 &"
+        )
+
         ssh.exec_command(start_writer_cmd)
 
         writer_status = check_status(f"writer_{idx}")
