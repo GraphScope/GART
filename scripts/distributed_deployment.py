@@ -24,11 +24,10 @@ def get_parser():
 def is_etcd_running(host, port):
     """Check if etcd is running by sending a request to the member list API."""
     try:
-        response = requests.get(f"http://{host}:{port}/health")
+        response = requests.get(f"http://{host}:{port}/health", timeout=1)
         return response.status_code == 200 and response.json().get("health") == "true"
     except requests.exceptions.RequestException:
         return False
-    return False
 
 
 def check_port(host, port):

@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     for _ in range(max_retries):
         try:
-            response = requests.get(etcd_health_url)
+            response = requests.get(etcd_health_url, timeout=1)
             if response.status_code == 200 and response.json().get("health") == "true":
                 server_up = True
                 status = 1
