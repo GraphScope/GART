@@ -29,15 +29,16 @@ def is_etcd_running(host, port):
     except requests.exceptions.RequestException:
         return False
     return False
-    
+
+
 def check_port(host, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.bind((host, port))
-            return True  
+            return True
         except socket.error as e:
             print(f"Port {port} is already in use: {e}")
-            return False  
+            return False
 
 
 if __name__ == "__main__":
@@ -57,7 +58,7 @@ if __name__ == "__main__":
         config = json.load(f)
 
     rg_mapping_file = config["rgmapping_file"]
-    
+
     with open(rg_mapping_file, "r", encoding="UTF-8") as f:
         rg_mapping = yaml.safe_load(f)
 
@@ -81,11 +82,11 @@ if __name__ == "__main__":
             if check_port(etcd_host, etcd_peer_port):
                 break
             etcd_peer_port += 1
-            
+
         if etcd_peer_port == 65535:
             print("No available port for etcd peer.")
             sys.exit(1)
-            
+
         etcd_command = (
             f"nohup etcd --listen-client-urls http://{etcd_host}:{etcd_port} "
             f"--advertise-client-urls http://{etcd_host}:{etcd_port} "
@@ -146,6 +147,27 @@ if __name__ == "__main__":
     enable_bulkload = config["enable_bulkload"]
     kafka_path = config["kafka_path"]
 
+    clear_captruer_cmd = (
+        f"export KAFKA_HOME={kafka_path}; "
+        f"cd {gart_bin_path}/; "
+        f"./stop-gart --kill-v6d-sock {v6d_socket} "
+        f"--role capturer --is-abnormal "
+        f">clear_capturer.log 2>&1"
+    )
+
+    clear_converter_cmd = (
+        f"cd {gart_bin_path}/; "
+        f"./stop-gart --kill-v6d-sock {v6d_socket} "
+        f"--role converter --is-abnormal "
+        f">clear_converter.log 2>&1"
+    )
+
+    clear_writer_cmd = (
+        f"cd {gart_bin_path}/; "
+        f"./stop-gart --kill-v6d-sock {v6d_socket} "
+        f"--role writer --is-abnormal "
+    )
+
     def check_status(role):
         # Poll etcd status
         timeout = 120  # Maximum time to wait in seconds
@@ -188,8 +210,10 @@ if __name__ == "__main__":
 
     capturer_status = check_status("capturer")
     if not capturer_status:
-        print("Capturer failed to start.")
+        print("Capturer failed to start, start to clear resources...")
+        ssh.exec_command(clear_captruer_cmd)
         ssh.close()
+        print("All resources are cleared. Exiting...")
         sys.exit(1)
     else:
         print("Capturer is up and running.")
@@ -221,8 +245,13 @@ if __name__ == "__main__":
 
     converter_status = check_status("converter")
     if not converter_status:
-        print("Converter failed to start.")
+        print("Converter failed to start. Start to clear resources...")
+        ssh.exec_command(clear_converter_cmd)
         ssh.close()
+        ssh.connect(capturer_host)
+        ssh.exec_command(clear_captruer_cmd)
+        ssh.close()
+        print("All resources are cleared. Exiting...")
         sys.exit(1)
     else:
         print("Converter is up and running.")
@@ -260,8 +289,21 @@ if __name__ == "__main__":
 
         writer_status = check_status(f"writer_{idx}")
         if not writer_status:
-            print(f"Writer {idx} failed to start.")
+            print(f"Writer {idx} failed to start. Start to clear resources...")
+            ssh.exec_command(clear_writer_cmd + f" >clear_writer_{idx}.log 2>&1")
             ssh.close()
+            for i in range(idx):
+                previous_writer_host = writer_hosts[i]["host"]
+                ssh.connect(previous_writer_host)
+                ssh.exec_command(clear_writer_cmd + f" >clear_writer_{i}.log 2>&1")
+                ssh.close()
+            ssh.connect(converter_host)
+            ssh.exec_command(clear_converter_cmd)
+            ssh.close()
+            ssh.connect(capturer_host)
+            ssh.exec_command(clear_captruer_cmd)
+            ssh.close()
+            print("All resources are cleared. Exiting...")
             sys.exit(1)
         else:
             print(f"Writer {idx} is up and running.")

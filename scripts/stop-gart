@@ -3,10 +3,11 @@
 KAFKA_HOME=$KAFKA_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o k:h? --long kill-v6d-sock:,is-abnormal,help -- "$@")
+VALID_ARGS=$(getopt -o k:h? --long kill-v6d-sock:,role:,is-abnormal,help -- "$@")
 
 v6d_sock=
 is_normal=true
+role="all"
 
 eval set -- "$VALID_ARGS"
 while [ : ]; do
@@ -19,9 +20,14 @@ while [ : ]; do
         is_normal=false
         shift
         ;;
+         --role)
+        role=$2
+        shift 2
+        ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
         echo "  -k, --kill-v6d-sock:     kill vineyard by socket path"
+        echo "  --role:                  the role of the node, default is all"
         echo "  -h, --help:              help"
         exit 0
         ;;
@@ -32,11 +38,13 @@ while [ : ]; do
   esac
 done
 
-if [ -n "$KAFKA_HOME" ]; then
-    echo "KAFKA_HOME: $KAFKA_HOME"
-else
-    echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
-    exit 1
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then 
+    if [ -n "$KAFKA_HOME" ]; then
+        echo "KAFKA_HOME: $KAFKA_HOME"
+    else
+        echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
+        exit 1
+    fi
 fi
 
 kill $(ps aux | grep '[c]heck_process.sh' | awk '{print $2}') > /dev/null 2>&1
@@ -53,26 +61,32 @@ kill $(ps aux | grep '[d]ebezium-api' | awk '{print $2}') > /dev/null 2>&1
 
 my_pid=$$
 
-if [ "$v6d_sock" != "" ]; then
-    echo "Stop vineyard by socket $v6d_sock"
-    kill $(pgrep -f "vineyardd .* $v6d_sock" | grep -v "$my_pid") > /dev/null 2>&1
-    rm $v6d_sock > /dev/null 2>&1
+if [ "$role" == "all" ] || [ "$role" == "writer" ]; then 
+    if [ "$v6d_sock" != "" ]; then
+        echo "Stop vineyard by socket $v6d_sock"
+        kill $(pgrep -f "vineyardd .* $v6d_sock" | grep -v "$my_pid") > /dev/null 2>&1
+        rm $v6d_sock > /dev/null 2>&1
+    fi
 fi
 
-KAFKA_BIN=$KAFKA_HOME/bin
 
-echo "Stop Zookeeper and Kafka"
-$KAFKA_BIN/kafka-server-stop.sh
-$KAFKA_BIN/zookeeper-server-stop.sh
 
-# To kill all legacy kafka and zookeeper processes
-kill $(ps aux | grep '[k]afka' | awk '{print $2}') > /dev/null 2>&1
-kill $(ps aux | grep '[z]ookeeper' | awk '{print $2}') > /dev/null 2>&1
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then 
 
-sleep 3
+    KAFKA_BIN=$KAFKA_HOME/bin
+    echo "Stop Zookeeper and Kafka"
+    $KAFKA_BIN/kafka-server-stop.sh
+    $KAFKA_BIN/zookeeper-server-stop.sh
+
+    # To kill all legacy kafka and zookeeper processes
+    kill $(ps aux | grep '[k]afka' | awk '{print $2}') > /dev/null 2>&1
+    kill $(ps aux | grep '[z]ookeeper' | awk '{print $2}') > /dev/null 2>&1
+
+    sleep 3
+fi
 
 if [ "$is_normal" = false ]; then
-    echo "GART stopped abnormally."
+    echo "GART $role stopped abnormally."
 else
-    echo "GART stopped normally."
+    echo "GART $role stopped normally."
 fi
