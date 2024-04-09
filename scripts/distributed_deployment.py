@@ -114,7 +114,6 @@ if __name__ == "__main__":
             sys.exit(1)
         else:
             print("Etcd service is up and running.")
-            ssh.close()
 
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
 
