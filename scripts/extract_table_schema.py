@@ -263,7 +263,11 @@ if __name__ == "__main__":
     else:
         print("We now only support mysql and postgresql")
         exit(1)
-    conn = engine.raw_connection()
+    try:
+        conn = engine.raw_connection()
+    except Exception as e:
+        print(-1)
+        sys.exit(1)
     cursor = conn.cursor()
     if args.rg_mapping_from_etcd == 1 or args.rg_mapping_from_etcd == "1":
         args.rgmapping_file = ""

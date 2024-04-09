@@ -24,7 +24,6 @@ subgraph_num=1
 use_debezium=1
 db_type="postgresql"
 enable_bulkload=false
-hostfile=
 role="all"
 start_slot=
 num_slot=
@@ -99,10 +98,6 @@ while [ : ]; do
         role=$2
         shift 2
         ;;
-         --hostfile)
-        hostfile=$2
-        shift 2
-        ;;
          --start-slot)
         start_slot=$2
         shift 2
@@ -133,7 +128,6 @@ while [ : ]; do
         echo "  -k, --kafka-server:      kafka bootstrap server (default: 127.0.0.1:9092)"
         echo "      --subgraph-num:      number of sub graphs (default: 1)"
         echo "      --role:              the role of running this script: capturer, converter, writer or all (default: all)"
-        echo "      --hostfile:          hostfile for distributed deployment"
         echo "      --start-slot:        the start slot of subgraph on this machine"
         echo "      --num-slot:          the number of slots on this machine"
         echo "  -h, --help:              help"
@@ -251,7 +245,6 @@ echo "    etcd-endpoint: $etcd_endpoint"
 echo "    etcd-prefix: $etcd_prefix"
 echo "    kafka-server: $kafka_server"
 echo "    subgraph-num: $subgraph_num"
-echo "    hostfile: $hostfile"
 echo "    start-slot: $start_slot"
 echo "    num-slot: $num_slot"
 echo "    role: $role"
@@ -314,6 +307,10 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
         --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
         --etcd_prefix $etcd_prefix --rg_mapping_from_etcd $rg_from_etcd
     )
+    if [ $num_row -eq -1 ]; then
+        echo "Failed to extract schema from database, please check the status of database and database info you provide."
+        exit 1
+    fi
     if [ $num_row -eq 0 ] && $enable_bulkload; then
         echo "No tuples found in the database, skip bulk load"
         enable_bulkload=false

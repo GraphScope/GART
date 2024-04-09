@@ -212,6 +212,7 @@ if __name__ == "__main__":
         ssh.exec_command(clear_captruer_cmd)
         ssh.close()
         print("All resources are cleared. Exiting...")
+        print("For detailed error messages for capturer, please check capturer.log")
         sys.exit(1)
     else:
         print("Capturer is up and running.")
@@ -250,6 +251,7 @@ if __name__ == "__main__":
         ssh.exec_command(clear_captruer_cmd)
         ssh.close()
         print("All resources are cleared. Exiting...")
+        print("For detailed error messages for converter, please check converter.log")
         sys.exit(1)
     else:
         print("Converter is up and running.")
@@ -292,8 +294,9 @@ if __name__ == "__main__":
             ssh.close()
             for i in range(idx):
                 previous_writer_host = writer_hosts[i]["host"]
+                previous_subgraph_id = writer_hosts[i]["subgraph_id"]
                 ssh.connect(previous_writer_host)
-                ssh.exec_command(clear_writer_cmd + f" >clear_writer_{i}.log 2>&1")
+                ssh.exec_command(clear_writer_cmd + f" >clear_writer_{previous_subgraph_id}.log 2>&1")
                 ssh.close()
             ssh.connect(converter_host)
             ssh.exec_command(clear_converter_cmd)
@@ -302,6 +305,7 @@ if __name__ == "__main__":
             ssh.exec_command(clear_captruer_cmd)
             ssh.close()
             print("All resources are cleared. Exiting...")
+            print(f"For detailed error messages for writer {idx}, please check writer_{subgraph_id}.log")
             sys.exit(1)
         else:
             print(f"Writer {idx} is up and running.")
