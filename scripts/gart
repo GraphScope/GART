@@ -274,6 +274,10 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
         vineyardd --etcd_cmd=/usr/local/bin/etcd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
         pids["Vineyard"]=$!
         sleep 5
+        if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
+            echo "Failed to launch vineyardd"
+            exit 1
+        fi 
     fi
 fi
 
@@ -310,8 +314,7 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     if [ $num_row -eq -1 ]; then
         echo "Failed to extract schema from database, please check the status of database and database info you provide."
         exit 1
-    fi
-    if [ $num_row -eq 0 ] && $enable_bulkload; then
+    elif [ $num_row -eq 0 ] && $enable_bulkload; then
         echo "No tuples found in the database, skip bulk load"
         enable_bulkload=false
     fi
@@ -333,29 +336,55 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
 
     echo "Start Zookeeper and Kafka"
     $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-    # pids["Zookeeper"]=$!  # TODO(SSJ): check if Zookeeper is started
-    sleep 3
+    # pids["Zookeeper"]=$! 
+    sleep 20
+    # sleep 20 to avoid https://stackoverflow.com/questions/39759071/error-while-starting-kafka-broker
+
+    # Checking if the Zookeeper process is running
+    if ps -ef | grep -v grep | grep zookeeper.server; then
+        echo "Zookeeper process is running."
+    else
+        echo "Zookeeper process is NOT running. Wait for retrying."
+    fi
 
     $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-    # pids["Kafka"]=$!  # TODO(SSJ): check if Kafka is started
-    sleep 5
+
+    # pids["Kafka"]=$! 
+    sleep 8
+    # check if Kafka is started
+    if grep -q "started" $KAFKA_LOG; then
+        echo "Kafka log shows successful startup."
+    else
+        echo "Kafka log does not indicate successful startup. Please check $KAFKA_LOG for details. Wait for retrying."
+    fi
+    
 
     # check Kafka failure
     for i in {1..3}
     do
-        if grep -q "ERROR" "$KAFKA_LOG"; then
+        if grep -q "ERROR" $KAFKA_LOG; then
             if [ $i -ne 1 ]; then
                 echo "File $KAFKA_LOG contains ERROR, waiting for cleanning"
                 sleep 10
             fi
-
             $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-            #pids["Zookeeper"]=$!
             sleep 3
+            # Checking if the Zookeeper process is running
+            if ps -ef | grep -v grep | grep zookeeper.server; then
+                echo "Zookeeper process is running."
+            else
+                echo "Zookeeper process is NOT running. Wait for retrying."
+            fi
+
 
             $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
-            #pids["Kafka"]=$!
             sleep 5
+            if grep -q "started" $KAFKA_LOG; then
+                echo "Kafka log shows successful startup."
+            else
+                echo "Kafka log does not indicate successful startup. Please check $KAFKA_LOG for details. Wait for retrying."
+            fi
+
         else
             break
         fi
