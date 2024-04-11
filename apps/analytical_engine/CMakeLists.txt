@@ -41,7 +41,8 @@ if (NETWORKX)
 endif ()
 
 if (WITH_GAE_FOR_GART)
-    include_directories(/usr/local/include/gart)
+    include_directories(../../vegito/include)
+    include_directories(../..)
 endif ()
 
 set(DEFAULT_BUILD_TYPE "Release")
