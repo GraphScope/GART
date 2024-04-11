@@ -271,7 +271,7 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
         fi
         echo "Start to launch vineyardd on $v6d_sock"
         # TODO: etcd_cmd user for PostgreSQL Extension
-        vineyardd --etcd_cmd=/usr/local/bin/etcd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
+        vineyardd --socket $v6d_sock --size $v6d_size --etcd_endpoint $etcd_endpoint  --norpc > /dev/null 2>&1 &
         pids["Vineyard"]=$!
         sleep 5
         if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
@@ -286,8 +286,9 @@ if [ "$role" == "capturer" ] || [ "$role" == "converter" ]; then
     echo "Start to launch Etcd by role $role"
     if ! pgrep -f "etcd .*$etcd_endpoint" > /dev/null 2>&1; then
         echo "Start to launch etcd on $etcd_endpoint"
+        export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
         etcd_status=$(
-        python ./scripts/launch_etcd.py --etcd_endpoint $etcd_endpoint
+        ./scripts/launch_etcd.py --etcd_endpoint $etcd_endpoint
         )
         if [ $etcd_status -eq 1 ]; then
             echo "Etcd is launched successfully"
@@ -304,6 +305,7 @@ fi
 ####################### Extract Schema #######################
 if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     echo "Start extracting schema"
+    export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
     num_row=$(
     ./scripts/extract_table_schema.py \
         --host $db_host --port $db_port --db $db_name \

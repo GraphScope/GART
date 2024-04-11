@@ -43,10 +43,6 @@ class KafkaProducer {
         RdKafka::Conf::CONF_OK) {
       LOG(ERROR) << "Failed to set metadata.broker.list: " << rdkafka_err;
     }
-    if (conf->set("metadata.broker.list", broker_list, rdkafka_err) !=
-        RdKafka::Conf::CONF_OK) {
-      std::cout << "Failed to set metadata.broker.list: " << rdkafka_err;
-    }
     // for producer's internal queue.
     if (conf->set("queue.buffering.max.messages",
                   std::to_string(internal_buffer_size_),

@@ -2,12 +2,14 @@
 
 sudo apt update
 
-sudo apt-get install -y cmake curl
+sudo apt-get install -y cmake 
+sudo apt-get install -y etcd
+sudo apt-get install -y default-jdk
 
 # gflags and glog
 sudo apt-get install -y libgflags-dev libgoogle-glog-dev
 
-# etcd
+# etcd-client
 sudo apt-get install -y libboost-all-dev libssl-dev
 sudo apt-get install -y libgrpc-dev \
         libgrpc++-dev \
@@ -79,6 +81,14 @@ cd v6d
 git submodule update --init
 mkdir -p build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF
+make -j && sudo make install
+cd ../..
+
+# libgrape-lite
+git clone https://github.com/alibaba/libgrape-lite.git
+cd libgrape-lite
+mkdir -p build && cd build
+cmake .. -DBUILD_LIBGRAPELITE_TESTS=OFF
 make -j && sudo make install
 cd ../..
 
@@ -189,5 +199,12 @@ plugin.name=pgoutput
 publication.autocreate.mode=filtered
 
 $COMM_CONFIG
+
+EOT
+
+#write server.properties
+cat << EOT >> $KAFKA_CONFIG/server.properties
+listeners=PLAINTEXT://localhost:9092
+advertised.listeners=PLAINTEXT://localhost:9092
 
 EOT

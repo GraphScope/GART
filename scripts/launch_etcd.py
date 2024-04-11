@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 from urllib.parse import urlparse
 import requests
