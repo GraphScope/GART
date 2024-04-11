@@ -2,15 +2,10 @@
 
 sudo apt update
 
-# glogs
-git clone https://github.com/google/glog.git
-cd glog
-cmake -S . -B build -G "Unix Makefiles"
-sudo cmake --build build --target install
-cd ..
+sudo apt-get install -y cmake curl
 
-# gflags
-sudo apt-get install -y libgflags-dev
+# gflags and glog
+sudo apt-get install -y libgflags-dev libgoogle-glog-dev
 
 # etcd
 sudo apt-get install -y libboost-all-dev libssl-dev
@@ -21,7 +16,7 @@ sudo apt-get install -y libgrpc-dev \
 git clone https://github.com/microsoft/cpprestsdk.git
 cd cpprestsdk
 mkdir -p build && cd build
-cmake .. -DCPPREST_EXCLUDE_WEBSOCKETS=ON
+cmake .. -DCPPREST_EXCLUDE_WEBSOCKETS=ON -DBUILD_TESTS=OFF -DBUILD_SAMPLES=OFF
 make -j && sudo make install
 cd ../..
 
@@ -54,6 +49,8 @@ pip3 install pyyaml
 sudo apt-get install -y librdkafka-dev
 
 # Install sqlalchemy, pymysql, psycopg2
+# for psycopg2, you need to install libpq-dev
+sudo apt-get install -y libpq-dev 
 pip3 install sqlalchemy pymysql psycopg2
 
 # vineyard
@@ -81,13 +78,19 @@ git clone https://github.com/v6d-io/v6d
 cd v6d
 git submodule update --init
 mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF
 make -j && sudo make install
 cd ../..
 
 # pgql-lang
 git clone https://github.com/oracle/pgql-lang.git
 (cd pgql-lang; sh install.sh)
+
+# rapidjson
+sudo apt-get install -y rapidjson-dev
+
+# required python modules
+pip3 install etcd3 msgpack grpcio grpcio-tools networkx
 
 # Kafka
 KAFKA_VERSION=3.7.0
