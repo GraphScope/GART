@@ -519,56 +519,56 @@ if(ENABLE_JAVA_SDK)
     add_custom_target(grape_jni ALL
          DEPENDS "${GAE_JAVA_RUNTIME_JAR}"
     )
-    install(FILES DESTINATION lib)
-    install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
-    install(FILES "${GAE_JAVA_GRAPHX_JAR}" DESTINATION lib)
-    install(FILES "${GAE_JAVA_GIRAPH_JAR}" DESTINATION lib)
-    install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
-    install(FILES "${GAE_JAVA_DIR}/run_graphx.sh" DESTINATION bin)
+    #install(FILES DESTINATION lib)
+    #install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
+    #install(FILES "${GAE_JAVA_GRAPHX_JAR}" DESTINATION lib)
+    #install(FILES "${GAE_JAVA_GIRAPH_JAR}" DESTINATION lib)
+    #install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
+    #install(FILES "${GAE_JAVA_DIR}/run_graphx.sh" DESTINATION bin)
  endif()
 
 # Install binaries
 macro(install_gsa_binary target)
-    install(TARGETS ${target}
-            EXPORT graphscope-analytical-targets
-            ARCHIVE DESTINATION lib
-            LIBRARY DESTINATION lib
-            RUNTIME DESTINATION bin
-    )
+    #install(TARGETS ${target}
+    #        EXPORT graphscope-analytical-targets
+    #        ARCHIVE DESTINATION lib
+    #        LIBRARY DESTINATION lib
+    #        RUNTIME DESTINATION bin
+    #)
 endmacro()
 
 # Install headers
 macro(install_gsa_headers header_target)
     get_filename_component(ABS_DIR ${header_target} REALPATH)
-    install(DIRECTORY ${ABS_DIR}
-            DESTINATION include/graphscope      # target directory
-            FILES_MATCHING                      # install only matched files
-            PATTERN "*.h"                       # select header files
-            PATTERN "*.hpp"                     # select C++ template header files
-            PATTERN "*javasdk.cc"               # javasdk.cc is needed to compile graph frame
-            PATTERN "*dynamic.cc"               # dynamic.cc is needed to compile graph frame
-            )
+    #install(DIRECTORY ${ABS_DIR}
+    #        DESTINATION include/graphscope      # target directory
+    #        FILES_MATCHING                      # install only matched files
+    #        PATTERN "*.h"                       # select header files
+    #        PATTERN "*.hpp"                     # select C++ template header files
+    #        PATTERN "*javasdk.cc"               # javasdk.cc is needed to compile graph frame
+    #        PATTERN "*dynamic.cc"               # dynamic.cc is needed to compile graph frame
+    #        )
 endmacro()
 
 # Install app frames
 macro(install_gsa_app_frames source_target)
     get_filename_component(ABS_DIR ${source_target} REALPATH)
-    install(DIRECTORY ${ABS_DIR}
-            DESTINATION include/graphscope      # target directory
-            FILES_MATCHING                      # install only matched files
-            PATTERN "*.h"                       # select app frame files
-            PATTERN "*.cc"                      # select app frame files
-            )
+    #install(DIRECTORY ${ABS_DIR}
+    #        DESTINATION include/graphscope      # target directory
+    #        FILES_MATCHING                      # install only matched files
+    #        PATTERN "*.h"                       # select app frame files
+    #        PATTERN "*.cc"                      # select app frame files
+    #        )
 endmacro()
 
 # Install dependencies FindXXX.cmake
 macro(install_gsa_dependency_modules cmake_target)
     get_filename_component(ABS_DIR ${cmake_target} REALPATH)
-    install(DIRECTORY ${ABS_DIR}
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical  # target directory
-            FILES_MATCHING                                                   # install only matched files
-            PATTERN "*.cmake"                                                # select cmake files
-            )
+    #install(DIRECTORY ${ABS_DIR}
+    #        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical  # target directory
+    #        FILES_MATCHING                                                   # install only matched files
+    #        PATTERN "*.cmake"                                                # select cmake files
+    #        )
 endmacro()
 
 # install_gsa_binary(grape_engine)
@@ -593,10 +593,10 @@ configure_file(graphscope-analytical-config.in.cmake
 configure_file(graphscope-analytical-config-version.in.cmake
         "${PROJECT_BINARY_DIR}/graphscope-analytical-config-version.cmake" @ONLY
         )
-install(FILES "${PROJECT_BINARY_DIR}/graphscope-analytical-config.cmake"
-        "${PROJECT_BINARY_DIR}/graphscope-analytical-config-version.cmake"
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical
-        )
+#install(FILES "${PROJECT_BINARY_DIR}/graphscope-analytical-config.cmake"
+#        "${PROJECT_BINARY_DIR}/graphscope-analytical-config-version.cmake"
+#        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical
+#        )
 # install(EXPORT graphscope-analytical-targets
 #         FILE graphscope-analytical-targets.cmake
 #         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical
