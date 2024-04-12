@@ -2,7 +2,7 @@
 
 sudo apt update
 
-sudo apt-get install -y cmake 
+sudo apt-get install -y build-essential cmake python3 python3-pip lsb-release wget
 sudo apt-get install -y etcd
 sudo apt-get install -y default-jdk
 

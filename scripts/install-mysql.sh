@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt install -y mysql-server
+sudo DEBIAN_FRONTEND=noninteractive apt install -y mysql-server
 pip3 install pymysql cryptography
 
 sudo tee -a /etc/mysql/my.cnf << EOT
