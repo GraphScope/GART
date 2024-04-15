@@ -11,7 +11,7 @@ import sys
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Launch ETCD with a a given endpoint",
+        description="Launch ETCD with a given endpoint",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 

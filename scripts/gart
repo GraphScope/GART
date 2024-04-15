@@ -22,7 +22,7 @@ etcd_prefix="gart_meta_"
 kafka_server="127.0.0.1:9092"
 subgraph_num=1
 use_debezium=1
-db_type="postgresql"
+db_type="mysql"
 enable_bulkload=false
 role="all"
 start_slot=
@@ -335,6 +335,11 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     KAFKA_BIN=$KAFKA_HOME/bin
     KAFKA_CONFIG=$KAFKA_HOME/config
     KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
+
+    # write kafka config according to graph schema
+    ./scripts/update_kafka_config_file.py --etcd_endpoint $etcd_endpoint --etcd_prefix $etcd_prefix \
+                                        --kafka_endpoint $kafka_server --db_type $db_type --db_host $db_host --db_port $db_port \
+                                        --db_user $user --db_password $password --db_name $db_name --enable_bulkload $enable_bulkload
 
     echo "Start Zookeeper and Kafka"
     $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties

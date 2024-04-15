@@ -42,6 +42,7 @@ file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/check_process.sh check_process.sh S
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/extract_table_schema.py scripts/extract_table_schema.py SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/distributed_deployment.py scripts/distributed_deployment.py SYMBOLIC)
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/launch_etcd.py scripts/launch_etcd.py SYMBOLIC)
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/scripts/update_kafka_config_file.py scripts/update_kafka_config_file.py SYMBOLIC)
 ### install headers ###
 
 set(CMAKE_INSTALL_INCLUDE_DIR "/usr/local/include")

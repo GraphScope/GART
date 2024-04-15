@@ -24,8 +24,13 @@ ENV MAXWELL_HOME="/deps/maxwell"
 # If you want to install MySQL, use install-mysql.sh instead of install-psql.sh
 RUN /workspace/gart/scripts/install-psql.sh
 
+RUN /workspace/gart/scripts/install-mysql.sh
+
 WORKDIR /workspace
 RUN git clone https://github.com/GraphScope/gstest.git
+
+# clean up
+RUN rm -rf /deps/cpprestsdk /deps/etcd-cpp-apiv3 /deps/libgrape-lite /deps/oneTBB /deps/pgql-lang /deps/v6d /deps/yaml-cpp
 
 CMD ["/bin/bash"]
 

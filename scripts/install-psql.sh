@@ -15,7 +15,7 @@ export PSQL_VERSION=16
 
 # Install the specific version of PostgreSQL.
 # If you want a latest version, use 'postgresql' instead of 'postgresql-$PSQL_VERSION':
-sudo apt-get -y install postgresql-$PSQL_VERSION
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install postgresql-$PSQL_VERSION
 
 export PSQL_CONFIG=/etc/postgresql/$PSQL_VERSION/main/postgresql.conf
 
