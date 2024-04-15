@@ -92,7 +92,10 @@ if __name__ == "__main__":
                 temp_file.write(f"table.include.list={new_line}\n")
             elif line.startswith("snapshot.mode"):
                 if args.enable_bulkload == "1" or args.enable_bulkload == 1 or args.enable_bulkload == True or args.enable_bulkload == "True" or args.enable_bulkload == "true":
-                    temp_file.write("snapshot.mode=always\n")
+                    if db_type == "postgresql":
+                        temp_file.write("snapshot.mode=always\n")
+                    else:
+                        temp_file.write("snapshot.mode=initial\n")
                 else:
                     temp_file.write("snapshot.mode=never\n")
             elif line.startswith("database.history.kafka.bootstrap.servers"):
