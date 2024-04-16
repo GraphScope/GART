@@ -40,8 +40,27 @@ else()
     set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
 endif()
 
+# Attempt to find python3, fallback to python if not found
+find_program(PYTHON_EXECUTABLE NAMES python3 python)
+
+if(NOT PYTHON_EXECUTABLE)
+    message(FATAL_ERROR "Python is not found")
+endif()
+
+# Reflect our choice of Python executable in the command
+message(STATUS "Using Python executable: ${PYTHON_EXECUTABLE}")
+
+# Attempt to find pip3 associated with the found python, fallback to pip if not found
+find_program(PIP_EXECUTABLE NAMES pip3 pip HINTS "${PYTHON_EXECUTABLE}")
+if(NOT PIP_EXECUTABLE)
+    message(FATAL_ERROR "pip is not found")
+endif()
+
+# Reflect our choice of pip executable in the command
+message(STATUS "Using pip executable: ${PIP_EXECUTABLE}")
+
 # Generate proto for cpp
-execute_process(COMMAND python3 ./proto/proto_generator.py "${CMAKE_CURRENT_SOURCE_DIR}/build" --cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND ${PYTHON_EXECUTABLE} ./proto/proto_generator.py "${CMAKE_CURRENT_SOURCE_DIR}/build" --cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB PROTO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/build/*.cc)
 
@@ -118,8 +137,8 @@ add_custom_target(install_pybind
 
 
 add_custom_target(install_python
-        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/client/python/setup.py build_proto sdist bdist_wheel WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
-        COMMAND pip install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/client/python/setup.py build_proto sdist bdist_wheel WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
+        COMMAND ${PIP_EXECUTABLE} install . --force-reinstall WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client/python
         COMMENT "Install python client"
         VERBATIM
         )

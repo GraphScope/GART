@@ -37,7 +37,7 @@ WORKDIR /workspace
 RUN git clone https://github.com/GraphScope/gstest.git
 
 # clean up
-RUN rm -rf /deps/cpprestsdk /deps/etcd-cpp-apiv3 /deps/libgrape-lite /deps/oneTBB /deps/pgql-lang /deps/v6d /deps/yaml-cpp
+RUN rm -rf /deps/cpprestsdk /deps/etcd-cpp-apiv3 /deps/libgrape-lite /deps/oneTBB /deps/pgql-lang /deps/v6d /deps/yaml-cpp /deps/pybind11
 
 CMD ["/bin/bash", "-c", ". /workspace/env_script.sh && /bin/bash"]
 

@@ -47,7 +47,17 @@ find_package(pybind11 REQUIRED)
 
 pybind11_add_module(local_gart SHARED python_bindings.cc fragment_builder.cc)
 
-execute_process(COMMAND python -c "import site; print(site.getsitepackages()[0])"
+# Attempt to find python3, fallback to python if not found
+find_program(PYTHON_EXECUTABLE NAMES python3 python)
+
+if(NOT PYTHON_EXECUTABLE)
+    message(FATAL_ERROR "Python is not found")
+endif()
+
+# Reflect our choice of Python executable in the command
+message(STATUS "Using Python executable: ${PYTHON_EXECUTABLE}")
+
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
   OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # Install the module

@@ -5,6 +5,7 @@ sudo apt update
 sudo apt-get install -y build-essential cmake python3 python3-pip lsb-release wget
 sudo apt-get install -y etcd
 sudo apt-get install -y default-jdk
+sudo apt-get install -y libmsgpack-dev
 
 # gflags and glog
 sudo apt-get install -y libgflags-dev libgoogle-glog-dev
@@ -45,6 +46,14 @@ cmake -D BUILD_SHARED_LIBS=ON ..
 make -j && sudo make install
 cd ../..
 
+# pybind11
+git clone https://github.com/pybind/pybind11.git
+cd pybind11
+mkdir -p build && cd build
+cmake .. -DPYBIND11_TEST=OFF
+make -j && sudo make install
+cd ../..
+
 pip3 install pyyaml
 
 # librdkafka
@@ -80,7 +89,7 @@ git clone https://github.com/v6d-io/v6d
 cd v6d
 git submodule update --init
 mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF
 make -j && sudo make install
 cd ../..
 
@@ -100,7 +109,7 @@ git clone https://github.com/oracle/pgql-lang.git
 sudo apt-get install -y rapidjson-dev
 
 # required python modules
-pip3 install etcd3 msgpack grpcio grpcio-tools networkx
+pip3 install etcd3 msgpack grpcio grpcio-tools networkx mypy-protobuf
 
 # Kafka
 KAFKA_VERSION=3.7.0
