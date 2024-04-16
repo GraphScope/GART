@@ -1,6 +1,6 @@
 # GART: Graph Analysis on Relational Transactional Datasets
 
-GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for in-line graph processing.
+GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing.
 
 ## Table of Contents
 - [What is GART](#what-is-gart)

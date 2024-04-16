@@ -1,2 +1,0 @@
-Ray on Vineyard
-===============

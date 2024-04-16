@@ -18,18 +18,18 @@ import sys
 sys.path.insert(0, os.path.abspath("../python"))
 
 # Initialize attached doc strings.
-try:
-    import vineyard  # noqa: E402
+# try:
+#     import gart  # noqa: E402
 
-    version = vineyard.__version__
-except ImportError:
-    version = "0.0.0"
+#     version = gart.__version__
+# except ImportError:
+#     version = "0.0.0"
 
 # -- Project information -----------------------------------------------------
 
-project = "vineyard"
-copyright = "2020-2023, The Vineyard Authors"
-author = "The Vineyard Authors"
+project = "gart"
+copyright = "2022-2024, The GART Authors"
+author = "The GART Authors"
 
 language = "en"
 
@@ -56,9 +56,9 @@ suppress_warnings = []
 
 # breathe
 breathe_projects = {
-    "vineyard": os.path.abspath("./_build/doxygen/xml"),
+    "gart": os.path.abspath("./_build/doxygen/xml"),
 }
-breathe_default_project = "vineyard"
+breathe_default_project = "gart"
 breathe_debug_trace_directives = True
 breathe_debug_trace_doxygen_ids = True
 breathe_debug_trace_qualification = True
@@ -147,9 +147,9 @@ html_extra_path = [
 
 html_additional_pages = {"index": "index.html"}
 
-html_title = "Vineyard"
-html_logo = "images/vineyard-logo-h.png"
-html_favicon = "images/vineyard.ico"
+html_title = "GART"
+# html_logo = "images/vineyard-logo-h.png"
+# html_favicon = "images/vineyard.ico"
 
 html_show_copyright = True
 html_show_sphinx = False
