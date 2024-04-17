@@ -45,7 +45,7 @@ It is designed to bridge the gap between relational OLTP and graph-based OLAP.
 
 We would like to be able to use graph flexibly without re-altering the existing relational database system. Moreover, users do not need to be aware of the storage of graph data and the synchronization of data between relational data and graph data for freshness. To fullfil this requirement, we build GART, an in-memory system for real-time online graph computation.
 
-GART uses transational logs (e.g., binlog) to capture data changes, then recovers data changes into fresh graph data in real time. GART integrates graph computation engines (e.g. GraphScope, NetworkX) to support efficient graph computation processing. The workflow of GART is shown below.
+GART uses transactional logs (e.g., binlog) to capture data changes, then recovers data changes into fresh graph data in real time. GART integrates graph computation engines (e.g. GraphScope, NetworkX) to support efficient graph computation processing. The workflow of GART is shown below.
 
 .. figure:: images/arch.png
    :alt: GART architecture
@@ -149,12 +149,10 @@ Read the Paper
 
 .. toctree::
    :maxdepth: 1
-   :caption: Cloud-Native
+   :caption: Deployment
    :hidden:
 
-   notes/cloud-native/deploy-kubernetes.rst
-   notes/cloud-native/vineyard-operator.rst
-   Command-line tool <notes/cloud-native/vineyardctl.md>
+   notes/deployment/deploy-docker.rst
 
 .. toctree::
    :maxdepth: 1
