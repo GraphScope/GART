@@ -10,7 +10,10 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     vim \
     wget \
+    openssh-server \
     && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /var/run/sshd
 
 WORKDIR /workspace
 COPY . /workspace/gart
@@ -23,15 +26,23 @@ RUN set -eux; \
     KAFKA_DIR=$(find /deps -maxdepth 1 -type d -name "kafka_*" -print -quit); \
     echo "export KAFKA_HOME=${KAFKA_DIR}" >> /etc/profile.d/kafka_path.sh
 RUN echo "source /etc/profile.d/kafka_path.sh" >> /workspace/env_script.sh
+RUN echo "service ssh start" >> /workspace/env_script.sh
 RUN chmod ugo+x /workspace/env_script.sh
 
 ENV MAXWELL_HOME="/deps/maxwell"
+
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION="python"
 
 # Install PostgreSQL
 # If you want to install MySQL, use install-mysql.sh instead of install-psql.sh
 RUN /workspace/gart/scripts/install-psql.sh
 
 RUN /workspace/gart/scripts/install-mysql.sh
+
+RUN echo "service mysql start" >> /workspace/env_script.sh
+
+RUN echo "mkdir /root/.ssh && ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa" >> /workspace/env_script.sh
+RUN echo "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys" >> /workspace/env_script.sh
 
 WORKDIR /workspace
 RUN git clone https://github.com/GraphScope/gstest.git

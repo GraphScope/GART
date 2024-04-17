@@ -109,7 +109,7 @@ git clone https://github.com/oracle/pgql-lang.git
 sudo apt-get install -y rapidjson-dev
 
 # required python modules
-pip3 install etcd3 msgpack grpcio grpcio-tools networkx mypy-protobuf
+pip3 install etcd3 msgpack grpcio grpcio-tools networkx mypy-protobuf requests paramiko
 
 # Kafka
 KAFKA_VERSION=3.7.0
