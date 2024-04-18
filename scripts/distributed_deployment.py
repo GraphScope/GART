@@ -63,9 +63,9 @@ if __name__ == "__main__":
     with open(rg_mapping_file, "r", encoding="UTF-8") as f:
         rg_mapping = yaml.safe_load(f)
 
-    v6d_socket = config["v6d_socket"]
-    v6d_size = config["v6d_size"]
-    etcd_endpoint = config["etcd_endpoint"]
+    v6d_socket = config.get("v6d_socket", "/tmp/v6d.sock")
+    v6d_size = config.get("v6d_size", "32G")
+    etcd_endpoint = config.get("etcd_endpoint", "http://127.0.0.1:2379")
     if not etcd_endpoint.startswith(("http://", "https://")):
         etcd_endpoint = "http://" + etcd_endpoint
     parsed_url = urlparse(etcd_endpoint)
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
 
-    etcd_prefix = config["etcd_prefix"]
+    etcd_prefix = config.get("etcd_prefix", "gart_meta_")
 
     etcd_client.put(etcd_prefix + "capturer_is_up", "False")
     etcd_client.put(etcd_prefix + "converter_is_up", "False")
@@ -132,20 +132,21 @@ if __name__ == "__main__":
         etcd_prefix + "gart_rg_mapping_yaml", yaml.dump(rg_mapping, sort_keys=False)
     )
 
-    # Launch the capturer
-    capturer_host = config["capturer_host"]
-    ssh.connect(capturer_host)
-
     gart_bin_path = config["gart_bin_path"]
     db_type = config["db_type"]
+    default_db_port = 3306 if db_type == "mysql" else 5432
     db_host = config["db_host"]
-    db_port = config["db_port"]
+    db_port = config.get("db_port", default_db_port)
     db_user = config["db_user"]
     db_password = config["db_password"]
     db_name = config["db_name"]
-    kafka_server = config["kafka_server"]
-    enable_bulkload = config["enable_bulkload"]
+    kafka_server = config.get("kafka_server", "127.0.0.1:9092")
+    enable_bulkload = config.get("enable_bulkload", 0)
     kafka_path = config["kafka_path"]
+
+    # Launch the capturer
+    capturer_host = config["capturer_host"]
+    ssh.connect(capturer_host)
 
     clear_captruer_cmd = (
         f"export KAFKA_HOME={kafka_path}; "
@@ -223,6 +224,7 @@ if __name__ == "__main__":
     # Launch the converter
     converter_host = config["converter_host"]
     ssh.connect(converter_host)
+
     start_converter_cmd = (
         f"cd {gart_bin_path}/; "
         f"nohup {gart_bin_path}/gart "
