@@ -58,7 +58,7 @@ Features
 ^^^^^^^^
 
 Transparent Data Model Conversion
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To adapt to rich workload flexibility, GART proposes transparent data model conversion by graph extraction interfaces, which define rules of relational-graph mapping.
 During the use of GART, data changes from relational databases are converted into graph data updates based on user-defined model mapping rules (RGMapping).  GART provides a set of interfaces for DBAs to define data model conversion rules, which can be compatible with SQL/PGQ DDL.
@@ -74,7 +74,7 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 3. a flexible property storage to efficiently run various GAP workloads.
 
 Service-Oriented Deployment Model
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GART acts as a service to synchronize database changes to the graph store.
 When pulled up as a service on its own, users can try out the full power of GART and different graph computation engines on the graph store.
@@ -97,12 +97,12 @@ Get started now!
 
    ---
 
-   .. link-button:: notes/cloud-native/deploy-kubernetes
+   .. link-button:: notes/deployment/deploy-docker
       :type: ref
-      :text: Deploy on Kubernetes
+      :text: Deployment
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
-   Deploy GART on Kubernetes.
+   Deploy GART on by Docker.
 
    ---
 
@@ -115,21 +115,12 @@ Get started now!
 
    ---
 
-   .. link-button:: notes/developers
-      :type: ref
+   .. link-button:: https://github.com/GraphScope/GART
+      :type: url
       :text: Getting Involved
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
    Get involved and become part of the GART community.
-
-   ---
-
-   .. link-button:: notes/developers/faq
-      :type: ref
-      :text: FAQ
-      :classes: btn-block stretched-link
-   ^^^^^^^^^^^^
-   Frequently asked questions and discussions during the adoption of Vineyard.
 
 Read the Paper
 --------------
@@ -163,13 +154,6 @@ Read the Paper
    tutorials/kubernetes.rst
    tutorials/extending.rst
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Developer Guides
-   :hidden:
-
-   notes/developers.rst
-   notes/developers/faq.rst
 
 .. _GraphScope: https://github.com/alibaba/GraphScope
 .. _RGMappings: https://github.com/GraphScope/GART/blob/main/vegito/test/schema/rgmapping-ldbc.yaml
