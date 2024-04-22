@@ -43,7 +43,7 @@ Transparent Data Model Conversion
 ^^^^^^^^^^^
 
 To adapt to rich workload flexibility, GART proposes transparent data model conversion by graph extraction interfaces, which define rules of relational-graph mapping.
-During the use of GART, data changes from relational databases are converted into graph data updates based on user-defined model mapping rules (RGMapping).  GART provides a set of interfaces for DBAs to define data model conversion rules, which can be compatible with SQL/PGQ DDL.
+During the use of GART, data changes from relational databases are converted into graph data updates based on user-defined model mapping rules (RGMapping).  GART provides a set of interfaces for DBAs to define data model conversion rules, which can be compatible with `SQL/PGQ`_ DDL.
 
 We provide a sample definition file called `RGMappings`_.
 
@@ -51,8 +51,11 @@ Efficient Dynamic Graph Storage
 ^^^^^^^^^^^
 
 To ensure the performance of graph analytical processing (GAP), GART proposes an efficient dynamic graph storage with good locality that stems from key insights into online graph computation workloads, including:
+
 1. an efficient and mutable compressed sparse row (CSR) representation to guarantee the locality of scanning edges;
+
 2. a coarse-grained MVCC to reduce the temporal and spatial overhead of versioning;
+
 3. a flexible property storage to efficiently run various GAP workloads.
 
 Service-Oriented Deployment Model
@@ -63,6 +66,7 @@ When pulled up as a service on its own, users can try out the full power of GART
 At the same time, GART also provides a front-end, used as a database plug-in, currently supported as PostgreSQL extension.
 Users can invoke GART's functions in the database client, such as RGMapping definitions, graph computation on the graph store, etc.
 
-.. _GRIN: https://graphscope.io/docs/latest/storage_engine/grin
-.. _RGMappings: https://github.com/GraphScope/GART/blob/main/vegito/test/schema/rgmapping-ldbc.yaml
-.. _Vineyard: https://v6d.io
+.. _GRIN: https://graphscope.io/docs/latest/storage_engine/grin/
+.. _RGMappings: https://github.com/GraphScope/GART/blob/main/vegito/test/schema/rgmapping-ldbc.sql
+.. _Vineyard: https://v6d.io/
+.. _SQL/PGQ: https://pgql-lang.org/

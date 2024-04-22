@@ -8,6 +8,7 @@
    :keywords: distributed-systems, distributed, graph-analytics, in-memory-storage, big-data-analytics, distributed-comp
 
 GART: Graph Analysis on Relational Transactional Datasets
+========================================================
 
 |Discussion| |License| |USENIX|
 
@@ -61,7 +62,7 @@ Transparent Data Model Conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To adapt to rich workload flexibility, GART proposes transparent data model conversion by graph extraction interfaces, which define rules of relational-graph mapping.
-During the use of GART, data changes from relational databases are converted into graph data updates based on user-defined model mapping rules (RGMapping).  GART provides a set of interfaces for DBAs to define data model conversion rules, which can be compatible with SQL/PGQ DDL.
+During the use of GART, data changes from relational databases are converted into graph data updates based on user-defined model mapping rules (RGMapping).  GART provides a set of interfaces for DBAs to define data model conversion rules, which can be compatible with `SQL/PGQ`_ DDL.
 
 We provide a sample definition file called `RGMappings`_.
 
@@ -69,8 +70,11 @@ Efficient Dynamic Graph Storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To ensure the performance of graph analytical processing (GAP), GART proposes an efficient dynamic graph storage with good locality that stems from key insights into online graph computation workloads, including:
+
 1. an efficient and mutable compressed sparse row (CSR) representation to guarantee the locality of scanning edges;
+
 2. a coarse-grained MVCC to reduce the temporal and spatial overhead of versioning;
+
 3. a flexible property storage to efficiently run various GAP workloads.
 
 Service-Oriented Deployment Model
@@ -156,11 +160,12 @@ Read the Paper
 
 
 .. _GraphScope: https://github.com/alibaba/GraphScope
-.. _RGMappings: https://github.com/GraphScope/GART/blob/main/vegito/test/schema/rgmapping-ldbc.yaml
+.. _RGMappings: https://github.com/GraphScope/GART/blob/main/vegito/test/schema/rgmapping-ldbc.sql
 .. _GraphScript: https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-graph-reference/graphscript-language
 .. _SQL Graph: https://learn.microsoft.com/en-us/sql/relational-databases/graphs/sql-graph-architecture?view=sql-server-ver16
 .. _Apache AGE: https://age.apache.org/
 .. _Neo4j: https://neo4j.com/
+.. _SQL/PGQ: https://pgql-lang.org/
 
 .. |Discussion| image:: https://img.shields.io/badge/Discuss-Ask%20Questions-blue?logo=GitHub
    :target: https://github.com/GraphScope/GART/issues

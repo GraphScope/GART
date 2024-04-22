@@ -3,4 +3,4 @@
 Deploy by Docker
 ====================
 
-XXX
+XXX (deploy by docker/source code)
