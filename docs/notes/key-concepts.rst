@@ -10,14 +10,12 @@ Key Concepts
    key-concepts/graph-storage.rst
    key-concepts/graph-server.rst
 
-The *User Guide* section offers an in-depth understanding of GART's design
-and implementation. It covers detailed environment setup instructions, the
-architecture, and the core features within the GART engine.
+The **User Guide** section provides an in-depth understanding of the design and implementation of GART. It includes detailed instructions for setting up the environment, the architecture, and the core features within the GART engine.
 
 .. tip::
 
-   If you are new to GART, we recommend starting with the
-   `Getting Started <https://v6d.io/notes/getting-started.html>`_ page for a smoother
+   If you are new to GART, we recommend that you start with the
+   `Getting Started <getting-started.html>`_ page for a smoother
    introduction.
 
 Concepts
