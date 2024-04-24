@@ -128,13 +128,13 @@ Before running GART, we need to configure the data source to capture its logs.
 Currently, we have supported PostgreSQL and MySQL as the relational data source.
 
 #### PostgreSQL
-- The PostgreSQL configuration file is in the directory `/etc/postgresql/<postgresql_version>/main/`
+- The PostgreSQL configuration file is in the directory `/etc/postgresql/$PSQL_VERSION/main/`
 
 - Modify the configuration file `postgresql.conf` to enable WAL as follows:
     ```
     wal_level = logical
-    max_replication_slots = <larger than 0>
-    max_wal_senders = <larger than 0>
+    max_replication_slots = 1 # larger than 0
+    max_wal_senders = 1 # larger than 0
     ```
 
 - Create a PostgreSQL user (`dbuser`) for the log capture Debezium:
