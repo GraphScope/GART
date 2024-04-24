@@ -145,7 +145,7 @@ The graph analysis can be launched by the following command:
 .. code:: bash
 
     gart-env$ cd /workspace/gart/
-    gart-env$ mpirun --allow-run-as-root -n 1 ./apps/run_gart_app --etcd_endpoint http://127.0.0.1:23760 --read_epoch 0 --meta_prefix gart_meta_ --app_name sssp --sssp_source_label organisation --sssp_source_oid 0 --sssp_weight_name wa_work_from
+    gart-env$ mpirun -n 1 ./apps/run_gart_app --read_epoch 0 --app_name sssp --sssp_source_label organisation --sssp_source_oid 0 --sssp_weight_name wa_work_from
 
 Next steps
 ----------
