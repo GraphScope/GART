@@ -136,3 +136,5 @@ tmp/
 
 apps/networkx/client/python/dist/
 apps/networkx/python_bindings/build/
+
+*.zip

@@ -20,7 +20,7 @@ Workflow
 In order to convert data logs from different *relational* data sources and update the real-time graph data, GART is architecturally divided into three main layers:
 
 - **Pre-processing layer (Data Source)**:
-Capturer is responsible for capturing logs from different data sources (need to get the corresponding permissions of the data source, such as slave permissions in MySQL), and Parser needs to convert the binlog format of different data sources into a unified format of transaction log (TxnLog).
+The capturer is responsible for capturing logs from different data sources (need to get the corresponding permissions of the data source, such as slave permissions in MySQL), and Parser needs to convert the binlog format of different data sources into a unified format of transactional log (TxnLog).
 It is responsible for converting primary keys in relational data to IDs of vertices or edges in the graph.
 It also ensures that in cases where logs may be out of order (distributed logs, streaming data, etc.), the logs are put in order for data recovery, ensuring the consistency of the graph data.
 
@@ -30,9 +30,9 @@ GART needs to get the corresponding permissions of the data source of the data s
 The log parser then converts the *binlog* format of the different data sources into the transaction log (TxnLog) format in the prescribed format.
 
 - **Dynamic graph storage layer (Storage)**:
-It is responsible for updating the graphics data and providing a unified graphics storage interface to the upper tier graphics computing engine.
+It is responsible for updating the graphics data and providing a unified graphics storage interface to the upper-tier graphics computing engine.
 The interface provided by the graph store to the execution engine is encapsulated through the `GRIN`_ library.
-The storage layer provides snapshots of the graph data so that users can analyze the graph in real time as if it were a static graph.
+The storage layer provides snapshots of the graph data so that users can analyze the graph in real-time as if it were a static graph.
 GART's dynamic graph store is based on `Vineyard`_, which simplifies access to shared data by different processes.
 In a distributed scenario, the preprocessing and model transformation layers are deployed on a single machine, and the transformed UnifiedLog is sent to data stores on different machines according to distributed distribution rules.
 
@@ -56,7 +56,7 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 
 2. a coarse-grained MVCC to reduce the temporal and spatial overhead of versioning;
 
-3. a flexible property storage to efficiently run various GAP workloads.
+3. flexible property storage to efficiently run various GAP workloads.
 
 Service-Oriented Deployment Model
 ^^^^^^^^^^^
