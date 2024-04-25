@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g2")
 # ------------------------------------------------------------------------------
 # find_libraries
 # ------------------------------------------------------------------------------
-find_package(vineyard 0.15.0 REQUIRED)
+find_package(vineyard REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 
 find_package(yaml-cpp REQUIRED)

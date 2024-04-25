@@ -78,10 +78,17 @@ sudo apt-get install -y ca-certificates \
                    libunwind-dev \
                    libz-dev \
                    protobuf-compiler-grpc
-wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb -O /tmp/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-sudo apt-get install -y -V /tmp/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-sudo apt update -y
-sudo apt-get install -y libarrow-dev
+
+wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+sudo apt update
+sudo apt install -y libarrow-dev=14.0.1-1 \
+                    libarrow-dataset-dev=14.0.1-1 \
+                    libarrow-acero-dev=14.0.1-1 \
+                    libarrow-flight-dev=14.0.1-1 \
+                    libgandiva-dev=14.0.1-1 \
+                    libparquet-dev=14.0.1-1
+
 
 pip3 install libclang
 
@@ -89,6 +96,7 @@ git clone https://github.com/v6d-io/v6d
 cd v6d
 git submodule update --init
 mkdir -p build && cd build
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64:/usr/local/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu
 cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF
 make -j && sudo make install
 cd ../..
@@ -213,7 +221,7 @@ EOT
 
 #write server.properties
 cat << EOT >> $KAFKA_CONFIG/server.properties
-listeners=PLAINTEXT://localhost:9092
+listeners=PLAINTEXT://0.0.0.0:9092
 advertised.listeners=PLAINTEXT://localhost:9092
 
 EOT

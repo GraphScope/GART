@@ -86,7 +86,7 @@ include_directories(${ETCD_CPP_INCLUDE_DIR})
 link_libraries(${ETCD_CPP_LIBRARIES})
 
 # find vineyard
-find_package(vineyard 0.15.0 REQUIRED)
+find_package(vineyard REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 link_libraries(${VINEYARD_LIBRARIES})
 

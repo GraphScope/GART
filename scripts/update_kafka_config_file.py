@@ -39,6 +39,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     db_type = args.db_type
+    
+    kafka_server = args.kafka_endpoint
+    kafka_port = kafka_server.split(":")[1]
 
     if db_type not in ["mysql", "postgresql"]:
         print("Invalid database type")
@@ -121,11 +124,11 @@ if __name__ == "__main__":
                     temp_file.write("snapshot.mode=never\n")
             elif line.startswith("database.history.kafka.bootstrap.servers"):
                 temp_file.write(
-                    f"database.history.kafka.bootstrap.servers={args.kafka_endpoint}\n"
+                    f"database.history.kafka.bootstrap.servers=localhost:{kafka_port}\n"
                 )
             elif line.startswith("schema.history.internal.kafka.bootstrap.servers"):
                 temp_file.write(
-                    f"schema.history.internal.kafka.bootstrap.servers={args.kafka_endpoint}\n"
+                    f"schema.history.internal.kafka.bootstrap.servers=localhost:{kafka_port}\n"
                 )
             else:
                 temp_file.write(line)

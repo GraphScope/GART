@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,role:,start-slot:,num-slot:,rg-from-etcd:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,role:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -28,6 +28,7 @@ role="all"
 start_slot=
 num_slot=
 rg_from_etcd=0
+k8s_mode="no"
 
 set_port=false
 eval set -- "$VALID_ARGS"
@@ -110,6 +111,10 @@ while [ : ]; do
         rg_from_etcd=$2
         shift 2
         ;;
+         --k8s-mode)
+        k8s_mode=$2
+        shift 2
+        ;;
     -h | --help | ?)
         echo "Usage: $0 [options]"
         echo "      --db-type:           type of data source: postgresql, mysql (default: postgresql)"
@@ -130,6 +135,8 @@ while [ : ]; do
         echo "      --role:              the role of running this script: capturer, converter, writer or all (default: all)"
         echo "      --start-slot:        the start slot of subgraph on this machine"
         echo "      --num-slot:          the number of slots on this machine"
+        echo "      --rg-from-etcd:      if read rg mapping from etcd (default: 0)"
+        echo "      --k8s-mode:          if running in k8s mode (default: no)"
         echo "  -h, --help:              help"
         exit 0
         ;;
@@ -282,7 +289,7 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
 fi
 
 ####################### Etcd #######################
-if [ "$role" == "capturer" ] || [ "$role" == "converter" ]; then
+if [ "$k8s_mode" == "no" ] && { [ "$role" == "capturer" ] || [ "$role" == "converter" ]; }; then
     echo "Start to launch Etcd by role $role"
     if ! pgrep -f "etcd .*$etcd_endpoint" > /dev/null 2>&1; then
         echo "Start to launch etcd on $etcd_endpoint"
@@ -480,12 +487,16 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
         $CONVENTER_HOME/binlog_convert_debezium \
             --etcd_endpoint $etcd_endpoint \
             --etcd_prefix $etcd_prefix \
+            --read_kafka_broker_list $kafka_server \
+            --write_kafka_broker_list $kafka_server \ 
             --subgraph_num $subgraph_num --logs_per_epoch 10000 \
             --enable_bulkload=$enable_bulkload &
     else
         echo "    Use Maxwell converter"
         $CONVENTER_HOME/binlog_convert_maxwell  --etcd_endpoint $etcd_endpoint \
             --etcd_prefix $etcd_prefix \
+            --read_kafka_broker_list $kafka_server \
+            --write_kafka_broker_list $kafka_server \ 
             --subgraph_num $subgraph_num --logs_per_epoch 10000 &
     fi
     pids["Converter"]=$!

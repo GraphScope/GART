@@ -41,7 +41,9 @@ RUN /workspace/gart/scripts/install-mysql.sh
 
 RUN echo "service mysql start" >> /workspace/env_script.sh
 
-RUN echo "mkdir /root/.ssh && ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa" >> /workspace/env_script.sh
+RUN mkdir -p /workspace/gart/build && cd /workspace/gart/build && cmake .. -DADD_GAE_ENGINE=ON && make -j && sudo make install
+
+RUN echo "mkdir -p /root/.ssh && ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa" >> /workspace/env_script.sh
 RUN echo "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys" >> /workspace/env_script.sh
 
 WORKDIR /workspace

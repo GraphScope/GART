@@ -58,11 +58,11 @@ if __name__ == "__main__":
     etcd_command = [
         "etcd",
         "--listen-client-urls",
-        f"http://{etcd_host}:{etcd_port}",
+        f"http://0.0.0.0:{etcd_port}",
         "--advertise-client-urls",
         f"http://{etcd_host}:{etcd_port}",
         "--listen-peer-urls",
-        f"http://{etcd_host}:{etcd_peer_port}",
+        f"http://0.0.0.0:{etcd_peer_port}",
         "--initial-cluster",
         f"default=http://{etcd_host}:{etcd_peer_port}",
         "--initial-advertise-peer-urls",
