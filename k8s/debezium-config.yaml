@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: debezium-config
+data:
+  mysql-connector.json: |-
+    {
+      "name": "debezium-connector-mysql",
+      "config": {
+        "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+        "tasks.max": "1",
+        "database.hostname": "mysql-service",
+        "database.port": "3306",
+        "database.user": "debezium",
+        "database.password": "dbz",
+        "database.server.id": "184054",
+        "database.server.name": "dbserver1",
+        "database.include.list": "mydatabase",
+        "database.history.kafka.bootstrap.servers": "kafka-service:9092",
+        "database.history.kafka.topic": "schema-changes.mydatabase"
+      }
+    }

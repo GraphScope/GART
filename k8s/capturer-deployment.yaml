@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capturer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: capturer
+  template:
+    metadata:
+      labels:
+        app: capturer
+    spec:
+      containers:
+      - name: capturer
+        image: gart-env:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9092
+          name: kafka-port
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          /workspace/env_script.sh &&
+          cat /workspace/env_script.sh &&
+          cat /etc/profile.d/kafka_path.sh &&
+          source /etc/profile.d/kafka_path.sh &&
+          cd /workspace/gart/build &&
+          ./gart \
+          --db-host ${DB_HOST} \
+          --db-port ${DB_PORT} \
+          --db-name ${DB_NAME} \
+          --db-type ${DB_TYPE} \
+          --user ${DB_USER} \
+          --password ${DB_PASSWORD} \
+          --v6d-sock ${V6D_SOCKET} \
+          --v6d-size ${V6D_SIZE} \
+          --etcd-endpoint ${ETCD_ENDPOINT} \
+          --etcd-prefix ${ETCD_PREFIX} \
+          --kafka-server ${KAFKA_SERVER} \
+          --subgraph-num ${SUBGRAPH_NUM} \
+          --enable-bulkload ${ENABLE_BULKLOAD} \
+          --rg-from-etcd 1 \
+          --k8s-mode yes \
+          --role capturer &&
+          sleep infinity
+        env:
+          - name: KAFKA_SERVER
+            value: "capturer-service:9092"
+          - name: DB_HOST
+            value: "127.0.0.1"
+          - name: DB_PORT
+            value: "3306"
+          - name: DB_USER
+            value: "dbuser"
+          - name: DB_PASSWORD
+            value: "123456"
+          - name: DB_TYPE
+            value: "mysql"
+          - name: DB_NAME
+            value: "ldbc"
+          - name: V6D_SOCKET
+            value: "/tmp/v6d.sock"
+          - name: V6D_SIZE
+            value: "750G"
+          - name: ETCD_ENDPOINT
+            value: "etcd-service:2379"
+          - name: ETCD_PREFIX
+            value: "gart_meta_"
+          - name: SUBGRAPH_NUM
+            value: "1"
+          - name: ENABLE_BULKLOAD
+            value: "1" 
+             
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: capturer-service
+spec:
+  type: ClusterIP
+  selector:
+    app: capturer
+  ports:
+    - port: 9092
+      targetPort: 9092

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-broker1
+spec:
+  selector:  # This selector must match the template labels
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+        id: "1"
+    spec:
+      containers:
+        - name: kafka
+          image: wurstmeister/kafka:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9092
+          env:
+            - name: KAFKA_ADVERTISED_PORT
+              value: "9092"
+            - name: KAFKA_ADVERTISED_HOST_NAME
+              value: "kafka-service"
+            - name: KAFKA_ZOOKEEPER_CONNECT
+              value: zoo1:2181
+            - name: KAFKA_BROKER_ID
+              value: "1"
+            - name: KAFKA_CREATE_TOPICS
+              value: binlog:1:1,unified_log:1:1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-service
+  labels:
+    name: kafka
+spec:
+  ports:
+    - port: 9092
+      name: kafka-port
+      protocol: TCP
+      targetPort: 9092
+  selector:
+    app: kafka
+  type: ClusterIP

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper-deployment-1
+spec:
+  selector: 
+    matchLabels:
+      app: zookeeper-1
+  template:
+    metadata:
+      labels:
+        app: zookeeper-1
+    spec:
+      containers:
+        - name: zoo1
+          image: bitnami/zookeeper:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 2181
+          env:
+            - name: ZOOKEEPER_ID
+              value: "1"
+            - name: ZOOKEEPER_SERVER_1
+              value: zoo1
+            - name: ALLOW_ANONYMOUS_LOGIN
+              value: "yes"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zoo1
+  labels:
+    app: zookeeper-1
+spec:
+  type: ClusterIP
+  ports:
+    - name: zk-port
+      port: 2181
+      targetPort: 2181
+  selector:
+    app: zookeeper-1
