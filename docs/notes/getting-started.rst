@@ -152,7 +152,15 @@ Next steps
 
 GART also provides:
 
-- XXX
+- **Distributed deployment based on Kubernetes.** GART can be deployed on a distributed environment based on Kubernetes.
+
+- **Support for more data sources.** GART can support more data sources, such as MySQL, PostgreSQL. Users can also implement their own data source by following the data source interface.
+
+- **Support for more graph analysis algorithms.** GART can support more graph analysis algorithms, such as PageRank, Connected Components, etc. The execution engine of GART is based on `GraphScope`_, which supports a wide range of graph algorithms. We also support `NetworkX`_ as the execution engine.
+
+- **Flexible data model mapping.** GART can support more data model mappings by RGMapping. Users can implement their own mapping rules by following the RGMapping interface.
+
+Learn more about key concepts of GART from the following user guides:
 
 .. panels::
    :header: text-center
@@ -164,8 +172,6 @@ GART also provides:
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
    Overview of GART.
-
-Learn more about key concepts of GART from the following user guides:
 
 .. panels::
    :header: text-center
@@ -201,3 +207,7 @@ Learn more about key concepts of GART from the following user guides:
 .. _trust the user: https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings
 
 .. _LDBC-SNB: https://ldbcouncil.org/benchmarks/snb/
+
+.. _GraphScope: https://github.com/alibaba/GraphScope
+
+.. _NetworkX: https://networkx.org/
