@@ -26,15 +26,15 @@ There are two common architectures for graph data processing:
 .. figure:: images/graph-arch.png
    :alt: Common architectures for graph data processing
 
-In order to do graph computation, relational database systems will provide some interface extensions, which is equivalent to a kind of syntactic sugar for graph processing, and the underlying still uses the relational model, e.g., `GraphScript`_ provided by SAP HANA, `SQL Graph`_ provided by SQL Server, `Apache AGE`_ as an extension for PostgreSQL.
+To do graph computation, relational database systems will provide some interface extensions, which are equivalent to a kind of syntactic sugar for graph processing, and the underlying still uses the relational model, e.g., `GraphScript`_ provided by SAP HANA, `SQL Graph`_ provided by SQL Server, `Apache AGE`_ as an extension for PostgreSQL.
 
 On the other hand, there is also the option of exporting the data as offline graph data for offline graph data analysis and processing on a graph processing system (`Neo4j`_, `GraphScope`_, ...).
 
-An ideal model for processing on-line graph data needs to fulfill at least the following three requirements:
+An ideal model for processing online graph data needs to fulfill at least the following three requirements:
 
 1. **Performance**. The performance of the graph processing meets the performance of advanced graph processing systems. However, storing data as tables in relational storage for graph processing requires a large number of time-consuming join operations. Such operations cause serious performance degradation compared to the graph native storage and execution engine.
 
-2. **Data freshness**. In order to keep the data current, long offline data moves need to be avoided so that analysis can be performed quickly on the updated data. In some time-sensitive scenarios, such as fraud detection, early analysis results can avoid losses.
+2. **Data freshness**. To keep the data current, long offline data moves need to be avoided so that analysis can be performed quickly on the updated data. In some time-sensitive scenarios, such as fraud detection, early analysis results can avoid losses.
 
 3. **Expressiveness**. Graph data processing tasks are diverse, such as graph traversal, graph algorithms, graph learning, etc. Therefore, sufficient graph representation capabilities are needed to be able to represent different graph tasks efficiently.
 
@@ -44,7 +44,7 @@ What is GART?
 GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing.
 It is designed to bridge the gap between relational OLTP and graph-based OLAP.
 
-We would like to be able to use graph flexibly without re-altering the existing relational database system. Moreover, users do not need to be aware of the storage of graph data and the synchronization of data between relational data and graph data for freshness. To fullfil this requirement, we build GART, an in-memory system for real-time online graph computation.
+We would like to be able to use graph data flexibly without re-altering the existing relational database system. Moreover, users do not need to be aware of the storage of graph data and the synchronization of data between relational data and graph data for freshness. To fulfill this requirement, we build GART, an in-memory system for real-time online graph computation.
 
 GART uses transactional logs (e.g., binlog) to capture data changes, then recovers data changes into fresh graph data in real time. GART integrates graph computation engines (e.g. GraphScope, NetworkX) to support efficient graph computation processing. The workflow of GART is shown below.
 
@@ -75,14 +75,14 @@ To ensure the performance of graph analytical processing (GAP), GART proposes an
 
 2. a coarse-grained MVCC to reduce the temporal and spatial overhead of versioning;
 
-3. a flexible property storage to efficiently run various GAP workloads.
+3. flexible property storage to efficiently run various GAP workloads.
 
 Service-Oriented Deployment Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GART acts as a service to synchronize database changes to the graph store.
 When pulled up as a service on its own, users can try out the full power of GART and different graph computation engines on the graph store.
-At the same time, GART also provides a front-end, used as a database plug-in, currently supported as PostgreSQL extension.
+At the same time, GART also provides a front-end, used as a database plug-in, currently supported as a PostgreSQL extension.
 Users can invoke GART's functions in the database client, such as RGMapping definitions, graph computation on the graph store, etc.
 
 Get started now!
