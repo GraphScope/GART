@@ -32,7 +32,7 @@ Concepts
       :text: RGMapping
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
-   The design of relational-graph mapping (RGMapping).
+   The design of RGMapping and the interface to use it.
 
    ---
 

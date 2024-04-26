@@ -32,7 +32,7 @@ The log parser then converts the *binlog* format of the different data sources i
 - **Dynamic graph storage layer (Storage)**:
 It is responsible for updating the graphics data and providing a unified graphics storage interface to the upper-tier graphics computing engine.
 The interface provided by the graph store to the execution engine is encapsulated through the `GRIN`_ library.
-The storage layer provides snapshots of the graph data so that users can analyze the graph in real-time as if it were a static graph.
+The storage layer provides snapshots of the graph data, allowing users to analyze the graph in real time as if it were a static graph.
 GART's dynamic graph store is based on `Vineyard`_, which simplifies access to shared data by different processes.
 In a distributed scenario, the preprocessing and model transformation layers are deployed on a single machine, and the transformed UnifiedLog is sent to data stores on different machines according to distributed distribution rules.
 
@@ -63,7 +63,7 @@ Service-Oriented Deployment Model
 
 GART acts as a service to synchronize database changes to the graph store.
 When pulled up as a service on its own, users can try out the full power of GART and different graph computation engines on the graph store.
-At the same time, GART also provides a front-end, used as a database plug-in, currently supported as PostgreSQL extension.
+At the same time, GART also provides a front-end, used as a database plug-in, currently supported as a PostgreSQL extension.
 Users can invoke GART's functions in the database client, such as RGMapping definitions, graph computation on the graph store, etc.
 
 .. _GRIN: https://graphscope.io/docs/latest/storage_engine/grin/

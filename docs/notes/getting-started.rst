@@ -9,6 +9,7 @@ Install GART
 GART currently requires installation via source code. Its dependencies and environment deployment can be done via docker
 
 .. code:: bash
+    :linenos:
 
     $ git clone git@github.com:GraphScope/GART.git
     $ cd GART
@@ -18,6 +19,7 @@ GART currently requires installation via source code. Its dependencies and envir
 After entering the docker image, build GART:
 
 .. code:: bash
+    :linenos:
 
     # In the docker image
     gart-env$ cd /workspace/gart/
@@ -43,6 +45,7 @@ The PostgreSQL configuration file is in the directory ``/etc/postgresql/$PSQL_VE
 2. Create a PostgreSQL user (``dbuser``) for the log capture Debezium:
 
 .. code:: postgresql
+    :linenos:
 
     CREATE USER dbuser WITH PASSWORD '123456';
     ALTER USER dbuser REPLICATION;
@@ -55,7 +58,7 @@ The PostgreSQL configuration file is in the directory ``/etc/postgresql/$PSQL_VE
     \c ldbc
     GRANT ALL ON SCHEMA public TO dbuser;
 
-3. Modify the configuration file `/etc/postgresql/$PSQL_VERSION/main/pg_hba.conf` to `trust the user`_ ``dbuser``:
+3. Modify the configuration file ``/etc/postgresql/$PSQL_VERSION/main/pg_hba.conf`` to `trust the user`_ ``dbuser``:
 
 .. code:: none
 
@@ -111,6 +114,7 @@ Launch as PostgreSQL plugin
 You can launch GART as a PostgreSQL plugin:
 
 .. code:: postgresql
+    :linenos:
 
     CREATE EXTENSION gart;
 
@@ -184,7 +188,7 @@ Learn more about key concepts of GART from the following user guides:
       :text: RGMapping
       :classes: btn-block stretched-link
 
-   The design of relational-graph mapping (RGMapping).
+   The design of RGMapping and the interface to use it.
 
    ---
 

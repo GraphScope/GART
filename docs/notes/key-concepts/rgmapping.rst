@@ -38,5 +38,7 @@ In the fraud detection example, the user can define rules for RGMapping as descr
         LABEL "transfer" PROPERTIES ( t_data AS "t_date" )
     )
 
-The RGMapping rule is written in SQL/PGQ. It creates a graph named ``ldbc``, which contains a type of vertices ``PERSON`` and a type of edges ``TRANSFER`` (it ignores the label name which is the same as the table name). It shows the correspondence between the vertices, edges and their properties in the graph and the columns in the table.
+The RGMapping rule is written in `SQL/PGQ`_. It creates a graph named ``ldbc``, which contains a type of vertices ``PERSON`` and a type of edges ``TRANSFER`` (it ignores the label name which is the same as the table name). It shows the correspondence between the vertices, edges and their properties in the graph and the columns in the table.
 After starting the GART service, updates to the relational data will be imposed on the graph data through log synchronization. Users can query the data for updates to their tests in a familiar graph language (e.g., Cypher, Gremlin).
+
+.. _SQL/PGQ: https://pgql-lang.org/
