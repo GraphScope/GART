@@ -6,7 +6,7 @@ Getting Started
 Install GART
 -------------------
 
-GART currently requires installation via source code. Its dependencies and environment deployment can be done via docker
+GART currently requires installation via source code. Its dependencies and environment deployment can be done via Docker. The following steps will guide you through the installation process.
 
 .. code:: bash
     :linenos:
@@ -127,12 +127,12 @@ You can launch GART as a PostgreSQL plugin:
 Run Dynamic Graph Analysis
 ----------------------------
 
-GART is able to create a fresh snapshot of a graph on a real-time updated relational data. Users are able to perform graph analytic processing on this snapshot.
+GART can create a fresh snapshot of a graph on real-time updated relational data. Users can perform graph analytic processing on this snapshot.
 
 Initiate data updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, the data changes are modeled in the following way, in this case the insertion of data:
+First, the data changes are modeled in the following way, in this case, the insertion of data:
 
 .. code:: bash
 
@@ -158,7 +158,7 @@ GART also provides:
 
 - **Distributed deployment based on Kubernetes.** GART can be deployed on a distributed environment based on Kubernetes.
 
-- **Support for more data sources.** GART can support more data sources, such as MySQL, PostgreSQL. Users can also implement their own data source by following the data source interface.
+- **Support for more data sources.** GART can support more data sources, such as MySQL, and PostgreSQL. Users can also implement their own data source by following the data source interface.
 
 - **Support for more graph analysis algorithms.** GART can support more graph analysis algorithms, such as PageRank, Connected Components, etc. The execution engine of GART is based on `GraphScope`_, which supports a wide range of graph algorithms. We also support `NetworkX`_ as the execution engine.
 

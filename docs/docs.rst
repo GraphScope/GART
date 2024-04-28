@@ -154,9 +154,7 @@ Read the Paper
    :caption: Tutorials
    :hidden:
 
-   tutorials/data-processing.rst
-   tutorials/kubernetes.rst
-   tutorials/extending.rst
+   tutorials/data-source-config.rst
 
 
 .. _GraphScope: https://github.com/alibaba/GraphScope
