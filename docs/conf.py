@@ -110,13 +110,13 @@ html_theme = "furo"
 html_theme_options = {
     "sidebar_hide_name": True,  # we use the logo
     "navigation_with_keys": True,
-    "source_repository": "https://github.com/v6d-io/v6d/",
+    "source_repository": "https://github.com/GraphScope/GART/",
     "source_branch": "main",
     "source_directory": "docs/",
     "footer_icons": [
         {
             "name": "GitHub",
-            "url": "https://github.com/v6d-io/v6d",
+            "url": "https://github.com/GraphScope/GART/",
             "html": "",
             "class": "fa fa-solid fa-github fa-2x",
         },
