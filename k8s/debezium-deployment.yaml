@@ -15,6 +15,7 @@ spec:
       containers:
       - name: debezium-connect
         image: debezium/connect:latest 
+        imagePullPolicy: IfNotPresent
         env:
         - name: BOOTSTRAP_SERVERS
           value: "kafka-service:9092"  
@@ -35,3 +36,20 @@ spec:
       - name: debezium-config-volume
         configMap:
           name: debezium-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: debezium-connect-service
+  labels:
+    app: debezium-connect
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8083
+    targetPort: 8083
+  selector:
+    app: debezium-connect
+
+    #curl -i -X POST -H "Accept:application/json" -H  "Content-Type:application/json" http://debezium-connect-service:8083/connectors/ -d @/kafka/connect/debezium-config/mysql-connector.json

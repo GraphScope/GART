@@ -20,11 +20,8 @@ spec:
         args:
         - |
           /workspace/env_script.sh &&
-          cat /workspace/env_script.sh &&
-          cat /etc/profile.d/kafka_path.sh &&
-          source /etc/profile.d/kafka_path.sh &&
           cd /workspace/gart/build &&
-          echo ./gart \
+          ./gart \
           --db-host ${DB_HOST} \
           --db-port ${DB_PORT} \
           --db-name ${DB_NAME} \
@@ -44,7 +41,7 @@ spec:
           sleep infinity
         env:
           - name: KAFKA_SERVER
-            value: "capturer-service:9092"
+            value: "kafka-service:9092"
           - name: DB_HOST
             value: "127.0.0.1"
           - name: DB_PORT

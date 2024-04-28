@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: debezium-connector-launch
+spec:
+  template:
+    spec:
+      containers:
+      - name: debezium-connector-launch
+        image: curlimages/curl:latest
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args:
+        - "-c"
+        - >
+          echo "Applying Debezium connector configuration...";
+          CONFIG=$(cat /etc/debezium-connector-config/mysql-connector.json);
+          curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json"
+          --data "$CONFIG" http://debezium-connect-service:8083/connectors/;
+          echo "Configuration applied.";
+        volumeMounts:
+        - name: config-volume
+          mountPath: "/etc/debezium-connector-config"
+      restartPolicy: OnFailure
+      volumes:
+      - name: config-volume
+        configMap:
+          name: debezium-config

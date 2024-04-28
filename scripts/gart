@@ -310,7 +310,7 @@ fi
 
 
 ####################### Extract Schema #######################
-if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
+if [ "$role" == "all" ] || [ "$role" == "capturer" ] || { [ "$k8s_mode" == "yes" ] && [ "$role" == "converter" ]; }; then
     echo "Start extracting schema"
     export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
     num_row=$(
@@ -488,7 +488,7 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
             --etcd_endpoint $etcd_endpoint \
             --etcd_prefix $etcd_prefix \
             --read_kafka_broker_list $kafka_server \
-            --write_kafka_broker_list $kafka_server \ 
+            --write_kafka_broker_list $kafka_server \
             --subgraph_num $subgraph_num --logs_per_epoch 10000 \
             --enable_bulkload=$enable_bulkload &
     else
@@ -496,7 +496,7 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
         $CONVENTER_HOME/binlog_convert_maxwell  --etcd_endpoint $etcd_endpoint \
             --etcd_prefix $etcd_prefix \
             --read_kafka_broker_list $kafka_server \
-            --write_kafka_broker_list $kafka_server \ 
+            --write_kafka_broker_list $kafka_server \
             --subgraph_num $subgraph_num --logs_per_epoch 10000 &
     fi
     pids["Converter"]=$!

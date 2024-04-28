@@ -39,21 +39,22 @@ if __name__ == "__main__":
     
     gart_home = os.getenv("GART_HOME")
     
-    launch_etcd_pod_deployment_cmd = f"kubectl apply -f {gart_home}/k8s/etcd-deployment.yaml"
-    process = subprocess.run(launch_etcd_pod_deployment_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    if process.returncode != 0:
-        print("Start Etcd Deployment Error:\n", process.stderr)
-        sys.exit(1)
-    else:
-        print("Etcd Deployment info: ", process.stdout)
-        
-    launch_etcd_pod_service_cmd = f"kubectl apply -f {gart_home}/k8s/etcd-service.yaml"
-    process = subprocess.run(launch_etcd_pod_service_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    if process.returncode != 0:
-        print("Start Etcd Service Error:\n", process.stderr)
-        sys.exit(1)
-    else:
-        print("Etcd Service info: ", process.stdout)
+    if False:
+        launch_etcd_pod_deployment_cmd = f"kubectl apply -f {gart_home}/k8s/etcd-deployment.yaml"
+        process = subprocess.run(launch_etcd_pod_deployment_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if process.returncode != 0:
+            print("Start Etcd Deployment Error:\n", process.stderr)
+            sys.exit(1)
+        else:
+            print("Etcd Deployment info: ", process.stdout)
+            
+        launch_etcd_pod_service_cmd = f"kubectl apply -f {gart_home}/k8s/etcd-service.yaml"
+        process = subprocess.run(launch_etcd_pod_service_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if process.returncode != 0:
+            print("Start Etcd Service Error:\n", process.stderr)
+            sys.exit(1)
+        else:
+            print("Etcd Service info: ", process.stdout)
     
     etcd_host="localhost"
     etcd_port=12379
