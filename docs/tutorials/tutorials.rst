@@ -2,6 +2,4 @@
 
 :orphan:
 
-.. include:: ../tutorials/data-source-config.rst
-.. include:: ../tutorials/kubernetes.rst
-.. include:: ../tutorials/extending.rst
+.. include:: ./data-source-config.rst

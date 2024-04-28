@@ -6,30 +6,40 @@ Data Source Configuration
    :caption: TOC
    :hidden:
 
-   ./data-processing/using-objects-python.rst
-   ./data-processing/python-sharedmemory.rst
+   ./data-source-config/postgresql.rst
+   ./data-source-config/mysql.rst
+   ../storage.md
 
-In these comprehensive case studies, we demonstrate how to seamlessly integrate vineyard's
-capabilities with existing data-intensive tasks. By incorporating vineyard into complex
-workflows involving multiple computing engines, users can experience significant
-improvements in both performance and ease of use.
+
+GART supports different types of data sources for data model transformation to provide real-time graph analytic processing. Because of the need to keep track of data updates, some permissions need to be configured on the data sources.
+
+In this section, we will introduce the configuration of the data sources supported by GART: PostgreSQL and MySQL. At the same time, GART also supports arbitrary data streams, which only require the user to manually convert the data updates to the specified format.
 
 .. panels::
    :header: text-center
    :column: col-lg-12 p-2
 
-   .. link-button:: ./data-processing/using-objects-python
+   .. link-button:: ./data-source-config/postgresql
       :type: ref
-      :text: Python Objects
+      :text: PostgreSQL
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
-   Effortlessly share Python objects between processes using vineyard's intuitive and efficient approach.
+   PostgreSQL configuration guide.
 
    ---
 
-   .. link-button:: ./data-processing/python-sharedmemory
+   .. link-button:: ./data-source-config/mysql
       :type: ref
-      :text: SharedMemory in Python
+      :text: MySQL
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
-   Utilize vineyard as an elegant alternative to :code:`multiprocessing.shared_memory` in Python.
+   MySQL configuration guide.
+
+   ---
+
+   .. link-button:: ../storage
+      :type: ref
+      :text: GART Storage
+      :classes: btn-block stretched-link
+   ^^^^^^^^^^^^
+   Guidelines for the use of GART's dynamic graph storage.
