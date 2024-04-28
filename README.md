@@ -1,6 +1,6 @@
 # GART: Graph Analysis on Relational Transactional Datasets
 
-GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for in-line graph processing.
+GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing.
 
 ## Table of Contents
 - [What is GART](#what-is-gart)
@@ -128,13 +128,13 @@ Before running GART, we need to configure the data source to capture its logs.
 Currently, we have supported PostgreSQL and MySQL as the relational data source.
 
 #### PostgreSQL
-- The PostgreSQL configuration file is in the directory `/etc/postgresql/<postgresql_version>/main/`
+- The PostgreSQL configuration file is in the directory `/etc/postgresql/$PSQL_VERSION/main/`
 
 - Modify the configuration file `postgresql.conf` to enable WAL as follows:
     ```
     wal_level = logical
-    max_replication_slots = <larger than 0>
-    max_wal_senders = <larger than 0>
+    max_replication_slots = 1 # larger than 0
+    max_wal_senders = 1 # larger than 0
     ```
 
 - Create a PostgreSQL user (`dbuser`) for the log capture Debezium:
