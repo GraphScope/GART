@@ -39,7 +39,7 @@ The storage layer provides snapshots of the graph data, allowing users to analyz
 GART's dynamic graph store is based on `Vineyard`_, which simplifies access to shared data by different processes.
 In a distributed scenario, the preprocessing and model transformation layers are deployed on a single machine, and the transformed UnifiedLog is sent to data stores on different machines according to distributed distribution rules.
 
-Core features
+Core Features
 -------------
 
 Transparent Data Model Conversion

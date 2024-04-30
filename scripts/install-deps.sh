@@ -1,5 +1,60 @@
 #!/bin/bash
 
+# Function to show usage
+show_usage() {
+  echo "Usage: $0 [path]"
+  echo "If no path is specified, './_deps' will be used as the default directory."
+}
+
+# Function to create a directory if it doesn't exist
+create_directory() {
+  local dir=$1
+  if [[ ! -d "$dir" ]]; then
+    echo "Directory '$dir' does not exist. Attempting to create it..."
+    mkdir -p "$dir"
+    if [[ $? -ne 0 ]]; then
+      echo "Error: Unable to create directory '$dir'."
+      return 1
+    fi
+  fi
+  return 0
+}
+
+if [[ $# -gt 1 ]]; then
+    echo "Error: Too many arguments provided."
+    show_usage
+    exit 1 # Use 'return' instead of 'exit' when inside a function
+fi
+
+# Save the current working directory
+ORIGINAL_DIR=$(pwd)
+
+# Use the default directory if no argument is provided; display a warning
+TARGET_DIR="$1"
+if [[ -z "$TARGET_DIR" ]]; then
+    echo "WARNING: No path provided, using default directory './_deps'."
+    TARGET_DIR="./_deps"
+fi
+
+# Check for the --help flag before invoking main
+if [[ "$TARGET_DIR" == "--help" ]]; then
+    show_usage
+    exit 0
+fi
+
+# Ensure the TARGET_DIR exists or create it
+create_directory "$TARGET_DIR" || exit 1
+
+# Try to change to the target directory
+cd "$TARGET_DIR" 2>/dev/null
+if [[ $? -ne 0 ]]; then
+    echo "Error: Unable to change to directory '$TARGET_DIR'."
+    exit 2
+fi
+
+# Your commands here...
+echo "Now in directory $(pwd). Executing commands..."
+
 sudo apt update
 
 sudo apt-get install -y build-essential cmake python3 python3-pip lsb-release wget
@@ -61,23 +116,23 @@ sudo apt-get install -y librdkafka-dev
 
 # Install sqlalchemy, pymysql, psycopg2
 # for psycopg2, you need to install libpq-dev
-sudo apt-get install -y libpq-dev 
+sudo apt-get install -y libpq-dev
 pip3 install sqlalchemy pymysql psycopg2
 
 # vineyard
 # pip3 install vineyard
 sudo apt-get install -y ca-certificates \
-                   doxygen \
-                   libboost-all-dev \
-                   libcurl4-openssl-dev \
-                   libgrpc-dev \
-                   libgrpc++-dev \
-                   libmpich-dev \
-                   libprotobuf-dev \
-                   libssl-dev \
-                   libunwind-dev \
-                   libz-dev \
-                   protobuf-compiler-grpc
+                doxygen \
+                libboost-all-dev \
+                libcurl4-openssl-dev \
+                libgrpc-dev \
+                libgrpc++-dev \
+                libmpich-dev \
+                libprotobuf-dev \
+                libssl-dev \
+                libunwind-dev \
+                libz-dev \
+                protobuf-compiler-grpc
 
 wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
@@ -161,7 +216,7 @@ rm -rf debezium-connector-postgres
 #link kafka connect plugins
 ln -s $KAFKA_PLUGIN/*.jar $KAFKA_HOME/libs/
 
-COMM_CONFIG=$(cat <<EOT
+COMM_CONFIG=$(cat << EOT
 database.server.id=1
 include.schema.changes=false
 tombstones.on.delete=false
@@ -183,7 +238,7 @@ schema.history.internal.kafka.bootstrap.servers=<kafka bootstrap servers, e.g., 
 EOT
 )
 
-#write connect-debezium-mysql.properties
+# write connect-debezium-mysql.properties
 cat << EOT >> $KAFKA_CONFIG/connect-debezium-mysql.properties
 name=test-connector
 connector.class=io.debezium.connector.mysql.MySqlConnector
@@ -199,7 +254,7 @@ $COMM_CONFIG
 
 EOT
 
-#write connect-debezium-postgresql.properties
+# write connect-debezium-postgresql.properties
 cat << EOT >> $KAFKA_CONFIG/connect-debezium-postgresql.properties
 name=test-connector
 connector.class=io.debezium.connector.postgresql.PostgresConnector
@@ -219,7 +274,7 @@ $COMM_CONFIG
 
 EOT
 
-#write server.properties
+# write server.properties
 cat << EOT >> $KAFKA_CONFIG/server.properties
 listeners=PLAINTEXT://0.0.0.0:9092
 advertised.listeners=PLAINTEXT://localhost:9092
