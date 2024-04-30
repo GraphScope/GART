@@ -12,7 +12,7 @@ GART is a graph extension that includes an interface to an RDBMS and a dynamic g
     - [Building](#building)
 - [Getting Started](#getting-started)
     - [Configure Data Source](#configure-data-source)
-    - [Configure Capture](#configure-capture)
+    - [Configure Log Capturer](#configure-log-capturer)
     - [Run GART](#run-gart)
     - [Mirco Demo: Graph Analysis on Data from MySQL](#mirco-demo-graph-analysis-on-data-from-mysql)
 - [License](#license)
@@ -196,7 +196,7 @@ Currently, we have supported PostgreSQL and MySQL as the relational data source.
 #### User-defined Data Source
 Please refer to [Usage of GART Storage](./docs/storage.md).
 
-### Configure Capture
+### Configure Log Capturer
 
 Configure Kafka (`$KAFKA_HOME/config/server.properties`) as follows:
 ```
@@ -214,7 +214,7 @@ export MAXWELL_HOME=/path/to/maxwell # if you use Maxwell as log capturer
 ./gart --user dbuser --password 123456
 ```
 
-The arguments of `--user` and `--password` is the user name and the password in the database.
+The arguments of `--user` and `--password` are the user name and the password in the database.
 
 The full usage of `gart` can be shown as:
 
