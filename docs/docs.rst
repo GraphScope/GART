@@ -8,7 +8,7 @@
    :keywords: distributed-systems, distributed, graph-analytics, in-memory-storage, big-data-analytics, distributed-comp
 
 GART: Graph Analysis on Relational Transactional Datasets
-========================================================
+=================================================================
 
 |Discussion| |License| |USENIX|
 
@@ -101,12 +101,12 @@ Get started now!
 
    ---
 
-   .. link-button:: notes/deployment/deploy-docker
+   .. link-button:: notes/deployment/deploy-local
       :type: ref
       :text: Deployment
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
-   Deploy GART on by Docker.
+   Build environment and deploy GART.
 
    ---
 
@@ -147,7 +147,8 @@ Read the Paper
    :caption: Deployment
    :hidden:
 
-   notes/deployment/deploy-docker.rst
+   notes/deployment/deploy-local.rst
+   notes/deployment/deploy-cloud.rst
 
 .. toctree::
    :maxdepth: 1

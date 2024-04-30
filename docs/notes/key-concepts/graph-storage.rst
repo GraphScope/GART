@@ -1,7 +1,7 @@
 .. _gstore:
 
 Dynamic Graph Storage
-=======
+============================
 
 To enable dynamic graph data analysis of data that is changing, GART provides a dynamic graph store. The execution engine can read the latest data **snapshot** on this storage for real-time data analysis.
 

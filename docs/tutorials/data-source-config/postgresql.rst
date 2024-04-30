@@ -43,3 +43,5 @@ The PostgreSQL configuration file is in the directory ``/etc/postgresql/$PSQL_VE
 .. code:: bash
 
     gart-env$ sudo /etc/init.d/postgresql restart
+
+.. _trust the user: https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings

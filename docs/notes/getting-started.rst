@@ -45,7 +45,7 @@ Initialize the PostgreSQL database by `LDBC-SNB`_ schema:
    :header: text-center
    :column: col-lg-12 p-2
 
-   .. link-button:: ./tutorials/data-source-config
+   .. link-button:: ../tutorials/data-source-config
       :type: ref
       :text: Tutorial
       :classes: btn-block stretched-link

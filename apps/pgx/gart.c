@@ -573,7 +573,7 @@ Datum gart_launch_graph_server(PG_FUNCTION_ARGS) {
   PG_RETURN_INT32(server_id);
 }
 
-static int kill_networkx_server(int server_id) {
+static int kill_graph_server(int server_id) {
   char cmd[1024];
   FILE* fp = NULL;
   char hostname[MAX_HOSTNAME_LEN + 1];
@@ -624,7 +624,7 @@ Datum gart_stop_graph_server(PG_FUNCTION_ARGS) {
     PG_RETURN_INT32(0);
   }
 
-  if (kill_networkx_server(server_id) < 0) {
+  if (kill_graph_server(server_id) < 0) {
     PG_RETURN_INT32(0);
   }
 
@@ -707,7 +707,7 @@ static void my_resource_cleanup(ResourceReleasePhase phase, bool isCommit,
     // TODO(ssj): kill all NetworkX servers
     // for (int i = 0; i < server_id_counter; ++i) {
     //   if (server_info[i].server_host) {
-    //     kill_networkx_server(i);
+    //     kill_graph_server(i);
     //   }
     // }
   }
