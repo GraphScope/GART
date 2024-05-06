@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: zookeeper-deployment-1
+  namespace: gart
 spec:
   selector: 
     matchLabels:
@@ -30,6 +31,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: zoo1
+  namespace: gart
   labels:
     app: zookeeper-1
 spec:

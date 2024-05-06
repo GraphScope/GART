@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kafka-broker1
+  namespace: gart
 spec:
   selector:  # This selector must match the template labels
     matchLabels:
@@ -35,6 +36,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kafka-service
+  namespace: gart
   labels:
     name: kafka
 spec:
