@@ -3,20 +3,34 @@
 Quick Start
 ===============
 
-Install GART
+Step 0: Get GART
 -------------------
 
-GART currently requires installation via source code. Its dependencies and environment deployment can be done via Docker. The following steps will guide you through the installation process.
+The following steps will guide you through the installation process.
+
+GART currently requires installation via source code:
+
+
+.. code:: bash
+
+    $ git clone git@github.com:GraphScope/GART.git gart
+
+Step 1: Start the GART Environment
+--------------------------------------
+
+We provide a Docker image that contains all the dependencies and configurations needed to run GART. The Docker image is based on Ubuntu 20.04.
+If you would like to install it locally, please refer to the `detailed deployment tutorial <../deployment/deploy-local.html>`_ we provide.
+
+To build the Docker container called ``gart-env`` and enter the container:
 
 .. code:: bash
     :linenos:
 
-    $ git clone git@github.com:GraphScope/GART.git
-    $ cd GART
+    $ cd gart
     $ docker build . -t gart-env
     $ docker run -it gart-env
 
-After entering the docker image, build GART:
+After entering the Docker container, build GART:
 
 .. code:: bash
     :linenos:
@@ -27,12 +41,27 @@ After entering the docker image, build GART:
     gart-env$ cmake .. -DADD_GAE_ENGINE=ON
     gart-env$ make -j
 
-Configure Data Source
-----------------------------
+.. panels::
+   :header: text-center
+   :column: col-lg-12 p-2
 
-Since the capture of logs requires corresponding permissions to the database, some configuration of the relational database, connection permissions, etc. is required.
+   .. link-button:: ../deployment/deploy-local
+      :type: ref
+      :text: Deployment
+      :classes: btn-block stretched-link
+   ^^^^^^^^^^^^
+   Detailed instructions for deploying GART locally.
+
+Step 2: Configure Data Source
+------------------------------------
+
+Since GART needs the log access privileges of the data source to access the data logs in real time, it is necessary to configure the privileges at the data source first.
 
 In the Docker image we provided, the basic configuration of the database has been done and there is a user as ``dbuser`` with default password as ``123456``.
+
+.. tip::
+
+    If you want to use a different user, you can create a new user in the database and grant the user the necessary privileges. Please refer to the `tutorial <../tutorials/data-source-config.html>`_ for more information.
 
 Initialize the PostgreSQL database by `LDBC-SNB`_ schema:
 
@@ -45,31 +74,33 @@ Initialize the PostgreSQL database by `LDBC-SNB`_ schema:
    :header: text-center
    :column: col-lg-12 p-2
 
-   .. link-button:: ../../tutorials/data-source-config
+   .. link-button:: ../tutorials/data-source-config
       :type: ref
       :text: Tutorial
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
    Detailed instructions for configuring different data sources.
 
-Configure Log Capturer
-----------------------------
+Step 3: Configure Log Capturer
+---------------------------------
 
-Configure Kafka (``$KAFKA_HOME/config/server.properties``) as follows:
+This step is to allow GART's log capturer to fetch the logs of specified database tables to avoid causing irrelevant logs to be tracked.
+
+Edit Kafka configuration (``$KAFKA_HOME/config/server.properties``) as follows:
 
 .. code:: ini
 
     delete.topic.enable=true
 
-We also need to set up a configuration of Debezium. Please replace the fields in the configuration file (``$KAFKA_HOME/config/connect-debezium-{mysql,postgresql}.properties``) that have sharp brackets (``<>``) with the actual contents (e.g., ``database.user``, ``database.password``).
+Set up a configuration of Debezium. Please replace the fields in the configuration file (``$KAFKA_HOME/config/connect-debezium-{mysql,postgresql}.properties``) that have sharp brackets (``<>``) with the actual contents (e.g., ``database.user``, ``database.password``).
 
-Launch GART Server
+Step 4: Launch GART Server
 ----------------------------
 
 GART offers two ways to start up, and you can choose one of the following two ways.
 
-Launch as a standalone server
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Alternative #1: Launch as a standalone server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can launch GART by the ``gart`` script under the ``build`` directory, like:
 
@@ -84,7 +115,7 @@ The full usage of ``gart`` can be shown as:
 
 .. code:: bash
 
-    gart-env$ --help
+    gart-env$ ./gart --help
 
 You can stop GART by:
 
@@ -92,10 +123,21 @@ You can stop GART by:
 
     gart-env$ ./stop-gart
 
-Launch as PostgreSQL plugin
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Alternative #2: Launch as PostgreSQL plugin
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can launch GART as a PostgreSQL plugin:
+
+You need to install the PostgreSQL plugin by copying the shared library to the PostgreSQL library directory:
+
+.. code:: bash
+    :linenos:
+
+    gart-env$ cd /workspace/gart/apps/pgx/
+    gart-env$ make USE_PGXS=1 -j
+    gart-env$ sudo make install
+
+Then, load the plugin in the PostgreSQL:
 
 .. code:: postgresql
     :linenos:
@@ -108,8 +150,8 @@ You can launch GART as a PostgreSQL plugin:
 
     SELECT * FROM gart_get_connection('123456');
 
-Run Dynamic Graph Analysis
-----------------------------
+Step 5: Run Dynamic Graph Analysis
+-------------------------------------
 
 GART can create a fresh snapshot of a graph on real-time updated relational data. Users can perform graph analytic processing on this snapshot.
 

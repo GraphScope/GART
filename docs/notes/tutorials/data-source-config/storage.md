@@ -2,9 +2,9 @@
 
 GART Storage can be used with user-defined data sources.
 
-In [README](../README.md), we describe the workflow of GART as the following steps:
+The workflow of GART is the following steps:
 
-![](images/arch.png)
+![](../../../images/arch.png)
 
 Users can directly input the data as `TxnLog` to the converter and provide an `RGMapping` file.
 

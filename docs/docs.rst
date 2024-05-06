@@ -38,7 +38,7 @@ GART: Graph Analysis on Relational Transactional Datasets
 
    ---
 
-   .. link-button:: tutorials/tutorials
+   .. link-button:: notes/tutorials/data-source-config
       :type: ref
       :text: Tutorials
       :classes: btn-block stretched-link
