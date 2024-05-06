@@ -8,7 +8,7 @@ Overview
 
 The following figure illustrates the architecture of GART.
 
-.. figure:: ../images/arch.png
+.. figure:: /images/arch.png
    :width: 100%
    :alt: Architecture of GART
 

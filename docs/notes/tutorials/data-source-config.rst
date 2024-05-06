@@ -6,9 +6,9 @@ Data Source Configuration
    :caption: TOC
    :hidden:
 
-   ./data-source-config/postgresql.rst
-   ./data-source-config/mysql.rst
-   ../storage.md
+   data-source-config/postgresql
+   data-source-config/mysql
+   data-source-config/storage
 
 
 GART supports different types of data sources for data model transformation to provide real-time graph analytic processing. Because of the need to keep track of data updates, some permissions need to be configured on the data sources.
@@ -19,7 +19,7 @@ In this section, we will introduce the configuration of the data sources support
    :header: text-center
    :column: col-lg-12 p-2
 
-   .. link-button:: ./data-source-config/postgresql
+   .. link-button:: data-source-config/postgresql
       :type: ref
       :text: PostgreSQL
       :classes: btn-block stretched-link
@@ -28,7 +28,7 @@ In this section, we will introduce the configuration of the data sources support
 
    ---
 
-   .. link-button:: ./data-source-config/mysql
+   .. link-button:: data-source-config/mysql
       :type: ref
       :text: MySQL
       :classes: btn-block stretched-link
@@ -37,7 +37,7 @@ In this section, we will introduce the configuration of the data sources support
 
    ---
 
-   .. link-button:: ../storage
+   .. link-button:: data-source-config/storage
       :type: ref
       :text: GART Storage
       :classes: btn-block stretched-link

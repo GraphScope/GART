@@ -11,7 +11,7 @@ GART is an in-memory system for real-time dynamic graph computation. GART can re
 GART provides a transparent data model conversion. During the use of GART, data changes from relational databases are converted into graph data updates based on user-defined model mapping rules (RGMapping).  GART provides a set of interfaces (``def_vetex``, ``def_edge``, ... ) for DBAs to define data model conversion rules, which can be compatible with SQL/PGQ DDL.
 The following figure gives an example of RGMapping.
 
-.. figure:: ../../images/rgmapping.png
+.. figure:: /images/rgmapping.png
     :width: 80%
     :alt: An overview of RGMapping in GART.
 
