@@ -2,8 +2,9 @@
 
 # Function to show usage
 show_usage() {
-  echo "Usage: $0 [path]"
+  echo "Usage: $0 [path] [role]"
   echo "If no path is specified, './_deps' will be used as the default directory."
+  echo "If no role is specified, dependencies required by all roles in GART will be installed."
 }
 
 # Function to create a directory if it doesn't exist
@@ -20,7 +21,7 @@ create_directory() {
   return 0
 }
 
-if [[ $# -gt 1 ]]; then
+if [[ $# -gt 2 ]]; then
     echo "Error: Too many arguments provided."
     show_usage
     exit 1 # Use 'return' instead of 'exit' when inside a function
@@ -34,6 +35,12 @@ TARGET_DIR="$1"
 if [[ -z "$TARGET_DIR" ]]; then
     echo "WARNING: No path provided, using default directory './_deps'."
     TARGET_DIR="./_deps"
+fi
+
+ROLE="$2"
+if [[ -z "$ROLE" ]]; then
+    echo "No role provided, installing all dependencies for GART."
+    ROLE="All"
 fi
 
 # Check for the --help flag before invoking main
@@ -59,8 +66,17 @@ sudo apt update
 
 sudo apt-get install -y build-essential cmake python3 python3-pip lsb-release wget
 sudo apt-get install -y etcd
-sudo apt-get install -y default-jdk
-sudo apt-get install -y libmsgpack-dev
+
+if [ "$ROLE" == "All" ]; then
+    if ! command -v javac &> /dev/null; then
+        echo "JDK not installed. Installing JDK..."
+        sudo apt-get install -y default-jdk
+    fi
+fi
+
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+    sudo apt-get install -y libmsgpack-dev
+fi
 
 # gflags and glog
 sudo apt-get install -y libgflags-dev libgoogle-glog-dev
@@ -71,6 +87,7 @@ sudo apt-get install -y libgrpc-dev \
         libgrpc++-dev \
         libprotobuf-dev \
         protobuf-compiler-grpc
+
 git clone https://github.com/microsoft/cpprestsdk.git
 cd cpprestsdk
 mkdir -p build && cd build
@@ -85,13 +102,15 @@ cmake ..
 make -j && sudo make install
 cd ../..
 
-# TBB
-git clone https://github.com/oneapi-src/oneTBB.git
-cd oneTBB
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DTBB_TEST=OFF
-make -j && sudo make install
-cd ../..
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+  # TBB
+  git clone https://github.com/oneapi-src/oneTBB.git
+  cd oneTBB
+  mkdir -p build && cd build
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DTBB_TEST=OFF
+  make -j && sudo make install
+  cd ../..
+fi
 
 # yaml-cpp
 git clone https://github.com/jbeder/yaml-cpp.git
@@ -102,12 +121,14 @@ make -j && sudo make install
 cd ../..
 
 # pybind11
-git clone https://github.com/pybind/pybind11.git
-cd pybind11
-mkdir -p build && cd build
-cmake .. -DPYBIND11_TEST=OFF
-make -j && sudo make install
-cd ../..
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+  git clone https://github.com/pybind/pybind11.git
+  cd pybind11
+  mkdir -p build && cd build
+  cmake .. -DPYBIND11_TEST=OFF
+  make -j && sudo make install
+  cd ../..
+fi
 
 pip3 install pyyaml
 
@@ -116,8 +137,9 @@ sudo apt-get install -y librdkafka-dev
 
 # Install sqlalchemy, pymysql, psycopg2
 # for psycopg2, you need to install libpq-dev
+
 sudo apt-get install -y libpq-dev
-pip3 install sqlalchemy pymysql psycopg2
+pip3 install sqlalchemy pymysql psycopg2 etcd3
 
 # vineyard
 # pip3 install vineyard
@@ -125,14 +147,10 @@ sudo apt-get install -y ca-certificates \
                 doxygen \
                 libboost-all-dev \
                 libcurl4-openssl-dev \
-                libgrpc-dev \
-                libgrpc++-dev \
                 libmpich-dev \
-                libprotobuf-dev \
                 libssl-dev \
                 libunwind-dev \
-                libz-dev \
-                protobuf-compiler-grpc
+                libz-dev
 
 wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
@@ -152,69 +170,83 @@ cd v6d
 git submodule update --init
 mkdir -p build && cd build
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64:/usr/local/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu
-cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF
-make -j && sudo make install
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_VINEYARD_IO=OFF -DBUILD_VINEYARD_PYTHON_BINDINGS=OFF
+  make -j && sudo make install
+fi
+
+if [ "$ROLE" == "Converter" ]; then
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_VINEYARD_SERVER=OFF -DBUILD_VINEYARD_PYTHON_BINDINGS=OFF -DBUILD_VINEYARD_BASIC=OFF -DBUILD_VINEYARD_IO=OFF -DBUILD_VINEYARD_GRAPH=OFF
+  make -j && sudo make install
+fi
 cd ../..
 
-# libgrape-lite
-git clone https://github.com/alibaba/libgrape-lite.git
-cd libgrape-lite
-mkdir -p build && cd build
-cmake .. -DBUILD_LIBGRAPELITE_TESTS=OFF
-make -j && sudo make install
-cd ../..
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+  # libgrape-lite
+  git clone https://github.com/alibaba/libgrape-lite.git
+  cd libgrape-lite
+  mkdir -p build && cd build
+  cmake .. -DBUILD_LIBGRAPELITE_TESTS=OFF
+  make -j && sudo make install
+  cd ../..
+fi
 
 # pgql-lang
 git clone https://github.com/oracle/pgql-lang.git
 (cd pgql-lang; sh install.sh)
 
-# rapidjson
-sudo apt-get install -y rapidjson-dev
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+  # rapidjson
+  sudo apt-get install -y rapidjson-dev
+fi
 
-# required python modules
-pip3 install etcd3 msgpack grpcio grpcio-tools networkx mypy-protobuf requests paramiko
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+  # required python modules
+  pip3 install msgpack grpcio grpcio-tools networkx mypy-protobuf requests paramiko
+fi
 
-# Kafka
-KAFKA_VERSION=3.7.0
-KAFKA_SACALE_VERSION=2.13
-KAFKA_PKG_NAME=kafka_$KAFKA_SACALE_VERSION-$KAFKA_VERSION
-wget https://dlcdn.apache.org/kafka/$KAFKA_VERSION/$KAFKA_PKG_NAME.tgz
-tar -xzf $KAFKA_PKG_NAME.tgz
-rm $KAFKA_PKG_NAME.tgz
-export KAFKA_HOME=`pwd`/$KAFKA_PKG_NAME
-export KAFKA_CONFIG=$KAFKA_HOME/config
-export KAFKA_PLUGIN=$KAFKA_HOME/connect
-export KAFKA_LOGS=$KAFKA_HOME/logs
-mkdir -p $KAFKA_PLUGIN  # we need to mkdir connect plugins for Kafka
-echo "delete.topic.enable=true" >> $KAFKA_CONFIG/server.properties
-#write config for kafka connect
-echo "plugin.path=$KAFKA_PLUGIN" >> $KAFKA_CONFIG/connect-standalone.properties
-mkdir -p $KAFKA_LOGS
-sudo chmod -R 774 $KAFKA_LOGS # we need to change the permission of logs for PostgreSQL Extension
+if [ "$ROLE" == "All" ]; then
+  # Kafka
+  KAFKA_VERSION=3.7.0
+  KAFKA_SACALE_VERSION=2.13
+  KAFKA_PKG_NAME=kafka_$KAFKA_SACALE_VERSION-$KAFKA_VERSION
+  wget https://dlcdn.apache.org/kafka/$KAFKA_VERSION/$KAFKA_PKG_NAME.tgz
+  tar -xzf $KAFKA_PKG_NAME.tgz
+  rm $KAFKA_PKG_NAME.tgz
+  export KAFKA_HOME=`pwd`/$KAFKA_PKG_NAME
+  export KAFKA_CONFIG=$KAFKA_HOME/config
+  export KAFKA_PLUGIN=$KAFKA_HOME/connect
+  export KAFKA_LOGS=$KAFKA_HOME/logs
+  mkdir -p $KAFKA_PLUGIN  # we need to mkdir connect plugins for Kafka
+  echo "delete.topic.enable=true" >> $KAFKA_CONFIG/server.properties
+  #write config for kafka connect
+  echo "plugin.path=$KAFKA_PLUGIN" >> $KAFKA_CONFIG/connect-standalone.properties
+  mkdir -p $KAFKA_LOGS
+  sudo chmod -R 774 $KAFKA_LOGS # we need to change the permission of logs for PostgreSQL Extension
 
-# Maxwell
-wget https://github.com/zendesk/maxwell/releases/download/v1.40.0/maxwell-1.40.0.tar.gz
-tar zxvf maxwell-1.40.0.tar.gz
-rm maxwell-1.40.0.tar.gz
-mv maxwell-1.40.0 maxwell
-export MAXWELL_HOME=`pwd`/maxwell
+  # Maxwell
+  wget https://github.com/zendesk/maxwell/releases/download/v1.40.0/maxwell-1.40.0.tar.gz
+  tar zxvf maxwell-1.40.0.tar.gz
+  rm maxwell-1.40.0.tar.gz
+  mv maxwell-1.40.0 maxwell
+  export MAXWELL_HOME=`pwd`/maxwell
 
-# Debezium
-DEBEZIUM_VERSION=2.5.2.Final
-# mysql connector
-wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/$DEBEZIUM_VERSION/debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
-tar zxvf debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
-rm debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
-mv debezium-connector-mysql/* $KAFKA_PLUGIN
-rm -rf debezium-connector-mysql
-#postgresql connector
-wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/$DEBEZIUM_VERSION/debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
-tar zxvf debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
-rm debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
-mv debezium-connector-postgres/* $KAFKA_PLUGIN
-rm -rf debezium-connector-postgres
-#link kafka connect plugins
-ln -s $KAFKA_PLUGIN/*.jar $KAFKA_HOME/libs/
+  # Debezium
+  DEBEZIUM_VERSION=2.5.2.Final
+  # mysql connector
+  wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/$DEBEZIUM_VERSION/debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
+  tar zxvf debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
+  rm debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
+  mv debezium-connector-mysql/* $KAFKA_PLUGIN
+  rm -rf debezium-connector-mysql
+  #postgresql connector
+  wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/$DEBEZIUM_VERSION/debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
+  tar zxvf debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
+  rm debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz
+  mv debezium-connector-postgres/* $KAFKA_PLUGIN
+  rm -rf debezium-connector-postgres
+  #link kafka connect plugins
+  ln -s $KAFKA_PLUGIN/*.jar $KAFKA_HOME/libs/
 
 COMM_CONFIG=$(cat << EOT
 database.server.id=1
@@ -280,3 +312,4 @@ listeners=PLAINTEXT://0.0.0.0:9092
 advertised.listeners=PLAINTEXT://localhost:9092
 
 EOT
+fi

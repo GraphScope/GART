@@ -15,12 +15,11 @@ spec:
     spec:
       containers:
       - name: converter
-        image: gart-env:latest
+        image: gart-converter:latest
         imagePullPolicy: IfNotPresent
         command: ["/bin/bash", "-c"]
         args:
         - |
-          /workspace/env_script.sh &&
           cd /workspace/gart/build &&
           ./gart \
           --db-host ${DB_HOST} \

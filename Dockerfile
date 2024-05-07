@@ -17,7 +17,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN if [ "$build_type" = "All" ]; then \
     apt-get update && apt-get install -y \
-    default-jdk \
     openssh-server \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /var/run/sshd; \
@@ -27,7 +26,7 @@ WORKDIR /workspace
 COPY . /workspace/gart
 
 WORKDIR /deps
-RUN /workspace/gart/scripts/install-deps.sh /deps
+RUN /workspace/gart/scripts/install-deps.sh /deps $build_type
 RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
@@ -40,8 +39,9 @@ RUN if [ "$build_type" = "All" ]; then \
     echo "export KAFKA_HOME=${KAFKA_DIR}" >> /etc/profile.d/env_path.sh; \
     echo "export MAXWELL_HOME=/deps/maxwell" >> /etc/profile.d/env_path.sh; \
     echo "source /etc/profile.d/env_path.sh" >> /workspace/env_script.sh; \
-    chmod ugo+x /workspace/env_script.sh; \
 fi
+
+RUN chmod ugo+x /workspace/env_script.sh
 
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION="python"
 
@@ -57,7 +57,20 @@ RUN if [ "$build_type" = "All" ]; then \
 fi
 
 
-RUN mkdir -p /workspace/gart/build && cd /workspace/gart/build && cmake .. -DADD_GAE_ENGINE=ON && make -j && sudo make install
+RUN mkdir -p /workspace/gart/build && cd /workspace/gart/build 
+WORKDIR /workspace/gart/build
+
+RUN bash -c "\
+    if [ \"$build_type\" = 'All' ]; then \
+      cmake .. -DADD_GAE_ENGINE=ON && make -j && sudo make install; \
+    elif [ \"$build_type\" = 'Converter' ]; then \
+      cmake .. -DADD_PGQL=OFF -DADD_VEGITO=OFF && make -j; \
+    elif [ \"$build_type\" = 'Writer' ]; then \
+      cmake .. -DADD_PGQL=OFF -DADD_CONVERTER=OFF && make -j; \
+    else \
+      echo 'Invalid build type specified'; exit 1; \
+    fi \
+    "
 
 WORKDIR /workspace
 RUN if [ "$build_type" = "All" ]; then \
