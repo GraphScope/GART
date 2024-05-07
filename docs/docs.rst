@@ -29,6 +29,15 @@ GART: Graph Analysis on Relational Transactional Datasets
 
    ---
 
+   .. link-button:: notes/design/architecture
+      :type: ref
+      :text: Design
+      :classes: btn-block stretched-link
+   ^^^^^^^^^^^^
+   Learn about the architecture and key concepts of GART.
+
+   ---
+
    .. link-button:: notes/deployment/deploy-local
       :type: ref
       :text: Deployment
@@ -68,8 +77,14 @@ Read the Paper
 
    notes/getting-started/introduction
    notes/getting-started/quick-start
-   notes/getting-started/architecture
-   notes/getting-started/key-concepts
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Design
+   :hidden:
+
+   notes/design/architecture
+   notes/design/key-concepts
 
 .. toctree::
    :maxdepth: 1

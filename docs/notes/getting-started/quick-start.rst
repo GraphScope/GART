@@ -190,50 +190,6 @@ GART also provides:
 
 - **Flexible data model mapping.** GART can support more data model mappings by RGMapping. Users can implement their own mapping rules by following the RGMapping interface.
 
-Learn more about key concepts of GART from the following user guides:
-
-.. panels::
-   :header: text-center
-   :column: col-lg-12 p-2
-
-   .. link-button:: architecture
-      :type: ref
-      :text: Architecture
-      :classes: btn-block stretched-link
-   ^^^^^^^^^^^^
-   Overview of GART.
-
-.. panels::
-   :header: text-center
-   :container: container-lg pb-4
-   :column: col-lg-4 col-md-4 col-sm-4 col-xs-12 p-2
-   :body: text-center
-
-   .. link-button:: key-concepts/rgmapping
-      :type: ref
-      :text: RGMapping
-      :classes: btn-block stretched-link
-
-   The design of RGMapping and the interface to use it.
-
-   ---
-
-   .. link-button:: key-concepts/graph-storage
-      :type: ref
-      :text: Dynamic Graph Storage
-      :classes: btn-block stretched-link
-
-   The design of the dynamic graph storage in GART.
-
-   ---
-
-   .. link-button:: key-concepts/graph-server
-      :type: ref
-      :text: Graph Server
-      :classes: btn-block stretched-link
-
-   The design of the graph server in GART.
-
 .. _trust the user: https://debezium.io/documentation/reference/stable/postgres-plugins.html#:~:text=pg_hba.conf%20%2C%20configuration%20file%20parameters%20settings
 
 .. _LDBC-SNB: https://ldbcouncil.org/benchmarks/snb/
