@@ -137,16 +137,47 @@ You need to install the PostgreSQL plugin by copying the shared library to the P
     gart-env$ make USE_PGXS=1 -j
     gart-env$ sudo make install
 
-Then, load the plugin in the PostgreSQL:
+To configure and utilize the GART extension within your PostgreSQL environment, you'll need to follow these steps.
+
+**1. Open the PostgreSQL Command Line Interface:**
+
+To enter commands into PostgreSQL, you need access to the PostgreSQL CLI. You can do this by opening a terminal on Unix-like systems or a command prompt on Windows, and running:
+
+.. code:: bash
+
+    # choose the `ldbc` database
+    sudo -u postgres psql -d ldbc
+
+    # or
+    psql -U postgres -d ldbc
+
+**2. Install the ``gart`` Extension:**
+
+After successfully logging in to your database, run the following command to create the ``gart`` extension:
 
 .. code:: postgresql
-    :linenos:
 
     CREATE EXTENSION gart;
 
+**3. Configure ``gart`` Extension:**
+
+Now set up the ``gart`` configuration using the following command:
+
+.. code:: postgresql
+
     SELECT * FROM gart_set_config('/workspace/gart/apps/pgx/gart-pgx-config-template.ini');
 
+**4. Load the LDBC-SNB schema:**
+
+.. code::
+
     \i /workspace/gart/vegito/test/schema/rgmapping-ldbc.sql
+
+**5. Establish a Connection Using ``gart``:**
+
+Finally, establish a connection using a specific identifier like so:
+
+.. code:: postgresql
 
     SELECT * FROM gart_get_connection('123456');
 

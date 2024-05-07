@@ -27,10 +27,17 @@ The PostgreSQL configuration file is in the directory ``/etc/postgresql/$PSQL_VE
     CREATE DATABASE ldbc;
     GRANT ALL ON DATABASE ldbc TO dbuser;
 
+3. Switch to the database ``ldbc`` and create the schema ``public``:
+
+.. code::
+
     \c ldbc
+
+.. code:: postgresql
+
     GRANT ALL ON SCHEMA public TO dbuser;
 
-3. Modify the configuration file ``/etc/postgresql/$PSQL_VERSION/main/pg_hba.conf`` to `trust the user`_ ``dbuser``:
+4. Modify the configuration file ``/etc/postgresql/$PSQL_VERSION/main/pg_hba.conf`` to `trust the user`_ ``dbuser``:
 
 .. code:: none
 
@@ -38,7 +45,7 @@ The PostgreSQL configuration file is in the directory ``/etc/postgresql/$PSQL_VE
     host    replication     dbuser  127.0.0.1/32            trust
     host    replication     dbuser  ::1/128                 trust
 
-4. Restart PostgreSQL:
+5. Restart PostgreSQL:
 
 .. code:: bash
 
