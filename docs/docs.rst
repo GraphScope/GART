@@ -77,6 +77,7 @@ Read the Paper
 
    notes/getting-started/introduction
    notes/getting-started/quick-start
+   notes/getting-started/use-cases
 
 .. toctree::
    :maxdepth: 1

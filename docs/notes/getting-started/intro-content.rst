@@ -12,6 +12,8 @@ There are two common architectures for graph data processing:
 .. figure:: /images/graph-arch.png
    :alt: Common architectures for graph data processing
 
+   Common architectures for graph data processing
+
 To do graph computation, relational database systems will provide some interface extensions, which are equivalent to a kind of syntactic sugar for graph processing, and the underlying still uses the relational model, e.g., `GraphScript`_ provided by SAP HANA, `SQL Graph`_ provided by SQL Server, `Apache AGE`_ as an extension for PostgreSQL.
 
 On the other hand, there is also the option of exporting the data as offline graph data for offline graph data analysis and processing on a graph processing system (`Neo4j`_, `GraphScope`_, ...).
