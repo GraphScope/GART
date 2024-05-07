@@ -12,7 +12,7 @@ GART: Graph Analysis on Relational Transactional Datasets
 
 |Discussion| |License| |USENIX|
 
-.. include:: notes/getting-started/intro-content
+.. include:: documentation/getting-started/intro-content
 
 ----------------
 
@@ -20,7 +20,7 @@ GART: Graph Analysis on Relational Transactional Datasets
    :header: text-center
    :column: col-lg-12 p-2
 
-   .. link-button:: notes/getting-started/quick-start
+   .. link-button:: documentation/getting-started/quick-start
       :type: ref
       :text: Getting Started
       :classes: btn-block stretched-link
@@ -29,7 +29,7 @@ GART: Graph Analysis on Relational Transactional Datasets
 
    ---
 
-   .. link-button:: notes/design/architecture
+   .. link-button:: documentation/design/architecture
       :type: ref
       :text: Design
       :classes: btn-block stretched-link
@@ -38,7 +38,7 @@ GART: Graph Analysis on Relational Transactional Datasets
 
    ---
 
-   .. link-button:: notes/deployment/deploy-local
+   .. link-button:: documentation/deployment/deploy-local
       :type: ref
       :text: Deployment
       :classes: btn-block stretched-link
@@ -47,7 +47,7 @@ GART: Graph Analysis on Relational Transactional Datasets
 
    ---
 
-   .. link-button:: notes/tutorials/data-source-config
+   .. link-button:: documentation/tutorials/data-source-config
       :type: ref
       :text: Tutorials
       :classes: btn-block stretched-link
@@ -75,32 +75,32 @@ Read the Paper
    :caption: Getting Started
    :hidden:
 
-   notes/getting-started/introduction
-   notes/getting-started/quick-start
-   notes/getting-started/use-cases
+   documentation/getting-started/introduction
+   documentation/getting-started/quick-start
+   documentation/getting-started/use-cases
 
 .. toctree::
    :maxdepth: 1
    :caption: Design
    :hidden:
 
-   notes/design/architecture
-   notes/design/key-concepts
+   documentation/design/architecture
+   documentation/design/key-concepts
 
 .. toctree::
    :maxdepth: 1
    :caption: Deployment
    :hidden:
 
-   notes/deployment/deploy-local
-   notes/deployment/deploy-cloud
+   documentation/deployment/deploy-local
+   documentation/deployment/deploy-cloud
 
 .. toctree::
    :maxdepth: 1
    :caption: Tutorials
    :hidden:
 
-   notes/tutorials/data-source-config
+   documentation/tutorials/data-source-config
 
 .. |Discussion| image:: https://img.shields.io/badge/Discuss-Ask%20Questions-blue?logo=GitHub
    :target: https://github.com/GraphScope/GART/issues

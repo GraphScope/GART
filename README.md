@@ -194,7 +194,7 @@ Currently, we have supported PostgreSQL and MySQL as the relational data source.
     ```
 
 #### User-defined Data Source
-Please refer to [Usage of GART Storage](./docs/notes/tutorials/data-source-config/storage.md).
+Please refer to [Usage of GART Storage](./docs/documentation/tutorials/data-source-config/storage.md).
 
 ### Configure Log Capturer
 
