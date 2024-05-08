@@ -173,6 +173,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64:/usr/loc
 if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
   cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_VINEYARD_IO=OFF -DBUILD_VINEYARD_PYTHON_BINDINGS=OFF
   make -j && sudo make install
+  strip --strip-unneeded /usr/local/lib/libvineyard_graph.so
 fi
 
 if [ "$ROLE" == "Converter" ]; then

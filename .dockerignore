@@ -133,6 +133,7 @@ core.*
 
 # GRIN header files
 interfaces/grin/include/
+interfaces/grin/build/
 
 # tmp directory
 tmp/
