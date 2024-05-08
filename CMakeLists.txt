@@ -125,3 +125,27 @@ add_custom_target(pyformat
         COMMAND python3 -m black ${CMAKE_SOURCE_DIR}
         COMMENT "Running black for python formats."
         VERBATIM)
+
+### make docs ###
+set(GART_DOC_SOURCE_DIR "${CMAKE_SOURCE_DIR}/docs")
+add_custom_target(gart-docs
+        COMMAND make html
+        WORKING_DIRECTORY ${GART_DOC_SOURCE_DIR}
+        COMMENT "Building documentation."
+        VERBATIM)
+
+### install PostgreSQL Extension ###
+# 设置插件的源码目录
+set(PGX_PLUGIN_SOURCE_DIR "${CMAKE_SOURCE_DIR}/apps/pgx")
+
+# 添加自定义目标pgx
+add_custom_target(pgx
+    COMMAND ${CMAKE_MAKE_PROGRAM} USE_PGXS=1 -j
+    WORKING_DIRECTORY ${PGX_PLUGIN_SOURCE_DIR}
+)
+
+add_custom_target(pgx-install
+    COMMAND sudo ${CMAKE_MAKE_PROGRAM} install
+    WORKING_DIRECTORY ${PGX_PLUGIN_SOURCE_DIR}
+    DEPENDS pgx # Enusre pgx target is built before installing
+)
