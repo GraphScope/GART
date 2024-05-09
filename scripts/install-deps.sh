@@ -314,3 +314,6 @@ advertised.listeners=PLAINTEXT://localhost:9092
 
 EOT
 fi
+
+rm -rf /deps/cpprestsdk /deps/etcd-cpp-apiv3 /deps/libgrape-lite /deps/oneTBB /deps/pgql-lang /deps/v6d /deps/yaml-cpp /deps/pybind11
+rm -rf /var/lib/apt/lists/*

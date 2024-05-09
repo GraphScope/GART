@@ -39,7 +39,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     db_type = args.db_type
-    
+
     kafka_server = args.kafka_endpoint
     kafka_port = kafka_server.split(":")[1]
 
@@ -97,9 +97,89 @@ if __name__ == "__main__":
                 vertex_table_names = [
                     vertex_type.get("dataSourceName") for vertex_type in vertex_types
                 ]
+
+                vertex_type_names = [
+                    vertex_type.get("type_name") for vertex_type in vertex_types
+                ]
+
+                # build a dict (vertex_type_name, vertex_table_name)
+                vertex_type_name_table_mapping = {
+                    vertex_type_name: vertex_table_name
+                    for vertex_type_name, vertex_table_name in zip(
+                        vertex_type_names, vertex_table_names
+                    )
+                }
+
                 edge_types = graph_schema.get("edgeMappings", {}).get("edge_types", [])
                 edge_table_names = [edge.get("dataSourceName") for edge in edge_types]
-                all_table_names = vertex_table_names + edge_table_names
+
+                src_names = [edge["type_pair"]["source_vertex"] for edge in edge_types]
+                dst_names = [
+                    edge["type_pair"]["destination_vertex"] for edge in edge_types
+                ]
+
+                all_table_names = []
+                both_vertex_edge_table_names = []
+                for vertex_table_name in vertex_table_names:
+                    if vertex_table_name not in edge_table_names:
+                        all_table_names.append(vertex_table_name)
+                    else:
+                        both_vertex_edge_table_names.append(vertex_table_name)
+
+                # build a dict (table_name, src/dst_type_names)
+                edge_table_src_dst_type_mapping = {}
+
+                for idx in range(len(edge_table_names)):
+                    edge_table_name = edge_table_names[idx]
+                    if edge_table_name not in both_vertex_edge_table_names:
+                        continue
+
+                    src_name = src_names[idx]
+                    dst_name = dst_names[idx]
+                    if vertex_type_name_table_mapping[src_name] != edge_table_name:
+                        if edge_table_name not in edge_table_src_dst_type_mapping:
+                            edge_table_src_dst_type_mapping[edge_table_name] = [
+                                src_name
+                            ]
+                        else:
+                            edge_table_src_dst_type_mapping[edge_table_name].append(
+                                src_name
+                            )
+                    if vertex_type_name_table_mapping[dst_name] != edge_table_name:
+                        if edge_table_name not in edge_table_src_dst_type_mapping:
+                            edge_table_src_dst_type_mapping[edge_table_name] = [
+                                dst_name
+                            ]
+                        else:
+                            edge_table_src_dst_type_mapping[edge_table_name].append(
+                                dst_name
+                            )
+
+                both_vertex_edge_table_placed = [0] * len(both_vertex_edge_table_names)
+                while True:
+                    if sum(both_vertex_edge_table_placed) == len(
+                        both_vertex_edge_table_names
+                    ):
+                        break
+                    for idx in range(len(both_vertex_edge_table_names)):
+                        if both_vertex_edge_table_placed[idx] == 1:
+                            continue
+                        edge_table_name = both_vertex_edge_table_names[idx]
+                        src_dst_type_names = edge_table_src_dst_type_mapping[
+                            edge_table_name
+                        ]
+                        if all(
+                            vertex_type_name_table_mapping[src_dst_type_name]
+                            in all_table_names
+                            for src_dst_type_name in src_dst_type_names
+                        ):
+                            all_table_names.append(edge_table_name)
+                            both_vertex_edge_table_placed[idx] = 1
+
+                for edge_table_name in edge_table_names:
+                    if edge_table_name not in all_table_names:
+                        all_table_names.append(edge_table_name)
+
                 db_name = args.db_name
                 if db_type == "postgresql":
                     db_name = "public"

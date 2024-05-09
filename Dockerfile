@@ -27,7 +27,6 @@ COPY . /workspace/gart
 
 WORKDIR /deps
 RUN /workspace/gart/scripts/install-deps.sh /deps $build_type
-RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
 RUN touch env_script.sh
@@ -76,9 +75,6 @@ WORKDIR /workspace
 RUN if [ "$build_type" = "All" ]; then \
     git clone https://github.com/GraphScope/gstest.git; \
 fi 
-
-# clean up
-RUN rm -rf /deps/cpprestsdk /deps/etcd-cpp-apiv3 /deps/libgrape-lite /deps/oneTBB /deps/pgql-lang /deps/v6d /deps/yaml-cpp /deps/pybind11
 
 CMD ["/bin/bash", "-c", ". /workspace/env_script.sh && /bin/bash"]
 
