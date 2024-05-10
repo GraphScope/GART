@@ -63,7 +63,7 @@ spec:
           - name: ETCD_PREFIX
             value: "gart_meta_"
           - name: SUBGRAPH_NUM
-            value: "1"
+            value: "2"
           - name: ENABLE_BULKLOAD
             value: "1" 
           

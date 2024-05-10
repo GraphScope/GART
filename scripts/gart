@@ -4,7 +4,7 @@ KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
 ####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,role:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,help -- "$@")
+VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,subgraph-id:,role:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,help -- "$@")
 if [[ $? -ne 0 ]]; then
     exit 1;
 fi
@@ -29,6 +29,7 @@ start_slot=
 num_slot=
 rg_from_etcd=0
 k8s_mode="no"
+subgraph_id=0
 
 set_port=false
 eval set -- "$VALID_ARGS"
@@ -93,6 +94,10 @@ while [ : ]; do
         ;;
          --subgraph-num)
         subgraph_num=$2
+        shift 2
+        ;;
+         --subgraph-id)
+        subgraph_id=$2
         shift 2
         ;;
          --role)
@@ -505,7 +510,7 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
 fi
 
 ####################### Writer (VEGITO) #######################
-if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
+if [[ "$role" == "all" ]] || { [[ "$role" == "writer" ]] && [[ "$k8s_mode" == "no" ]]; }; then
     WRITER_HOME=./vegito
 
     echo "Start Writer"
@@ -517,6 +522,19 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
         --subgraph_num $subgraph_num --subgraph_id $i &
         pids["Vegito-$i"]=$!
     done
+fi
+
+if [ "$role" == "writer" ] && [ "$k8s_mode" == "yes" ]; then
+    WRITER_HOME=./vegito
+
+    echo "Start Writer $subgraph_id"
+
+    
+    $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
+    --etcd_endpoint $etcd_endpoint --meta_prefix $etcd_prefix \
+    --kafka_broker_list $kafka_server \
+    --subgraph_num $subgraph_num --subgraph_id $subgraph_id &
+    pids["Vegito"]=$!
 fi
 
 echo "Process IDs:"

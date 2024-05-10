@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: writer-deployment
+  name: writer-statefulset
   namespace: gart
 spec:
-  replicas: 1
+  serviceName: "writer"
+  replicas: 2
   selector:
     matchLabels:
       app: writer
@@ -34,6 +35,7 @@ spec:
           --etcd-prefix ${ETCD_PREFIX} \
           --kafka-server ${KAFKA_SERVER} \
           --subgraph-num ${SUBGRAPH_NUM} \
+          --subgraph-id $((${HOSTNAME##*-} + 0)) \
           --enable-bulkload ${ENABLE_BULKLOAD} \
           --rg-from-etcd 1 \
           --k8s-mode yes \
@@ -63,7 +65,7 @@ spec:
           - name: ETCD_PREFIX
             value: "gart_meta_"
           - name: SUBGRAPH_NUM
-            value: "1"
+            value: "2"
           - name: ENABLE_BULKLOAD
             value: "1" 
           
