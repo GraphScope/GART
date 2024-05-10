@@ -135,10 +135,8 @@ add_custom_target(gart-docs
         VERBATIM)
 
 ### install PostgreSQL Extension ###
-# 设置插件的源码目录
 set(PGX_PLUGIN_SOURCE_DIR "${CMAKE_SOURCE_DIR}/apps/pgx")
 
-# 添加自定义目标pgx
 add_custom_target(pgx
     COMMAND ${CMAKE_MAKE_PROGRAM} USE_PGXS=1 -j
     WORKING_DIRECTORY ${PGX_PLUGIN_SOURCE_DIR}
