@@ -93,13 +93,7 @@ jobs:
                                   wget
 
           # install python packages for codegen, and io adaptors
-          sudo pip3 install -U "Pygments>=2.4.1"
-          sudo pip3 install -U "sphinx>=7.1.2"
-          sudo pip3 install -U sphinx-copybutton
-          sudo pip3 install -U sphinx-panels
-          sudo pip3 install -U sphinxemoji
-          sudo pip3 install -U sphinxext-opengraph
-          sudo pip3 install -U breathe
+          sudo pip3 install -r requirements-dev.txt
 
       - name: Generate docs
         run: |
