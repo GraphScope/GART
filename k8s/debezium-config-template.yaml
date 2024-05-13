@@ -9,7 +9,7 @@ data:
       "name": "debezium-connector-mysql",
       "config": {
         "connector.class": "io.debezium.connector.mysql.MySqlConnector",
-        "database.hostname": "172.29.161.155",
+        "database.hostname": "127.0.0.1",
         "database.port": "3306",
         "database.user": "dbuser",
         "database.password": "123456",
@@ -29,7 +29,7 @@ data:
         "transforms.ReplaceField.exclude": "ts_ms,transaction",
         "key.converter": "org.apache.kafka.connect.json.JsonConverter",
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-        "key.converter.schemas.enabl": "false",
+        "key.converter.schemas.enable": "false",
         "value.converter.schemas.enable": "false",
         "database.history.kafka.bootstrap.servers": "kafka-service:9092",
         "schema.history.internal.kafka.bootstrap.servers": "kafka-service:9092"

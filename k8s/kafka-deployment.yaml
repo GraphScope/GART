@@ -4,7 +4,7 @@ metadata:
   name: kafka-broker1
   namespace: gart
 spec:
-  selector:  # This selector must match the template labels
+  selector:
     matchLabels:
       app: kafka
   template:

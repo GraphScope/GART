@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gart-config
+  namespace: gart
+data:
+  DB_HOST: "127.0.0.1"
+  DB_PORT: "3306"
+  DB_USER: "dbuser"
+  DB_PASSWORD: "123456"
+  DB_TYPE: "mysql"
+  DB_NAME: "ldbc"
+  V6D_SOCKET: "/tmp/v6d.sock"
+  V6D_SIZE: "750G"
+  ETCD_PREFIX: "gart_meta_"
+  ENABLE_BULKLOAD: "1"
+  SUBGRAPH_NUM: "2"

@@ -30,41 +30,17 @@ spec:
           --password ${DB_PASSWORD} \
           --v6d-sock ${V6D_SOCKET} \
           --v6d-size ${V6D_SIZE} \
-          --etcd-endpoint ${ETCD_ENDPOINT} \
+          --etcd-endpoint etcd-service:2379 \
           --etcd-prefix ${ETCD_PREFIX} \
-          --kafka-server ${KAFKA_SERVER} \
+          --kafka-server kafka-service:9092 \
           --subgraph-num ${SUBGRAPH_NUM} \
           --enable-bulkload ${ENABLE_BULKLOAD} \
           --rg-from-etcd 1 \
           --k8s-mode yes \
           --role converter &&
           sleep infinity
-        env:
-          - name: KAFKA_SERVER
-            value: "kafka-service:9092"
-          - name: DB_HOST
-            value: "127.0.0.1"
-          - name: DB_PORT
-            value: "3306"
-          - name: DB_USER
-            value: "dbuser"
-          - name: DB_PASSWORD
-            value: "123456"
-          - name: DB_TYPE
-            value: "mysql"
-          - name: DB_NAME
-            value: "ldbc"
-          - name: V6D_SOCKET
-            value: "/tmp/v6d.sock"
-          - name: V6D_SIZE
-            value: "750G"
-          - name: ETCD_ENDPOINT
-            value: "etcd-service:2379"
-          - name: ETCD_PREFIX
-            value: "gart_meta_"
-          - name: SUBGRAPH_NUM
-            value: "2"
-          - name: ENABLE_BULKLOAD
-            value: "1" 
+        envFrom:
+        - configMapRef:
+            name: gart-config
           
         

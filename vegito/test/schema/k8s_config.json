@@ -1,0 +1,14 @@
+{
+    "db_host": "127.0.0.1",
+    "db_port": 3306,
+    "db_type": "mysql",
+    "db_name": "ldbc",
+    "db_user": "dbuser",
+    "db_password": "123456",
+    "rgmapping_file": "/path/to/rgmapping-ldbc.yaml",
+    "v6d_socket": "/tmp/ldbc.sock",
+    "v6d_size": "750G",
+    "etcd_prefix": "gart_meta_",
+    "total_subgraph_num": 2,
+    "enable_bulkload": 1
+}
