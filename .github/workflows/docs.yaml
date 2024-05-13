@@ -99,6 +99,7 @@ jobs:
           sudo pip3 install -U sphinx-panels
           sudo pip3 install -U sphinxemoji
           sudo pip3 install -U sphinxext-opengraph
+          sudo pip3 install -U breathe
 
       - name: Generate docs
         run: |
