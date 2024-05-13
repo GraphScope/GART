@@ -3,8 +3,8 @@
 Architecture
 ============
 
-Overview
---------
+Overview and Workflow
+------------------------
 
 The following figure illustrates the architecture of GART.
 
@@ -14,24 +14,24 @@ The following figure illustrates the architecture of GART.
 
    Architecture of GART
 
-Workflow
-^^^^^^^^^^^
+To convert data logs from different *relational* data sources and update the real-time graph data, GART is architecturally divided into three main layers:
 
-In order to convert data logs from different *relational* data sources and update the real-time graph data, GART is architecturally divided into three main layers:
-
-- **Pre-processing layer (Data Source)**:
+Pre-processing
+^^^^^^^^^^^^^^
 
 The capturer is responsible for capturing logs from different data sources (need to get the corresponding permissions of the data source, such as slave permissions in MySQL), and Parser needs to convert the binlog format of different data sources into a unified format of transactional log (TxnLog).
 It is responsible for converting primary keys in relational data to IDs of vertices or edges in the graph.
 It also ensures that in cases where logs may be out of order (distributed logs, streaming data, etc.), the logs are put in order for data recovery, ensuring the consistency of the graph data.
 
-- **Model Mapping Layer (RGMapping)**:
+RGMapping: Model Mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The log capturer in GART is responsible for capturing logs from the data source.
 GART needs to get the corresponding permissions of the data source of the data source through user configuration, such as slave permissions in MySQL.
 The log parser then converts the *binlog* format of the different data sources into the transaction log (TxnLog) format in the prescribed format.
 
-- **Dynamic graph storage layer (Storage)**:
+Dynamic Graph Storage
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is responsible for updating the graphics data and providing a unified graphics storage interface to the upper-tier graphics computing engine.
 The interface provided by the graph store to the execution engine is encapsulated through the `GRIN`_ library.

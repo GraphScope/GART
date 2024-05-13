@@ -1,0 +1,123 @@
+# Copyright 2020-2023 Alibaba Group Holding Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: GART Docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_C_COMPILER_LAUNCHER: ccache
+  CMAKE_CXX_COMPILER_LAUNCHER: ccache
+
+jobs:
+  docs:
+    runs-on: ${{ matrix.os }}
+    if: ${{ github.repository == 'GraphScope/GART' }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          submodules: true
+          fetch-depth: 0
+
+      - name: Generate Summary for Submodules
+        run: |
+          git submodule > git-modules.txt
+          cat git-modules.txt
+
+      - name: Cache for cccahe
+        uses: actions/cache@v3
+        with:
+          path: ~/.ccache
+          key: ${{ matrix.os }}-docs-cache-${{ hashFiles('**/git-modules.txt') }}
+          restore-keys: |
+            ${{ matrix.os }}-docs-cache-
+
+      - name: Install Dependencies for Linux
+        if: runner.os == 'Linux'
+        run: |
+          export PATH=/usr/lib/ccache:$PATH
+
+          sudo apt update -y
+          sudo apt-get install -y ca-certificates \
+                                  ccache \
+                                  cmake \
+                                  doxygen \
+                                  libboost-all-dev \
+                                  libcurl4-openssl-dev \
+                                  libgflags-dev \
+                                  libgoogle-glog-dev \
+                                  libgrpc-dev \
+                                  libgrpc++-dev \
+                                  libmpich-dev \
+                                  libprotobuf-dev \
+                                  libssl-dev \
+                                  libunwind-dev \
+                                  libz-dev \
+                                  protobuf-compiler-grpc \
+                                  python3-pip \
+                                  openjdk-11-jdk \
+                                  default-jdk \
+                                  docker  \
+                                  wget
+
+          # install python packages for codegen, and io adaptors
+          sudo pip3 install -U "Pygments>=2.4.1"
+          sudo pip3 install -U "sphinx>=7.1.2"
+          sudo pip3 install -U sphinx-copybutton
+          sudo pip3 install -U sphinx-panels
+          sudo pip3 install -U sphinxemoji
+          sudo pip3 install -U sphinxext-opengraph
+
+      - name: Generate docs
+        run: |
+          make -C docs html
+
+      - name: Commit Doc
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'GraphScope/GART' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git branch -D gh-pages || true
+          git checkout --orphan gh-pages
+          shopt -s extglob
+          rm -rf !(docs)
+          rm -rf .github .clang-format .gitattributes .gitmodules .gitignore
+          mv docs/_build/html/* ./
+          mv docs/_build/html/.nojekyll ./
+          rm -rf docs
+          git add -A
+          git commit -m "Generate latest docs on CI, from commit ${{ github.sha }}."
+          git push -f origin gh-pages
