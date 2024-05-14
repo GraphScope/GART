@@ -65,4 +65,4 @@ GART provides a Python script to launch GART on a cluster easily. You can launch
 
 .. code:: bash
 
-./path/to/GART/scripts/distributed_deployment.py --config_file /path/to/user_config.json
+    ./path/to/GART/scripts/distributed_deployment.py --config_file /path/to/user_config.json
