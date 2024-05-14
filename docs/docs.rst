@@ -93,7 +93,8 @@ Read the Paper
    :hidden:
 
    documentation/deployment/deploy-local
-   documentation/deployment/deploy-cloud
+   documentation/deployment/deploy-distributed
+   documentation/deployment/deploy-k8s
 
 .. toctree::
    :maxdepth: 1

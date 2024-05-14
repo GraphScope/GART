@@ -213,7 +213,9 @@ Next steps
 
 GART also provides:
 
-- **Distributed deployment based on Kubernetes.** GART can be deployed on a distributed environment based on Kubernetes.
+- **Distributed deployment.** GART allows users to provide a simple configuration file, and it will run on a cluster.
+
+- **Deployment based on Kubernetes.**  GART can be deployed on Kubernetes.
 
 - **Support for more data sources.** GART can support more data sources, such as MySQL, and PostgreSQL. Users can also implement their own data source by following the data source interface.
 
