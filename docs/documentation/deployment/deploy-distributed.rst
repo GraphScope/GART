@@ -34,6 +34,7 @@ Then you can create a configuration file in the following format:
         "etcd_prefix": "gart_meta_",
         // entrypoint of the kafka server
         "kafka_server": "127.0.0.1:9092",
+        // total number of subgraphs
         "total_subgraph_num": 2,
         // path to the GART build folder
         "gart_bin_path": "/path/to/GART/build/",
