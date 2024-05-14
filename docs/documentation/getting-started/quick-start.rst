@@ -3,6 +3,8 @@
 Quick Start
 ===============
 
+This section gives an experiential process of GART where we provide containers for deployment. Users can also try local deployment, we will give local deployment and usage tips.
+
 Step 0: Get GART
 -------------------
 
@@ -19,7 +21,10 @@ Step 1: Start the GART Environment
 --------------------------------------
 
 We provide a Docker image that contains all the dependencies and configurations needed to run GART. The Docker image is based on Ubuntu 20.04.
-If you would like to install it locally, please refer to the `detailed deployment tutorial <../deployment/deploy-local.html>`_ we provide.
+
+.. tip::
+
+    If you would like to install it locally, please refer to the `detailed deployment tutorial <../deployment/deploy-local.html>`_ we provide.
 
 To build the Docker container called ``gart-env`` and enter the container:
 

@@ -6,9 +6,7 @@ RGMapping
 What is RGMapping?
 -------------------
 
-GART is an in-memory system for real-time dynamic graph computation. GART can reuse the execution engines of existing OLTP and graph-specific systems. It synchronizes the updated data through transactional logs from OLTP components. GART can be used with relational OLTP systems such as MySQL and PostgreSQL. It follows the architecture of GART.
-
-GART provides a transparent data model conversion. During the use of GART, data changes from relational databases are converted into graph data updates based on user-defined model mapping rules (RGMapping).  GART provides a set of interfaces (``def_vetex``, ``def_edge``, ... ) for DBAs to define data model conversion rules, which can be compatible with SQL/PGQ DDL.
+GART provides a transparent data model conversion. During the use of GART, data changes from relational databases are converted into graph data updates based on user-defined model mapping rules (RGMapping).  GART allows DBAs to define data model conversion rules in multiple ways.
 The following figure gives an example of RGMapping.
 
 .. figure:: /images/rgmapping.png

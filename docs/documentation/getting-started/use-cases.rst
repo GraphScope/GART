@@ -15,7 +15,7 @@ As shown in the figure below, in a business database (such as MySQL), user infor
 
 Whenever there are new users and new follows (as well as modifications and deletions), these will be executed on this database. To perform friend recommendations for users, it is necessary to apply the PageRank graph computation algorithm on this dataset. However, operating graphs directly in a relational database is inefficient, resulting in a large number of join operations. GART captures the changes in data by fetching the binary log (binlog) from MySQL.
 
-During the use of GART, changes in data from the relational database are transformed into updates of graph data according to the user-defined model mapping rules. In this way, the graph data can reflect changes in real-time, and dynamic graph storage provided by GART allows the use of the graph computing engine (GraphScope) to perform PageRank calculations, similar to how a static graph is accessed.
+During the use of GART, changes in data from the relational database are transformed into updates of graph data according to the user-defined model mapping rules. In this way, the graph data can reflect changes in real time, and dynamic graph storage provided by GART allows the use of the graph computing engine (GraphScope) to perform PageRank calculations, similar to how a static graph is accessed.
 
 These model transformation rules include the user's definition of the graph structure and how information in the relational data is mapped to the vertices, edges, and attributes in the graph.
 
