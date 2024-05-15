@@ -85,7 +85,8 @@ Read the Paper
    :hidden:
 
    documentation/design/architecture
-   documentation/design/key-concepts
+   documentation/design/rgmapping
+   documentation/design/graph-storage
 
 .. toctree::
    :maxdepth: 1

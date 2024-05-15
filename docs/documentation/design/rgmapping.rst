@@ -64,34 +64,34 @@ YAML
     method: append
     enableRowStore: false
     vertexMappings:
-    vertex_types:
-    - type_name: person
-        dataSourceName: PERSON
-        idFieldName: p_id
-        mappings:
-        - property: p_id
-        dataField:
-            name: P_ID
-        - property: p_name
-        dataField:
-            name: NAME
+        vertex_types:
+            - type_name: person
+              dataSourceName: PERSON
+              idFieldName: p_id
+              mappings:
+                - property: p_id
+                  dataField:
+                      name: P_ID
+                - property: p_name
+                  dataField:
+                      name: NAME
     edgeMappings:
-    edge_types:
-    - type_pair:
-        edge: transfer
-        source_vertex: person
-        destination_vertex: person
-        dataSourceName: TRANSFER
-        sourceVertexMappings:
-        - dataField:
-            name: P_ID1
-        destinationVertexMappings:
-        - dataField:
-            name: P_ID2
-        dataFieldMappings:
-        - property: t_date
-        dataField:
-            name: T_DATA
+        edge_types:
+            - type_pair:
+                edge: transfer
+                source_vertex: person
+                destination_vertex: person
+              dataSourceName: TRANSFER
+              sourceVertexMappings:
+                - dataField:
+                      name: P_ID1
+              destinationVertexMappings:
+                - dataField:
+                      name: P_ID2
+              dataFieldMappings:
+                - property: t_date
+                  dataField:
+                      name: T_DATA
 
 The RGMapping rule can also be written in `YAML`_. It defines the graph schema for the graph named ``ldbc``. It specifies the mapping between the vertices, edges and their properties in the graph and the columns in the table.
 
