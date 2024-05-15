@@ -250,7 +250,7 @@ if [ "$ROLE" == "All" ]; then
   mv debezium-connector-postgres/* $KAFKA_PLUGIN
   rm -rf debezium-connector-postgres
   #link kafka connect plugins
-  ln -s $KAFKA_PLUGIN/*.jar $KAFKA_HOME/libs/
+  ln -s $KAFKA_PLUGIN/*.jar $KAFKA_HOME/libs/ || true
 
 COMM_CONFIG=$(cat << EOT
 database.server.id=1

@@ -103,6 +103,7 @@ Read the Paper
    :hidden:
 
    documentation/tutorials/data-source-config
+   documentation/tutorials/log-capturer-config
 
 .. |Discussion| image:: https://img.shields.io/badge/Discuss-Ask%20Questions-blue?logo=GitHub
    :target: https://github.com/GraphScope/GART/issues
