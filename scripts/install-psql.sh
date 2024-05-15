@@ -27,7 +27,8 @@ max_wal_senders = 1  # larger than 0
 
 EOT
 
-sudo apt-get install postgresql-server-dev-$PSQL_VERSION
+# Install the development package for the PostgreSQL Extension:
+sudo apt-get install -y postgresql-server-dev-$PSQL_VERSION
 
 sudo /etc/init.d/postgresql restart
 

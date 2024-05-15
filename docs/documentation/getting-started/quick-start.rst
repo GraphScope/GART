@@ -32,8 +32,8 @@ To build the Docker container called ``gart-env`` and enter the container:
     :linenos:
 
     $ cd gart
-    $ docker build . -t gart-env
-    $ docker run -it gart-env
+    $ sudo docker build . -t gart-env
+    $ sudo docker run -it gart-env
 
 After entering the Docker container, build GART:
 

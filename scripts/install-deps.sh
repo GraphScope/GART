@@ -130,7 +130,8 @@ if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
   cd ../..
 fi
 
-pip3 install pyyaml
+# YAML for Python
+pip3 install pyyaml libclang
 
 # librdkafka
 sudo apt-get install -y librdkafka-dev
@@ -141,8 +142,13 @@ sudo apt-get install -y librdkafka-dev
 sudo apt-get install -y libpq-dev
 pip3 install sqlalchemy pymysql psycopg2 etcd3
 
+# Install requirements-dev.txt for docs
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+REQUIREMENTS_FILE="$SCRIPT_DIR/../requirements-dev.txt"
+
+pip3 install -r $REQUIREMENTS_FILE
+
 # vineyard
-# pip3 install vineyard
 sudo apt-get install -y ca-certificates \
                 doxygen \
                 libboost-all-dev \
@@ -161,9 +167,6 @@ sudo apt install -y libarrow-dev=14.0.1-1 \
                     libarrow-flight-dev=14.0.1-1 \
                     libgandiva-dev=14.0.1-1 \
                     libparquet-dev=14.0.1-1
-
-
-pip3 install libclang
 
 git clone https://github.com/v6d-io/v6d
 cd v6d

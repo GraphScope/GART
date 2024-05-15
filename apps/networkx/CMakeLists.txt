@@ -13,6 +13,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 
 set(DEFAULT_BUILD_TYPE "Release")
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif ()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g2")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
@@ -125,7 +131,7 @@ set_source_files_properties(${PROTO_SOURCES} PROPERTIES COMPILE_FLAGS -Wno-array
 add_executable(gart_networkx_server server/graph_server.cc ${PROTO_SOURCES} ${SOURCES})
 target_link_libraries(gart_networkx_server ${GRPC_LIBRARIES} ${Protobuf_LIBRARIES} ${MPI_CXX_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
 
-add_custom_target(create_pybind_build_dir 
+add_custom_target(create_pybind_build_dir
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/python_bindings/build"
     )
 
@@ -144,7 +150,7 @@ add_custom_target(install_python
         )
 
 
-add_custom_target(create_build_dir 
+add_custom_target(create_build_dir
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/../analytical_engine/build"
     )
 
