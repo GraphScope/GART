@@ -1,3 +1,22 @@
+# Copyright 2020-2023 Alibaba Group Holding Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Example:
+# docker rm gart0; docker image rm gart
+# docker build -t gart .
+# docker run -it --name gart0 gart
+
 FROM ubuntu:22.04
 
 # Define build type
@@ -12,14 +31,12 @@ RUN apt-get update && apt-get install -y \
   python3 \
   python3-pip \
   vim \
-  wget \
-  && rm -rf /var/lib/apt/lists/*
+  wget
 
 RUN if [ "$build_type" = "All" ]; then \
-  apt-get update && apt-get install -y \
-  openssh-server \
-  && rm -rf /var/lib/apt/lists/* \
-  && mkdir -p /var/run/sshd; \
+  apt-get install -y openssh-server \
+  && touch /workspace/env_script.sh \
+  && mkdir -p /var/run/sshd \
   && echo "mkdir -p /root/.ssh && ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa" >> /workspace/env_script.sh \
   && echo "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys" >> /workspace/env_script.sh \
   && echo "service ssh start" >> /workspace/env_script.sh; \
@@ -29,7 +46,7 @@ RUN if [ "$build_type" = "All" ]; then \
 RUN if [ "$build_type" = "All" ]; then \
   /workspace/gart/scripts/install-psql.sh \
   && /workspace/gart/scripts/install-mysql.sh \
-  && echo "service mysql start" >> /workspace/env_script.sh \
+  && echo "service mysql start" >> /workspace/env_script.sh; \
   fi
 
 WORKDIR /workspace
@@ -38,8 +55,8 @@ COPY . /workspace/gart
 WORKDIR /deps
 RUN /workspace/gart/scripts/install-deps.sh /deps $build_type
 
-WORKDIR /workspace
-RUN touch env_script.sh
+# Complete the installation
+RUN rm -rf /var/lib/apt/lists/*
 
 # Find the Kafka directory and write its path to a file
 RUN if [ "$build_type" = "All" ]; then \
@@ -75,7 +92,3 @@ RUN if [ "$build_type" = "All" ]; then \
   fi
 
 CMD ["/bin/bash", "-c", ". /workspace/env_script.sh && /bin/bash"]
-
-# Example:
-# docker rm gart0; docker image rm gart; docker build -t gart .
-# docker run -it --name gart0 gart

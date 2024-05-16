@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Copyright 2020-2023 Alibaba Group Holding Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 KAFKA_HOME=$KAFKA_HOME
 MAXWELL_HOME=$MAXWELL_HOME
 
@@ -194,7 +208,7 @@ if [ "$role" != "all" ] && [ "$role" != "capturer" ] && [ "$role" != "converter"
 fi
 
 # check environment variables
-if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then   
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     unset=false
     if [ -n "$KAFKA_HOME" ]; then
         echo "    KAFKA_HOME: $KAFKA_HOME"
@@ -233,7 +247,7 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
         elif [ ! -n "$start_slot" ] && [ -n "$num_slot" ]; then
             echo "Please set both start-slot and num-slot"
             exit 1
-        else 
+        else
             echo "    Run Writer as given slot info"
         fi
     fi
@@ -289,7 +303,7 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
         if [ ! -e "$v6d_sock" ] || [ ! -S "$v6d_sock" ]; then
             echo "Failed to launch vineyardd"
             exit 1
-        fi 
+        fi
     fi
 fi
 
@@ -355,7 +369,7 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
 
     echo "Start Zookeeper and Kafka"
     $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
-    # pids["Zookeeper"]=$! 
+    # pids["Zookeeper"]=$!
     sleep 20
     # sleep 20 to avoid https://stackoverflow.com/questions/39759071/error-while-starting-kafka-broker
 
@@ -368,7 +382,7 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
 
     $KAFKA_BIN/kafka-server-start.sh -daemon $KAFKA_CONFIG/server.properties
 
-    # pids["Kafka"]=$! 
+    # pids["Kafka"]=$!
     sleep 8
     # check if Kafka is started
     if grep -q "started" $KAFKA_LOG; then
@@ -376,7 +390,7 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     else
         echo "Kafka log does not indicate successful startup. Please check $KAFKA_LOG for details. Wait for retrying."
     fi
-    
+
 
     # check Kafka failure
     for i in {1..3}
@@ -506,7 +520,7 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
     fi
     pids["Converter"]=$!
     sleep 2
-    
+
 fi
 
 ####################### Writer (VEGITO) #######################
@@ -529,7 +543,7 @@ if [ "$role" == "writer" ] && [ "$k8s_mode" == "yes" ]; then
 
     echo "Start Writer $subgraph_id"
 
-    
+
     $WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
     --etcd_endpoint $etcd_endpoint --meta_prefix $etcd_prefix \
     --kafka_broker_list $kafka_server \
