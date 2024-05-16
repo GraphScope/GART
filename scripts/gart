@@ -87,7 +87,7 @@ while [ : ]; do
         shift 2
         ;;
          --db-type)
-        db_type=$2
+        db_type=$(echo "$2" | awk '{print tolower($0)}')
         shift 2
         ;;
         --enable-bulkload)

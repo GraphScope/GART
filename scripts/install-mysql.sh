@@ -18,4 +18,9 @@ binlog-do-db=ldbc  # change the name to your database
 
 EOT
 
+# For some reason, the mysql user's home directory is not set correctly
+# see https://stackoverflow.com/questions/62987154/mysql-wont-start-error-su-warning-cannot-change-directory-to-nonexistent
+sudo usermod -d /var/lib/mysql/ mysql
+
+# Restart mysql to apply the changes
 sudo service mysql restart
