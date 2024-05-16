@@ -19,7 +19,7 @@
 
 FROM ubuntu:22.04
 
-# Define build type
+# Define build type (All, Converter, Writer)
 ARG build_type=All
 
 RUN apt-get update && apt-get install -y \
@@ -35,12 +35,15 @@ RUN apt-get update && apt-get install -y \
 
 RUN if [ "$build_type" = "All" ]; then \
   apt-get install -y openssh-server \
+  && mkdir -p /var/run/sshd /workspace \
   && touch /workspace/env_script.sh \
-  && mkdir -p /var/run/sshd \
   && echo "mkdir -p /root/.ssh && ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa" >> /workspace/env_script.sh \
   && echo "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys" >> /workspace/env_script.sh \
   && echo "service ssh start" >> /workspace/env_script.sh; \
   fi
+
+WORKDIR /workspace
+COPY . /workspace/gart
 
 # Install PostgreSQL and MySQL
 RUN if [ "$build_type" = "All" ]; then \
@@ -48,9 +51,6 @@ RUN if [ "$build_type" = "All" ]; then \
   && /workspace/gart/scripts/install-mysql.sh \
   && echo "service mysql start" >> /workspace/env_script.sh; \
   fi
-
-WORKDIR /workspace
-COPY . /workspace/gart
 
 WORKDIR /deps
 RUN /workspace/gart/scripts/install-deps.sh /deps $build_type
