@@ -1,6 +1,8 @@
 # GART: Graph Analysis on Relational Transactional Datasets
 
-GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing.
+GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing. It is designed to bridge the gap between relational OLTP and graph-based OLAP.
+
+Please to refer [GART documentation](https://graphscope.github.io/GART/documentation/getting-started/quick-start.html) for more details.
 
 ## Table of Contents
 - [What is GART](#what-is-gart)
@@ -11,19 +13,14 @@ GART is a graph extension that includes an interface to an RDBMS and a dynamic g
 - [Getting Started](#getting-started)
     - [Requirements](#requirements)
     - [Run GART](#run-gart)
-    - [Mirco Demo: Graph Analysis on Data from MySQL](#mirco-demo-graph-analysis-on-data-from-mysql)
 - [License](#license)
 - [Publications](#publications)
 
 ## What is GART
 
-Hybrid transactional/analytical processing (HTAP) is a new trend that processes OLTP and online analytical processing (OLAP) in the same system simultaneously.
-Analogously, we term dynamic graph analysis processing workloads on transactional datasets as hybrid transactional/graph-analytical processing (**HTGAP**).
-GART reuses transaction logs to replay graph data online for freshness instead of offline data migration for freshness and performance.
+We would like to be able to use graph data flexibly without re-altering the existing relational database system. Moreover, users do not need to be aware of the storage of graph data and the synchronization of data between relational data and graph data for freshness. To fulfill this requirement, we build GART, an in-memory system for real-time online graph computation.
 
-GART captures the data changes in different (relational) data sources (e.g., database systems, streaming systems) and converts them to graph data according to user-defined rules.
-
-In detail, the workflow of GART can be broken into the following steps:
+GART uses transactional logs (e.g., binlog) to capture data changes, then recovers data changes into fresh graph data in real time. GART integrates graph computation engines (e.g. GraphScope, NetworkX) to support efficient graph computation processing. The workflow of GART is shown below.
 
 ![](docs/images/arch.png)
 
@@ -97,54 +94,6 @@ Users can invoke GART's functions in the database client, such as RGMapping defi
 ### Run GART
 
 Please to refer our [documentation](https://graphscope.github.io/GART/documentation/getting-started/quick-start.html).
-
-### Mirco Demo: Graph Analysis on Data from MySQL
-- Topology of the demo
-![demo-topo](docs/images/demo-topo.png)
-
-- Download test datasets (use `ldbc_sample`)
-    ```
-    git clone https://github.com/GraphScope/gstest.git
-    ```
-
-- Initialize database schema in MySQL (need a user with necessary privileges)
-    ```
-    pip3 install pymysql cryptography
-
-    cd gart
-    ./apps/rdbms/init_schema.py --user [username] --password [password] --db ldbc
-    ```
-
-    If you have no such user, you can create the user (called `test`) before running `init_schema.py` like:
-    ```
-    CREATE USER test IDENTIFIED BY '123456';
-    GRANT SELECT, CREATE, DROP, INSERT, DELETE ON ldbc.* TO test;
-    ```
-
-    MySQL and its dependencies can be installed by [scripts/install-mysql.sh](scripts/install-mysql.sh).
-
-- Lanch GART
-    ```
-    export KAFKA_HOME=/path/to/kafka
-
-    cd build
-    ./gart --user dbuser --password 123456 --db-name ldbc --v6d-sock /tmp/ldbc.sock --etcd-endpoint 127.0.0.1:23760
-    ```
-
-- Start transactional data insertion
-    ```
-    ./apps/rdbms/insert_db.py --user [username] --password [password] --db ldbc --data_dir /path/to/gstest/ldbc_sample
-    ```
-
-- Start graph analysis
-    ```
-    cd /path_to_gart/apps/analytical_engine/
-    mkdir -p build
-    cd build
-    cmake ..
-    make -j
-    .run_gart_app --etcd_endpoint 127.0.0.1:23760
-    ```
 
 ## License
 
