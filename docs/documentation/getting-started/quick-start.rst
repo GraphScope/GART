@@ -13,7 +13,7 @@ We provide a Docker image that contains all the dependencies and configurations 
 
 .. tip::
 
-    If you would like to install it locally, please refer to the `detailed deployment tutorial <../deployment/deploy-local.html>`_ we provide.
+    If you would like to install it locally, please refer to the `detailed deployment tutorial <../deployment/env-setup.html>`_ we provide.
 
 To build the Docker container called ``gart-env`` and enter the container:
 

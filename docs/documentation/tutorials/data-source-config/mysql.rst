@@ -7,6 +7,7 @@ Modify Configuration Files
 MySQL configuration file ``/etc/mysql/my.cnf``:
 
 .. code:: ini
+    :linenos:
 
     [mysqld]
     # Prefix of the binlogs

@@ -362,7 +362,7 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     KAFKA_CONFIG=$KAFKA_HOME/config
     KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
 
-    # write kafka config according to graph schema
+    # write Kafka config according to graph schema
     ./scripts/update_kafka_config_file.py --etcd_endpoint $etcd_endpoint --etcd_prefix $etcd_prefix \
                                         --kafka_endpoint $kafka_server --db_type $db_type --db_host $db_host --db_port $db_port \
                                         --db_user $user --db_password $password --db_name $db_name --enable_bulkload $enable_bulkload

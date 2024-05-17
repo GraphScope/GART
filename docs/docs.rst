@@ -38,7 +38,7 @@ GART: Graph Analysis on Relational Transactional Datasets
 
    ---
 
-   .. link-button:: documentation/deployment/deploy-local
+   .. link-button:: documentation/deployment/env-setup
       :type: ref
       :text: Deployment
       :classes: btn-block stretched-link
@@ -93,7 +93,7 @@ Read the Paper
    :caption: Deployment
    :hidden:
 
-   documentation/deployment/deploy-local
+   documentation/deployment/env-setup
    documentation/deployment/deploy-distributed
    documentation/deployment/deploy-k8s
 

@@ -1,6 +1,4 @@
-.. _deploy-local:
-
-Local Deployment
+Environment Setup
 ====================
 
 This section describes how to deploy GART locally.

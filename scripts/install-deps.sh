@@ -298,9 +298,9 @@ database.hostname=<postgresql host, e.g., 127.0.0.1>
 database.port=<postgresql port, e.g., 5432>
 database.user=<postgresql user>
 database.password=<postgresql password>
-database.dbname=<which databse is needed to capture, e.g., ldbc>
+database.dbname=<which database is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
-snapshot.mode=<if enable buldload, set as "always", otherwise set as "never">
+snapshot.mode=<if enable bulkload, set as "always", otherwise set as "never">
 
 slot.name=debezium
 plugin.name=pgoutput
