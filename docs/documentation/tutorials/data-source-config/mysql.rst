@@ -12,7 +12,7 @@ MySQL configuration file ``/etc/mysql/my.cnf``:
     # Prefix of the binlogs
     log-bin=mysql-bin
 
-    # Binlog Format: row-based logging, only maxwell needs binlog_format=row
+    # Binlog Format: row-based logging, only Maxwell needs binlog_format=row
     binlog_format=row
     binlog_row_image=full
 
