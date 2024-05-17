@@ -1,4 +1,4 @@
-gart_meta_gart_rg_mapping_yaml
+# gart_meta_gart_rg_mapping_yaml
 graph: LDBC
 loadingConfig:
   dataSource: mysql
@@ -462,4 +462,3 @@ edgeMappings:
     - property: wa_work_from
       dataField:
         name: wa_work_from
-
