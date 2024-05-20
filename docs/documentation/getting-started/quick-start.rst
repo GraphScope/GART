@@ -41,7 +41,7 @@ Step 2: Configure Data Source
 
 Since GART needs the log access privileges of the data source to access the data logs in real time, it is necessary to configure the privileges at the data source first.
 
-In the Docker image we provided, the basic configuration of the database has been done and there is a user as ``dbuser`` with default password as ``123456``.
+In the Docker image we provided, the basic configuration of the database has been done and there is a user as ``dbuser`` with a default password as ``123456``.
 
 .. tip::
 
@@ -173,7 +173,7 @@ The graph analysis can be launched by the following command:
     gart-env$ cd /workspace/gart/
     gart-env$ mpirun -n 1 ./apps/run_gart_app --read_epoch 0 --app_name sssp --sssp_source_label organisation --sssp_source_oid 0 --sssp_weight_name wa_work_from
 
-Next steps
+Next Steps
 ----------
 
 GART also provides:

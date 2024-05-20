@@ -31,6 +31,9 @@ Interface of RGMapping
 
 In the fraud detection example, the user can define rules for RGMapping as described below. This model transformation rule includes the user's definition of the graph structure and how the information in the relational data is mapped to the vertices, edges, and attributes in the graph.
 
+.. tip::
+    See `this section <../tutorials/rgmapping-config.html>`_ for a specific semantic explanation.
+
 SQL/PGQ
 ^^^^^^^
 

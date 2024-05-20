@@ -106,6 +106,7 @@ Read the Paper
    documentation/tutorials/log-capturer-config
    documentation/tutorials/rgmapping-config
    documentation/tutorials/run-gap
+   documentation/tutorials/pgx
 
 .. |Discussion| image:: https://img.shields.io/badge/Discuss-Ask%20Questions-blue?logo=GitHub
    :target: https://github.com/GraphScope/GART/issues
