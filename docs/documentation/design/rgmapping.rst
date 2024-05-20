@@ -61,7 +61,6 @@ YAML
     !!gart.pgql.GSchema
     graph: ldbc
     database: ldbc
-    method: append
     enableRowStore: false
     vertexMappings:
         vertex_types:
@@ -94,6 +93,7 @@ YAML
                       name: T_DATA
 
 The RGMapping rule can also be written in `YAML`_. It defines the graph schema for the graph named ``ldbc``. It specifies the mapping between the vertices, edges and their properties in the graph and the columns in the table.
+The examples we give are equivalent conversion conditions to those described above for SQL/PGQ.
 
 .. _SQL/PGQ: https://pgql-lang.org/
 .. _YAML: https://yaml.org/
