@@ -1,0 +1,46 @@
+{{- $debezium_service_name := include "gart.debezium.fullname" . }}
+{{- $debezium_service_port := int .Values.debezium.containerPort }}
+{{- $debezium_service := printf "%s:%d" $debezium_service_name $debezium_service_port }}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "gart.debezium.jobName" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  template:
+    spec:
+      containers:
+      - name: debezium-connector-launch
+        image: {{ include "gart.curl.image" . }}
+        imagePullPolicy: {{ .Values.curl.image.pullPolicy | quote }}
+        command: ["/bin/sh"]
+        args:
+        - "-c"
+        - >
+          echo "Applying Debezium connector configuration...";
+          CONFIG=$(cat /etc/debezium-connector-config/mysql-connector.json);
+          while : ; do
+            HTTP_STATUS=$(curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
+              --data "$CONFIG" \
+              http://{{ $debezium_service }}/connectors/ \
+              -o /dev/null -w '%{http_code}')
+            
+            if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 201 ]; then
+              echo "Debezium service is ready."
+              break
+            else
+              echo "Debezium service not ready, waiting... Status: $HTTP_STATUS"
+              sleep 5
+            fi
+          done
+        volumeMounts:
+        - name: config-volume
+          mountPath: "/etc/debezium-connector-config"
+      restartPolicy: OnFailure
+      volumes:
+      - name: config-volume
+        configMap:
+          name: {{ include "gart.debezium.configmapName" . }}
+
+

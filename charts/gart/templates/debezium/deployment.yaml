@@ -1,0 +1,45 @@
+{{- $kafka_service_name := .Values.kafka.fullnameOverride }}
+{{- $kafka_service_port := int .Values.kafka.service.ports.client }}
+{{- $kafka_service := printf "%s:%d" $kafka_service_name $kafka_service_port }}
+{{- $kafka_service := quote $kafka_service }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gart.debezium.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.debezium.replicaCount }}
+  selector:
+    matchLabels:
+      app: debezium-mysql-connect
+  template:
+    metadata:
+      labels:
+        app: debezium-mysql-connect
+    spec:
+      containers:
+      - name: debezium-mysql-connect
+        image: {{ include "gart.debezium.image" . }}
+        imagePullPolicy: {{ .Values.debezium.image.pullPolicy | quote }}
+        env:
+        - name: BOOTSTRAP_SERVERS
+          value: {{ $kafka_service }}  
+        - name: GROUP_ID
+          value: "1"
+        - name: CONFIG_STORAGE_TOPIC
+          value: "debezium-connect-configs"
+        - name: OFFSET_STORAGE_TOPIC
+          value: "debezium-connect-offsets"
+        - name: STATUS_STORAGE_TOPIC
+          value: "debezium-connect-status"
+        ports:
+        - containerPort: {{ .Values.debezium.containerPort }}
+        volumeMounts:
+        - name: debezium-config-volume
+          mountPath: /kafka/connect/debezium-config
+      volumes:
+      - name: debezium-config-volume
+        configMap:
+          name: {{ include "gart.debezium.configmapName" . }}
+

@@ -139,5 +139,11 @@ tmp/
 apps/networkx/client/python/dist/
 apps/networkx/python_bindings/build/
 
+charts/gart/charts/
+
+k8s/debezium-config.yaml
+k8s/gart-config.yaml
+k8s/writer-deployment.yaml
+
 *.zip
 _deps/

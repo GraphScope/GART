@@ -1,0 +1,59 @@
+{{- $kafka_service_name := .Values.kafka.fullnameOverride }}
+{{- $kafka_service_port := int .Values.kafka.service.ports.client }}
+{{- $kafka_service := printf "%s:%d" $kafka_service_name $kafka_service_port }}
+
+{{- $etcd_service_name := .Values.etcd.fullnameOverride }}
+{{- $etcd_service_port := int .Values.etcd.containerPorts.client }}
+{{- $etcd_service := printf "%s:%d" $etcd_service_name $etcd_service_port }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "gart.writer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: "writer"
+  replicas: {{ .Values.dataconfig.subgraphNum }}
+  selector:
+    matchLabels:
+      app: writer
+  template:
+    metadata:
+      labels:
+        app: writer
+    spec:
+      containers:
+      - name: writer
+        image: {{ include "gart.writer.image" . }}
+        imagePullPolicy: {{ .Values.writer.image.pullPolicy | quote }}
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          cd /workspace/gart/build &&
+          until nc -z {{ $kafka_service_name }} {{ $kafka_service_port }}; do echo waiting for kafka; sleep 5; done &&
+          until nc -z {{ $etcd_service_name }} {{ $etcd_service_port }}; do echo waiting for etcd; sleep 5; done && 
+          sleep 100 &&
+          ./gart \
+          --db-host ${DB_HOST} \
+          --db-port ${DB_PORT} \
+          --db-name ${DB_NAME} \
+          --db-type ${DB_TYPE} \
+          --user ${DB_USER} \
+          --password ${DB_PASSWORD} \
+          --v6d-sock ${V6D_SOCKET} \
+          --v6d-size ${V6D_SIZE} \
+          --etcd-endpoint {{ $etcd_service }} \
+          --etcd-prefix ${ETCD_PREFIX} \
+          --kafka-server {{ $kafka_service }} \
+          --subgraph-num ${SUBGRAPH_NUM} \
+          --subgraph-id $((${HOSTNAME##*-} + 0)) \
+          --enable-bulkload ${ENABLE_BULKLOAD} \
+          --rg-from-etcd 1 \
+          --k8s-mode yes \
+          --role writer &&
+          sleep infinity
+        envFrom:
+        - configMapRef:
+            name: {{ include "gart.configmapName" . }}
+          
+        

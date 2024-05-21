@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gart.configmapName" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  DB_HOST: {{ .Values.dataconfig.dbHost | quote }}
+  DB_PORT: {{ .Values.dataconfig.dbPort | quote }}
+  DB_USER: {{ .Values.dataconfig.dbUser | quote }}
+  DB_PASSWORD: {{ .Values.dataconfig.dbPassword | quote }}
+  DB_TYPE: {{ .Values.dataconfig.dbType | quote }}
+  DB_NAME: {{ .Values.dataconfig.dbName | quote }}
+  V6D_SOCKET: {{ .Values.dataconfig.v6dSocket | quote }}
+  V6D_SIZE: {{ .Values.dataconfig.v6dSize | quote }}
+  ETCD_PREFIX: {{ .Values.dataconfig.etcdPrefix | quote }}
+  ENABLE_BULKLOAD: {{ .Values.dataconfig.enableBulkload | quote }}
+  SUBGRAPH_NUM: {{ .Values.dataconfig.subgraphNum | quote }}

@@ -23,20 +23,25 @@ FROM ubuntu:22.04
 ARG build_type=All
 
 RUN apt-get update && apt-get install -y \
-  build-essential \
-  cmake \
-  git \
-  lsb-release \
-  sudo \
-  python3 \
-  python3-pip \
-  vim \
-  wget
+    build-essential \
+    cmake \
+    git \
+    lsb-release \
+    sudo \
+    python3 \
+    python3-pip \
+    vim \
+    wget \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN touch /workspace/env_script.sh
 
 RUN if [ "$build_type" = "All" ]; then \
-  apt-get install -y openssh-server \
-  && mkdir -p /var/run/sshd /workspace \
-  && touch /workspace/env_script.sh \
+  apt-get update && apt-get install -y \
+  openssh-server \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /var/run/sshd; \
   && echo "mkdir -p /root/.ssh && ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa" >> /workspace/env_script.sh \
   && echo "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys" >> /workspace/env_script.sh \
   && echo "service ssh start" >> /workspace/env_script.sh; \
@@ -54,9 +59,6 @@ RUN if [ "$build_type" = "All" ]; then \
 
 WORKDIR /deps
 RUN /workspace/gart/scripts/install-deps.sh /deps $build_type
-
-# Complete the installation
-RUN rm -rf /var/lib/apt/lists/*
 
 # Find the Kafka directory and write its path to a file
 RUN if [ "$build_type" = "All" ]; then \

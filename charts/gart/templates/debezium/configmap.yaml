@@ -1,0 +1,42 @@
+{{- $kafka_service_name := .Values.kafka.fullnameOverride }}
+{{- $kafka_service_port := int .Values.kafka.service.ports.client }}
+{{- $kafka_service := printf "%s:%d" $kafka_service_name $kafka_service_port }}
+{{- $kafka_service := quote $kafka_service }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gart.debezium.configmapName" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  mysql-connector.json: |-
+    {
+      "name": "debezium-connector-mysql",
+      "config": {
+        "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+        "database.hostname": {{ .Values.dataconfig.dbHost | quote }},
+        "database.port": {{ .Values.dataconfig.dbPort | quote }},
+        "database.user": {{ .Values.dataconfig.dbUser | quote }},
+        "database.password": {{ .Values.dataconfig.dbPassword | quote }},
+        "database.include.list": {{ .Values.dataconfig.dbName | quote }},
+        "table.include.list": "ldbc.organisation,ldbc.place,ldbc.tag,ldbc.tagclass,ldbc.person,ldbc.comment,ldbc.post,ldbc.forum,ldbc.org_islocationin,ldbc.ispartof,ldbc.issubclassof,ldbc.hastype,ldbc.comment_hascreator,ldbc.comment_hastag,ldbc.comment_islocationin,ldbc.replyof_comment,ldbc.replyof_post,ldbc.post_hascreator,ldbc.post_hastag,ldbc.post_islocationin,ldbc.forum_containerof,ldbc.forum_hasmoderator,ldbc.forum_hastag,ldbc.person_hasinterest,ldbc.person_islocationin,ldbc.forum_hasmember,ldbc.knows,ldbc.likes_comment,ldbc.likes_post,ldbc.studyat,ldbc.workat",
+        "snapshot.mode": "initial",
+        "database.server.id": "1", 
+        "include.schema.changes": "false",
+        "tombstones.on.delete": "false",
+        "topic.prefix": "fullfillment",
+        "schema.history.internal.kafka.topic": "schemahistory.fullfillment",
+        "transforms": "Combine,ReplaceField",
+        "transforms.Combine.type": "io.debezium.transforms.ByLogicalTableRouter",
+        "transforms.Combine.topic.regex": "(.*)",
+        "transforms.Combine.topic.replacement": "binlog",
+        "transforms.ReplaceField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.ReplaceField.exclude": "ts_ms,transaction",
+        "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "key.converter.schemas.enable": "false",
+        "value.converter.schemas.enable": "false",
+        "database.history.kafka.bootstrap.servers": {{ $kafka_service }},
+        "schema.history.internal.kafka.bootstrap.servers": {{ $kafka_service }}
+      }
+    }

@@ -1,0 +1,22 @@
+annotations:
+  category: Database
+  licenses: Apache-2.0
+apiVersion: v2
+appVersion: 1.16.0
+name: gart
+description: Graph Analysis on Relational Transactional Datasets
+home: https://github.com/graphscope/gart
+type: application
+version: 0.1.0
+maintainers:
+- name: GraphScope
+  url: https://github.com/graphscope
+
+
+dependencies:
+- name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: "*"
+- name: etcd
+  repository: https://charts.bitnami.com/bitnami
+  version: "*"
