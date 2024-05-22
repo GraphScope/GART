@@ -6,7 +6,7 @@ GART supports different approaches for graph analysis. The following sections de
 Graph Analysis with GAE
 ------------------------
 
-The Graph Analysis Engine (GAE) is a graph analysis framework that provides a set of graph algorithms for analyzing large-scale graphs. GAE is implemented in C++ and provides a Python interface for running graph algorithms on graphs stored in the GART format. The GAE library is included in the GART distribution and can be found in the `gae` directory.
+`GAE <https://graphscope.io/docs/analytical_engine/builtin_algorithms>`_ is a graph analysis framework that provides a set of graph algorithms for analyzing large-scale graphs. GAE is implemented in C++ and provides a Python interface for running graph algorithms on graphs stored in the GART format.
 
 After running the GART server, you can run graph analysis using the GAE library by ``mpirun`` command.
 

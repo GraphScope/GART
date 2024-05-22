@@ -63,7 +63,7 @@ GART: Graph Analysis on Relational Transactional Datasets
    ^^^^^^^^^^^^
    Get involved and become part of the GART community.
 
-Read the Paper
+Our Paper
 --------------
 
 - Sijie Shen, Zihang Yao, Lin Shi, Lei Wang, Longbin Lai, Qian Tao, Li Su, Rong Chen, Wenyuan Yu, Haibo Chen, Binyu Zang, Jingren Zhou.
