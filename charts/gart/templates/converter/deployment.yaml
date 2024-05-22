@@ -31,7 +31,6 @@ spec:
           cd /workspace/gart/build &&
           until nc -z {{ $kafka_service_name }} {{ $kafka_service_port }}; do echo waiting for kafka; sleep 5; done &&
           until nc -z {{ $etcd_service_name }} {{ $etcd_service_port }}; do echo waiting for etcd; sleep 5; done && 
-          sleep 60 &&
           ./gart \
           --db-host ${DB_HOST} \
           --db-port ${DB_PORT} \

@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 import yaml
 import etcd3
 from urllib.parse import urlparse
+import time
 
 
 def get_parser():
@@ -62,7 +63,18 @@ def extract_schema(
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
     if len(rgmapping_file) == 0:
         rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml"
-        rg_mapping_str = etcd_client.get(rg_mapping_key)[0].decode("utf-8")
+        while True:
+            try:
+                rg_mapping_str, _ = etcd_client.get(rg_mapping_key)
+                if rg_mapping_str is not None:
+                    rg_mapping_str = rg_mapping_str.decode("utf-8")
+                    break
+            except Exception as e:
+                print(f"Error accessing etcd: {e}.")
+                sys.exit(1)
+            time.sleep(5)
+
+        # rg_mapping_str = etcd_client.get(rg_mapping_key)[0].decode("utf-8")
         config = yaml.load(rg_mapping_str, Loader=GSchemaLoader)
     else:
         with open(rgmapping_file, "r", encoding="UTF-8") as f:
@@ -114,7 +126,17 @@ def produce_graph_schema(schema, rgmapping_file, etcd_endpoint, etcd_prefix):
     }
     if len(rgmapping_file) == 0:
         rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml"
-        rg_mapping_str = etcd_client.get(rg_mapping_key)[0].decode("utf-8")
+        while True:
+            try:
+                rg_mapping_str, _ = etcd_client.get(rg_mapping_key)
+                if rg_mapping_str is not None:
+                    rg_mapping_str = rg_mapping_str.decode("utf-8")
+                    break
+            except Exception as e:
+                print(f"Error accessing etcd: {e}")
+                sys.exit(1)
+            time.sleep(5)
+        # rg_mapping_str = etcd_client.get(rg_mapping_key)[0].decode("utf-8")
         config = yaml.load(rg_mapping_str, Loader=GSchemaLoader)
     else:
         with open(rgmapping_file, "r", encoding="UTF-8") as f:

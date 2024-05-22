@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <stdio.h>
+#include <unistd.h>
 
 #include <fstream>
 #include <string>
@@ -72,21 +73,43 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
       std::make_shared<etcd::Client>(etcd_endpoint);
 
   std::string rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml";
-  etcd::Response response = etcd_client->get(rg_mapping_key).get();
-  if (!response.is_ok()) {
-    LOG(ERROR) << "RGMapping file get failed.";
-    return gart::Status::GraphSchemaConfigError();
+  std::string rg_mapping_str;
+  etcd::Response response;
+  while (true) {
+    try {
+      response = etcd_client->get(rg_mapping_key).get();
+      if (!response.is_ok()) {
+        std::cout << "Key '" << rg_mapping_key << "' not found. Retrying..."
+                  << std::endl;
+      } else {
+        rg_mapping_str = response.value().as_string();
+        break;
+      }
+    } catch (std::exception& e) {
+      std::cout << "Error accessing etcd: " << e.what() << ". Retrying..."
+                << std::endl;
+    }
+    sleep(5);
   }
-  std::string rg_mapping_str = response.value().as_string();
 
   std::string table_schema_key = etcd_prefix + "gart_table_schema";
-  response = etcd_client->get(table_schema_key).get();
-  if (!response.is_ok()) {
-    LOG(ERROR) << "Table schema file get failed.";
-    return gart::Status::TableConfigError();
+  std::string table_schema_str;
+  while (true) {
+    try {
+      response = etcd_client->get(table_schema_key).get();
+      if (!response.is_ok()) {
+        std::cout << "Key '" << table_schema_key << "' not found. Retrying..."
+                  << std::endl;
+      } else {
+        table_schema_str = response.value().as_string();
+        break;
+      }
+    } catch (std::exception& e) {
+      std::cout << "Error accessing etcd: " << e.what() << ". Retrying..."
+                << std::endl;
+    }
+    sleep(5);
   }
-
-  std::string table_schema_str = response.value().as_string();
 
   YAML::Node config;
   try {
