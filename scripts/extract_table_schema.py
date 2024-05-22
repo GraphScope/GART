@@ -73,8 +73,6 @@ def extract_schema(
                 print(f"Error accessing etcd: {e}.")
                 sys.exit(1)
             time.sleep(5)
-
-        # rg_mapping_str = etcd_client.get(rg_mapping_key)[0].decode("utf-8")
         config = yaml.load(rg_mapping_str, Loader=GSchemaLoader)
     else:
         with open(rgmapping_file, "r", encoding="UTF-8") as f:
@@ -136,7 +134,6 @@ def produce_graph_schema(schema, rgmapping_file, etcd_endpoint, etcd_prefix):
                 print(f"Error accessing etcd: {e}")
                 sys.exit(1)
             time.sleep(5)
-        # rg_mapping_str = etcd_client.get(rg_mapping_key)[0].decode("utf-8")
         config = yaml.load(rg_mapping_str, Loader=GSchemaLoader)
     else:
         with open(rgmapping_file, "r", encoding="UTF-8") as f:

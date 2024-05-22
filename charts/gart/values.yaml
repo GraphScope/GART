@@ -4,12 +4,6 @@
 
 replicaCount: 1
 
-image:
-  repository: nginx
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
-
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
@@ -141,6 +135,10 @@ etcd:
   persistence:
     enabled: false
   fullnameOverride: "gart-release-etcd"
+  livenessProbe:
+    initialDelaySeconds: 10
+  readinessProbe:
+    initialDelaySeconds: 10
 
 # debezium config
 debezium:
