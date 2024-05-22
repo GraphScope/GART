@@ -23,6 +23,28 @@ The capturer is responsible for capturing logs from different data sources (need
 It is responsible for converting primary keys in relational data to IDs of vertices or edges in the graph.
 It also ensures that in cases where logs may be out of order (distributed logs, streaming data, etc.), the logs are put in order for data recovery, ensuring the consistency of the graph data.
 
+GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use `Debezium`_ as the log capture. The sample format of an inserted tuple of TxnLog is as follows (Debezium style, only necessary information):
+
+.. code-block:: json
+
+    {
+    "before": null,
+    "after": {
+        "org_id": "0",
+        "org_type": "company",
+        "org_name": "Kam_Air",
+        "org_url": "http://dbpedia.org/resource/Kam_Air"
+    },
+    "source": {
+        "ts_ms": 1689159703811,
+        "db": "ldbc",
+        "table": "organisation"
+    },
+    "op": "c"
+  }
+
+This sample records the log that inserts a tuple of ``organisation``. The ``before`` field is null, indicating that this is an insert operation. The ``after`` field records the inserted tuple. The ``source`` field records the source of the log, including the timestamp, database, and table. The ``op`` field records the operation type.
+
 RGMapping: Model Mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -73,3 +95,4 @@ Users can invoke GART's functions in the database client, such as RGMapping defi
 .. _RGMappings: https://github.com/GraphScope/GART/blob/main/vegito/test/schema/rgmapping-ldbc.sql
 .. _Vineyard: https://v6d.io/
 .. _SQL/PGQ: https://pgql-lang.org/
+.. _Debezium: https://debezium.io/

@@ -13,7 +13,7 @@ Requirements
 - `librdkafka`_
 - `Vineyard`_
 - `Apache Kafka`_
-- `Debezium`_ (preferred) or `Maxwell`_
+- `Debezium`_
 
 
 Install Dependencies
@@ -47,5 +47,4 @@ Compile and Install GART
 .. _Vineyard: https://github.com/v6d-io/v6d
 .. _Apache Kafka: https://kafka.apache.org/quickstart
 .. _Debezium: https://github.com/debezium/debezium
-.. _Maxwell: https://github.com/zendesk/maxwell
 .. _scripts/install-deps.sh: https://github.com/GraphScope/GART/blob/main/scripts/install-deps.sh

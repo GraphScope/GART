@@ -25,7 +25,7 @@ GART uses transactional logs (e.g., binlog) to capture data changes, then recove
 ![](docs/images/arch.png)
 
 - **1. Preprocess (Capture & Parser)**:
-GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use [Debezium](https://debezium.io/) (for MySQL, PostgreSQL, ...) or [Maxwell](https://github.com/zendesk/maxwell) (only for MySQL) as the log capture.
+GART captures data changes from data sources by logs (e.g., Binlogs in SQL systems). Then, it parsers these logs into a recognized format, called as TxnLog. Currently, we use [Debezium](https://debezium.io/) (for MySQL, PostgreSQL, ...) as the log capture.
 
     The sample format of an inserted tuple of TxnLog is as follows (Debezium style, only necessary information):
   ```
@@ -89,7 +89,7 @@ Users can invoke GART's functions in the database client, such as RGMapping defi
 - [librdkafka](https://github.com/confluentinc/librdkafka)
 - [Vineyard](https://github.com/v6d-io/v6d)
 - [Apach Kafka](https://kafka.apache.org/quickstart)
-- [Debezium](https://github.com/debezium/debezium) (preferred) or [Maxwell](https://github.com/zendesk/maxwell)
+- [Debezium](https://github.com/debezium/debezium)
 
 ### Run GART
 

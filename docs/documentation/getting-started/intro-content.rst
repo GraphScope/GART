@@ -20,9 +20,9 @@ On the other hand, there is also the option of exporting the data as offline gra
 
 An ideal model for processing online graph data needs to fulfill at least the following three requirements:
 
-1. **Performance**. The performance of the graph processing meets the performance of advanced graph processing systems. However, storing data as tables in relational storage for graph processing requires a large number of time-consuming join operations. Such operations cause serious performance degradation compared to the graph native storage and execution engine.
+1. **Performance**. Storing data as tables in relational storage for graph processing requires a large number of time-consuming join operations. Such operations cause serious performance degradation compared to the graph native storage and execution engine.
 
-2. **Data freshness**. To keep the data current, long offline data moves need to be avoided so that analysis can be performed quickly on the updated data. In some time-sensitive scenarios, such as fraud detection, early analysis results can avoid losses.
+2. **Data freshness**. To keep the data consistent, long offline data moves need to be avoided so that analysis can be performed quickly on the updated data. In some time-sensitive scenarios, such as fraud detection, early analysis results can avoid losses.
 
 3. **Expressiveness**. Graph data processing tasks are diverse, such as graph traversal, graph algorithms, graph learning, etc. Therefore, sufficient graph representation capabilities are needed to be able to represent different graph tasks efficiently.
 
@@ -30,9 +30,10 @@ What is GART?
 -----------------
 
 GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing.
-It is designed to bridge the gap between relational OLTP and graph-based OLAP.
 
-We would like to be able to use graph data flexibly without re-altering the existing relational database system. Moreover, users do not need to be aware of the storage of graph data and the synchronization of data between relational data and graph data for freshness. To fulfill this requirement, we build GART, an in-memory system for real-time online graph computation.
+There is a need to utilize graph data flexibly without altering the existing relational database system. Additionally, the issue of transparency arises, where users should not need to be concerned with the intricacies of graph data storage or the process of maintaining data consistency between relational and graph data stores.
+
+To meet this requirement, GART has been developed—an in-memory system tailored for real-time, online graph computation. GART enables users to work with graph data effectively, ensuring that the graph representation remains current and in sync with the traditional relational data without direct user intervention for data synchronization.
 
 GART uses transactional logs (e.g., binlog) to capture data changes, then recovers data changes into fresh graph data in real time. GART integrates graph computation engines (e.g. GraphScope, NetworkX) to support efficient graph computation processing. The workflow of GART is shown below.
 
@@ -72,6 +73,15 @@ GART acts as a service to synchronize database changes to the graph store.
 When pulled up as a service on its own, users can try out the full power of GART and different graph computation engines on the graph store.
 At the same time, GART also provides a front-end, used as a database plug-in, currently supported as a PostgreSQL extension.
 Users can invoke GART's functions in the database client, such as RGMapping definitions, graph computation on the graph store, etc.
+
+Limitations
+-----------------
+
+GART is still in the early stages of development, and there are some limitations:
+
+- GART currently only supports PostgreSQL and MySQL as the relational database.
+
+- GART currently only supports GraphScope and NetworkX as the graph computation engine.
 
 Get started now!
 
