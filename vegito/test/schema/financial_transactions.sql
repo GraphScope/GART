@@ -1,19 +1,18 @@
 CREATE DATABASE IF NOT EXISTS financial_transactions;
 USE financial_transactions;
 
+CREATE TABLE Companies (
+            id BIGINT NOT NULL,
+            name VARCHAR(255),
+            PRIMARY KEY (id)
+        );
+
 CREATE TABLE Persons (
             id BIGINT NOT NULL,
             name VARCHAR(255),
             company_id BIGINT,
             PRIMARY KEY (id),
             FOREIGN KEY (company_id) REFERENCES Companies(id)
-        );
-
-
-CREATE TABLE Companies (
-            id BIGINT NOT NULL,
-            name VARCHAR(255),
-            PRIMARY KEY (id)
         );
 
 CREATE TABLE Accounts (
