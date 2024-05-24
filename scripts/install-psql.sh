@@ -22,8 +22,8 @@ export PSQL_CONFIG=/etc/postgresql/$PSQL_VERSION/main/postgresql.conf
 sudo tee -a $PSQL_CONFIG << EOT
 
 wal_level = logical
-max_replication_slots = 1  # larger than 0
-max_wal_senders = 1  # larger than 0
+max_replication_slots = 10  # larger than 0, default is 10
+max_wal_senders = 10  # larger than 0, default is 10
 
 EOT
 
