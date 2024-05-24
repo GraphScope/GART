@@ -35,11 +35,4 @@ spec:
           value: "debezium-connect-status"
         ports:
         - containerPort: {{ .Values.debezium.containerPort }}
-        volumeMounts:
-        - name: debezium-config-volume
-          mountPath: /kafka/connect/debezium-config
-      volumes:
-      - name: debezium-config-volume
-        configMap:
-          name: {{ include "gart.debezium.configmapName" . }}
 

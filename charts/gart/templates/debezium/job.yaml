@@ -2,6 +2,10 @@
 {{- $debezium_service_port := int .Values.debezium.containerPort }}
 {{- $debezium_service := printf "%s:%d" $debezium_service_name $debezium_service_port }}
 
+{{- $etcd_service_name := .Values.etcd.fullnameOverride }}
+{{- $etcd_service_port := int .Values.etcd.containerPorts.client }}
+{{- $etcd_service := printf "%s:%d" $etcd_service_name $etcd_service_port }}
+
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -12,14 +16,15 @@ spec:
     spec:
       containers:
       - name: debezium-connector-launch
-        image: {{ include "gart.curl.image" . }}
-        imagePullPolicy: {{ .Values.curl.image.pullPolicy | quote }}
+        image: {{ include "gart.converter.image" . }}
+        imagePullPolicy: {{ .Values.converter.image.pullPolicy | quote }}
         command: ["/bin/sh"]
         args:
         - "-c"
         - >
           echo "Applying Debezium connector configuration...";
-          CONFIG=$(cat /etc/debezium-connector-config/mysql-connector.json);
+          export  PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python;
+          CONFIG=$(/workspace/gart/scripts/update_debezium_config.py {{ $etcd_service }} {{ .Values.dataconfig.etcdPrefix }} {{ .Values.dataconfig.dbName }} {{ .Values.dataconfig.dbType }});
           while : ; do
             HTTP_STATUS=$(curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
               --data "$CONFIG" \

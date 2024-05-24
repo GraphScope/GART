@@ -19,8 +19,11 @@ data:
         "database.user": {{ .Values.dataconfig.dbUser | quote }},
         "database.password": {{ .Values.dataconfig.dbPassword | quote }},
         "database.include.list": {{ .Values.dataconfig.dbName | quote }},
-        "table.include.list": "ldbc.organisation,ldbc.place,ldbc.tag,ldbc.tagclass,ldbc.person,ldbc.comment,ldbc.post,ldbc.forum,ldbc.org_islocationin,ldbc.ispartof,ldbc.issubclassof,ldbc.hastype,ldbc.comment_hascreator,ldbc.comment_hastag,ldbc.comment_islocationin,ldbc.replyof_comment,ldbc.replyof_post,ldbc.post_hascreator,ldbc.post_hastag,ldbc.post_islocationin,ldbc.forum_containerof,ldbc.forum_hasmoderator,ldbc.forum_hastag,ldbc.person_hasinterest,ldbc.person_islocationin,ldbc.forum_hasmember,ldbc.knows,ldbc.likes_comment,ldbc.likes_post,ldbc.studyat,ldbc.workat",
+        {{- if eq (int .Values.dataconfig.enableBulkload) 1 }}
         "snapshot.mode": "initial",
+        {{- else }}
+        "snapshot.mode": "never",
+        {{- end }}
         "database.server.id": "1", 
         "include.schema.changes": "false",
         "tombstones.on.delete": "false",
