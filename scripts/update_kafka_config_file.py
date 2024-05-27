@@ -222,6 +222,10 @@ if __name__ == "__main__":
                 temp_file.write(
                     f"schema.history.internal.kafka.bootstrap.servers=localhost:{kafka_port}\n"
                 )
+            elif line.startswith("slot.name"):
+                # slot.name should be unique for each database
+                # this method is a effective way to make it unique
+                temp_file.write(f"slot.name=debezium_{args.db_name}\n")
             else:
                 temp_file.write(line)
     shutil.move(temp_file_name, kafka_config_file_name)

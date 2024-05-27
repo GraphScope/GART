@@ -32,7 +32,8 @@ For Postgresql
     table.include.list=<list the tables in the order of vertices, then edges>
     snapshot.mode=<if enable bulkload, set as "always", otherwise set as "never">
 
-    slot.name=debezium
+    slot.name=<name of replication slots, please avoid repetition>
+
     plugin.name=pgoutput
     publication.autocreate.mode=filtered
 

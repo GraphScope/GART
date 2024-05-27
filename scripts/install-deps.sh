@@ -302,7 +302,7 @@ database.dbname=<which database is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
 snapshot.mode=<if enable bulkload, set as "always", otherwise set as "never">
 
-slot.name=debezium
+slot.name=debezium_0
 plugin.name=pgoutput
 publication.autocreate.mode=filtered
 
