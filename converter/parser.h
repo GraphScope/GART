@@ -40,6 +40,8 @@ class LogEntry {
 
   std::string to_string() const;
 
+  int get_tx_id() const { return tx_id; }
+
   bool valid() const { return valid_; }
 
   bool last_snapshot() const { return snapshot == Snapshot::LAST; }
@@ -81,6 +83,7 @@ class LogEntry {
   bool valid_;
   bool update_has_finish_delete;
   bool all_labels_have_process;
+  int tx_id;
   size_t table_idx;
   Snapshot snapshot;
 
@@ -89,7 +92,8 @@ class LogEntry {
 
 class TxnLogParser {
  public:
-  TxnLogParser(const std::string& etcd_endpoint, const std::string& etcd_prefix, int subgraph_num) {
+  TxnLogParser(const std::string& etcd_endpoint, const std::string& etcd_prefix,
+               int subgraph_num) {
     GART_CHECK_OK(init(etcd_endpoint, etcd_prefix, subgraph_num));
   }
 
@@ -104,7 +108,8 @@ class TxnLogParser {
 
   void set_gid(const vineyard::json& oid, int vlabel, int64_t gid);
 
-  gart::Status init(const std::string& etcd_endpoint, const std::string& etcd_prefix, int subgraph_num);
+  gart::Status init(const std::string& etcd_endpoint,
+                    const std::string& etcd_prefix, int subgraph_num);
 
   void fill_vertex(LogEntry& out, const vineyard::json& log);
 

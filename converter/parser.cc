@@ -104,12 +104,12 @@ string LogEntry::to_string() const {
   return base;
 }
 
-gart::Status TxnLogParser::init(const string& etcd_endpoint, const string& etcd_prefix,
-                                int subgraph_num) {
+gart::Status TxnLogParser::init(const string& etcd_endpoint,
+                                const string& etcd_prefix, int subgraph_num) {
   subgraph_num_ = subgraph_num;
 
   std::shared_ptr<etcd::Client> etcd_client =
-        std::make_shared<etcd::Client>(etcd_endpoint);
+      std::make_shared<etcd::Client>(etcd_endpoint);
 
   std::string rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml";
   etcd::Response response = etcd_client->get(rg_mapping_key).get();
@@ -189,7 +189,8 @@ gart::Status TxnLogParser::init(const string& etcd_endpoint, const string& etcd_
     vertex_nums_per_fragment_[idx].resize(subgraph_num_, 0);
   }
 
-  auto response_task = etcd_client->put(etcd_prefix + "converter_is_up", "True").get();
+  auto response_task =
+      etcd_client->put(etcd_prefix + "converter_is_up", "True").get();
   assert(response_task.is_ok());
   return gart::Status::OK();
 }
@@ -243,6 +244,7 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
                                    : LogEntry::OpType::UNKNOWN;
   out.snapshot = LogEntry::Snapshot::FALSE;
 #else
+  out.tx_id = log["source"]["txId"].get<int>();
   out.op_type = type == "c"   ? LogEntry::OpType::INSERT
                 : type == "u" ? LogEntry::OpType::UPDATE
                 : type == "d" ? LogEntry::OpType::DELETE

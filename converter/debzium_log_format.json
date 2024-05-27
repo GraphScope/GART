@@ -1,0 +1,92 @@
+// update
+{
+    "before": null,
+    "after": {
+        "custid": 400000,
+        "bal": 12374.0
+    },
+    "source": {
+        "version": "2.5.2.Final",
+        "connector": "postgresql",
+        "name": "fullfillment",
+        "ts_ms": 1716795951682,
+        "snapshot": "false",
+        "db": "benchbase",
+        "sequence": "[\"2660953128\",\"2660961512\"]",
+        "schema": "public",
+        "table": "savings",
+        "txId": 63475,
+        "lsn": 2660961512,
+        "xmin": null
+    },
+    "op": "u"
+}
+// create
+{
+    "before": null,
+    "after": {
+        "custid": 12344321,
+        "name": "12344321"
+    },
+    "source": {
+        "version": "2.5.2.Final",
+        "connector": "postgresql",
+        "name": "fullfillment",
+        "ts_ms": 1716797397195,
+        "snapshot": "false",
+        "db": "benchbase",
+        "sequence": "[\"2660961648\",\"2660961936\"]",
+        "schema": "public",
+        "table": "accounts",
+        "txId": 63476,
+        "lsn": 2660961936,
+        "xmin": null
+    },
+    "op": "c"
+}
+// snapshot
+{
+    "before": null,
+    "after": {
+        "custid": 155261,
+        "bal": -449.0
+    },
+    "source": {
+        "version": "2.5.2.Final",
+        "connector": "postgresql",
+        "name": "fullfillment",
+        "ts_ms": 1716802567772,
+        "snapshot": "true",
+        "db": "benchbase",
+        "sequence": "[null,\"2660984064\"]",
+        "schema": "public",
+        "table": "savings",
+        "txId": 63477,
+        "lsn": 2660984064,
+        "xmin": null
+    },
+    "op": "r"
+}
+
+{
+    "before": null,
+    "after": {
+        "custid": 294972,
+        "bal": 19987.8
+    },
+    "source": {
+        "version": "2.5.2.Final",
+        "connector": "postgresql",
+        "name": "fullfillment",
+        "ts_ms": 1716802567772,
+        "snapshot": "last",
+        "db": "benchbase",
+        "sequence": "[null,\"2660984064\"]",
+        "schema": "public",
+        "table": "savings",
+        "txId": 63477,
+        "lsn": 2660984064,
+        "xmin": null
+    },
+    "op": "r"
+}

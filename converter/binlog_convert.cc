@@ -45,12 +45,19 @@ int main(int argc, char** argv) {
       FLAGS_write_kafka_broker_list, FLAGS_write_kafka_topic);
   KafkaOutputStream ostream(producer);
 
-  TxnLogParser parser(FLAGS_etcd_endpoint, FLAGS_etcd_prefix, FLAGS_subgraph_num);
+  TxnLogParser parser(FLAGS_etcd_endpoint, FLAGS_etcd_prefix,
+                      FLAGS_subgraph_num);
 
   int log_count = 0;
   bool is_timeout = false;
 
+  int epoch = 0;
+
 #ifdef USE_DEBEZIUM
+  // used for consistent epoch calculation
+  int last_tx_id = -1;
+  int last_log_count = 0;
+
   // bulk load data
   if (FLAGS_enable_bulkload) {
     cout << "Bulk load data start" << endl;
@@ -68,11 +75,11 @@ int main(int argc, char** argv) {
 
       string line(static_cast<const char*>(msg->payload()), msg->len());
       LogEntry log_entry;
-      GART_CHECK_OK(parser.parse(log_entry, line, 0));
+      GART_CHECK_OK(parser.parse(log_entry, line, epoch));
 
       while (log_entry.more_entires()) {
         ostream << log_entry.to_string() << flush;
-        GART_CHECK_OK(parser.parse(log_entry, line, 0));
+        GART_CHECK_OK(parser.parse(log_entry, line, epoch));
 
         if (!log_entry.valid()) {
           break;
@@ -91,6 +98,9 @@ int main(int argc, char** argv) {
       if (log_entry.last_snapshot()) {
         cout << "Bulk load data finished: " << init_logs << " logs" << endl;
         log_count = FLAGS_logs_per_epoch;  // for the first epoch
+        last_tx_id = log_entry.get_tx_id();
+        last_log_count = log_count;
+        epoch = 1;
         ostream << LogEntry::bulk_load_end().to_string() << flush;
         break;
       }
@@ -131,10 +141,24 @@ int main(int argc, char** argv) {
     }
 
     string line(static_cast<const char*>(msg->payload()), msg->len());
-    int epoch = log_count / FLAGS_logs_per_epoch;
 
     LogEntry log_entry;
     GART_CHECK_OK(parser.parse(log_entry, line, epoch));
+
+#ifndef USE_DEBEZIUM
+    epoch = log_count / FLAGS_logs_per_epoch;
+#else
+    // consistent epoch calculation
+    int tx_id = log_entry.get_tx_id();
+    if (tx_id != last_tx_id) {
+      last_tx_id = tx_id;
+      if (log_count - last_log_count >= FLAGS_logs_per_epoch) {
+        last_log_count = log_count;
+        cout << "Epoch " << epoch << " finished" << endl;
+        ++epoch;
+      }
+    }
+#endif
 
     while (log_entry.more_entires()) {
       ostream << log_entry.to_string() << flush;
