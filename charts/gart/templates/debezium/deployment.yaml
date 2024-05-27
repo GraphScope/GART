@@ -12,14 +12,14 @@ spec:
   replicas: {{ .Values.debezium.replicaCount }}
   selector:
     matchLabels:
-      app: debezium-mysql-connect
+      app: debezium-connect
   template:
     metadata:
       labels:
-        app: debezium-mysql-connect
+        app: debezium-connect
     spec:
       containers:
-      - name: debezium-mysql-connect
+      - name: debezium-connect
         image: {{ include "gart.debezium.image" . }}
         imagePullPolicy: {{ .Values.debezium.image.pullPolicy | quote }}
         env:

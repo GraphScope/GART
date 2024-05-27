@@ -13,14 +13,29 @@ data:
     {
       "name": "debezium-connector-mysql",
       "config": {
+        {{- if eq .Values.dataconfig.dbType "mysql" }}
         "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+        {{- else }}
+        "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+        {{- end }}
         "database.hostname": {{ .Values.dataconfig.dbHost | quote }},
         "database.port": {{ .Values.dataconfig.dbPort | quote }},
         "database.user": {{ .Values.dataconfig.dbUser | quote }},
         "database.password": {{ .Values.dataconfig.dbPassword | quote }},
+        {{- if eq .Values.dataconfig.dbType "mysql" }}
         "database.include.list": {{ .Values.dataconfig.dbName | quote }},
+        {{- else }}
+        "database.dbname": {{ .Values.dataconfig.dbName | quote }},
+        "slot.name": "debezium",
+        "plugin.name": "pgoutput",
+        "publication.autocreate.mode": "filtered",
+        {{- end }}
         {{- if eq (int .Values.dataconfig.enableBulkload) 1 }}
+        {{- if eq .Values.dataconfig.dbType "mysql" }}
         "snapshot.mode": "initial",
+        {{- else }}
+        "snapshot.mode": "always",
+        {{- end }}
         {{- else }}
         "snapshot.mode": "never",
         {{- end }}
