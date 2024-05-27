@@ -34,6 +34,10 @@ If release name contains chart name it will be used as a full name.
 {{- define "gart.writer.fullname" -}}
 {{- printf "%s-%s" (include "gart.fullname" .) "writer" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{- define "gart.analyzer.fullname" -}}
+{{- printf "%s-%s" (include "gart.fullname" .) "analyzer" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
     
     
 {{/*
@@ -86,6 +90,23 @@ Return the proper gart writer image name
 {{- define "gart.writer.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
 {{- with .Values.writer.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the proper gart analyzer image name
+*/}}
+{{- define "gart.analyzer.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.analyzer.image -}}
 {{- if .tag -}}
 {{- $tag = .tag | toString -}}
 {{- end -}}

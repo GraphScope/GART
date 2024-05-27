@@ -19,7 +19,7 @@
 
 FROM ubuntu:22.04
 
-# Define build type (All, Converter, Writer)
+# Define build type (All, Converter, Writer, Analyzer)
 ARG build_type=All
 
 RUN apt-get update && apt-get install -y \
@@ -85,6 +85,8 @@ RUN bash -c "\
   cmake .. -DADD_PGQL=OFF -DADD_VEGITO=OFF && make -j; \
   elif [ \"$build_type\" = 'Writer' ]; then \
   cmake .. -DADD_PGQL=OFF -DADD_CONVERTER=OFF && make -j; \
+  elif [ \"$build_type\" = 'Analyzer' ]; then \
+  cmake .. -DADD_PGQL=OFF -DADD_CONVERTER=OFF -DADD_VEGITO=OFF -DADD_GAE_ENGINE=ON && make -j; \
   else \
   echo 'Invalid build type specified'; exit 1; \
   fi \

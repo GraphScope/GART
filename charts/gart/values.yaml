@@ -171,6 +171,13 @@ writer:
     tag: latest
     pullPolicy: IfNotPresent
 
+# analyzer config
+analyzer:
+  image:
+    repository: gart-analyzer
+    tag: latest
+    pullPolicy: IfNotPresent
+
 dataconfig:
   subgraphNum: 2
   dbHost: "127.0.0.1"
@@ -179,7 +186,7 @@ dataconfig:
   dbPassword: "123456"
   dbType: "mysql"
   dbName: "ldbc"
-  v6dSocket: "/tmp/v6d.sock"
+  v6dSocket: "/tmp/shared/v6d.sock"
   v6dSize: "750G"
   etcdPrefix: "gart_meta_"
   enableBulkload: 1

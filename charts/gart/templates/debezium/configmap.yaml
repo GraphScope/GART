@@ -26,7 +26,7 @@ data:
         "database.include.list": {{ .Values.dataconfig.dbName | quote }},
         {{- else }}
         "database.dbname": {{ .Values.dataconfig.dbName | quote }},
-        "slot.name": "debezium",
+        "slot.name": "debezium_{{ .Values.dataconfig.dbName }}",
         "plugin.name": "pgoutput",
         "publication.autocreate.mode": "filtered",
         {{- end }}

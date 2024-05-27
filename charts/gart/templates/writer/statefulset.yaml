@@ -22,6 +22,9 @@ spec:
       labels:
         app: writer
     spec:
+      volumes:
+      - name: shared-socket
+        emptyDir: {}
       containers:
       - name: writer
         image: {{ include "gart.writer.image" . }}
@@ -54,5 +57,22 @@ spec:
         envFrom:
         - configMapRef:
             name: {{ include "gart.configmapName" . }}
+        volumeMounts:
+        - name: shared-socket
+          mountPath: /tmp/shared
+      - name: analyzer
+        image: {{ include "gart.analyzer.image" . }}
+        imagePullPolicy: {{ .Values.analyzer.image.pullPolicy | quote }}
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          cd /workspace/gart/build &&
+          sleep infinity
+        envFrom:
+        - configMapRef:
+            name: {{ include "gart.configmapName" . }}
+        volumeMounts:
+        - name: shared-socket
+          mountPath: /tmp/shared
           
         

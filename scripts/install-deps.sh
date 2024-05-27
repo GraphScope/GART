@@ -74,7 +74,7 @@ if [ "$ROLE" == "All" ]; then
     fi
 fi
 
-if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Analyzer" ]; then
     sudo apt-get install -y libmsgpack-dev
 fi
 
@@ -112,16 +112,18 @@ if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
   cd ../..
 fi
 
-# yaml-cpp
-git clone https://github.com/jbeder/yaml-cpp.git
-cd yaml-cpp
-mkdir -p build && cd build
-cmake -D BUILD_SHARED_LIBS=ON ..
-make -j && sudo make install
-cd ../..
+if [ "$ROLE" != "Analyzer" ]; then
+  # yaml-cpp
+  git clone https://github.com/jbeder/yaml-cpp.git
+  cd yaml-cpp
+  mkdir -p build && cd build
+  cmake -D BUILD_SHARED_LIBS=ON ..
+  make -j && sudo make install
+  cd ../..
+fi
 
 # pybind11
-if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Analyzer" ]; then
   git clone https://github.com/pybind/pybind11.git
   cd pybind11
   mkdir -p build && cd build
@@ -130,27 +132,31 @@ if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
   cd ../..
 fi
 
-# YAML for Python
-pip3 install pyyaml libclang
+if [ "$ROLE" != "Analyzer" ]; then
+  # YAML for Python
+  pip3 install pyyaml
+fi
 
-# librdkafka
-sudo apt-get install -y librdkafka-dev
+if [ "$ROLE" != "Analyzer" ]; then
+  # librdkafka
+  sudo apt-get install -y librdkafka-dev
+fi
 
 # Install sqlalchemy, pymysql, psycopg2
 # for psycopg2, you need to install libpq-dev
 
 sudo apt-get install -y libpq-dev
-pip3 install sqlalchemy pymysql psycopg2 etcd3
+pip3 install sqlalchemy pymysql psycopg2 etcd3 libclang
 
-# Install requirements-dev.txt for docs
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-REQUIREMENTS_FILE="$SCRIPT_DIR/../requirements-dev.txt"
-
-pip3 install -r $REQUIREMENTS_FILE
+if [ "$ROLE" == "All" ]; then
+  # Install requirements-dev.txt for docs
+  SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+  REQUIREMENTS_FILE="$SCRIPT_DIR/../requirements-dev.txt"
+  pip3 install -r $REQUIREMENTS_FILE
+fi
 
 # vineyard
 sudo apt-get install -y ca-certificates \
-                doxygen \
                 libboost-all-dev \
                 libcurl4-openssl-dev \
                 libmpich-dev \
@@ -173,7 +179,7 @@ cd v6d
 git submodule update --init
 mkdir -p build && cd build
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64:/usr/local/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu
-if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ] || [ "$ROLE" == "Analyzer" ]; then
   cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VINEYARD_TESTS=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_LLM_CACHE=OFF -DBUILD_VINEYARD_BENCHMARKS=OFF -DBUILD_VINEYARD_IO=OFF -DBUILD_VINEYARD_PYTHON_BINDINGS=OFF
   make -j && sudo make install
   strip --strip-unneeded /usr/local/lib/libvineyard_graph.so
@@ -185,7 +191,7 @@ if [ "$ROLE" == "Converter" ]; then
 fi
 cd ../..
 
-if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ] || [ "$ROLE" == "Analyzer" ]; then
   # libgrape-lite
   git clone https://github.com/alibaba/libgrape-lite.git
   cd libgrape-lite
@@ -195,18 +201,22 @@ if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
   cd ../..
 fi
 
-# pgql-lang
-git clone https://github.com/oracle/pgql-lang.git
-(cd pgql-lang; sh install.sh)
+if [ "$ROLE" == "All" ]; then
+  # pgql-lang
+  git clone https://github.com/oracle/pgql-lang.git
+  (cd pgql-lang; sh install.sh)
+fi
 
-if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Analyzer" ]; then
   # rapidjson
   sudo apt-get install -y rapidjson-dev
 fi
 
-if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+pip3 install grpcio grpcio-tools mypy-protobuf requests paramiko
+
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Analyzer" ]; then
   # required python modules
-  pip3 install msgpack grpcio grpcio-tools networkx mypy-protobuf requests paramiko
+  pip3 install msgpack networkx
 fi
 
 if [ "$ROLE" == "All" ]; then
