@@ -38,7 +38,7 @@ while [ : ]; do
   esac
 done
 
-if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then 
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     if [ -n "$KAFKA_HOME" ]; then
         echo "KAFKA_HOME: $KAFKA_HOME"
     else
@@ -61,7 +61,7 @@ kill $(ps aux | grep '[d]ebezium-api' | awk '{print $2}') > /dev/null 2>&1
 
 my_pid=$$
 
-if [ "$role" == "all" ] || [ "$role" == "writer" ]; then 
+if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
     if [ "$v6d_sock" != "" ]; then
         echo "Stop vineyard by socket $v6d_sock"
         kill $(pgrep -f "vineyardd .* $v6d_sock" | grep -v "$my_pid") > /dev/null 2>&1
@@ -71,7 +71,7 @@ fi
 
 
 
-if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then 
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
 
     KAFKA_BIN=$KAFKA_HOME/bin
     echo "Stop Zookeeper and Kafka"

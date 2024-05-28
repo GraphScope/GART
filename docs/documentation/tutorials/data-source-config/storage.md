@@ -21,7 +21,7 @@ docker run -it --name gart0 gart
 
 Each data change record should be input to the converter in the format of TxnLog.
 
-The sample format of `TxnLog` is as follows (Debezium style, only necessary information):
+The sample format of `TxnLog` is as follows ([Debezium style](https://debezium.io/documentation/reference/stable/connectors/postgresql.html#postgresql-events), only necessary information):
 ```
 {
     "before": null,
