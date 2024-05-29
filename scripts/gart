@@ -14,20 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KAFKA_HOME=$KAFKA_HOME
-MAXWELL_HOME=$MAXWELL_HOME
-
-####################### Parse Arguments #######################
-VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,user:,password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,subgraph-id:,role:,debug:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,help -- "$@")
-if [[ $? -ne 0 ]]; then
-    exit 1;
-fi
+# This script provides utility functions to set up and launch the GART system with various components
+# including PostgreSQL, MySQL, Kafka, ZooKeeper, and others depending on the specified role.
 
 db_host="127.0.0.1"
 db_port=5432
 db_name="ldbc"
-user=
-password=
+db_user=
+db_password=
 rgmapping_file="schema/rgmapping-ldbc.yaml"
 v6d_sock="/var/run/vineyard.sock"
 v6d_size="750G"
@@ -35,13 +29,13 @@ etcd_endpoint="http://127.0.0.1:2379"
 etcd_prefix="gart_meta_"
 kafka_server="127.0.0.1:9092"
 subgraph_num=1
-use_debezium=1
+use_debezium=true
 db_type="postgresql"
 enable_bulkload=false
 role="all"
 start_slot=
 num_slot=
-rg_from_etcd=0
+rg_from_etcd=false
 k8s_mode=false
 subgraph_id=0
 debug=
@@ -49,266 +43,309 @@ debug_writer=false
 debug_converter=false
 
 set_port=false
-eval set -- "$VALID_ARGS"
-while [ : ]; do
-  case "$1" in
-    -d | --db-host)
-        db_host=$2
-        shift 2
-        ;;
-         --db-port)
-        db_port=$2
-        shift 2
-        set_port=true
-        ;;
-    -b | --db-name)
-        db_name=$2
-        shift 2
-        ;;
-    -u | --user)
-        user=$2
-        shift 2
-        ;;
-    -p | --password)
-        password=$2
-        shift 2
-        ;;
-    -r | --rgmapping-file)
-        rgmapping_file=$2
-        shift 2
-        ;;
-         --v6d-sock)
-        v6d_sock=$2
-        shift 2
-        ;;
-         --v6d-size)
-        v6d_size=$2
-        shift 2
-        ;;
-        --use-debezium)
-        use_debezium=$2
-        shift 2
-        ;;
-         --db-type)
-        db_type=$(echo "$2" | awk '{print tolower($0)}')
-        shift 2
-        ;;
-        --enable-bulkload)
-        enable_bulkload=$2
-        shift 2
-        ;;
-    -e | --etcd-endpoint)
-        etcd_endpoint=$2
-        shift 2
-        ;;
-         --etcd-prefix)
-        etcd_prefix=$2
-        shift 2
-        ;;
-    -k | --kafka-server)
-        kafka_server=$2
-        shift 2
-        ;;
-         --subgraph-num)
-        subgraph_num=$2
-        shift 2
-        ;;
-         --subgraph-id)
-        subgraph_id=$2
-        shift 2
-        ;;
-         --role)
-        role=$(echo "$2" | awk '{print tolower($0)}')
-        shift 2
-        ;;
-         --debug)
-        debug=$(echo "$2" | awk '{print tolower($0)}')
-        IFS=',' read -r -a debug <<< "$debug"
-        shift 2
-        ;;
-         --start-slot)
-        start_slot=$2
-        shift 2
-        ;;
-         --num-slot)
-        num_slot=$2
-        shift 2
-        ;;
-         --rg-from-etcd)
-        rg_from_etcd=$2
-        shift 2
-        ;;
-         --k8s-mode)
-        k8s_mode=$2
-        shift 2
-        ;;
-    -h | --help | ?)
-        echo "Usage: $0 [options]"
-        echo "Options:"
-        echo "  -h, --help:                    Show this help message and exit."
-        echo "  -d, --db-host:                 Database host (default: 127.0.0.1)."
-        echo "      --db-port:                 Database port (default: 3306 for MySQL, 5432 for PostgreSQL)."
-        echo "  -b, --db-name:                 Database name (default: ldbc)."
-        echo "  -u, --user:                    Database user."
-        echo "  -p, --password:                Database password."
-        echo "      --db-type:                 Type of data source: postgresql, mysql (default: postgresql)."
-        echo "  -r, --rgmapping-file:          RGMapping file path (default: schema/rgmapping-ldbc.yaml)."
-        echo "      --rg-from-etcd:            Whether to read RG mapping from etcd (default: 0)."
-        echo "      --v6d-sock:                Vineyard socket path (default: /var/run/vineyard.sock)."
-        echo "      --v6d-size:                Vineyard size (default: 110G)."
-        echo "      --use-debezium:            Whether to use Debezium to parse txn logs (default: 1)."
-        echo "      --enable-bulkload:         Whether to enable bulkload (default: false)."
-        echo "  -e, --etcd-endpoint:           Etcd endpoint (default: http://127.0.0.1:2379)."
-        echo "      --etcd-prefix:             Etcd metadata prefix (default: gart_meta_)."
-        echo "  -k, --kafka-server:            Kafka bootstrap server (default: 127.0.0.1:9092)."
-        echo "      --subgraph-num:            Number of subgraphs (default: 1)."
-        echo "      --role:                    Role when running this script: capturer, converter, writer, or all (default: all)."
-        echo "      --start-slot:              The start slot of subgraph on this machine."
-        echo "      --num-slot:                The number of slots on this machine."
-        echo "      --k8s-mode:                Whether running in k8s mode (default: false)."
-        echo "      --debug:                   Specify components to debug. Pass as a comma-separated list. Examples: '--debug=writer', '--debug=converter,writer' (default: '')."
-        exit 0
-        ;;
-    --)
-        shift;
-        break
-        ;;
-  esac
-done
 
-for item in "${debug[@]}"; do
-    if [ "$item" == "writer" ]; then
-        echo "The 'writer' component is selected for debugging."
-        debug_writer=true
-    elif [ "$item" == "converter" ]; then
-        echo "The 'converter' component is selected for debugging."
-        debug_converter=true
-    else
-        echo "Error: Unknown debugging component '$item'."
-    fi
-done
-
-# check file path
-function make_absolute_path() {
-  local path=$1
-  if [[ ! $path = /* ]]; then
-    path=$(readlink -f "$path" 2>/dev/null || pwd -P)
-  fi
-  echo "$path"
+print_arguments() {
+    printf "Arguments:\n"
+    printf "    %-20s %s\n" "db-type:" "$db_type"
+    printf "    %-20s %s\n" "db-host:" "$db_host"
+    printf "    %-20s %s\n" "db-port:" "$db_port"
+    printf "    %-20s %s\n" "db-name:" "$db_name"
+    printf "    %-20s %s\n" "db-user:" "$db_user"
+    printf "    %-20s %s\n" "db-password:" "$db_password"
+    printf "    %-20s %s\n" "rgmapping-file:" "$rgmapping_file"
+    printf "    %-20s %s\n" "rg-from-etcd:" "$rg_from_etcd"
+    printf "    %-20s %s\n" "v6d-sock:" "$v6d_sock"
+    printf "    %-20s %s\n" "v6d-size:" "$v6d_size"
+    printf "    %-20s %s\n" "use-debezium:" "$use_debezium"
+    printf "    %-20s %s\n" "enable-bulkload:" "$enable_bulkload"
+    printf "    %-20s %s\n" "etcd-endpoint:" "$etcd_endpoint"
+    printf "    %-20s %s\n" "etcd-prefix:" "$etcd_prefix"
+    printf "    %-20s %s\n" "kafka-server:" "$kafka_server"
+    printf "    %-20s %s\n" "subgraph-num:" "$subgraph_num"
+    printf "    %-20s %s\n" "role:" "$role"
+    printf "    %-20s %s\n" "start-slot:" "$start_slot"
+    printf "    %-20s %s\n" "num-slot:" "$num_slot"
+    printf "    %-20s %s\n" "k8s-mode:" "$k8s_mode"
+    printf "    %-20s %s\n" "debug:" "${debug[*]}"
 }
 
-v6d_sock=$(make_absolute_path "$v6d_sock")
-rgmapping_file=$(make_absolute_path "$rgmapping_file")
 
-# set default port
-if [ !$set_port ] && [ "$db_type" == "mysql" ]; then
-    db_port=3306
-fi
+# Function to normalize boolean inputs (1/0, yes/no, true/false) to true or false
+normalize_boolean() {
+    case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
+        1 | yes | true)
+            echo "true"
+            ;;
+        0 | no | false)
+            echo "false"
+            ;;
+        *)
+            echo "Error: Invalid boolean value '$1'." >&2
+            exit 1
+            ;;
+    esac
+}
 
-if [ "$enable_bulkload" == 1 ]; then
-    enable_bulkload=true
-fi
+# check file path
+make_absolute_path() {
+    local path=$1
+    if [[ ! $path = /* ]]; then
+        path=$(readlink -f "$path" 2>/dev/null || pwd -P)
+    fi
+    echo "$path"
+}
 
-if [ "$enable_bulkload" == 0 ]; then
-    enable_bulkload=false
-fi
+# Function to display the help message
+show_help() {
+    cat << EOF
+Usage: $0 [options]
+Options:
+  -h, --help:                    Show this help message and exit.
+      --db-type:                 Type of data source: postgresql, mysql (default: postgresql).
+  -d, --db-host:                 Database host (default: 127.0.0.1).
+      --db-port:                 Database port (default: 3306 for MySQL, 5432 for PostgreSQL).
+  -b, --db-name:                 Database name (default: ldbc).
+  -u, --db-user:                 Database user.
+  -p, --db-password:             Database password.
+  -r, --rgmapping-file:          RGMapping file path (default: schema/rgmapping-ldbc.yaml).
+      --rg-from-etcd:            Whether to read RG mapping from etcd (default: false).
+      --v6d-sock:                Vineyard socket path (default: /var/run/vineyard.sock).
+      --v6d-size:                Vineyard size (default: 110G).
+      --use-debezium:            Whether to use Debezium to parse txn logs (default: true).
+      --enable-bulkload:         Whether to enable bulkload (default: false).
+  -e, --etcd-endpoint:           Etcd endpoint (default: http://127.0.0.1:2379).
+      --etcd-prefix:             Etcd metadata prefix (default: gart_meta_).
+  -k, --kafka-server:            Kafka bootstrap server (default: 127.0.0.1:9092).
+      --subgraph-num:            Number of subgraphs (default: true).
+      --role:                    Role when running this script: capturer, converter, writer, or all (default: all).
+      --start-slot:              The start slot of subgraph on this machine.
+      --num-slot:                The number of slots on this machine.
+      --k8s-mode:                Whether running in k8s mode (default: false).
+      --debug:                   Specify components to debug. Pass as a comma-separated list.
+                                 Examples: '--debug=writer', '--debug=converter,writer' (default: '').
+EOF
+}
 
-if [ "$k8s_mode" == 1 ]; then
-    k8s_mode=true
-fi
-
-if [ "$k8s_mode" == 0 ]; then
-    k8s_mode=false
-fi
-
-# check arguments
-if [ "$db_type" != "mysql" ] && [ "$db_type" != "postgresql" ]; then
-    echo "Invalid value for 'db_type': $db_type"
-    exit 1
-fi
-
-if [ "$use_debezium" == 0 ] && [ "$db_type" != "mysql" ]; then
-    echo "Maxwell only supports MySQL"
-    exit 1
-fi
-
-if [ "$role" != "all" ] && [ "$role" != "capturer" ] && [ "$role" != "converter" ] && [ "$role" != "writer" ]; then
-    echo "Invalid value for 'role': $role"
-    exit 1
-fi
-
-# check environment variables
-if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
-    unset=false
-    if [ -n "$KAFKA_HOME" ]; then
-        echo "    KAFKA_HOME: $KAFKA_HOME"
-    else
-        echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
-        unset=true
+####################### Parse Arguments #######################
+parse_arguments() {
+    local VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,db-user:,db-password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,subgraph-id:,role:,debug:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,help -- "$@")
+    if [[ $? -ne 0 ]]; then
+        exit 1;
     fi
 
+    eval set -- "$VALID_ARGS"
 
-    if [ "$use_debezium" == 0 ]; then
-        if [ -n "$MAXWELL_HOME" ]; then
-            echo "    MAXWELL_HOME: $MAXWELL_HOME"
-        else
-            echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
-            unset=true
-        fi
+    while [ : ]; do
+        case "$1" in
+            -d | --db-host)
+                db_host=$2
+                shift 2
+                ;;
+                --db-port)
+                db_port=$2
+                shift 2
+                set_port=true
+                ;;
+            -b | --db-name)
+                db_name=$2
+                shift 2
+                ;;
+            -u | --db-user)
+                db_user=$2
+                shift 2
+                ;;
+            -p | --password)
+                db_password=$2
+                shift 2
+                ;;
+            -r | --rgmapping-file)
+                rgmapping_file=$(make_absolute_path "$2")
+                shift 2
+                ;;
+                --v6d-sock)
+                v6d_sock=$(make_absolute_path "$2")
+                shift 2
+                ;;
+                --v6d-size)
+                v6d_size=$2
+                shift 2
+                ;;
+                --use-debezium)
+                use_debezium=$(normalize_boolean "$2")
+                shift 2
+                ;;
+                --db-type)
+                db_type=$(echo "$2" | awk '{print tolower($0)}')
+                shift 2
+                ;;
+                --enable-bulkload)
+                enable_bulkload=$(normalize_boolean "$2")
+                shift 2
+                ;;
+            -e | --etcd-endpoint)
+                etcd_endpoint=$2
+                shift 2
+                ;;
+                --etcd-prefix)
+                etcd_prefix=$2
+                shift 2
+                ;;
+            -k | --kafka-server)
+                kafka_server=$2
+                shift 2
+                ;;
+                --subgraph-num)
+                subgraph_num=$2
+                shift 2
+                ;;
+                --subgraph-id)
+                subgraph_id=$2
+                shift 2
+                ;;
+                --role)
+                role=$(echo "$2" | awk '{print tolower($0)}')
+                shift 2
+                ;;
+                --debug)
+                debug=$(echo "$2" | awk '{print tolower($0)}')
+                IFS=',' read -r -a debug <<< "$debug"
+                shift 2
+                ;;
+                --start-slot)
+                start_slot=$2
+                shift 2
+                ;;
+                --num-slot)
+                num_slot=$2
+                shift 2
+                ;;
+                --rg-from-etcd)
+                rg_from_etcd=$(normalize_boolean "$2")
+                shift 2
+                ;;
+                --k8s-mode)
+                k8s_mode=$(normalize_boolean "$2")
+                shift 2
+                ;;
+            -h | --help | ?)
+                show_help
+                exit 0
+                ;;
+            --)
+                shift;
+                break
+                ;;
+        esac
+    done
+
+    # set default port
+    if [ "$set_port" != "true" ] && [ "$db_type" == "mysql" ]; then
+        db_port=3306
     fi
+}
 
-    if [ $unset == true ]; then
+set_debug() {
+    if [ -n "$debug" ]; then
+        for component in "${debug[@]}"; do
+            case "$component" in
+                # capturer)
+                #     debug_capturer=true
+                #     ;;
+                converter)
+                    debug_converter=true
+                    ;;
+                writer)
+                    debug_writer=true
+                    ;;
+                *)
+                    echo "Invalid debug component: $component"
+                    exit 1
+                    ;;
+            esac
+        done
+    fi
+}
+
+check_arguments() {
+    case "$db_type" in
+        mysql|postgresql)
+            # Valid database types, no action needed
+            ;;
+        *)
+            echo "Invalid value for 'db_type': $db_type"
+            exit 1
+            ;;
+    esac
+
+    if [ "$use_debezium" != "true" ] && [ "$db_type" != "mysql" ]; then
+        echo "Maxwell only supports MySQL"
         exit 1
     fi
-fi
 
-if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
-    if [ "$role" == "all" ]; then
+    case "$role" in
+        all|capturer|converter|writer)
+            # Valid roles, no action needed
+            ;;
+        *)
+            echo "Invalid value for 'role': $role"
+            exit 1
+            ;;
+    esac
+}
+
+check_environment() {
+    local env_unset=true
+    if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
+        env_unset=false
+        if [ -n "$KAFKA_HOME" ]; then
+            echo "    KAFKA_HOME: $KAFKA_HOME"
+        else
+            echo "KAFKA_HOME is empty, please set the environment variable KAFKA_HOME"
+            env_unset=true
+        fi
+
+        if [ "$use_debezium" != "true" ] ; then
+            if [ -n "$MAXWELL_HOME" ]; then
+                echo "    MAXWELL_HOME: $MAXWELL_HOME"
+            else
+                echo "MAXWELL_HOME is empty, please set the environment variable MAXWELL_HOME"
+                env_unset=true
+            fi
+        fi
+
+        if [ "$env_unset" == "true" ]; then
+            exit 1
+        fi
+    fi
+}
+
+allocate_slot() {
+    # Set defaults or exit based on conditions
+    if [[ $role == "all" ]]; then
         start_slot=0
         num_slot=$subgraph_num
-    fi
-    if [ "$role" == "writer" ]; then
-        if [ ! -n "$start_slot" ] && [ ! -n "$num_slot" ]; then
-            start_slot=0
-            num_slot=$subgraph_num
-        elif [ -n "$start_slot" ] && [ ! -n "$num_slot" ]; then
-            echo "Please set both start-slot and num-slot"
-            exit 1
-        elif [ ! -n "$start_slot" ] && [ -n "$num_slot" ]; then
-            echo "Please set both start-slot and num-slot"
-            exit 1
+    elif [[ $role == "writer" ]]; then
+        # Check if either start_slot or num_slot is unset or empty
+        if [[ -z $start_slot || -z $num_slot ]]; then
+            # If both are unset or empty, set to defaults
+            if [[ -z $start_slot && -z $num_slot ]]; then
+                start_slot=0
+                num_slot=$subgraph_num
+            else
+                # If only one is set, it's an error
+                echo "Please set both start-slot and num-slot"
+                exit 1
+            fi
         else
+            # Additional log for clarity when both slots are provided
             echo "    Run Writer as given slot info"
         fi
     fi
-fi
-
-echo "Arguments:"
-printf "    %-20s %s\n" "db-host:"          "$db_host"
-printf "    %-20s %s\n" "db-port:"          "$db_port"
-printf "    %-20s %s\n" "db-name:"          "$db_name"
-printf "    %-20s %s\n" "user:"             "$user"
-printf "    %-20s %s\n" "password:"         "$password"
-printf "    %-20s %s\n" "db-type:"          "$db_type"
-printf "    %-20s %s\n" "rgmapping-file:"   "$rgmapping_file"
-printf "    %-20s %s\n" "rg-from-etcd:"     "$rg_from_etcd"
-printf "    %-20s %s\n" "v6d-sock:"         "$v6d_sock"
-printf "    %-20s %s\n" "v6d-size:"         "$v6d_size"
-printf "    %-20s %s\n" "use-debezium:"     "$use_debezium"
-printf "    %-20s %s\n" "enable-bulkload:"  "$enable_bulkload"
-printf "    %-20s %s\n" "etcd-endpoint:"    "$etcd_endpoint"
-printf "    %-20s %s\n" "etcd-prefix:"      "$etcd_prefix"
-printf "    %-20s %s\n" "kafka-server:"     "$kafka_server"
-printf "    %-20s %s\n" "subgraph-num:"     "$subgraph_num"
-printf "    %-20s %s\n" "role:"             "$role"
-printf "    %-20s %s\n" "start-slot:"       "$start_slot"
-printf "    %-20s %s\n" "num-slot:"         "$num_slot"
-printf "    %-20s %s\n" "k8s-mode:"         "$k8s_mode"
-printf "    %-20s %s\n" "debug:"            "${debug[*]}"
+}
 
 # Check database connection for PostgreSQL
 check_postgresql_connection() {
-    PGPASSWORD=$password psql -h "$db_host" -p "$db_port" -U "$user" -d "$db_name" -c "\q"
+    PGPASSWORD=$db_password psql -h "$db_host" -p "$db_port" -U "$db_user" -d "$db_name" -c "\q"
     if [ $? -eq 0 ]; then
         echo "Successfully connected to PostgreSQL database."
     else
@@ -318,7 +355,7 @@ check_postgresql_connection() {
 
 # Check database connection for MySQL
 check_mysql_connection() {
-    mysql --host="$db_host" --port="$db_port" --user="$user" --password="$password" --database="$db_name" -e "QUIT"
+    mysql --host="$db_host" --port="$db_port" --user="$db_user" --password="$db_password" --database="$db_name" -e "QUIT"
     if [ $? -eq 0 ]; then
         echo "Successfully connected to MySQL database."
     else
@@ -326,11 +363,23 @@ check_mysql_connection() {
     fi
 }
 
-if [ "$db_type" == "postgresql" ]; then
-    check_postgresql_connection
-elif [ "$db_type" == "mysql" ]; then
-    check_mysql_connection
-fi
+prepare_args() {
+    parse_arguments "$@"
+    set_debug
+    check_arguments
+    check_environment
+    allocate_slot
+
+    print_arguments
+
+    if [ "$db_type" == "postgresql" ]; then
+        check_postgresql_connection
+    elif [ "$db_type" == "mysql" ]; then
+        check_mysql_connection
+    fi
+}
+
+prepare_args "$@"
 
 if [ "$role" == "all" ]; then
     ##################### Stop Previous GART ######################
@@ -365,7 +414,7 @@ if [ "$role" == "all" ] || [ "$role" == "writer" ]; then
 fi
 
 ####################### Etcd #######################
-if !$k8s_mode && { [ "$role" == "capturer" ] || [ "$role" == "converter" ]; }; then
+if [ "$k8s_mode" != "true" ]  && { [ "$role" == "capturer" ] || [ "$role" == "converter" ]; }; then
     echo "Start to launch Etcd by role $role"
     if ! pgrep -f "etcd .*$etcd_endpoint" > /dev/null 2>&1; then
         echo "Start to launch etcd on $etcd_endpoint"
@@ -386,20 +435,20 @@ fi
 
 
 ####################### Extract Schema #######################
-if [ "$role" == "all" ] || [ "$role" == "capturer" ] || { $k8s_mode && [ "$role" == "converter" ]; }; then
+if [ "$role" == "all" ] || [ "$role" == "capturer" ] || { [ "$k8s_mode" == "true" ] && [ "$role" == "converter" ]; }; then
     echo "Start extracting schema"
     export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
     num_row=$(
     ./scripts/extract_table_schema.py \
         --host $db_host --port $db_port --db $db_name \
-        --user $user --password $password --db_type $db_type\
+        --user $db_user --password $db_password --db_type $db_type\
         --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
         --etcd_prefix $etcd_prefix --rg_mapping_from_etcd $rg_from_etcd
     )
     if [ $num_row -eq -1 ]; then
         echo "Failed to extract schema from database, please check the status of database and database info you provide."
         exit 1
-    elif [ $num_row -eq 0 ] && $enable_bulkload; then
+    elif [ $num_row -eq 0 ] && [ "$enable_bulkload" == "true" ]; then
         echo "No tuples found in the database, skip bulk load"
         enable_bulkload=false
     fi
@@ -407,7 +456,7 @@ fi
 
 ################### Bulk Load Initialize ######################
 if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
-    if [ "$use_debezium" == 1 ] && $enable_bulkload; then
+    if [ "$use_debezium" == "true" ] && [ "$enable_bulkload" == "true" ]; then
         rm /tmp/connect.offsets 1 > /dev/null 2>&1
         echo "Remove /tmp/connect.offsets for bulk load"
     fi
@@ -422,7 +471,7 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     # write Kafka config according to graph schema
     ./scripts/update_kafka_config_file.py --etcd_endpoint $etcd_endpoint --etcd_prefix $etcd_prefix \
                                         --kafka_endpoint $kafka_server --db_type $db_type --db_host $db_host --db_port $db_port \
-                                        --db_user $user --db_password $password --db_name $db_name --enable_bulkload $enable_bulkload
+                                        --db_user $db_user --db_password $db_password --db_name $db_name --enable_bulkload $enable_bulkload
 
     echo "Start Zookeeper and Kafka"
     $KAFKA_BIN/zookeeper-server-start.sh -daemon $KAFKA_CONFIG/zookeeper.properties
@@ -504,11 +553,11 @@ fi
 
 ####################### Capturer: Maxwell #######################
 if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
-    if [ "$use_debezium" == 0 ]; then
+    if [ "$use_debezium" != "true" ]; then
         MAXWELL_BIN=$MAXWELL_HOME/bin
 
         echo "Start Maxwell"
-        $MAXWELL_BIN/maxwell --host=$db_host --user=$user --password=$password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog > /dev/null 2>&1 &
+        $MAXWELL_BIN/maxwell --host=$db_host --user=$db_user --password=$db_password --producer=kafka --kafka.bootstrap.servers=127.0.0.1:9092 --kafka_topic=binlog > /dev/null 2>&1 &
 
         pids["Maxwell"]=$!
         sleep 3
@@ -527,7 +576,7 @@ fi
 ####################### Capturer: Debezium #######################
 if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
 # TODO(wanglei): add distributed deployment of debezium
-    if [ "$use_debezium" == 1 ]; then
+    if [ "$use_debezium" == "true" ]; then
         unset CLASSPATH
         echo "Start Debezium"
         if [ "$db_type" == "mysql" ]; then
@@ -559,7 +608,7 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
     # since --enable_bulkload will be parsed as --enable_bulkload=true,
     # and --no_enable_bulkload will be parsed as --enable_bulkload=false
     converter_cmd=
-    if [ "$use_debezium" == 1 ]; then
+    if [ "$use_debezium" == "true" ]; then
         converter_cmd="$CONVENTER_HOME/binlog_convert_debezium \
             --etcd_endpoint $etcd_endpoint \
             --etcd_prefix $etcd_prefix \
@@ -588,10 +637,8 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
 fi
 
 ####################### Writer (VEGITO) #######################
-if [[ "$role" == "all" ]] || { [[ "$role" == "writer" ]] && !$k8s_mode; }; then
+if [[ "$role" == "all" ]] || { [[ "$role" == "writer" ]] && [ "$k8s_mode" != "true" ]; }; then
     WRITER_HOME=./vegito
-
-
 
     for ((i=$start_slot; i<$start_slot + $num_slot; i++)); do
         vegito_cmd="$WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
@@ -606,11 +653,10 @@ if [[ "$role" == "all" ]] || { [[ "$role" == "writer" ]] && !$k8s_mode; }; then
             eval "${vegito_cmd} &"
             pids["Vegito-$i"]=$!
         fi
-
     done
 fi
 
-if [ "$role" == "writer" ] && $k8s_mode; then
+if [ "$role" == "writer" ] && [ "$k8s_mode" == "true" ]; then
     WRITER_HOME=./vegito
 
     vegito_cmd="$WRITER_HOME/vegito --v6d_ipc_socket $v6d_sock \
