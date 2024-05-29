@@ -306,6 +306,32 @@ printf "    %-20s %s\n" "num-slot:"         "$num_slot"
 printf "    %-20s %s\n" "k8s-mode:"         "$k8s_mode"
 printf "    %-20s %s\n" "debug:"            "${debug[*]}"
 
+# Check database connection for PostgreSQL
+check_postgresql_connection() {
+    PGPASSWORD=$password psql -h "$db_host" -p "$db_port" -U "$user" -d "$db_name" -c "\q"
+    if [ $? -eq 0 ]; then
+        echo "Successfully connected to PostgreSQL database."
+    else
+        echo "Could not connect to PostgreSQL database."
+    fi
+}
+
+# Check database connection for MySQL
+check_mysql_connection() {
+    mysql --host="$db_host" --port="$db_port" --user="$user" --password="$password" --database="$db_name" -e "QUIT"
+    if [ $? -eq 0 ]; then
+        echo "Successfully connected to MySQL database."
+    else
+        echo "Could not connect to MySQL database."
+    fi
+}
+
+if [ "$db_type" == "postgresql" ]; then
+    check_postgresql_connection
+elif [ "$db_type" == "mysql" ]; then
+    check_mysql_connection
+fi
+
 if [ "$role" == "all" ]; then
     ##################### Stop Previous GART ######################
     echo "Stop previous GART"
