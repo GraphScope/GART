@@ -26,8 +26,8 @@ spec:
           --db-port ${DB_PORT} \
           --db-name ${DB_NAME} \
           --db-type ${DB_TYPE} \
-          --user ${DB_USER} \
-          --password ${DB_PASSWORD} \
+          --db-user ${DB_USER} \
+          --db-password ${DB_PASSWORD} \
           --v6d-sock ${V6D_SOCKET} \
           --v6d-size ${V6D_SIZE} \
           --etcd-endpoint etcd-service:2379 \
@@ -35,8 +35,8 @@ spec:
           --kafka-server kafka-service:9092 \
           --subgraph-num ${SUBGRAPH_NUM} \
           --enable-bulkload ${ENABLE_BULKLOAD} \
-          --rg-from-etcd 1 \
-          --k8s-mode yes \
+          --rg-from-etcd true \
+          --k8s-mode true \
           --role converter &&
           sleep infinity
         envFrom:
