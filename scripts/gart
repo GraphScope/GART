@@ -377,15 +377,18 @@ prepare_args() {
     set_debug
     check_arguments
     check_environment
-    check_file "RGMapping" "$rgmapping_file"
+    if [ "$rg_from_etcd" != "true" ]; then
+        check_file "RGMapping" "$rgmapping_file"
+    fi
     allocate_slot
 
     print_arguments
-
-    if [ "$db_type" == "postgresql" ]; then
-        check_postgresql_connection
-    elif [ "$db_type" == "mysql" ]; then
-        check_mysql_connection
+    if [ $role == "all" ]; then
+        if [ "$db_type" == "postgresql" ]; then
+            check_postgresql_connection
+        elif [ "$db_type" == "mysql" ]; then
+            check_mysql_connection
+        fi
     fi
 }
 

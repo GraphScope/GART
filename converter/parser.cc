@@ -244,7 +244,7 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
                                    : LogEntry::OpType::UNKNOWN;
   out.snapshot = LogEntry::Snapshot::FALSE;
 #else
-  out.tx_id = log["source"]["txId"].get<int>();
+  out.tx_id = log["source"].value("txId", -1);
   out.op_type = type == "c"   ? LogEntry::OpType::INSERT
                 : type == "u" ? LogEntry::OpType::UPDATE
                 : type == "d" ? LogEntry::OpType::DELETE

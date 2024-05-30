@@ -150,12 +150,16 @@ int main(int argc, char** argv) {
 #else
     // consistent epoch calculation
     int tx_id = log_entry.get_tx_id();
-    if (tx_id != last_tx_id) {
-      last_tx_id = tx_id;
-      if (log_count - last_log_count >= FLAGS_logs_per_epoch) {
-        last_log_count = log_count;
-        cout << "Epoch " << epoch << " finished" << endl;
-        ++epoch;
+    if (tx_id == -1) {
+      epoch = log_count / FLAGS_logs_per_epoch;
+    } else {
+      if (tx_id != last_tx_id) {
+        last_tx_id = tx_id;
+        if (log_count - last_log_count >= FLAGS_logs_per_epoch) {
+          last_log_count = log_count;
+          cout << "Epoch " << epoch << " finished" << endl;
+          ++epoch;
+        }
       }
     }
 #endif
