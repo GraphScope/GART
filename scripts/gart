@@ -116,7 +116,7 @@ Options:
   -e, --etcd-endpoint:           Etcd endpoint (default: http://127.0.0.1:2379).
       --etcd-prefix:             Etcd metadata prefix (default: gart_meta_).
   -k, --kafka-server:            Kafka bootstrap server (default: 127.0.0.1:9092).
-      --subgraph-num:            Number of subgraphs (default: true).
+      --subgraph-num:            Number of subgraphs (default: 1).
       --role:                    Role when running this script: capturer, converter, writer, or all (default: all).
       --start-slot:              The start slot of subgraph on this machine.
       --num-slot:                The number of slots on this machine.
@@ -293,6 +293,15 @@ check_arguments() {
     esac
 }
 
+check_file() {
+    local prefix=$1
+    local file=$2
+    if [ ! -f "$file" ]; then
+        echo "$1 file $file does not exist."
+        exit 1
+    fi
+}
+
 check_environment() {
     local env_unset=true
     if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
@@ -368,6 +377,7 @@ prepare_args() {
     set_debug
     check_arguments
     check_environment
+    check_file "RGMapping" "$rgmapping_file"
     allocate_slot
 
     print_arguments
@@ -376,6 +386,33 @@ prepare_args() {
         check_postgresql_connection
     elif [ "$db_type" == "mysql" ]; then
         check_mysql_connection
+    fi
+}
+
+extract_table_schema() {
+    echo "Start extracting schema"
+    local extract_cmd="PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python ./scripts/extract_table_schema.py \
+        --host $db_host --port $db_port --db $db_name \
+        --user $db_user --password $db_password --db_type $db_type\
+        --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
+        --etcd_prefix $etcd_prefix --rg_mapping_from_etcd $rg_from_etcd"
+
+    local num_row=$(eval "$extract_cmd")
+
+    # not a number
+    if [[ ! $num_row =~ ^[0-9]+$ ]]; then
+        echo "Extract schema command: $extract_cmd"
+        echo "Error in extracting schema from database: $num_row"
+        exit 1
+    fi
+
+    if [ $num_row -eq -1 ]; then
+        echo "Extract schema command: $extract_cmd"
+        echo "Failed to extract schema from database, please check the status of database and database info you provide."
+        exit 1
+    elif [ $num_row -eq 0 ] && [ "$enable_bulkload" == "true" ]; then
+        echo "No tuples found in the database, skip bulk load"
+        enable_bulkload=false
     fi
 }
 
@@ -389,6 +426,14 @@ if [ "$role" == "all" ]; then
     ####################### Clean Etcd #######################
     echo "Clean etcd"
     etcdctl --endpoints=$etcd_endpoint del --prefix $etcd_prefix > /dev/null 2>&1
+fi
+
+################### Bulk Load Initialize ######################
+if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
+    if [ "$use_debezium" == "true" ] && [ "$enable_bulkload" == "true" ]; then
+        rm /tmp/connect.offsets 1 > /dev/null 2>&1
+        echo "Remove /tmp/connect.offsets for bulk load"
+    fi
 fi
 
 declare -A pids     # array to store pids and comments
@@ -433,33 +478,9 @@ if [ "$k8s_mode" != "true" ]  && { [ "$role" == "capturer" ] || [ "$role" == "co
     fi
 fi
 
-
 ####################### Extract Schema #######################
 if [ "$role" == "all" ] || [ "$role" == "capturer" ] || { [ "$k8s_mode" == "true" ] && [ "$role" == "converter" ]; }; then
-    echo "Start extracting schema"
-    export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-    num_row=$(
-    ./scripts/extract_table_schema.py \
-        --host $db_host --port $db_port --db $db_name \
-        --user $db_user --password $db_password --db_type $db_type\
-        --rgmapping_file $rgmapping_file --etcd_endpoint $etcd_endpoint \
-        --etcd_prefix $etcd_prefix --rg_mapping_from_etcd $rg_from_etcd
-    )
-    if [ $num_row -eq -1 ]; then
-        echo "Failed to extract schema from database, please check the status of database and database info you provide."
-        exit 1
-    elif [ $num_row -eq 0 ] && [ "$enable_bulkload" == "true" ]; then
-        echo "No tuples found in the database, skip bulk load"
-        enable_bulkload=false
-    fi
-fi
-
-################### Bulk Load Initialize ######################
-if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
-    if [ "$use_debezium" == "true" ] && [ "$enable_bulkload" == "true" ]; then
-        rm /tmp/connect.offsets 1 > /dev/null 2>&1
-        echo "Remove /tmp/connect.offsets for bulk load"
-    fi
+    extract_table_schema
 fi
 
 ####################### Capturer: Zookeeper and Kafka #######################
@@ -469,6 +490,7 @@ if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
     KAFKA_LOG=$KAFKA_HOME/logs/kafkaServer.out
 
     # write Kafka config according to graph schema
+    PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
     ./scripts/update_kafka_config_file.py --etcd_endpoint $etcd_endpoint --etcd_prefix $etcd_prefix \
                                         --kafka_endpoint $kafka_server --db_type $db_type --db_host $db_host --db_port $db_port \
                                         --db_user $db_user --db_password $db_password --db_name $db_name --enable_bulkload $enable_bulkload

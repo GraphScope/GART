@@ -51,28 +51,15 @@ public class Main {
     }
 
     private static void sql2yaml(String inputSQL, String outputYAML) {
-        try (Pgql pgql = new Pgql()) {
-            String ddlString = new String(Files.readAllBytes(Paths.get(inputSQL)), StandardCharsets.UTF_8);
-
-            PgqlResult pgqlResult = pgql.parse(ddlString);
-
-            if (!pgqlResult.isQueryValid()) {
-                System.out.println(ddlString);
-                System.out.println(pgqlResult.getErrorMessages());
-                return;
-            }
-
-            CreatePropertyGraph createPropertyGraph = (CreatePropertyGraph) pgqlResult.getPgqlStatement();
-            // System.out.println(createPropertyGraph);
-
-            FileWriter writer = new FileWriter(outputYAML);
-            YamlConverter yamlConventer = new YamlConverter(writer, createPropertyGraph);
-            yamlConventer.convert();
+        String ddlString;
+        try {
+            ddlString = new String(Files.readAllBytes(Paths.get(inputSQL)), StandardCharsets.UTF_8);
         } catch (IOException ie) {
-            System.out.println("Error: " + ie.getMessage());
-        } catch (PgqlException e) {
-            System.out.println("PSQL Parse Error: " + e.getMessage());
+            System.out.println("IO Error: " + ie.getMessage());
+            return;
         }
+
+        sql2yamlStr(ddlString, outputYAML);
     }
 
     private static void sql2yamlStr(String ddlString, String outputYAML) {
