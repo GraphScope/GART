@@ -47,7 +47,7 @@ public class YamlConverter {
         schema.graph = ddlStatement.getGraphName().toString();
 
         schema.loadingConfig = new LoadingConfig();
-        schema.loadingConfig.dataSource = "mysql";
+        schema.loadingConfig.dataSource = "rdbms";
         schema.loadingConfig.database = "ldbc";
 
         List<VertexTable> vertexTables = ddlStatement.getVertexTables();

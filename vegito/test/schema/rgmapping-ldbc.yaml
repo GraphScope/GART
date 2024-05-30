@@ -1,7 +1,7 @@
 ---
 graph: LDBC
 loadingConfig:
-  dataSource: mysql
+  dataSource: rdbms
   database: ldbc
   method: append
 vertexMappings:

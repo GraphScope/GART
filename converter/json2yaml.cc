@@ -63,7 +63,7 @@ void parse_json(const string& json_file, const string& yaml_file) {
   out << YAML::Key << "loadingConfig" << YAML::Value;
   {
     out << YAML::BeginMap;
-    out << YAML::Key << "dataSource" << YAML::Value << "mysql";
+    out << YAML::Key << "dataSource" << YAML::Value << "rdbms";
     out << YAML::Key << "database" << YAML::Value << "ldbc";
     out << YAML::Key << "method" << YAML::Value << "append";
     out << YAML::EndMap;
