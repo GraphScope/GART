@@ -59,6 +59,14 @@ inline vector<string_view> splitString(const string_view& str, char delimiter) {
   }
   return result;
 }
+
+inline string toLowerCase(const string& input) {
+  string output = input;
+  for (char& c : output) {
+    c = std::tolower(static_cast<unsigned char>(c));
+  }
+  return output;
+}
 }  // anonymous namespace
 
 namespace gart {
@@ -153,6 +161,7 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
     int id = idx;
     string name = vdef[idx]["type_name"].as<string>();
     string table_name = vdef[idx]["dataSourceName"].as<string>();
+    table_name = toLowerCase(table_name);
     vertex_name_id_map.emplace(name, id);
     graph_schema.label_id_map[name] = id;
     rg_map->define_vertex(id, id);  // (vlabel, table_id)
@@ -208,6 +217,8 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
       prop_info = edef[idx - vlabel_num]["dataFieldMappings"];
       table_name = edef[idx - vlabel_num]["dataSourceName"].as<string>();
     }
+    table_name = toLowerCase(table_name);
+
     if (prop_info.size() != 0) {
       graph_schema.label2prop_offset[id] = prop_offset;
     }
@@ -236,6 +247,7 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
       string prop_dtype = "";
       string prop_table_col_name =
           prop_info[prop_idx]["dataField"]["name"].as<string>();
+      prop_table_col_name = toLowerCase(prop_table_col_name);
 
       size_t column_family_id = 0;
       if (is_vertex) {
@@ -257,10 +269,9 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
 
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx].size() != 2) {
-          LOG(ERROR) << "Table schema format error. "
-                     << "Table name" << table_name << "Column index " << col_idx
-                     << " has " << required_table_schema[col_idx].size()
-                     << " columns.";
+          LOG(ERROR) << "Table schema format error. " << "Table name"
+                     << table_name << "Column index " << col_idx << " has "
+                     << required_table_schema[col_idx].size() << " columns.";
           assert(false);
         }
         if (required_table_schema[col_idx][0].get<string>() ==
@@ -306,9 +317,9 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
       }
 
       if (prop_dtype == "") {
-        LOG(ERROR) << "Table schema format error. "
-                   << "Table name " << table_name << " Column name "
-                   << prop_table_col_name << " not found.";
+        LOG(ERROR) << "Table schema format error. " << "Table name "
+                   << table_name << " Column name " << prop_table_col_name
+                   << " not found.";
         assert(false);
       }
 

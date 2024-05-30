@@ -416,25 +416,28 @@ extract_table_schema() {
     fi
 }
 
-prepare_args "$@"
+clean_previous_gart() {
+    if [ "$role" == "all" ]; then
+        ##################### Stop Previous GART ######################
+        echo "Stop previous GART"
+        ./stop-gart --kill-v6d-sock $v6d_sock
 
-if [ "$role" == "all" ]; then
-    ##################### Stop Previous GART ######################
-    echo "Stop previous GART"
-    ./stop-gart --kill-v6d-sock $v6d_sock
-
-    ####################### Clean Etcd #######################
-    echo "Clean etcd"
-    etcdctl --endpoints=$etcd_endpoint del --prefix $etcd_prefix > /dev/null 2>&1
-fi
-
-################### Bulk Load Initialize ######################
-if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
-    if [ "$use_debezium" == "true" ] && [ "$enable_bulkload" == "true" ]; then
-        rm /tmp/connect.offsets 1 > /dev/null 2>&1
-        echo "Remove /tmp/connect.offsets for bulk load"
+        ####################### Clean Etcd #######################
+        echo "Clean etcd"
+        etcdctl --endpoints=$etcd_endpoint del --prefix $etcd_prefix > /dev/null 2>&1
     fi
-fi
+
+    ################### Bulk Load Initialize ######################
+    if [ "$role" == "all" ] || [ "$role" == "capturer" ]; then
+        if [ "$use_debezium" == "true" ] && [ "$enable_bulkload" == "true" ]; then
+            rm /tmp/connect.offsets 1 > /dev/null 2>&1
+            echo "Remove /tmp/connect.offsets for bulk load"
+        fi
+    fi
+}
+
+prepare_args "$@"
+clean_previous_gart
 
 declare -A pids     # array to store pids and comments
 
