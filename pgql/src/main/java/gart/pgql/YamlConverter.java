@@ -19,10 +19,6 @@ package gart.pgql;
 import java.util.List;
 import java.io.FileWriter;
 
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.representer.Representer;
-
 import oracle.pgql.lang.ddl.propertygraph.CreatePropertyGraph;
 import oracle.pgql.lang.ddl.propertygraph.EdgeTable;
 import oracle.pgql.lang.ddl.propertygraph.VertexTable;
@@ -32,37 +28,30 @@ public class YamlConverter {
     public YamlConverter(FileWriter writer, CreatePropertyGraph ddlStatement) {
         this.writer = writer;
         this.ddlStatement = ddlStatement;
-
-        // initialize yaml
-        DumperOptions options = new DumperOptions();
-        options.setIndent(2);
-        options.setPrettyFlow(true);
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        Representer representer = new CustomRepresenter(options);
-        this.yaml = new Yaml(representer, options);
     }
 
     public void convert() {
-        GSchema schema = new GSchema();
-        schema.graph = ddlStatement.getGraphName().toString();
+        GSchema gSchema = new GSchema();
+        gSchema.graph = ddlStatement.getGraphName().toString();
 
-        schema.loadingConfig = new LoadingConfig();
-        schema.loadingConfig.dataSource = "rdbms";
-        schema.loadingConfig.database = "ldbc";
+        gSchema.loadingConfig = new LoadingConfig();
+        gSchema.loadingConfig.dataSource = "rdbms";
+        gSchema.loadingConfig.database = "ldbc";
 
         List<VertexTable> vertexTables = ddlStatement.getVertexTables();
         List<EdgeTable> edgeTables = ddlStatement.getEdgeTables();
 
-        schema.vertexMappings = new VertexMappings(vertexTables);
-        schema.edgeMappings = new EdgeMappings(edgeTables, vertexTables);
+        gSchema.vertexMappings = new VertexMappings(vertexTables);
+        gSchema.edgeMappings = new EdgeMappings(edgeTables, vertexTables);
+
+        gSchema.format();
 
         // output yaml
-        yaml.dump(schema, writer);
+        CustomYaml.getWriteYaml().dump(gSchema, writer);
         // String str = yaml.dump(schema);
         // System.out.println(str);
     }
 
     final private CreatePropertyGraph ddlStatement;
     final private FileWriter writer;
-    final private Yaml yaml;
 }

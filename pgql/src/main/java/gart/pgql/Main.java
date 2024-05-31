@@ -32,9 +32,14 @@ public class Main {
 
     public static void main(String[] args) throws PgqlException {
 
-        String errorMsg = "Usage: pgql <yaml2sql|sql2yaml|sql2yaml_str> <input_file> <output_file>";
+        String errorMsg = "Usage: pgql <yaml2sql|sql2yaml|sqlStr2yaml|yaml-check|yaml-format> <input_file> <output_file>";
 
-        if (args.length < 3) {
+        if (args.length < 2) {
+            System.out.println(errorMsg);
+            return;
+        }
+
+        if (!args[0].equals("yaml-check") && args.length < 3) {
             System.out.println(errorMsg);
             return;
         }
@@ -43,8 +48,12 @@ public class Main {
             yaml2sql(args[1], args[2]);
         } else if (args[0].equals("sql2yaml")) {
             sql2yaml(args[1], args[2]);
-        } else if (args[0].equals("sql2yaml_str")) {
+        } else if (args[0].equals("sqlStr2yaml")) {
             sql2yamlStr(args[1], args[2]);
+        } else if (args[0].equals("yaml-check")) {
+            yamlCheck(args[1]);
+        } else if (args[0].equals("yaml-format")) {
+            yamlFormat(args[1], args[2]);
         } else {
             System.out.println(errorMsg);
         }
@@ -93,6 +102,27 @@ public class Main {
             FileWriter writer = new FileWriter(outputYAML);
             writer.write(ddl.toString());
             writer.close();
+        } catch (IOException ie) {
+            System.out.println("IO Error: " + ie.getMessage());
+        }
+    }
+
+    private static void yamlCheck(String inputYAML) {
+        try {
+            FileReader reader = new FileReader(inputYAML);
+            YamlFormatter yamlFormater = new YamlFormatter(reader);
+            yamlFormater.check();
+        } catch (IOException ie) {
+            System.out.println("IO Error: " + ie.getMessage());
+        }
+    }
+
+    private static void yamlFormat(String inputYAML, String outputYAML) {
+        try {
+            FileReader reader = new FileReader(inputYAML);
+            FileWriter writer = new FileWriter(outputYAML);
+            YamlFormatter yamlFormater = new YamlFormatter(reader);
+            yamlFormater.format(writer);
         } catch (IOException ie) {
             System.out.println("IO Error: " + ie.getMessage());
         }

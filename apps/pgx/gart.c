@@ -340,8 +340,8 @@ Datum gart_define_graph(PG_FUNCTION_ARGS) {
   }
 
   // Use JAVA converter to convert SQL to YAML
-  sprintf(cmd, "(cd %s/pgql/; sh run.sh sql2yaml_str '%s' %s)",
-          config_gart_home, sql_str, config_gart_yaml_path);
+  sprintf(cmd, "(cd %s/pgql/; sh run.sh sqlStr2yaml '%s' %s)", config_gart_home,
+          sql_str, config_gart_yaml_path);
   elog(INFO, "Command: %s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
