@@ -87,14 +87,20 @@ affinity: {}
 # kafka config
 kafka:
   kraft:
-    enabled: false
-  zookeeper:
     enabled: true
+  zookeeper:
+    enabled: false
+  controller:
     replicaCount: 1
     persistence:
       enabled: false
-  controller:
-    replicaCount: 0
+    resources:
+      requests:
+        cpu: 2
+        memory: 4096Mi
+      limits:
+        cpu: 3
+        memory: 4096Mi
   broker:
     replicaCount: 1
     persistence:
