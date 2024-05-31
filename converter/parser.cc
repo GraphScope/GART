@@ -54,6 +54,15 @@ inline void append_str<string>(string& base, const string& append,
     base += delimiter + append;
   }
 }
+
+inline string to_lower_case(const string& input) {
+  string output = input;
+  for (char& c : output) {
+    c = std::tolower(static_cast<unsigned char>(c));
+  }
+  return output;
+}
+
 }  // namespace
 
 namespace converter {
@@ -140,18 +149,20 @@ gart::Status TxnLogParser::init(const string& etcd_endpoint,
   // parse vertex
   for (int idx = 0; idx < vlabel_num_; ++idx) {
     int id = idx;
-    const string& table_name = vdef[idx]["dataSourceName"].as<string>();
+    const string& table_name =
+        to_lower_case(vdef[idx]["dataSourceName"].as<string>());
     const string& label = vdef[idx]["type_name"].as<string>();
     table2label_names_[table_name].push_back(label);
     useful_tables_.insert(table_name);
     vlable_names_.insert(label);
-    vertex_id_columns_.emplace(label, vdef[idx]["idFieldName"].as<string>());
+    vertex_id_columns_.emplace(
+        label, to_lower_case(vdef[idx]["idFieldName"].as<string>()));
     vertex_label2ids_.emplace(label, id);
     YAML::Node properties = vdef[idx]["mappings"];
     vector<string> required_prop_names;
     for (uint64_t prop_id = 0; prop_id < properties.size(); prop_id++) {
       const string& prop_name =
-          properties[prop_id]["dataField"]["name"].as<string>();
+          to_lower_case(properties[prop_id]["dataField"]["name"].as<string>());
       required_prop_names.emplace_back(prop_name);
     }
     required_properties_.emplace(label, required_prop_names);
@@ -160,6 +171,7 @@ gart::Status TxnLogParser::init(const string& etcd_endpoint,
   // parse edges
   for (int idx = 0; idx < elabel_num; ++idx) {
     auto table_name = edef[idx]["dataSourceName"].as<string>();
+    table_name = to_lower_case(table_name);
     useful_tables_.insert(table_name);
     auto src_label = edef[idx]["type_pair"]["source_vertex"].as<string>();
     auto dst_label = edef[idx]["type_pair"]["destination_vertex"].as<string>();
@@ -170,6 +182,8 @@ gart::Status TxnLogParser::init(const string& etcd_endpoint,
     auto dst_col =
         edef[idx]["destinationVertexMappings"][0]["dataField"]["name"]
             .as<string>();
+    src_col = to_lower_case(src_col);
+    dst_col = to_lower_case(dst_col);
     edge_label_columns_.emplace(label, make_pair(src_col, dst_col));
     elabel_names2elabel_.emplace(label, idx);
     auto src_label_id = vertex_label2ids_.find(src_label)->second;
