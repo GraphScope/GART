@@ -1,0 +1,67 @@
+!!gart.pgql.GSchema
+graph: smallbank
+loadingConfig:
+  dataSource: rdbms
+  database: ldbc
+  method: append
+  enableRowStore: false
+vertexMappings:
+  vertex_types:
+  - type_name: account
+    dataSourceName: accounts
+    idFieldName: custid
+    mappings:
+    - property: custid
+      dataField:
+        name: custid
+    - property: name
+      dataField:
+        name: name
+  - type_name: saving
+    dataSourceName: savings
+    idFieldName: custid
+    mappings:
+    - property: custid
+      dataField:
+        name: custid
+    - property: bal
+      dataField:
+        name: bal
+  - type_name: checking
+    dataSourceName: checking
+    idFieldName: custid
+    mappings:
+    - property: custid
+      dataField:
+        name: custid
+    - property: bal
+      dataField:
+        name: bal
+edgeMappings:
+  edge_types:
+  - type_pair:
+      edge: saving_account
+      source_vertex: account
+      destination_vertex: saving
+    dataSourceName: savings
+    sourceVertexMappings:
+    - dataField:
+        name: custid
+    destinationVertexMappings:
+    - dataField:
+        name: custid
+    dataFieldMappings: [
+      ]
+  - type_pair:
+      edge: checking_account
+      source_vertex: account
+      destination_vertex: checking
+    dataSourceName: checking
+    sourceVertexMappings:
+    - dataField:
+        name: custid
+    destinationVertexMappings:
+    - dataField:
+        name: custid
+    dataFieldMappings: [
+      ]
