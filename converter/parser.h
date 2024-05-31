@@ -17,6 +17,7 @@
 #define CONVERTER_PARSER_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -120,8 +121,9 @@ class TxnLogParser {
   // used for schema mapping (unchanged after init)
   int vlabel_num_;
   int subgraph_num_;
-  std::map<std::string, bool> useful_tables_;
-  std::map<std::string, bool> is_vlable_names_;
+  std::set<std::string> useful_tables_;
+  std::set<std::string> unused_tables_;
+  std::set<std::string> vlable_names_;
   // table_name -> vertex_label names (one table may responses to multiple
   // vertex labels)
   std::map<std::string, std::vector<std::string>> table2label_names_;

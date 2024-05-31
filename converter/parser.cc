@@ -78,6 +78,10 @@ string LogEntry::to_string() const {
          : op_type == OpType::UPDATE ? "update"
          : op_type == OpType::DELETE ? "delete"
                                      : "unknown";
+  if (base == "unknown") {
+    LOG(ERROR) << "Unknown operation type: " << static_cast<int>(op_type);
+    assert(false);
+  }
   if (entity_type == EntityType::VERTEX) {
     append_str(base, string("vertex"), '_');
   } else {
@@ -139,8 +143,8 @@ gart::Status TxnLogParser::init(const string& etcd_endpoint,
     const string& table_name = vdef[idx]["dataSourceName"].as<string>();
     const string& label = vdef[idx]["type_name"].as<string>();
     table2label_names_[table_name].push_back(label);
-    useful_tables_.emplace(table_name, true);
-    is_vlable_names_.emplace(label, true);
+    useful_tables_.insert(table_name);
+    vlable_names_.insert(label);
     vertex_id_columns_.emplace(label, vdef[idx]["idFieldName"].as<string>());
     vertex_label2ids_.emplace(label, id);
     YAML::Node properties = vdef[idx]["mappings"];
@@ -156,7 +160,7 @@ gart::Status TxnLogParser::init(const string& etcd_endpoint,
   // parse edges
   for (int idx = 0; idx < elabel_num; ++idx) {
     auto table_name = edef[idx]["dataSourceName"].as<string>();
-    useful_tables_.emplace(table_name, true);
+    useful_tables_.insert(table_name);
     auto src_label = edef[idx]["type_pair"]["source_vertex"].as<string>();
     auto dst_label = edef[idx]["type_pair"]["destination_vertex"].as<string>();
     auto label = edef[idx]["type_pair"]["edge"].as<string>();
@@ -222,6 +226,10 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
   auto useful_tables_it = useful_tables_.find(table_name);
   if (useful_tables_it == useful_tables_.end()) {
     // skip unused tables
+    if (unused_tables_.find(table_name) == unused_tables_.end()) {
+      LOG(INFO) << "Skip unused table: " << table_name;
+      unused_tables_.insert(table_name);
+    }
     return gart::Status::OK();
   }
 #ifndef USE_DEBEZIUM
@@ -230,8 +238,8 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
   type = log["op"].get<string>();
 #endif
   auto label_name = table2label_names_.find(table_name)->second[out.table_idx];
-  auto is_vlabel_name_it = is_vlable_names_.find(label_name);
-  if (is_vlabel_name_it != is_vlable_names_.end()) {
+  auto is_vlabel_name_it = vlable_names_.find(label_name);
+  if (is_vlabel_name_it != vlable_names_.end()) {
     out.entity_type = LogEntry::EntityType::VERTEX;
   } else {
     out.entity_type = LogEntry::EntityType::EDGE;
@@ -298,7 +306,6 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
     fill_prop(out, log);
   }
 
-  out.valid_ = true;
   if (out.update_has_finish_delete != true) {
     out.table_idx++;
   }
@@ -308,6 +315,8 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
     out.all_labels_have_process = true;
     out.table_idx = 0;
   }
+
+  out.valid_ = true;
   return gart::Status::OK();
 }
 

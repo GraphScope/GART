@@ -77,6 +77,14 @@ int main(int argc, char** argv) {
       LogEntry log_entry;
       GART_CHECK_OK(parser.parse(log_entry, line, epoch));
 
+      ++init_logs;
+
+      // skip invalid log entry (unused tables)
+      if (!log_entry.valid()) {
+        consumer->delete_message(msg);
+        continue;
+      }
+
       while (log_entry.more_entires()) {
         ostream << log_entry.to_string() << flush;
         GART_CHECK_OK(parser.parse(log_entry, line, epoch));
@@ -84,12 +92,6 @@ int main(int argc, char** argv) {
         if (!log_entry.valid()) {
           break;
         }
-      }
-
-      ++init_logs;
-      if (!log_entry.valid()) {
-        consumer->delete_message(msg);
-        continue;
       }
 
       ostream << log_entry.to_string() << flush;
@@ -145,6 +147,14 @@ int main(int argc, char** argv) {
     LogEntry log_entry;
     GART_CHECK_OK(parser.parse(log_entry, line, epoch));
 
+    ++log_count;
+
+    // skip invalid log entry (unused tables)
+    if (!log_entry.valid()) {
+      consumer->delete_message(msg);
+      continue;
+    }
+
 #ifndef USE_DEBEZIUM
     epoch = log_count / FLAGS_logs_per_epoch;
 #else
@@ -173,13 +183,7 @@ int main(int argc, char** argv) {
       }
     }
 
-    if (!log_entry.valid()) {
-      continue;
-    }
-
     ostream << log_entry.to_string() << flush;
     consumer->delete_message(msg);
-
-    log_count++;
   }
 }
