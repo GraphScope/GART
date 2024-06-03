@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gart.controller-service.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: converter
+spec:
+  type: ClusterIP
+  selector:
+    app: converter
+  ports:
+    - protocol: TCP
+      port: {{ .Values.controller.port }}
+      targetPort: {{ .Values.controller.containerPort }}
+

@@ -76,6 +76,15 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: "/etc/debezium-connector-config"
+      - name: controller
+        image: {{ include "gart.controller.image" . }}
+        imagePullPolicy: {{ .Values.controller.image.pullPolicy | quote }}
+        command: ["/workspace/gart/scripts/controller.py"]
+        ports:
+          - containerPort: {{ .Values.controller.containerPort }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "gart.configmapName" . }}
       volumes:
       - name: config-volume
         configMap:

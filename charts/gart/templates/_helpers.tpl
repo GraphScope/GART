@@ -38,6 +38,10 @@ If release name contains chart name it will be used as a full name.
 {{- define "gart.analyzer.fullname" -}}
 {{- printf "%s-%s" (include "gart.fullname" .) "analyzer" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{- define "gart.controller-service.fullname" -}}
+{{- printf "%s-%s" (include "gart.fullname" .) "controller-service" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
     
     
 {{/*
@@ -124,6 +128,23 @@ Return the proper gart debezium image name
 {{- define "gart.debezium.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
 {{- with .Values.debezium.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the proper gart controller image name
+*/}}
+{{- define "gart.controller.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.controller.image -}}
 {{- if .tag -}}
 {{- $tag = .tag | toString -}}
 {{- end -}}

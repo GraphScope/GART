@@ -1,3 +1,7 @@
+{{- $debezium_service_name := include "gart.debezium.fullname" . }}
+{{- $debezium_service_port := int .Values.debezium.containerPort }}
+{{- $debezium_service := printf "%s:%d" $debezium_service_name $debezium_service_port }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,3 +19,6 @@ data:
   ETCD_PREFIX: {{ .Values.dataconfig.etcdPrefix | quote }}
   ENABLE_BULKLOAD: {{ .Values.dataconfig.enableBulkload | quote }}
   SUBGRAPH_NUM: {{ .Values.dataconfig.subgraphNum | quote }}
+  DEBEZIUM_SERVICE: {{ $debezium_service | quote }}
+  DEBEZIUM_CONNECTOR_NAME: {{ include "gart.debezium.fullname" . | quote }}
+  CONTROLLER_FLASK_PORT: {{ .Values.controller.containerPort | quote }}

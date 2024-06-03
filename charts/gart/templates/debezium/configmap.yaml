@@ -11,7 +11,7 @@ metadata:
 data:
   mysql-connector.json: |-
     {
-      "name": "debezium-connector-mysql",
+      "name": {{ include "gart.debezium.fullname" . | quote }},
       "config": {
         {{- if eq .Values.dataconfig.dbType "mysql" }}
         "connector.class": "io.debezium.connector.mysql.MySqlConnector",

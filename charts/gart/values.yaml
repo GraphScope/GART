@@ -155,12 +155,6 @@ debezium:
     pullPolicy: IfNotPresent
   containerPort: 8083
 
-curl:
-  image:
-    repository: curlimages/curl
-    tag: latest
-    pullPolicy: IfNotPresent
-
 # converter config
 converter:
   replicaCount: 1
@@ -183,6 +177,17 @@ analyzer:
     repository: gart-analyzer
     tag: latest
     pullPolicy: IfNotPresent
+
+# controller config
+controller:
+  image:
+    repository: gart-converter
+    tag: latest
+    pullPolicy: IfNotPresent
+  #service port
+  port: 80
+  # container port
+  containerPort: 5000
 
 dataconfig:
   subgraphNum: 2
