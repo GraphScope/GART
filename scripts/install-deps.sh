@@ -146,7 +146,7 @@ fi
 # for psycopg2, you need to install libpq-dev
 
 sudo apt-get install -y libpq-dev
-pip3 install sqlalchemy pymysql psycopg2 etcd3 libclang flask
+pip3 install sqlalchemy pymysql psycopg2 etcd3 libclang
 
 if [ "$ROLE" == "All" ]; then
   # Install requirements-dev.txt for docs
@@ -159,7 +159,8 @@ fi
 sudo apt-get install -y ca-certificates \
                 libboost-all-dev \
                 libcurl4-openssl-dev \
-                libmpich-dev \
+                openmpi-bin \
+                libopenmpi-dev \
                 libssl-dev \
                 libunwind-dev \
                 libz-dev

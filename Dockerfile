@@ -19,7 +19,7 @@
 
 FROM ubuntu:22.04
 
-# Define build type (All, Converter, Writer, Analyzer)
+# Define build type (All, Converter, Writer, Analyzer, Controller)
 ARG build_type=All
 
 RUN apt-get update && apt-get install -y \
@@ -51,6 +51,7 @@ RUN if [ "$build_type" = "All" ]; then \
 
 WORKDIR /workspace
 COPY . /workspace/gart
+COPY ./scripts/kube_ssh /usr/local/bin/kube_ssh
 
 # Install PostgreSQL and MySQL
 RUN if [ "$build_type" = "All" ]; then \
@@ -60,7 +61,18 @@ RUN if [ "$build_type" = "All" ]; then \
   fi
 
 WORKDIR /deps
-RUN /workspace/gart/scripts/install-deps.sh /deps $build_type
+RUN if [ "$build_type" != "Controller" ]; then \
+ /workspace/gart/scripts/install-deps.sh /deps $build_type; \
+  fi
+
+RUN if [ "$build_type" = "Controller" ]; then \
+  curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+  chmod +x ./kubectl && \
+  mv ./kubectl /usr/local/bin/kubectl && \
+  apt-get update && apt-get install -y openmpi-bin libopenmpi-dev && \
+  rm -rf /var/lib/apt/lists/* && \
+  pip3 install flask kubernetes; \
+  fi
 
 # Find the Kafka directory and write its path to a file
 RUN if [ "$build_type" = "All" ]; then \
@@ -88,7 +100,7 @@ RUN bash -c "\
   elif [ \"$build_type\" = 'Analyzer' ]; then \
   cmake .. -DADD_PGQL=OFF -DADD_CONVERTER=OFF -DADD_VEGITO=OFF -DADD_GAE_ENGINE=ON && make -j; \
   else \
-  echo 'Invalid build type specified'; exit 1; \
+  echo 'Build as Controller'; \
   fi \
   "
 

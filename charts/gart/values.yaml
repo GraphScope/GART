@@ -181,7 +181,7 @@ analyzer:
 # controller config
 controller:
   image:
-    repository: gart-converter
+    repository: gart-controller
     tag: latest
     pullPolicy: IfNotPresent
   #service port
