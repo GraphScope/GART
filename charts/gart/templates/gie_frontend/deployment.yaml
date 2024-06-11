@@ -1,0 +1,35 @@
+{{- $etcd_service_name := .Values.etcd.fullnameOverride }}
+{{- $etcd_service_port := int .Values.etcd.containerPorts.client }}
+{{- $etcd_service := printf "%s:%d" $etcd_service_name $etcd_service_port }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gart.fullname" . }}-gie-frontend
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.gie_frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: gie-frontend
+  template:
+    metadata:
+      labels:
+        app: gie-frontend
+    spec:
+      containers:
+      - name: gie-frontend
+        image: {{ include "gart.gie_frontend.image" . }}
+        imagePullPolicy: {{ .Values.gie_frontend.image.pullPolicy | quote }}
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          cd /home/graphscope/GART &&
+          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python &&
+          ./scripts/update_gie_frontend_config.py {{ $etcd_service }} {{ .Values.dataconfig.etcdPrefix }} &&
+          cd /home/graphscope/GraphScope/interactive_engine/compiler &&
+          make run &&
+          sleep infinity
+        
+        
+        

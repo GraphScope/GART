@@ -189,6 +189,14 @@ controller:
   # container port
   containerPort: 5000
 
+#gie frontend config
+gie_frontend:
+  image:
+    repository: gart-gie-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+
 dataconfig:
   subgraphNum: 2
   dbHost: "127.0.0.1"

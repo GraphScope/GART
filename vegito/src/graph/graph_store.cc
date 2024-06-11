@@ -225,10 +225,10 @@ void GraphStore::put_schema() {
 void GraphStore::put_schema4gie() {
   auto schema = get_schema();
   string schema_str = schema.get_json4gie(get_local_pid());
-  std::ofstream fout("./schema/gie_schema_p" + to_string(get_local_pid()) +
-                     ".json");
-  fout << schema_str << std::endl;
-  fout.close();
+  string schema_key =
+      FLAGS_meta_prefix + "gart_gie_schema_p" + to_string(get_local_pid());
+  auto response_task = etcd_client_->put(schema_key, schema_str).get();
+  assert(response_task.is_ok());
 }
 
 void GraphStore::add_string_buffer(size_t size) {

@@ -157,11 +157,11 @@ Return the proper gart controller image name
 {{- end -}}
 
 {{/*
-Return the proper gart curl image name
+Return the proper gart gie frontend image name
 */}}
-{{- define "gart.curl.image" -}}
+{{- define "gart.gie_frontend.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
-{{- with .Values.curl.image -}}
+{{- with .Values.gie_frontend.image -}}
 {{- if .tag -}}
 {{- $tag = .tag | toString -}}
 {{- end -}}
