@@ -44,8 +44,6 @@ with open("/home/graphscope/gie-frontend-config.properties", "w") as f:
     f.write("pegasus.timeout: 240000\n")
     f.write("pegasus.output.capacity: 16\n")
     f.write("graph.schema: /home/graphscope/gie-graph-schema.json\n")
-    f.write("neo4j.bolt.server.disabled = NEO4J_DISABLED\n")
-    f.write("neo4j.bolt.server.port = FRONTEND_CYPHER_PORT\n")
     f.write("gremlin.server.port = " + gremlin_port + "\n")
     pegasus_hosts = ""
     for idx in range(server_size):
