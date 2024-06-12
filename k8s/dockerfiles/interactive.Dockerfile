@@ -138,4 +138,7 @@ RUN git clone https://github.com/doudoubobo/GraphScope.git -b v0.1.4 /home/graph
 RUN cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart && \
 cargo build --release
 
+WORKDIR /home/graphscope
+RUN git clone https://github.com/GraphScope/GART.git
+
 ENV PATH=${PATH}:/home/graphscope/.local/bin

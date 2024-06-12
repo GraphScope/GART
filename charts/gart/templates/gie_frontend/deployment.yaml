@@ -26,7 +26,7 @@ spec:
         - |
           cd /home/graphscope/GART &&
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python &&
-          ./scripts/update_gie_schema.py {{ $etcd_service }} {{ .Values.dataconfig.etcdPrefix }} {{ .Release.Namespace }} {{ include "gart.fullname" . }}-gie-executor {{ .Values.gie_frontend.gremlinPort }} {{ .Values.dataconfig.subgraphNum}} {{ include "gart.fullname" . }}-gie-executor-service {{ .Values.gie_executor.GAIA_RPC_PORT}} &&
+          ./scripts/update_gie_schema.py {{ $etcd_service }} {{ .Values.dataconfig.etcdPrefix }} {{ .Release.Namespace }} {{ include "gart.writer.fullname" . }} {{ .Values.gie_frontend.gremlinPort }} {{ .Values.dataconfig.subgraphNum}} {{ include "gart.fullname" . }}-gie-executor-service {{ .Values.gie_executor.GAIA_RPC_PORT}} &&
           cd /home/graphscope/GraphScope/interactive_engine/compiler &&
           make run &&
           sleep infinity

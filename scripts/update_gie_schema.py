@@ -14,6 +14,8 @@ server_size = sys.argv[6]
 rpc_service_name = sys.argv[7]
 rpc_service_port = sys.argv[8]
 
+server_size = int(server_size)
+
 if not etcd_endpoint.startswith(("http://", "https://")):
     etcd_endpoint = "http://" + etcd_endpoint
 parsed_url = urlparse(etcd_endpoint)

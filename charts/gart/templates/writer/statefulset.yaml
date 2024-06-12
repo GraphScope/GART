@@ -84,15 +84,20 @@ spec:
             containerPort: {{ .Values.gie_executor.GAIA_RPC_PORT }}
           - name: gaia-engine
             containerPort: {{ .Values.gie_executor.ENGINE_PORT }}
-            command: ["/bin/bash", "-c"]
-            args:
-            - |
-              cd /home/graphscope/GART &&
-              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib &&
-              ./scripts/update_gie_executor_config.py $((${HOSTNAME##*-} + 0)) {{ .Values.dataconfig.subgraphNum }} {{ .Values.gie_executor.GAIA_RPC_PORT }} {{ .Release.Namespace }} {{ include "gart.fullname" . }}-gie-executor {{ include "gart.fullname" . }}-gie-executor-service {{ .Values.gie_executor.ENGINE_PORT}} &&
-              cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart &&
-              ./target/release/grin_executor ../../../assembly/src/conf/graphscope/log4rs.yml /home/graphscope/gie-executor-config.properties &&
-              sleep infinity
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          echo "subgraph id: $((${HOSTNAME##*-} + 0))" &&
+          cd /home/graphscope/GART &&
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib &&
+          ./scripts/update_gie_executor_config.py $((${HOSTNAME##*-} + 0)) {{ .Values.dataconfig.subgraphNum }} {{ .Values.gie_executor.GAIA_RPC_PORT }} {{ .Release.Namespace }} {{ include "gart.writer.fullname" . }} {{ include "gart.fullname" . }}-gie-executor-service {{ .Values.gie_executor.ENGINE_PORT}} &&
+          sleep infinity &&
+          cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart &&
+          ./target/release/grin_executor ../../../assembly/src/conf/graphscope/log4rs.yml /home/graphscope/gie-executor-config.properties &&
+          sleep infinity
+        volumeMounts:
+        - name: shared-socket
+          mountPath: /tmp/shared
       {{- end }}
           
         
