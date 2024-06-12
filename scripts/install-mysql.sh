@@ -13,6 +13,10 @@ log-bin=mysql-bin
 binlog_format=row
 binlog_row_image=full
 
+# Enable GTID for consistency
+gtid_mode=ON
+enforce_gtid_consistency=ON
+
 # The databases captured. GART will capture all databases if not specified.
 binlog-do-db=ldbc  # change the name to your database
 
