@@ -7,6 +7,12 @@ import time
 
 etcd_endpoint = sys.argv[1]
 etcd_prefix = sys.argv[2]
+namespace = sys.argv[3]
+pod_base_name = sys.argv[4]
+gremlin_port = sys.argv[5]
+server_size = sys.argv[6]
+rpc_service_name = sys.argv[7]
+rpc_service_port = sys.argv[8]
 
 if not etcd_endpoint.startswith(("http://", "https://")):
     etcd_endpoint = "http://" + etcd_endpoint
@@ -26,6 +32,31 @@ while True:
         time.sleep(5)
     except Exception as e:
         time.sleep(5)
-        
-with open('/etc/gie-graph-schema.json', 'w') as f:
+
+with open("/home/graphscope/gie-graph-schema.json", "w") as f:
     f.write(schema_str)
+
+with open("/home/graphscope/gie-frontend-config.properties", "w") as f:
+    f.write("pegasus.worker.num: 2\n")
+    f.write("pegasus.batch.size: 1024\n")
+    f.write("pegasus.timeout: 240000\n")
+    f.write("pegasus.output.capacity: 16\n")
+    f.write("graph.schema: /home/graphscope/gie-graph-schema.json\n")
+    f.write("neo4j.bolt.server.disabled = NEO4J_DISABLED\n")
+    f.write("neo4j.bolt.server.port = FRONTEND_CYPHER_PORT\n")
+    f.write("gremlin.server.port = " + gremlin_port + "\n")
+    pegasus_hosts = ""
+    for idx in range(server_size):
+        service_name = (
+            pod_base_name
+            + "-"
+            + str(idx)
+            + "."
+            + rpc_service_name
+            + "."
+            + namespace
+            + ".svc.cluster.local"
+        )
+        pegasus_hosts += service_name + ":" + rpc_service_port + ","
+    pegasus_hosts = pegasus_hosts[:-1]
+    f.write("pegasus.hosts: " + pegasus_hosts + "\n")

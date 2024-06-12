@@ -27,3 +27,7 @@ data:
   DEBEZIUM_CONNECTOR_NAME: {{ include "gart.debezium.fullname" . | quote }}
   CONTROLLER_FLASK_PORT: {{ .Values.controller.containerPort | quote }}
   ETCD_SERVICE: {{ $etcd_service | quote }}
+  GIE_GREMLIN_PORT: {{ .Values.gie_frontend.gremlinPort | quote }}
+  GIE_EXECUTOR_RPC_PORT: {{ .Values.gie_executor.GAIA_RPC_PORT | quote }}
+  GIE_EXECUTOR_ENGINE_PORT: {{ .Values.gie_executor.ENGINE_PORT | quote }}
+

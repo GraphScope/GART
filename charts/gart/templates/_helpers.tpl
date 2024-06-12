@@ -172,6 +172,23 @@ Return the proper gart gie frontend image name
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Return the proper gart gie executor image name
+*/}}
+{{- define "gart.gie_executor.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.gie_executor.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
     
 
 {{/*

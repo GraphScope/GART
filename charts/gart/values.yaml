@@ -173,6 +173,7 @@ writer:
 
 # analyzer config
 analyzer:
+  enabled: false
   image:
     repository: gart-analyzer
     tag: latest
@@ -196,6 +197,17 @@ gie_frontend:
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
+  gremlinPort: 8182
+
+# gie executor config
+gie_executor:
+  image:
+    repository: gart-gie-executor
+    tag: latest
+    pullPolicy: IfNotPresent
+  GAIA_RPC_PORT: 8000
+  ENGINE_PORT: 9000
+
 
 dataconfig:
   subgraphNum: 2

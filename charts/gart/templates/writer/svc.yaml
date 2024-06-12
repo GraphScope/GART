@@ -1,0 +1,18 @@
+{{- if not .Values.analyzer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gart.fullname" . }}-gie-executor-service
+spec:
+  selector:
+    app: writer
+  ports:
+  - name: gaia-rpc
+    port: {{ .Values.gie_executor.GAIA_RPC_PORT }}
+    targetPort: gaia-rpc
+  - name: gaia-engine
+    port: {{ .Values.gie_executor.ENGINE_PORT }}
+    targetPort: gaia-engine
+  clusterIP: None
+
+{{- end }}
