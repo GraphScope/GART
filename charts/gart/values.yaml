@@ -212,10 +212,10 @@ gie_executor:
 dataconfig:
   subgraphNum: 2
   dbHost: "127.0.0.1"
-  dbPort: "3306"
+  dbPort: "5432"
   dbUser: "dbuser"
   dbPassword: "123456"
-  dbType: "mysql"
+  dbType: "postgresql"
   dbName: "ldbc"
   v6dSocket: "/tmp/shared/v6d.sock"
   v6dSize: "750G"

@@ -12,7 +12,7 @@ metadata:
   name: {{ include "gart.writer.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
-  serviceName: "writer"
+  serviceName: {{ include "gart.fullname" . }}-gie-executor-service
   replicas: {{ .Values.dataconfig.subgraphNum }}
   selector:
     matchLabels:
@@ -80,10 +80,10 @@ spec:
         image: {{ include "gart.gie_executor.image" . }}
         imagePullPolicy: {{ .Values.gie_executor.image.pullPolicy | quote }}
         ports:
-          - name: gaia-rpc
-            containerPort: {{ .Values.gie_executor.GAIA_RPC_PORT }}
-          - name: gaia-engine
-            containerPort: {{ .Values.gie_executor.ENGINE_PORT }}
+        - name: gaia-rpc
+          containerPort: {{ .Values.gie_executor.GAIA_RPC_PORT }}
+        - name: gaia-engine
+          containerPort: {{ .Values.gie_executor.ENGINE_PORT }}
         command: ["/bin/bash", "-c"]
         args:
         - |
@@ -91,9 +91,8 @@ spec:
           cd /home/graphscope/GART &&
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib &&
           ./scripts/update_gie_executor_config.py $((${HOSTNAME##*-} + 0)) {{ .Values.dataconfig.subgraphNum }} {{ .Values.gie_executor.GAIA_RPC_PORT }} {{ .Release.Namespace }} {{ include "gart.writer.fullname" . }} {{ include "gart.fullname" . }}-gie-executor-service {{ .Values.gie_executor.ENGINE_PORT}} &&
-          sleep infinity &&
           cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart &&
-          ./target/release/grin_executor ../../../assembly/src/conf/graphscope/log4rs.yml /home/graphscope/gie-executor-config.properties &&
+          echo ./target/release/grin_executor ../../../assembly/src/conf/graphscope/log4rs.yml /home/graphscope/gie-executor-config.properties &&
           sleep infinity
         volumeMounts:
         - name: shared-socket

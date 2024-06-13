@@ -31,7 +31,8 @@ spec:
           make run &&
           sleep infinity
         ports:
-          - containerPort: {{ .Values.gie_frontend.gremlinPort }}
+          - name: gremlin 
+            containerPort: {{ .Values.gie_frontend.gremlinPort }}
         envFrom:
         - configMapRef:
             name: {{ include "gart.configmapName" . }}
