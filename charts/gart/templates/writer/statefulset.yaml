@@ -84,6 +84,8 @@ spec:
           containerPort: {{ .Values.gie_executor.GAIA_RPC_PORT }}
         - name: gaia-engine
           containerPort: {{ .Values.gie_executor.ENGINE_PORT }}
+        - name: http-service
+          containerPort: {{ .Values.gie_executor.HTTP_SERVICE_PORT }}
         command: ["/bin/bash", "-c"]
         args:
         - |
@@ -91,9 +93,10 @@ spec:
           cd /home/graphscope/GART &&
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib &&
           ./scripts/update_gie_executor_config.py $((${HOSTNAME##*-} + 0)) {{ .Values.dataconfig.subgraphNum }} {{ .Values.gie_executor.GAIA_RPC_PORT }} {{ .Release.Namespace }} {{ include "gart.writer.fullname" . }} {{ include "gart.fullname" . }}-gie-executor-service {{ .Values.gie_executor.ENGINE_PORT}} &&
-          cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart &&
-          echo ./target/release/grin_executor ../../../assembly/src/conf/graphscope/log4rs.yml /home/graphscope/gie-executor-config.properties &&
           sleep infinity
+        envFrom:
+        - configMapRef:
+            name: {{ include "gart.configmapName" . }}
         volumeMounts:
         - name: shared-socket
           mountPath: /tmp/shared

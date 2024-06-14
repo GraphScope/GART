@@ -13,6 +13,9 @@ spec:
   - name: gaia-engine
     port: {{ .Values.gie_executor.ENGINE_PORT }}
     targetPort: gaia-engine
+  - name: http-service
+    port: {{ .Values.gie_executor.HTTP_SERVICE_PORT }}
+    targetPort: http-service
   clusterIP: None
 
 {{- end }}
