@@ -44,11 +44,21 @@ def start_gie_executor():
     read_epoch = request.form.get("read_epoch", None)
     if read_epoch is None:
         return "read_epoch is required", 400
-    # set the environment variable `READ_EPOCH` and make it visible to the linux command
-    os.environ["READ_EPOCH"] = read_epoch
-    cmd = "cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart && ./target/release/grin_executor ../../../assembly/src/conf/graphscope/log4rs.yml /home/graphscope/gie-executor-config.properties"
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
-    return result.stdout + "\n" + result.stderr, 200
+    etcd_endpoint = request.form.get("etcd_endpoint", None)
+    if etcd_endpoint is None:
+        return "etcd_endpoint is required", 400
+    etcd_prefix = request.form.get("etcd_prefix", "gart_meta_")
+    if etcd_prefix is None:
+        return "etcd_prefix is required", 400
+    cmd = f"/workspace/gart/scripts/launch_gie_executor.sh start {etcd_endpoint} {etcd_prefix} {read_epoch}"
+    subprocess.run(
+        [
+            "/bin/bash",
+            "-c",
+            cmd,
+        ]
+    )
+    return "Executor launching sucessfully", 200
     
 
 port = int(os.getenv("GIE_EXECUTOR_FLASK_PORT", 5000))

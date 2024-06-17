@@ -44,7 +44,7 @@ RUN apt-get update -y && \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH=/root/.cargo/bin:$PATH
 
-RUN python3 -m pip install --no-cache-dir vineyard vineyard-io etcd3 flask --user
+RUN python3 -m pip install --no-cache-dir vineyard vineyard-io etcd3 --user
 
 COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 
@@ -89,7 +89,7 @@ COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 
 RUN chmod a+wrx /tmp /var/tmp
 
-RUN python3 -m pip install --no-cache-dir vineyard vineyard-io --user
+RUN python3 -m pip install --no-cache-dir vineyard vineyard-io flask --user
 
 
 
