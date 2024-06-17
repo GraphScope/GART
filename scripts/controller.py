@@ -82,10 +82,11 @@ def run_gie_task():
         pod_service_name = os.getenv("GIE_EXECUTOR_POD_SERVICE_NAME", "engine")
         pod_service_port = os.getenv("GIE_EXECUTOR_POD_SERVICE_PORT", 80)
         cmd = f"curl -X POST http://{pod_base_name}-{idx}.{pod_service_name}:{pod_service_port}/start-gie-executor -d 'read_epoch={read_epoch}&etcd_prefix={etcd_prefix}&etcd_endpoint={etcd_server}'"
-        launch_gie_executor_result = subprocess.run(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True
-        )
-        print(launch_gie_executor_result.stdout + "\n" + launch_gie_executor_result.stderr)
+        return cmd, 200
+        #launch_gie_executor_result = subprocess.run(
+        #    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True
+        #)
+        #print(launch_gie_executor_result.stdout + "\n" + launch_gie_executor_result.stderr)
     #TODO(wanglei): check if all gie executors are launched successfully
     time.sleep(5)
     gremlin_client = Client(f"ws://{etcd_server}/gremlin", "g")

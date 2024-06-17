@@ -68,12 +68,12 @@ USER root
 ENV RUST_BACKTRACE=1
 
 RUN apt-get update -y && \
-    apt-get install -y python3-pip default-jdk curl && \
+    apt-get install -y python3-pip curl && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update -y && \
-    apt-get install -y git build-essential cmake curl maven libssl-dev libclang-dev openmpi-bin libopenmpi-dev && \
+    apt-get install -y git build-essential cmake libssl-dev libclang-dev openmpi-bin libopenmpi-dev && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

@@ -50,7 +50,7 @@ def start_gie_executor():
     etcd_prefix = request.form.get("etcd_prefix", "gart_meta_")
     if etcd_prefix is None:
         return "etcd_prefix is required", 400
-    cmd = f"/workspace/gart/scripts/launch_gie_executor.sh start {etcd_endpoint} {etcd_prefix} {read_epoch}"
+    cmd = f"/home/graphscope/GART/scripts/launch_gie_executor.sh start {etcd_endpoint} {etcd_prefix} {read_epoch}"
     subprocess.run(
         [
             "/bin/bash",

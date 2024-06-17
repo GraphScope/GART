@@ -85,7 +85,7 @@ spec:
         - name: gaia-engine
           containerPort: {{ .Values.gie_executor.ENGINE_PORT }}
         - name: http-service
-          containerPort: {{ .Values.gie_executor.HTTP_SERVICE_PORT }}
+          containerPort: {{ .Values.gie_executor.FLASK_PORT }}
         command: ["/bin/bash", "-c"]
         args:
         - |
