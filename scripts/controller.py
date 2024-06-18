@@ -13,6 +13,7 @@ from gremlin_python.driver.client import Client
 app = Flask(__name__)
 port = int(os.getenv("CONTROLLER_FLASK_PORT", 5000))
 previous_hosts_info = None
+previous_read_epoch = None
 
 
 @app.route("/control/pause", methods=["POST"])
@@ -52,46 +53,53 @@ def run_gae_task():
     command += f"--meta_prefix {etcd_prefix} "
     return run_gae(command)
 
-@app.route("/run-gie-task", methods=["POST"])
-def run_gie_task():
+
+@app.route("/change-read-epoch", methods=["POST"])
+def change_read_epoch():
     read_epoch = request.form.get("read_epoch", None)
     if read_epoch is None:
         return "read_epoch is required", 400
-    query = request.form.get("query", None)
-    if query is None:
-        return "query is required", 400
-    etcd_server = os.getenv("ETCD_SERVICE", "etcd")
-    if not etcd_server.startswith("http://"):
-        etcd_server = f"http://{etcd_server}"
-    etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
-    etcd_host = etcd_server.split("://")[1].split(":")[0]
-    etcd_port = etcd_server.split(":")[2]
-    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
-    num_fragment = os.getenv("SUBGRAPH_NUM", 1)
-    for idx in range(int(num_fragment)):
-        schema_key = etcd_prefix + "gart_blob_m0" + f"_p{idx}" + f"_e{read_epoch}"
-        while True:
-            try:
-                schema_str, _ = etcd_client.get(schema_key)
-                if schema_str is not None:
-                    break
-                time.sleep(5)
-            except Exception as e:
-                time.sleep(5)
-        pod_base_name = os.getenv("GIE_EXECUTOR_POD_BASE_NAME", "gart")
-        pod_service_name = os.getenv("GIE_EXECUTOR_POD_SERVICE_NAME", "engine")
-        pod_service_port = os.getenv("GIE_EXECUTOR_POD_SERVICE_PORT", 80)
-        cmd = f"curl -X POST http://{pod_base_name}-{idx}.{pod_service_name}:{pod_service_port}/start-gie-executor -d 'read_epoch={read_epoch}&etcd_prefix={etcd_prefix}&etcd_endpoint={etcd_server}'"
-        return cmd, 200
-        launch_gie_executor_result = subprocess.run(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True
-        )
-        print(launch_gie_executor_result.stdout + "\n" + launch_gie_executor_result.stderr)
-    #TODO(wanglei): check if all gie executors are launched successfully
-    time.sleep(5)
-    gremlin_client = Client(f"ws://{etcd_server}/gremlin", "g")
-    return gremlin_client.submit(query).all().result(), 200
-        
+    global previous_read_epoch
+    if previous_read_epoch is None or previous_read_epoch != read_epoch:
+        previous_read_epoch = read_epoch
+        etcd_server = os.getenv("ETCD_SERVICE", "etcd")
+        if not etcd_server.startswith("http://"):
+            etcd_server = f"http://{etcd_server}"
+        etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+        etcd_host = etcd_server.split("://")[1].split(":")[0]
+        etcd_port = etcd_server.split(":")[2]
+        etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+        num_fragment = os.getenv("SUBGRAPH_NUM", 1)
+        for idx in range(int(num_fragment)):
+            schema_key = etcd_prefix + "gart_blob_m0" + f"_p{idx}" + f"_e{read_epoch}"
+            while True:
+                try:
+                    schema_str, _ = etcd_client.get(schema_key)
+                    if schema_str is not None:
+                        break
+                    time.sleep(5)
+                except Exception as e:
+                    time.sleep(5)
+            pod_base_name = os.getenv("GIE_EXECUTOR_POD_BASE_NAME", "gart")
+            pod_service_name = os.getenv("GIE_EXECUTOR_POD_SERVICE_NAME", "engine")
+            pod_service_port = os.getenv("GIE_EXECUTOR_POD_SERVICE_PORT", 80)
+            cmd = f"curl -X POST http://{pod_base_name}-{idx}.{pod_service_name}:{pod_service_port}/start-gie-executor -d 'read_epoch={read_epoch}&etcd_prefix={etcd_prefix}&etcd_endpoint={etcd_server}'"
+
+            launch_gie_executor_result = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                shell=True,
+            )
+            print(
+                launch_gie_executor_result.stdout
+                + "\n"
+                + launch_gie_executor_result.stderr
+            )
+        # TODO(wanglei): check if all gie executors are launched successfully
+        time.sleep(5)
+    return "Read epoch changed", 200
 
 
 def get_pod_ips(namespace, label_selector):

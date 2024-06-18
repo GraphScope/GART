@@ -36,8 +36,9 @@ with open("/home/graphscope/gie-executor-config.properties", "w") as f:
         network_servers += service_name + ":" + engine_port + ","
     network_servers = network_servers[:-1]
     f.write("network.servers: " + network_servers + "\n")
-    
+
 app = Flask(__name__)
+
 
 @app.route("/start-gie-executor", methods=["POST"])
 def start_gie_executor():
@@ -59,7 +60,7 @@ def start_gie_executor():
         ]
     )
     return "Executor launching sucessfully", 200
-    
+
 
 port = int(os.getenv("GIE_EXECUTOR_FLASK_PORT", 5000))
 app.run(host="0.0.0.0", port=port)
