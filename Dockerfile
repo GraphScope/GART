@@ -71,8 +71,8 @@ RUN if [ "$build_type" = "Controller" ]; then \
   mv ./kubectl /usr/local/bin/kubectl && \
   apt-get update && apt-get install -y openmpi-bin libopenmpi-dev && \
   rm -rf /var/lib/apt/lists/* && \
-  pip3 install tenacity==8.3.0; \
-  pip3 install flask kubernetes gremlinpython etcd3; \
+  pip3 install tenacity==8.3.0 && \
+  pip3 install flask kubernetes etcd3; \
   fi
 
 # Find the Kafka directory and write its path to a file

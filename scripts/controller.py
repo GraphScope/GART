@@ -8,7 +8,7 @@ import tempfile
 import shutil
 import etcd3
 import time
-from gremlin_python.driver.client import Client
+import socket
 
 app = Flask(__name__)
 port = int(os.getenv("CONTROLLER_FLASK_PORT", 5000))
@@ -69,7 +69,10 @@ def change_read_epoch():
         etcd_host = etcd_server.split("://")[1].split(":")[0]
         etcd_port = etcd_server.split(":")[2]
         etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
-        num_fragment = os.getenv("SUBGRAPH_NUM", 1)
+        num_fragment = os.getenv("SUBGRAPH_NUM", "1")
+        pod_base_name = os.getenv("GIE_EXECUTOR_POD_BASE_NAME", "gart")
+        pod_service_name = os.getenv("GIE_EXECUTOR_POD_SERVICE_NAME", "engine")
+        pod_service_port = os.getenv("GIE_EXECUTOR_POD_SERVICE_PORT", "80")
         for idx in range(int(num_fragment)):
             schema_key = etcd_prefix + "gart_blob_m0" + f"_p{idx}" + f"_e{read_epoch}"
             while True:
@@ -80,9 +83,7 @@ def change_read_epoch():
                     time.sleep(5)
                 except Exception as e:
                     time.sleep(5)
-            pod_base_name = os.getenv("GIE_EXECUTOR_POD_BASE_NAME", "gart")
-            pod_service_name = os.getenv("GIE_EXECUTOR_POD_SERVICE_NAME", "engine")
-            pod_service_port = os.getenv("GIE_EXECUTOR_POD_SERVICE_PORT", 80)
+
             cmd = f"curl -X POST http://{pod_base_name}-{idx}.{pod_service_name}:{pod_service_port}/start-gie-executor -d 'read_epoch={read_epoch}&etcd_prefix={etcd_prefix}&etcd_endpoint={etcd_server}'"
 
             launch_gie_executor_result = subprocess.run(
@@ -97,8 +98,31 @@ def change_read_epoch():
                 + "\n"
                 + launch_gie_executor_result.stderr
             )
-        # TODO(wanglei): check if all gie executors are launched successfully
-        time.sleep(5)
+        # check if all gie executors are launched successfully
+        executors_status = [0] * int(num_fragment)
+        gie_executor_rpc_port = os.getenv("GIE_EXECUTOR_RPC_PORT", "8000")
+        while True:
+            if all(executors_status):
+                break
+            for idx in range(int(num_fragment)):
+                if executors_status[idx]:
+                    continue
+                if check_host_port(
+                    f"{pod_base_name}-{idx}.{pod_service_name}",
+                    int(gie_executor_rpc_port),
+                ):
+                    executors_status[idx] = 1
+                else:
+                    time.sleep(0.5)
+        # check if gie frontend is launched successfully
+        gie_frontend_service_name = os.getenv("GIE_FRONTEND_SERVICE_NAME", "frontend")
+        gie_frontend_service_port = os.getenv("GIE_FRONTEND_SERVIVE_PORT", "8182")
+        while True:
+            if check_host_port(
+                gie_frontend_service_name, int(gie_frontend_service_port)
+            ):
+                break
+            time.sleep(0.5)
     return "Read epoch changed", 200
 
 
@@ -173,6 +197,18 @@ def run_gae(part_cmd):
         cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
     return gae_result.stdout + " " + gae_result.stderr, 200
+
+
+def check_host_port(host, port):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        sock.connect((host, port))
+        sock.close()
+        return True
+    except socket.error as e:
+        print(f"Error: {e} on {host}:{port}")
+        return False
 
 
 if __name__ == "__main__":

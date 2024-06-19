@@ -34,6 +34,7 @@ data:
   GIE_EXECUTOR_POD_BASE_NAME: {{ include "gart.writer.fullname" . | quote }}
   GIE_EXECUTOR_POD_SERVICE_NAME: {{ include "gart.fullname" . }}-gie-executor-service
   GIE_EXECUTOR_POD_SERVICE_PORT: {{ .Values.gie_executor.HTTP_SERVICE_PORT | quote }}
+  GIE_EXECUTOR_RPC_PORT: {{ .Values.gie_executor.GAIA_RPC_PORT | quote }}
   GIE_EXECUTOR_FLASK_PORT: {{ .Values.gie_executor.FLASK_PORT | quote }}
   GIE_FRONTEND_SERVICE_NAME: {{ include "gart.fullname" . }}-gie-frontend-service
   GIE_FRONTEND_SERVIVE_PORT: {{ .Values.gie_frontend.gremlinPort | quote }}
