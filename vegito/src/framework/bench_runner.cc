@@ -544,6 +544,8 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
   }
 
   sv_vec.erase(sv_vec.begin(), sv_vec.begin() + 1);
+  // remove the last element of sv_vec, since the last element of sv_vec is offset of binlog
+  sv_vec.pop_back();
 
   if (op == "add_vertex") {
     process_add_vertex(sv_vec, graph_stores_[p_id]);

@@ -13,12 +13,15 @@
  * limitations under the License.
  */
 
+#include <sys/types.h>
 #include <chrono>
 #include <fstream>
+#include <iostream>
 
 #include "converter/flags.h"
 #include "converter/kafka_helper.h"
 #include "converter/parser.h"
+#include "util/macros.h"
 
 using converter::KafkaConsumer;
 using converter::KafkaOutputStream;
@@ -39,8 +42,6 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  shared_ptr<KafkaConsumer> consumer = make_shared<KafkaConsumer>(
-      FLAGS_read_kafka_broker_list, FLAGS_read_kafka_topic, "gart_consumer");
   shared_ptr<KafkaProducer> producer = make_shared<KafkaProducer>(
       FLAGS_write_kafka_broker_list, FLAGS_write_kafka_topic);
   KafkaOutputStream ostream(producer);
@@ -52,6 +53,52 @@ int main(int argc, char** argv) {
   bool is_timeout = false;
 
   int epoch = 0;
+
+  // catch up mode is used for failover
+  bool catch_up_mode = true;
+  int64_t last_processed_offset = 0;
+  int64_t processed_count = 0;
+
+  shared_ptr<KafkaConsumer> consumer_for_get_last_commit =
+      make_shared<KafkaConsumer>(FLAGS_write_kafka_broker_list,
+                                 FLAGS_write_kafka_topic, "gart_consumer", 0,
+                                 RdKafka::Topic::OFFSET_BEGINNING);
+  bool topic_exist = consumer_for_get_last_commit->topic_exist();
+
+  if (!topic_exist) {
+    consumer_for_get_last_commit->stop();
+    std::cout << "Empty...Will start to read topic messages from beginning."
+              << std::endl;
+  } else {
+    std::pair<int64_t, int64_t> low_high_pair =
+        consumer_for_get_last_commit->query_watermark_offsets();
+    consumer_for_get_last_commit->stop();
+    int64_t high_offset = low_high_pair.second;
+    std::cout << "Low offset: " << low_high_pair.first
+              << ", High offset: " << low_high_pair.second << std::endl;
+    if (high_offset == 0) {
+      std::cout << "Will start to read topic messages from beginning."
+                << std::endl;
+    } else {
+      consumer_for_get_last_commit->start(high_offset - 1);
+      RdKafka::Message* last_commit_msg =
+          consumer_for_get_last_commit->consume(nullptr, 1000);
+      string line(static_cast<const char*>(last_commit_msg->payload()),
+                  last_commit_msg->len());
+      std::cout << "Last message is " << line << std::endl;
+      char delimiter = '|';
+      size_t pos = line.find_last_of(delimiter);
+      last_processed_offset = std::stoll(line.substr(pos + 1));
+      std::cout << "Will start to read topic messages from "
+                << last_processed_offset << std::endl;
+      consumer_for_get_last_commit->delete_message(last_commit_msg);
+      consumer_for_get_last_commit->stop();
+    }
+  }
+
+  shared_ptr<KafkaConsumer> consumer = make_shared<KafkaConsumer>(
+      FLAGS_read_kafka_broker_list, FLAGS_read_kafka_topic, "gart_consumer", 0,
+      RdKafka::Topic::OFFSET_BEGINNING);
 
 #ifdef USE_DEBEZIUM
   // used for consistent epoch calculation
@@ -86,7 +133,16 @@ int main(int argc, char** argv) {
       }
 
       while (log_entry.more_entires()) {
-        ostream << log_entry.to_string() << flush;
+        if (catch_up_mode) {
+          if (processed_count >= last_processed_offset) {
+            catch_up_mode = false;
+          }
+        }
+        processed_count++;
+        if (likely(!catch_up_mode)) {
+          ostream << log_entry.to_string(processed_count) << flush;
+        }
+
         GART_CHECK_OK(parser.parse(log_entry, line, epoch));
 
         if (!log_entry.valid()) {
@@ -94,7 +150,17 @@ int main(int argc, char** argv) {
         }
       }
 
-      ostream << log_entry.to_string() << flush;
+      if (catch_up_mode) {
+        if (processed_count >= last_processed_offset) {
+          catch_up_mode = false;
+        }
+      }
+
+      processed_count++;
+      if (likely(!catch_up_mode)) {
+        ostream << log_entry.to_string(processed_count) << flush;
+      }
+
       consumer->delete_message(msg);
 
       if (log_entry.last_snapshot()) {
@@ -103,7 +169,16 @@ int main(int argc, char** argv) {
         last_tx_id = log_entry.get_tx_id();
         last_log_count = log_count;
         epoch = 1;
-        ostream << LogEntry::bulk_load_end().to_string() << flush;
+        if (catch_up_mode) {
+          if (processed_count >= last_processed_offset) {
+            catch_up_mode = false;
+          }
+        }
+        processed_count++;
+        if (!catch_up_mode) {
+          ostream << LogEntry::bulk_load_end().to_string(processed_count)
+                  << flush;
+        }
         break;
       }
 
@@ -175,7 +250,16 @@ int main(int argc, char** argv) {
 #endif
 
     while (log_entry.more_entires()) {
-      ostream << log_entry.to_string() << flush;
+      if (catch_up_mode) {
+        if (processed_count >= last_processed_offset) {
+          catch_up_mode = false;
+        }
+      }
+      processed_count++;
+      if (!catch_up_mode) {
+        ostream << log_entry.to_string(processed_count) << flush;
+      }
+
       GART_CHECK_OK(parser.parse(log_entry, line, epoch));
 
       if (!log_entry.valid()) {
@@ -183,7 +267,17 @@ int main(int argc, char** argv) {
       }
     }
 
-    ostream << log_entry.to_string() << flush;
+    if (catch_up_mode) {
+      if (processed_count >= last_processed_offset) {
+        catch_up_mode = false;
+      }
+    }
+
+    processed_count++;
+    if (!catch_up_mode) {
+      ostream << log_entry.to_string(processed_count) << flush;
+    }
+
     consumer->delete_message(msg);
   }
 }

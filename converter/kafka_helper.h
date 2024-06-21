@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "glog/logging.h"
 #include "librdkafka/rdkafkacpp.h"
@@ -128,12 +129,14 @@ class KafkaOutputStream : public std::ostream {
  */
 class KafkaConsumer {
  public:
-  explicit KafkaConsumer(const std::string& broker_list,
-                         const std::string& topic, const std::string& group_id,
-                         int partition = 0)
+  explicit KafkaConsumer(
+      const std::string& broker_list, const std::string& topic,
+      const std::string& group_id, int partition = 0,
+      int64_t start_offset = RdKafka::Topic::OFFSET_BEGINNING)
       : brokers_(broker_list),
         topic_(topic),
         group_id_(group_id),
+        start_offset_(start_offset),
         partition_(partition) {
     RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
     std::string rdkafka_err;
@@ -165,10 +168,9 @@ class KafkaConsumer {
 
     topic_ptr_ =
         RdKafka::Topic::create(consumer_.get(), topic_, tconf, rdkafka_err);
-    int64_t start_offset = RdKafka::Topic::OFFSET_BEGINNING;
 
     RdKafka::ErrorCode resp =
-        consumer_->start(topic_ptr_, partition_, start_offset);
+        consumer_->start(topic_ptr_, partition_, start_offset_);
 
     if (resp != RdKafka::ERR_NO_ERROR) {
       LOG(ERROR) << "Failed to start consumer: " << RdKafka::err2str(resp);
@@ -217,6 +219,44 @@ class KafkaConsumer {
     }
   }
 
+  inline std::pair<int64_t, int64_t> query_watermark_offsets() const {
+    int64_t low, high;
+    RdKafka::ErrorCode err = consumer_->query_watermark_offsets(
+        topic_, partition_, &low, &high, 5000);
+    if (err != RdKafka::ERR_NO_ERROR) {
+      LOG(INFO) << "Failed to query watermark offsets: "
+                << RdKafka::err2str(err);
+      return std::make_pair(0, 0);
+    }
+    return std::make_pair(low, high);
+  }
+
+  inline RdKafka::ErrorCode stop() const {
+    return consumer_->stop(topic_ptr_, partition_);
+  }
+
+  inline RdKafka::ErrorCode seek(int64_t offset) const {
+    return consumer_->seek(topic_ptr_, partition_, offset, 5000);
+  }
+
+  inline RdKafka::ErrorCode start(int64_t new_offset) const {
+    return consumer_->start(topic_ptr_, partition_, new_offset);
+  }
+
+  inline bool topic_exist() {
+    RdKafka::Metadata* metadata = nullptr;
+    RdKafka::ErrorCode metadata_err =
+        consumer_->metadata(false, topic_ptr_, &metadata, 5000);
+    delete metadata;
+    if (metadata_err != RdKafka::ERR_NO_ERROR) {
+      std::cout << "Failed to get metadata: " << RdKafka::err2str(metadata_err)
+                << std::endl;
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   ~KafkaConsumer() = default;
 
  private:
@@ -224,6 +264,7 @@ class KafkaConsumer {
   const std::string topic_;
   const std::string group_id_;
   const int partition_;
+  const int64_t start_offset_;
 
   RdKafka::Topic* topic_ptr_;
   std::unique_ptr<RdKafka::Consumer> consumer_;

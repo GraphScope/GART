@@ -94,11 +94,12 @@ LogEntry LogEntry::bulk_load_end() {
   return entry;
 }
 
-string LogEntry::to_string() const {
+string LogEntry::to_string(int64_t binlog_offset) const {
   string base;
   if (op_type == OpType::BULKLOAD_END) {
     base = "bulkload_end";
     append_str(base, epoch);
+    append_str(base, binlog_offset);
     return base;
   }
 
@@ -133,6 +134,7 @@ string LogEntry::to_string() const {
     append_str(base, str);
   }
 
+  append_str(base, binlog_offset);
   return base;
 }
 

@@ -35,10 +35,20 @@ spec:
           cd /workspace/gart/build &&
           until nc -z {{ $kafka_service_name }} {{ $kafka_service_port }}; do echo waiting for kafka; sleep 5; done &&
           until nc -z {{ $etcd_service_name }} {{ $etcd_service_port }}; do echo waiting for etcd; sleep 5; done &&
-          echo "Applying Debezium connector configuration..." &&
           export  PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python &&
           CONFIG=$(/workspace/gart/scripts/update_debezium_config.py {{ $etcd_service }} {{ .Values.dataconfig.etcdPrefix }} {{ .Values.dataconfig.dbName }} {{ .Values.dataconfig.dbType }}) &&
+          export ETCDCTL_API=3 &&
+          etcd_prefix=$(echo {{ .Values.dataconfig.etcdPrefix }}) &&
+          etcd_key=$etcd_prefix"debezium_request_is_sent" &&
+          etcd_endpoint=$(echo {{ $etcd_service }}) &&
+          echo $etcd_endpoint &&
+          echo $etcd_key &&
           while : ; do
+            if [ "$(etcdctl --endpoints=$etcd_endpoint get $etcd_key | awk 'NR==2')" == "True" ]; then
+              echo "Debezium service is already ready."
+              break
+            fi
+            echo "Applying Debezium connector configuration..."
             HTTP_STATUS=$(curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
               --data "$CONFIG" \
               http://{{ $debezium_service }}/connectors/ \
@@ -46,6 +56,7 @@ spec:
             
             if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 201 ]; then
               echo "Debezium service is ready."
+              etcdctl --endpoints=$etcd_endpoint put $etcd_key "True"
               break
             else
               echo "Debezium service not ready, waiting... Status: $HTTP_STATUS"

@@ -39,7 +39,7 @@ class LogEntry {
 
   static LogEntry bulk_load_end();
 
-  std::string to_string() const;
+  std::string to_string(int64_t binlog_offset) const;
 
   int get_tx_id() const { return tx_id; }
 
