@@ -30,4 +30,7 @@ DEFINE_string(etcd_prefix, "", "etcd prefix.");
 
 DEFINE_int32(subgraph_num, 1, "Number of subgraphs for GAP workloads.");
 
+DEFINE_int32(checkpoint_interval, 10, "Checkpoint interval in minutes.");
+DEFINE_string(checkpoint_dir, "/tmp/checkpoint", "Checkpoint directory.");
+
 DEFINE_bool(enable_bulkload, false, "Enable bulkload from existing data.");

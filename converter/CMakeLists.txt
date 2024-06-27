@@ -54,6 +54,11 @@ if (GLOG_FOUND)
     set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${GLOG_LIBRARIES}")
 endif ()
 
+if(ENABLE_CHECKPOINT)
+  find_package(Boost REQUIRED COMPONENTS serialization)
+  include_directories(${Boost_INCLUDE_DIRS})
+endif()
+
 file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h")
 
 add_custom_target(convert_clformat
@@ -70,6 +75,11 @@ target_include_directories(binlog_convert_debezium PRIVATE ${RDKAFKA_INCLUDE_DIR
 target_link_libraries(binlog_convert_debezium ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${CMAKE_DL_LIBS} ${YAML_CPP_LIBRARIES})
 target_compile_definitions(binlog_convert_debezium PUBLIC -DUSE_DEBEZIUM)
 
+if(ENABLE_CHECKPOINT)
+  target_compile_definitions(binlog_convert_debezium PRIVATE ENABLE_CHECKPOINT)
+  target_link_libraries(binlog_convert_debezium ${Boost_LIBRARIES})
+endif()
+
 add_executable(binlog_convert_maxwell binlog_convert.cc flags.cc parser.cc)
 
 target_include_directories(binlog_convert_maxwell PRIVATE ${RDKAFKA_INCLUDE_DIR})
@@ -77,3 +87,8 @@ target_link_libraries(binlog_convert_maxwell ${RDKAFKA_LIBRARIES} ${GFLAGS_LIBRA
 
 add_executable(json2yaml json2yaml.cc)
 target_link_libraries(json2yaml ${YAML_CPP_LIBRARIES})
+
+if(ENABLE_CHECKPOINT)
+  target_compile_definitions(binlog_convert_maxwell PRIVATE ENABLE_CHECKPOINT)
+  target_link_libraries(binlog_convert_maxwell ${Boost_LIBRARIES})
+endif()

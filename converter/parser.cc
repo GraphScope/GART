@@ -15,6 +15,7 @@
 
 #include "converter/parser.h"
 
+#include <chrono>
 #include <fstream>
 #include <string>
 #include <utility>
@@ -548,5 +549,52 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
     out.properties.push_back(prop_str);
   }
 }
+
+#ifdef ENABLE_CHECKPOINT
+void TxnLogParser::checkpoint_vertex_maps(const string& folder_path) {
+  // file format: vlabel_id_string_vertex_map.bin or vlabel_id_int_vertex_map.bin
+  for (auto v_label = 0; v_label < vlabel_num_; v_label++) {
+    if (!string_oid2gid_maps_.empty()) {
+      std::string file_name = folder_path + "/vlabel_" + std::to_string(v_label) +
+                              "_string_vertex_map.bin";
+      std::ofstream ofs(file_name);
+      boost::archive::binary_oarchive oa(ofs);
+      oa << string_oid2gid_maps_[v_label];
+    } else {
+      std::string file_name = folder_path + "/vlabel_" + std::to_string(v_label) +
+                              "_int_vertex_map.bin";
+      std::ofstream ofs(file_name);
+      boost::archive::binary_oarchive oa(ofs);
+      oa << int64_oid2gid_maps_[v_label];
+    }
+  }
+  // write the values of vertex_nums_ and vertex_nums_per_fragment_ into files
+  std::string file_name = folder_path + "/vertex_nums.bin";
+  std::ofstream ofs(file_name);
+}
+
+void TxnLogParser::load_vertex_maps_checkpoint(const string& folder_path) {
+  for (auto v_label = 0; v_label < vlabel_num_; v_label++) {
+    std::string file_name = folder_path + "/vlabel_" + std::to_string(v_label) +
+                            "_string_vertex_map.bin";
+    // check if file exists
+    std::ifstream ifs(file_name, std::ios::binary);
+    if (ifs.good()) {
+      boost::archive::binary_iarchive ia(ifs);
+      ia >> string_oid2gid_maps_[v_label];
+      continue;
+    }
+
+    file_name = folder_path + "/vlabel_" + std::to_string(v_label) +
+                "_int_vertex_map.bin";
+    ifs.open(file_name, std::ios::binary);
+    if (ifs.good()) {
+      boost::archive::binary_iarchive ia(ifs);
+      ia >> int64_oid2gid_maps_[v_label];
+      continue;
+    }
+  }
+}
+#endif  // ENABLE_CHECKPOINT
 
 }  // namespace converter

@@ -18,6 +18,11 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef ENABLE_CHECKPOINT
+#include <thread>
+#include <mutex>
+#endif // ENABLE_CHECKPOINT
+
 #include "converter/flags.h"
 #include "converter/kafka_helper.h"
 #include "converter/parser.h"
@@ -38,6 +43,10 @@ using std::endl;
 using std::flush;
 using std::make_shared;
 
+#ifdef ENABLE_CHECKPOINT
+std::mutex checkpoint_mutex;
+#endif // ENABLE_CHECKPOINT
+
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -48,6 +57,23 @@ int main(int argc, char** argv) {
 
   TxnLogParser parser(FLAGS_etcd_endpoint, FLAGS_etcd_prefix,
                       FLAGS_subgraph_num);
+  #ifdef ENABLE_CHECKPOINT
+  std::thread checkpoint_thread([&]() {
+    while (1) {
+      std::this_thread::sleep_for(
+          std::chrono::minutes(FLAGS_checkpoint_interval));
+      {
+        std::lock_guard<std::mutex> guard(checkpoint_mutex);
+        parser.checkpoint_vertex_maps(FLAGS_checkpoint_dir);
+      }
+    }
+  });
+  checkpoint_thread.detach();
+  {
+    std::lock_guard<std::mutex> guard(checkpoint_mutex);
+    parser.load_vertex_maps_checkpoint(FLAGS_checkpoint_dir);
+  }
+  #endif // ENABLE_CHECKPOINT
 
   int log_count = 0;
   bool is_timeout = false;

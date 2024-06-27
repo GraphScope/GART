@@ -484,6 +484,9 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) {
   blob_schema["epoch"] = write_epoch;
   blob_schema["instance_id"] = array_allocator_.get_client()->instance_id();
   blob_schema["vertex_label_num"] = blob_schemas_.size();
+  std::time_t currentTime = std::time(nullptr);
+  // put the currentTime as a int64_t into blob schema
+  blob_schema["timestamp"] = currentTime;
   blob_schema["string_buffer_object_id"] =
       string_buffer_manager_.get_buffer_oid();
   auto blob_schemas = fetch_blob_schema(write_epoch);

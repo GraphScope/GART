@@ -29,6 +29,7 @@ spec:
       - name: writer
         image: {{ include "gart.writer.image" . }}
         imagePullPolicy: {{ .Values.writer.image.pullPolicy | quote }}
+        resources: {{ toYaml .Values.writer.resources | nindent 10 }}
         command: ["/bin/bash", "-c"]
         args:
         - |
@@ -64,6 +65,7 @@ spec:
       - name: analyzer
         image: {{ include "gart.analyzer.image" . }}
         imagePullPolicy: {{ .Values.analyzer.image.pullPolicy | quote }}
+        resources: {{ toYaml .Values.analyzer.resources | nindent 10 }}
         command: ["/bin/bash", "-c"]
         args:
         - |
@@ -79,6 +81,7 @@ spec:
       - name: gie-executor
         image: {{ include "gart.gie_executor.image" . }}
         imagePullPolicy: {{ .Values.gie_executor.image.pullPolicy | quote }}
+        resources: {{ toYaml .Values.gie_executor.resources | nindent 10 }}
         ports:
         - name: gaia-rpc
           containerPort: {{ .Values.gie_executor.GAIA_RPC_PORT }}

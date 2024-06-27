@@ -32,4 +32,7 @@ DECLARE_string(etcd_prefix);
 DECLARE_int32(subgraph_num);
 DECLARE_bool(enable_bulkload);
 
+DECLARE_int32(checkpoint_interval);  // in minutes
+DECLARE_string(checkpoint_dir);
+
 #endif  // CONVERTER_FLAGS_H_

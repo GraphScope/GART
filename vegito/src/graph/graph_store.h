@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <ctime>
 #include <limits>
 #include <map>
 #include <memory>

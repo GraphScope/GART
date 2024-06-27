@@ -29,6 +29,7 @@ spec:
       - name: converter
         image: {{ include "gart.converter.image" . }}
         imagePullPolicy: {{ .Values.converter.image.pullPolicy | quote }}
+        resources: {{ toYaml .Values.converter.resources | nindent 10 }}
         command: ["/bin/bash", "-c"]
         args:
         - |
@@ -90,6 +91,7 @@ spec:
       - name: controller
         image: {{ include "gart.controller.image" . }}
         imagePullPolicy: {{ .Values.controller.image.pullPolicy | quote }}
+        resources: {{ toYaml .Values.controller.resources | nindent 10 }}
         command: ["/workspace/gart/scripts/controller.py"]
         ports:
           - containerPort: {{ .Values.controller.containerPort }}

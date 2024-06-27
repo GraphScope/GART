@@ -27,6 +27,7 @@ option(ADD_CONVERTER "Option to add converter" ON)
 option(ADD_VEGITO "Option to add Vegito" ON)
 option(ADD_PGQL "Option to add PGQL" ON)
 option(ADD_GAE_ENGINE "Option to add GAE engine" OFF)
+option(ENABLE_CHECKPOINT "Option to support checkpoint" OFF)
 
 if (ADD_CONVERTER)
     add_subdirectory(converter)

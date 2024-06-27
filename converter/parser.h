@@ -21,6 +21,12 @@
 #include <string>
 #include <utility>
 #include <vector>
+#ifdef ENABLE_CHECKPOINT
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/string.hpp>  
+#endif  // ENABLE_CHECKPOINT
 
 #include "vineyard/common/util/json.h"
 
@@ -99,6 +105,12 @@ class TxnLogParser {
   }
 
   gart::Status parse(LogEntry& out, const std::string& log_str, int epoch);
+
+  #ifdef ENABLE_CHECKPOINT
+  void checkpoint_vertex_maps(const std::string& folder_path);
+
+  void load_vertex_maps_checkpoint(const std::string& folder_path);
+  #endif  // ENABLE_CHECKPOINT
 
   ~TxnLogParser() = default;
 

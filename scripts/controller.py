@@ -9,6 +9,8 @@ import shutil
 import etcd3
 import time
 import socket
+import json
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 port = int(os.getenv("CONTROLLER_FLASK_PORT", 5000))
@@ -40,6 +42,33 @@ def resume():
     return "Resumed", 200
 
 
+@app.route("/get-all-available-read-epochs", methods=["POST"])
+def get_all_available_read_epochs():
+    all_epochs = get_all_available_read_epochs_internal()[0]
+    if len(all_epochs) == 0:
+        return "No available read epochs", 200
+    return json.dumps(all_epochs), 200
+
+
+@app.route("/get-read-epoch-by-timestamp", methods=["POST"])
+def get_read_epoch_by_timestamp():
+    time_string = request.form.get("timestamp", None)
+    if time_string is None:
+        return "timestamp is required", 400
+    # we assume the format of timestamp is like "2021-09-01 00:00:00"
+    time_format = "%Y-%m-%d %H:%M:%S"
+    dt = datetime.strptime(time_string, time_format)
+    # the datetime is in UTC, convert it to local time zone
+    dt = dt.astimezone(timezone.utc)
+    unix_time = int(dt.timestamp())
+    epoch_unix_time_pairs = get_all_available_read_epochs_internal()[1]
+    # iterate through the list of epoch_unix_time pairs from end to start
+    for epoch, unix_time_epoch in reversed(epoch_unix_time_pairs):
+        if unix_time_epoch <= unix_time:
+            return str(epoch), 200
+    return "No read epoch found", 200
+
+
 @app.route("/run-gae-task", methods=["POST"])
 def run_gae_task():
     command = ""
@@ -59,6 +88,9 @@ def change_read_epoch():
     read_epoch = request.form.get("read_epoch", None)
     if read_epoch is None:
         return "read_epoch is required", 400
+    latest_epoch = get_latest_read_epoch()
+    if int(read_epoch) > latest_epoch:
+        return "Invalid read epoch", 400
     global previous_read_epoch
     if previous_read_epoch is None or previous_read_epoch != read_epoch:
         previous_read_epoch = read_epoch
@@ -209,6 +241,57 @@ def check_host_port(host, port):
     except socket.error as e:
         print(f"Error: {e} on {host}:{port}")
         return False
+
+
+def get_all_available_read_epochs_internal():
+    etcd_server = os.getenv("ETCD_SERVICE", "etcd")
+    if not etcd_server.startswith("http://"):
+        etcd_server = f"http://{etcd_server}"
+    etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+    etcd_host = etcd_server.split("://")[1].split(":")[0]
+    etcd_port = etcd_server.split(":")[2]
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+    num_fragment = os.getenv("SUBGRAPH_NUM", "1")
+    latest_read_epoch = get_latest_read_epoch()
+    if latest_read_epoch == 2**64 - 1:
+        return []
+    available_epochs = []
+    available_epochs_internal = []
+    for epoch in range(latest_read_epoch + 1):
+        latest_timestamp = None
+        for frag_id in range(int(num_fragment)):
+            schema_key = etcd_prefix + "gart_blob_m0" + f"_p{frag_id}" + f"_e{epoch}"
+            schema_str, _ = etcd_client.get(schema_key)
+            schema = json.loads(schema_str)
+            unix_timestamp = schema["timestamp"]
+            if latest_timestamp is None or unix_timestamp > latest_timestamp:
+                latest_timestamp = unix_timestamp
+        converted_time = datetime.fromtimestamp(latest_timestamp)
+        # convert time into local time zone
+        converted_time = converted_time.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        formatted_time = converted_time.strftime("%Y-%m-%d %H:%M:%S")
+        available_epochs.append([epoch, formatted_time])
+        available_epochs_internal.append([epoch, latest_timestamp])
+    return [available_epochs, available_epochs_internal]
+
+
+def get_latest_read_epoch():
+    etcd_server = os.getenv("ETCD_SERVICE", "etcd")
+    if not etcd_server.startswith("http://"):
+        etcd_server = f"http://{etcd_server}"
+    etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+    etcd_host = etcd_server.split("://")[1].split(":")[0]
+    etcd_port = etcd_server.split(":")[2]
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+    num_fragment = os.getenv("SUBGRAPH_NUM", "1")
+    latest_epoch = 2**64 - 1
+    for idx in range(int(num_fragment)):
+        etcd_key = etcd_prefix + "gart_latest_epoch_p" + str(idx)
+        etcd_value, _ = etcd_client.get(etcd_key)
+        if latest_epoch > int(etcd_value):
+            latest_epoch = int(etcd_value)
+
+    return latest_epoch
 
 
 if __name__ == "__main__":

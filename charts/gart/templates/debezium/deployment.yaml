@@ -22,6 +22,7 @@ spec:
       - name: debezium-connect
         image: {{ include "gart.debezium.image" . }}
         imagePullPolicy: {{ .Values.debezium.image.pullPolicy | quote }}
+        resources: {{ toYaml .Values.debezium.resources | nindent 10 }}
         env:
         - name: BOOTSTRAP_SERVERS
           value: {{ $kafka_service }}  

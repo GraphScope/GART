@@ -21,6 +21,7 @@ spec:
       - name: gie-frontend
         image: {{ include "gart.gie_frontend.image" . }}
         imagePullPolicy: {{ .Values.gie_frontend.image.pullPolicy | quote }}
+        resources: {{ toYaml .Values.gie_frontend.resources | nindent 10 }}
         command: ["/bin/bash", "-c"]
         args:
         - |
