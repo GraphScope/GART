@@ -41,6 +41,9 @@ subgraph_id=0
 debug=
 debug_writer=false
 debug_converter=false
+use_logs_per_epoch=true
+logs_per_epoch=10000
+seconds_per_epoch=60
 
 set_port=false
 
@@ -66,6 +69,7 @@ print_arguments() {
     printf "    %-20s %s\n" "start-slot:" "$start_slot"
     printf "    %-20s %s\n" "num-slot:" "$num_slot"
     printf "    %-20s %s\n" "k8s-mode:" "$k8s_mode"
+    printf "    %-20s %s\n" "use-logs-per-epoch:" "$use_logs_per_epoch"
     printf "    %-20s %s\n" "debug:" "${debug[*]}"
 }
 
@@ -121,6 +125,9 @@ Options:
       --start-slot:              The start slot of subgraph on this machine.
       --num-slot:                The number of slots on this machine.
       --k8s-mode:                Whether running in k8s mode (default: false).
+      --use-logs-per-epoch:      Whether to use logs per epoch (default: true).
+      --logs-per-epoch:          Number of logs per epoch (default: 10000).
+      --seconds-per-epoch:       Number of seconds per epoch (default: 60).
       --debug:                   Specify components to debug. Pass as a comma-separated list.
                                  Examples: '--debug=writer', '--debug=converter,writer' (default: '').
 EOF
@@ -128,7 +135,7 @@ EOF
 
 ####################### Parse Arguments #######################
 parse_arguments() {
-    local VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,db-user:,db-password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,subgraph-id:,role:,debug:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,help -- "$@")
+    local VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,db-user:,db-password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,subgraph-id:,role:,debug:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,use-logs-per-epoch:,logs-per-epoch:,seconds-per-epoch:,help -- "$@")
     if [[ $? -ne 0 ]]; then
         exit 1;
     fi
@@ -225,6 +232,18 @@ parse_arguments() {
                 ;;
                 --k8s-mode)
                 k8s_mode=$(normalize_boolean "$2")
+                shift 2
+                ;;
+                --use-logs-per-epoch)
+                use_logs_per_epoch=$(normalize_boolean "$2")
+                shift 2
+                ;;
+                --logs-per-epoch)
+                logs_per_epoch=$2
+                shift 2
+                ;;
+                --seconds-per-epoch)
+                seconds_per_epoch=$2
                 shift 2
                 ;;
             -h | --help | ?)
@@ -642,7 +661,8 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
             --etcd_prefix $etcd_prefix \
             --read_kafka_broker_list $kafka_server \
             --write_kafka_broker_list $kafka_server \
-            --subgraph_num $subgraph_num --logs_per_epoch 10000 \
+            --subgraph_num $subgraph_num --logs_per_epoch $logs_per_epoch \
+            --seconds_per_epoch $seconds_per_epoch --use_logs_per_epoch=$use_logs_per_epoch \
             --enable_bulkload=$enable_bulkload"
     else
         converter_cmd="$CONVENTER_HOME/binlog_convert_maxwell \
@@ -650,7 +670,8 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
             --etcd_prefix $etcd_prefix \
             --read_kafka_broker_list $kafka_server \
             --write_kafka_broker_list $kafka_server \
-            --subgraph_num $subgraph_num --logs_per_epoch 10000"
+            --subgraph_num $subgraph_num --logs_per_epoch $logs_per_epoch \
+            --seconds_per_epoch $seconds_per_epoch --use_logs_per_epoch=$use_logs_per_epoch"
     fi
 
     if $debug_converter; then

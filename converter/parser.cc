@@ -552,17 +552,19 @@ void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {
 
 #ifdef ENABLE_CHECKPOINT
 void TxnLogParser::checkpoint_vertex_maps(const string& folder_path) {
-  // file format: vlabel_id_string_vertex_map.bin or vlabel_id_int_vertex_map.bin
+  // file format: vlabel_id_string_vertex_map.bin or
+  // vlabel_id_int_vertex_map.bin
   for (auto v_label = 0; v_label < vlabel_num_; v_label++) {
     if (!string_oid2gid_maps_.empty()) {
-      std::string file_name = folder_path + "/vlabel_" + std::to_string(v_label) +
+      std::string file_name = folder_path + "/vlabel_" +
+                              std::to_string(v_label) +
                               "_string_vertex_map.bin";
       std::ofstream ofs(file_name);
       boost::archive::binary_oarchive oa(ofs);
       oa << string_oid2gid_maps_[v_label];
     } else {
-      std::string file_name = folder_path + "/vlabel_" + std::to_string(v_label) +
-                              "_int_vertex_map.bin";
+      std::string file_name = folder_path + "/vlabel_" +
+                              std::to_string(v_label) + "_int_vertex_map.bin";
       std::ofstream ofs(file_name);
       boost::archive::binary_oarchive oa(ofs);
       oa << int64_oid2gid_maps_[v_label];

@@ -19,9 +19,9 @@
 #include <iostream>
 
 #ifdef ENABLE_CHECKPOINT
-#include <thread>
 #include <mutex>
-#endif // ENABLE_CHECKPOINT
+#include <thread>
+#endif  // ENABLE_CHECKPOINT
 
 #include "converter/flags.h"
 #include "converter/kafka_helper.h"
@@ -45,7 +45,7 @@ using std::make_shared;
 
 #ifdef ENABLE_CHECKPOINT
 std::mutex checkpoint_mutex;
-#endif // ENABLE_CHECKPOINT
+#endif  // ENABLE_CHECKPOINT
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 
   TxnLogParser parser(FLAGS_etcd_endpoint, FLAGS_etcd_prefix,
                       FLAGS_subgraph_num);
-  #ifdef ENABLE_CHECKPOINT
+#ifdef ENABLE_CHECKPOINT
   std::thread checkpoint_thread([&]() {
     while (1) {
       std::this_thread::sleep_for(
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     std::lock_guard<std::mutex> guard(checkpoint_mutex);
     parser.load_vertex_maps_checkpoint(FLAGS_checkpoint_dir);
   }
-  #endif // ENABLE_CHECKPOINT
+#endif  // ENABLE_CHECKPOINT
 
   int log_count = 0;
   bool is_timeout = false;
@@ -235,6 +235,9 @@ int main(int argc, char** argv) {
   }
 #endif
 
+  auto interval = std::chrono::seconds(FLAGS_seconds_per_epoch);
+  auto start = std::chrono::steady_clock::now();
+
   while (1) {
     RdKafka::Message* msg = consumer->consume(&is_timeout);
 
@@ -257,19 +260,45 @@ int main(int argc, char** argv) {
     }
 
 #ifndef USE_DEBEZIUM
-    epoch = log_count / FLAGS_logs_per_epoch;
+    if (FLAGS_use_logs_per_epoch) {
+      epoch = log_count / FLAGS_logs_per_epoch;
+    } else {
+      auto now = std::chrono::steady_clock::now();
+      if (now - start >= interval) {
+        start = now;
+        ++epoch;
+      }
+    }
+
 #else
     // consistent epoch calculation
     int tx_id = log_entry.get_tx_id();
     if (tx_id == -1) {
-      epoch = log_count / FLAGS_logs_per_epoch;
+      if (FLAGS_use_logs_per_epoch) {
+        epoch = log_count / FLAGS_logs_per_epoch;
+      } else {
+        auto now = std::chrono::steady_clock::now();
+        if (now - start >= interval) {
+          start = now;
+          ++epoch;
+        }
+      }
     } else {
       if (tx_id != last_tx_id) {
         last_tx_id = tx_id;
-        if (log_count - last_log_count >= FLAGS_logs_per_epoch) {
-          last_log_count = log_count;
-          cout << "Epoch " << epoch << " finished" << endl;
-          ++epoch;
+        if (FLAGS_use_logs_per_epoch) {
+          if (log_count - last_log_count >= FLAGS_logs_per_epoch) {
+            last_log_count = log_count;
+            cout << "Epoch " << epoch << " finished" << endl;
+            ++epoch;
+          }
+        } else {
+          auto now = std::chrono::steady_clock::now();
+          if (now - start >= interval) {
+            start = now;
+            cout << "Epoch " << epoch << " finished" << endl;
+            ++epoch;
+          }
         }
       }
     }

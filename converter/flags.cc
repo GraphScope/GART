@@ -24,6 +24,8 @@ DEFINE_string(write_kafka_topic, "unified_log",
               "Kafka topic for writing UnifiedLogs.");
 
 DEFINE_int32(logs_per_epoch, 10000, "logs_per_epoch.");
+DEFINE_int32(seconds_per_epoch, 60, "seconds_per_epoch.");
+DEFINE_bool(use_logs_per_epoch, true, "use_logs_per_epoch.");
 
 DEFINE_string(etcd_endpoint, "127.0.0.1:2379", "etcd endpoint.");
 DEFINE_string(etcd_prefix, "", "etcd prefix.");

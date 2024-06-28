@@ -78,6 +78,9 @@ spec:
           --kafka-server {{ $kafka_service }} \
           --subgraph-num ${SUBGRAPH_NUM} \
           --enable-bulkload ${ENABLE_BULKLOAD} \
+          --use-logs-per-epoch ${USE_LOGS_PER_EPOCH} \
+          --logs-per-epoch ${LOGS_PER_EPOCH} \
+          --seconds-per-epoch ${SECONDS_PER_EPOCH} \
           --rg-from-etcd true \
           --k8s-mode true \
           --role converter &&

@@ -25,6 +25,8 @@ DECLARE_string(read_kafka_topic);
 DECLARE_string(write_kafka_topic);
 
 DECLARE_int32(logs_per_epoch);
+DECLARE_int32(seconds_per_epoch);
+DECLARE_bool(use_logs_per_epoch);
 
 DECLARE_string(etcd_endpoint);
 DECLARE_string(etcd_prefix);

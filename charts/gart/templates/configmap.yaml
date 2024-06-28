@@ -18,9 +18,21 @@ data:
   DB_PASSWORD: {{ .Values.dataconfig.dbPassword | quote }}
   DB_TYPE: {{ .Values.dataconfig.dbType | quote }}
   DB_NAME: {{ .Values.dataconfig.dbName | quote }}
+  {{- if .Values.dataconfig.v6dSocket }}
   V6D_SOCKET: {{ .Values.dataconfig.v6dSocket | quote }}
+  {{- else }}
+  V6D_SOCKET: "/tmp/shared/v6d.sock"
+  {{- end }}
+  {{- if .Values.dataconfig.v6dSize }}
   V6D_SIZE: {{ .Values.dataconfig.v6dSize | quote }}
+  {{- else }}
+  V6D_SIZE: "750G"
+  {{- end }}
+  {{- if .Values.dataconfig.etcdPrefix }}
   ETCD_PREFIX: {{ .Values.dataconfig.etcdPrefix | quote }}
+  {{- else }}
+  ETCD_PREFIX: "gart_meta_"
+  {{- end }}
   ENABLE_BULKLOAD: {{ .Values.dataconfig.enableBulkload | quote }}
   SUBGRAPH_NUM: {{ .Values.dataconfig.subgraphNum | quote }}
   DEBEZIUM_SERVICE: {{ $debezium_service | quote }}
@@ -30,6 +42,21 @@ data:
   GIE_GREMLIN_PORT: {{ .Values.gie_frontend.gremlinPort | quote }}
   GIE_EXECUTOR_RPC_PORT: {{ .Values.gie_executor.GAIA_RPC_PORT | quote }}
   GIE_EXECUTOR_ENGINE_PORT: {{ .Values.gie_executor.ENGINE_PORT | quote }}
+  {{- if .Values.dataconfig.useSecondsPerEpoch }}
+  USE_LOGS_PER_EPOCH: "0"
+  {{- else }}
+  USE_LOGS_PER_EPOCH: "1"
+  {{- end }}
+  {{- if .Values.dataconfig.logsPerEpoch }}
+  LOGS_PER_EPOCH: {{ .Values.dataconfig.logsPerEpoch | quote}}
+  {{- else }}
+  LOGS_PER_EPOCH: "10000"
+  {{- end }}
+  {{- if .Values.dataconfig.secondsPerEpoch }}
+  SECONDS_PER_EPOCH: {{ .Values.dataconfig.secondsPerEpoch | quote}}
+  {{- else }}
+  SECONDS_PER_EPOCH: "60"
+  {{- end }}
   {{- if not .Values.analyzer.enabled }}
   GIE_EXECUTOR_POD_BASE_NAME: {{ include "gart.writer.fullname" . | quote }}
   GIE_EXECUTOR_POD_SERVICE_NAME: {{ include "gart.fullname" . }}-gie-executor-service
