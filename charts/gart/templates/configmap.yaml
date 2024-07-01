@@ -57,7 +57,7 @@ data:
   {{- else }}
   SECONDS_PER_EPOCH: "60"
   {{- end }}
-  {{- if not .Values.analyzer.enabled }}
+  {{- if not .Values.dataconfig.useGAE }}
   GIE_EXECUTOR_POD_BASE_NAME: {{ include "gart.writer.fullname" . | quote }}
   GIE_EXECUTOR_POD_SERVICE_NAME: {{ include "gart.fullname" . }}-gie-executor-service
   GIE_EXECUTOR_POD_SERVICE_PORT: {{ .Values.gie_executor.HTTP_SERVICE_PORT | quote }}

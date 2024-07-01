@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import subprocess
 import os
 from kubernetes import client, config
@@ -16,6 +16,34 @@ app = Flask(__name__)
 port = int(os.getenv("CONTROLLER_FLASK_PORT", 5000))
 previous_hosts_info = None
 previous_read_epoch = None
+
+
+@app.route("/submit-config", methods=["POST"])
+def submit_config():
+    if "file" not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+
+    try:
+        content = file.read()
+        etcd_server = os.getenv("ETCD_SERVICE", "etcd")
+        if not etcd_server.startswith("http://"):
+            etcd_server = f"http://{etcd_server}"
+        etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+        etcd_host = etcd_server.split("://")[1].split(":")[0]
+        etcd_port = etcd_server.split(":")[2]
+        etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+        while True:
+            try:
+                etcd_client.put(etcd_prefix + "gart_rg_mapping_yaml", content)
+                break
+            except Exception as e:
+                time.sleep(5)
+        return "Config submitted", 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route("/control/pause", methods=["POST"])
@@ -72,8 +100,21 @@ def get_read_epoch_by_timestamp():
 @app.route("/run-gae-task", methods=["POST"])
 def run_gae_task():
     command = ""
-    for key, value in request.form.items():
-        command += f"--{key} {value} "
+    data = request.json
+    algorithm_name = data.get("algorithm_name")
+    graph_version = data.get("graph_version")
+    latest_epoch = get_latest_read_epoch()
+    if int(graph_version) > latest_epoch:
+        return "Invalid read epoch", 400
+    if latest_epoch == 2**64 - 1:
+        return "No available read epoch", 400
+    command += f"--app_name {algorithm_name} "
+    command += f"--read_epoch {graph_version} "
+    for key, value in data.items():
+        if key not in ["algorithm_name", "graph_version"]:
+            command += f"--{key} {value} "
+    # for key, value in request.form.items():
+    #    command += f"--{key} {value} "
     etcd_server = os.getenv("ETCD_SERVICE", "etcd")
     if not etcd_server.startswith("http://"):
         etcd_server = f"http://{etcd_server}"
@@ -91,6 +132,8 @@ def change_read_epoch():
     latest_epoch = get_latest_read_epoch()
     if int(read_epoch) > latest_epoch:
         return "Invalid read epoch", 400
+    if latest_epoch == 2**64 - 1:
+        return "No available read epoch", 400
     global previous_read_epoch
     if previous_read_epoch is None or previous_read_epoch != read_epoch:
         previous_read_epoch = read_epoch
@@ -287,9 +330,12 @@ def get_latest_read_epoch():
     latest_epoch = 2**64 - 1
     for idx in range(int(num_fragment)):
         etcd_key = etcd_prefix + "gart_latest_epoch_p" + str(idx)
-        etcd_value, _ = etcd_client.get(etcd_key)
-        if latest_epoch > int(etcd_value):
-            latest_epoch = int(etcd_value)
+        try:
+            etcd_value, _ = etcd_client.get(etcd_key)
+            if latest_epoch > int(etcd_value):
+                latest_epoch = int(etcd_value)
+        except Exception as e:
+            print(f"Error: {e}")
 
     return latest_epoch
 

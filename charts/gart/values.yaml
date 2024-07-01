@@ -186,7 +186,6 @@ writer:
 
 # analyzer config
 analyzer:
-  enabled: false
   image:
     repository: gart-analyzer
     tag: latest
@@ -237,11 +236,17 @@ dataconfig:
   dbPassword: "123456"
   dbType: "postgresql"
   dbName: "ldbc"
+  #optional
   v6dSocket: "/tmp/shared/v6d.sock"
+  #optional
   v6dSize: "750G"
+  #optional
   etcdPrefix: "gart_meta_"
   enableBulkload: 1
-  # if you want to need an epoch after a give time interval, set useSecondsPerEpoch to 1
+  # if you want to need an epoch after a give time interval, set useSecondsPerEpoch to 1.
+  # If not set, use logsPerEpoch
   # useSecondsPerEpoch: 1
   logsPerEpoch: 10000
   # secondsPerEpoch: 60
+  # if you run GAE task, set useGAE to 1, otherwise run GIE task. Default run GIE task
+  useGAE: 0

@@ -1,4 +1,4 @@
-{{- if not .Values.analyzer.enabled }}
+{{- if not .Values.dataconfig.useGAE }}
 apiVersion: v1
 kind: Service
 metadata:

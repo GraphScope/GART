@@ -1,3 +1,4 @@
+{{- if not .Values.dataconfig.useGAE }}
 {{- $etcd_service_name := .Values.etcd.fullnameOverride }}
 {{- $etcd_service_port := int .Values.etcd.containerPorts.client }}
 {{- $etcd_service := printf "%s:%d" $etcd_service_name $etcd_service_port }}
@@ -40,3 +41,4 @@ spec:
         
         
         
+{{- end }}

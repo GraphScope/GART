@@ -61,7 +61,7 @@ spec:
         volumeMounts:
         - name: shared-socket
           mountPath: /tmp/shared
-      {{- if .Values.analyzer.enabled }}
+      {{- if .Values.dataconfig.useGAE }}
       - name: analyzer
         image: {{ include "gart.analyzer.image" . }}
         imagePullPolicy: {{ .Values.analyzer.image.pullPolicy | quote }}
