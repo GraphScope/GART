@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
           }
         }
         processed_count++;
-        if (!catch_up_mode) {
+        if (likely(!catch_up_mode)) {
           ostream << LogEntry::bulk_load_end().to_string(processed_count)
                   << flush;
         }
@@ -311,7 +311,7 @@ int main(int argc, char** argv) {
         }
       }
       processed_count++;
-      if (!catch_up_mode) {
+      if (likely(!catch_up_mode)) {
         ostream << log_entry.to_string(processed_count) << flush;
       }
 
@@ -329,7 +329,7 @@ int main(int argc, char** argv) {
     }
 
     processed_count++;
-    if (!catch_up_mode) {
+    if (likely(!catch_up_mode)) {
       ostream << log_entry.to_string(processed_count) << flush;
     }
 

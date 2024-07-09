@@ -13,6 +13,8 @@ pod_base_name = sys.argv[5]
 engine_service_name = sys.argv[6]
 engine_port = sys.argv[7]
 
+is_running = False
+
 
 with open("/home/graphscope/gie-executor-config.properties", "w") as f:
     f.write("rpc.port: " + rpc_port + "\n")
@@ -51,15 +53,22 @@ def start_gie_executor():
     etcd_prefix = request.form.get("etcd_prefix", "gart_meta_")
     if etcd_prefix is None:
         return "etcd_prefix is required", 400
-    cmd = f"/home/graphscope/GART/scripts/launch_gie_executor.sh {etcd_endpoint} {etcd_prefix} {read_epoch}"
-    subprocess.run(
-        [
-            "/bin/bash",
-            "-c",
-            cmd,
-        ]
-    )
-    return "Executor launching sucessfully", 200
+    global is_running
+    if not is_running:
+        is_running = True
+        cmd = f"/home/graphscope/GART/scripts/launch_gie_executor.sh {etcd_endpoint} {etcd_prefix} {read_epoch}"
+        subprocess.run(
+            [
+                "/bin/bash",
+                "-c",
+                cmd,
+            ]
+        )
+        return "Executor launching sucessfully", 200
+    else:
+        with open ("/tmp/read_epoch", "w") as f:
+            f.write(read_epoch)
+        return "Executor is already running", 200
 
 
 port = int(os.getenv("GIE_EXECUTOR_FLASK_PORT", 5000))
