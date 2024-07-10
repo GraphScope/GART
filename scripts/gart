@@ -378,6 +378,7 @@ check_postgresql_connection() {
         echo "Successfully connected to PostgreSQL database."
     else
         echo "Could not connect to PostgreSQL database."
+        exit 1
     fi
 }
 
@@ -388,6 +389,7 @@ check_mysql_connection() {
         echo "Successfully connected to MySQL database."
     else
         echo "Could not connect to MySQL database."
+        exit 1
     fi
 }
 
