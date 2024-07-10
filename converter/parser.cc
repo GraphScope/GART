@@ -298,6 +298,7 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
   // default for PostgreSQL, -1 for MySQL
   // TODO(SSJ): Hardcode for PostgreSQL and MySQL
   int tx_id = log["source"].value("txId", -1);
+  /*
   if (tx_id == -1) {
     // MySQL
     const json& gtid_json = log["source"]["gtid"];
@@ -313,6 +314,7 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
       LOG(ERROR) << "Please open GTID for MySQL.";
     }
   }
+  */
 
   out.tx_id = tx_id;
 

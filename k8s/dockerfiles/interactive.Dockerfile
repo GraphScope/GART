@@ -52,6 +52,46 @@ RUN mkdir -p /var/log/graphscope \
   && chown -R graphscope:graphscope /var/log/graphscope
 RUN chmod a+wrx /tmp
 
+# Install dependencies for etcd3
+RUN apt-get update && apt-get install -y \
+    libgrpc-dev \
+    libgrpc++-dev \
+    libprotobuf-dev \
+    protobuf-compiler-grpc \
+    libboost-all-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/microsoft/cpprestsdk.git \
+    && cd cpprestsdk \
+    && mkdir -p build \
+    && cd build \
+    && cmake .. -DCPPREST_EXCLUDE_WEBSOCKETS=ON -DBUILD_TESTS=OFF -DBUILD_SAMPLES=OFF \
+    && make -j \
+    && make install \
+    && cd ../.. \
+    && rm -rf cpprestsdk
+
+RUN git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git \
+    && cd etcd-cpp-apiv3 \
+    && mkdir -p build \
+    && cd build \
+    && cmake .. \
+    && make -j \
+    && make install \
+    && cd ../.. \
+    && rm -rf etcd-cpp-apiv3
+
+RUN git clone https://github.com/GraphScope/GART.git \
+    && cd GART \
+    && git submodule update --init \
+    && cd interfaces/grin \
+    && mkdir -p build \
+    && cd build \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release \
+    && make -j \
+    && cp ./libgart_grin.so /usr/local/lib/ \
+    && rm -rf /home/graphscope/GART
+
 WORKDIR /home/graphscope
 RUN git clone https://github.com/doudoubobo/GraphScope.git -b v0.1.4 /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/interactive_engine/compiler && \
