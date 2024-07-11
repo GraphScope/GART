@@ -151,7 +151,7 @@ debezium:
   replicaCount: 1
   image:
     repository: debezium/connect
-    tag: latest
+    tag: 2.7.0.Final
     pullPolicy: IfNotPresent
   containerPort: 8083
   resources: {}

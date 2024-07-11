@@ -37,7 +37,11 @@ data:
         "snapshot.mode": "always",
         {{- end }}
         {{- else }}
-        "snapshot.mode": "never",
+        {{- if eq .Values.dataconfig.dbType "mysql" }}
+        "snapshot.mode": "schema_only",
+        {{- else }}
+        "snapshot.mode": "no_data",
+        {{- end }}
         {{- end }}
         "database.server.id": "1", 
         "include.schema.changes": "false",

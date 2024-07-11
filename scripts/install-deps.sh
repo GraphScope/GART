@@ -296,7 +296,7 @@ database.user=<mysql user>
 database.password=<mysql password>
 database.include.list=<which databse is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
-snapshot.mode=<if enable buldload, set as "initial", otherwise set as "never">
+snapshot.mode=<if enable buldload, set as "initial", otherwise set as "schema_only">
 
 $COMM_CONFIG
 
