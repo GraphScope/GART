@@ -248,7 +248,7 @@ if [ "$ROLE" == "All" ]; then
   export MAXWELL_HOME=`pwd`/maxwell
 
   # Debezium
-  DEBEZIUM_VERSION=2.5.2.Final
+  DEBEZIUM_VERSION=2.7.0.Final
   # mysql connector
   wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/$DEBEZIUM_VERSION/debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
   tar zxvf debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz
@@ -296,7 +296,7 @@ database.user=<mysql user>
 database.password=<mysql password>
 database.include.list=<which databse is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
-snapshot.mode=<if enable buldload, set as "initial", otherwise set as "schema_only">
+snapshot.mode=<if enable buldload, set as "initial", otherwise set as "no_data">
 
 $COMM_CONFIG
 
@@ -312,7 +312,7 @@ database.user=<postgresql user>
 database.password=<postgresql password>
 database.dbname=<which database is needed to capture, e.g., ldbc>
 table.include.list=<list the tables in the order of vertices, then edges>
-snapshot.mode=<if enable bulkload, set as "always", otherwise set as "never">
+snapshot.mode=<if enable bulkload, set as "always", otherwise set as "no_data">
 
 slot.name=debezium_0
 plugin.name=pgoutput

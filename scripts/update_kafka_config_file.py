@@ -213,7 +213,7 @@ if __name__ == "__main__":
                     else:
                         temp_file.write("snapshot.mode=initial\n")
                 else:
-                    temp_file.write("snapshot.mode=never\n")
+                    temp_file.write("snapshot.mode=no_data\n")
             elif line.startswith("database.history.kafka.bootstrap.servers"):
                 temp_file.write(
                     f"database.history.kafka.bootstrap.servers=localhost:{kafka_port}\n"
