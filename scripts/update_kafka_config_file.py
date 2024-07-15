@@ -213,7 +213,10 @@ if __name__ == "__main__":
                     else:
                         temp_file.write("snapshot.mode=initial\n")
                 else:
-                    temp_file.write("snapshot.mode=no_data\n")
+                    if db_type == "postgresql":
+                        temp_file.write("snapshot.mode=no_data\n")
+                    else:
+                        temp_file.write("snapshot.mode=schema_only\n")
             elif line.startswith("database.history.kafka.bootstrap.servers"):
                 temp_file.write(
                     f"database.history.kafka.bootstrap.servers=localhost:{kafka_port}\n"
@@ -225,7 +228,10 @@ if __name__ == "__main__":
             elif line.startswith("slot.name"):
                 # slot.name should be unique for each database
                 # this method is a effective way to make it unique
-                temp_file.write(f"slot.name=debezium_{args.db_name}\n")
+                # we append timestamp string to the slot name
+                import time
+                timestamp_str = str(int(time.time()))
+                temp_file.write(f"slot.name=debezium_{args.db_name}_{timestamp_str}\n")
             else:
                 temp_file.write(line)
     shutil.move(temp_file_name, kafka_config_file_name)
