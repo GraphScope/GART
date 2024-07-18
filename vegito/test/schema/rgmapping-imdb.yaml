@@ -1,0 +1,627 @@
+---
+graph: IMDB
+loadingConfig:
+  dataSource: mysql
+  database: imdb
+  method: append
+vertexMappings:
+  vertex_types:
+    - type_name: AKA_NAME
+      dataSourceName: aka_name
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: name
+          dataField:
+            name: name
+        - property: imdb_index
+          dataField:
+            name: imdb_index
+        - property: name_pcode_cf
+          dataField:
+            name: name_pcode_cf
+        - property: name_pcode_nf
+          dataField:
+            name: name_pcode_nf
+        - property: surname_pcode
+          dataField:
+            name: surname_pcode
+        - property: md5sum
+          dataField:
+            name: md5sum
+    - type_name: AKA_TITLE
+      dataSourceName: aka_title
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: title
+          dataField:
+            name: title
+        - property: imdb_index
+          dataField:
+            name: imdb_index
+        - property: kind_id
+          dataField:
+            name: kind_id
+        - property: production_year
+          dataField:
+            name: production_year
+        - property: phonetic_code
+          dataField:
+            name: phonetic_code
+        - property: episode_of_id
+          dataField:
+            name: episode_of_id
+        - property: season_nr
+          dataField:
+            name: season_nr
+        - property: episode_nr
+          dataField:
+            name: episode_nr
+        - property: note
+          dataField:
+            name: note
+        - property: md5sum
+          dataField:
+            name: md5sum
+    - type_name: TITLE
+      dataSourceName: title
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: title
+          dataField:
+            name: title
+        - property: imdb_index
+          dataField:
+            name: imdb_index
+        - property: production_year
+          dataField:
+            name: production_year
+        - property: imdb_id
+          dataField:
+            name: imdb_id
+        - property: phonetic_code
+          dataField:
+            name: phonetic_code
+        - property: episode_of_id
+          dataField:
+            name: episode_of_id
+        - property: season_nr
+          dataField:
+            name: season_nr
+        - property: episode_nr
+          dataField:
+            name: episode_nr
+        - property: series_years
+          dataField:
+            name: series_years
+        - property: md5sum
+          dataField:
+            name: md5sum
+    - type_name: CHAR_NAME
+      dataSourceName: char_name
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: name
+          dataField:
+            name: name
+        - property: imdb_index
+          dataField:
+            name: imdb_index
+        - property: imdb_id
+          dataField:
+            name: imdb_id
+        - property: name_pcode_nf
+          dataField:
+            name: name_pcode_nf
+        - property: surname_pcode
+          dataField:
+            name: surname_pcode
+        - property: md5sum
+          dataField:
+            name: md5sum
+    - type_name: COMP_CAST_TYPE
+      dataSourceName: comp_cast_type
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: kind
+          dataField:
+            name: kind
+    - type_name: COMPANY_NAME
+      dataSourceName: company_name
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: name
+          dataField:
+            name: name
+        - property: country_code
+          dataField:
+            name: country_code
+        - property: imdb_id
+          dataField:
+            name: imdb_id
+        - property: name_pcode_nf
+          dataField:
+            name: name_pcode_nf
+        - property: name_pcode_sf
+          dataField:
+            name: name_pcode_sf
+        - property: md5sum
+          dataField:
+            name: md5sum
+    - type_name: COMPANY_TYPE
+      dataSourceName: company_type
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: kind
+          dataField:
+            name: kind
+    - type_name: INFO_TYPE
+      dataSourceName: info_type
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: info
+          dataField:
+            name: info
+    - type_name: KEYWORD
+      dataSourceName: keyword
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: keyword
+          dataField:
+            name: keyword
+        - property: phonetic_code
+          dataField:
+            name: phonetic_code
+    - type_name: KIND_TYPE
+      dataSourceName: kind_type
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: kind
+          dataField:
+            name: kind
+    - type_name: LINK_TYPE
+      dataSourceName: link_type
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: link
+          dataField:
+            name: link
+    - type_name: NAME
+      dataSourceName: name
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: name
+          dataField:
+            name: name
+        - property: imdb_index
+          dataField:
+            name: imdb_index
+        - property: imdb_id
+          dataField:
+            name: imdb_id
+        - property: gender
+          dataField:
+            name: gender
+        - property: name_pcode_cf
+          dataField:
+            name: name_pcode_cf
+        - property: name_pcode_nf
+          dataField:
+            name: name_pcode_nf
+        - property: surname_pcode
+          dataField:
+            name: surname_pcode
+        - property: md5sum
+          dataField:
+            name: md5sum
+    - type_name: ROLE_TYPE
+      dataSourceName: role_type
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: role
+          dataField:
+            name: role
+    - type_name: CAST_INFO
+      dataSourceName: cast_info
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: person_id
+          dataField:
+            name: person_id
+        - property: movie_id
+          dataField:
+            name: movie_id
+        - property: person_role_id
+          dataField:
+            name: person_role_id
+        - property: note
+          dataField:
+            name: note
+        - property: nr_order
+          dataField:
+            name: nr_order
+        - property: role_id
+          dataField:
+            name: role_id
+    - type_name: COMPLETE_CAST
+      dataSourceName: complete_cast
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: movie_id
+          dataField:
+            name: movie_id
+        - property: subject_id
+          dataField:
+            name: subject_id
+        - property: status_id
+          dataField:
+            name: status_id
+    - type_name: MOVIE_COMPANIES
+      dataSourceName: movie_companies
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: movie_id
+          dataField:
+            name: movie_id
+        - property: company_id
+          dataField:
+            name: company_id
+        - property: company_type_id
+          dataField:
+            name: company_type_id
+        - property: note
+          dataField:
+            name: note
+    - type_name: MOVIE_LINK
+      dataSourceName: movie_link
+      idFieldName: id
+      mappings:
+        - property: id
+          dataField:
+            name: id
+        - property: movie_id
+          dataField:
+            name: movie_id
+        - property: linked_movie_id
+          dataField:
+            name: linked_movie_id
+        - property: link_type_id
+          dataField:
+            name: link_type_id
+edgeMappings:
+  edge_types:
+    - type_pair:
+        edge: ALSO_KNOWN_AS_NAME
+        source_vertex: AKA_NAME
+        destination_vertex: NAME
+      dataSourceName: aka_name
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: person_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: ALSO_KNOWN_AS_TITLE
+        source_vertex: AKA_TITLE
+        destination_vertex: TITLE
+      dataSourceName: aka_title
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: movie_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: KIND_TYPE_TITLE
+        source_vertex: KIND_TYPE
+        destination_vertex: TITLE
+      dataSourceName: title
+      sourceVertexMappings:
+        - dataField:
+            name: kind_id
+      destinationVertexMappings:
+        - dataField:
+            name: id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: MOVIE_INFO
+        source_vertex: TITLE
+        destination_vertex: INFO_TYPE
+      dataSourceName: movie_info
+      sourceVertexMappings:
+        - dataField:
+            name: movie_id
+      destinationVertexMappings:
+        - dataField:
+            name: info_type_id
+      dataFieldMappings:
+        - property: info
+          dataField:
+            name: info
+        - property: note
+          dataField:
+            name: note
+        - property: id
+          dataField:
+            name: id
+    - type_pair:
+        edge: MOVIE_INFO_IDX
+        source_vertex: TITLE
+        destination_vertex: INFO_TYPE
+      dataSourceName: movie_info_idx
+      sourceVertexMappings:
+        - dataField:
+            name: movie_id
+      destinationVertexMappings:
+        - dataField:
+            name: info_type_id
+      dataFieldMappings:
+        - property: info
+          dataField:
+            name: info
+        - property: note
+          dataField:
+            name: note
+        - property: id
+          dataField:
+            name: id
+    - type_pair:
+        edge: PERSON_INFO
+        source_vertex: NAME
+        destination_vertex: INFO_TYPE
+      dataSourceName: person_info
+      sourceVertexMappings:
+        - dataField:
+            name: person_id
+      destinationVertexMappings:
+        - dataField:
+            name: info_type_id
+      dataFieldMappings:
+        - property: info
+          dataField:
+            name: info
+        - property: note
+          dataField:
+            name: note
+        - property: id
+          dataField:
+            name: id
+    - type_pair:
+        edge: MOVIE_KEYWORD
+        source_vertex: TITLE
+        destination_vertex: KEYWORD
+      dataSourceName: movie_keyword
+      sourceVertexMappings:
+        - dataField:
+            name: movie_id
+      destinationVertexMappings:
+        - dataField:
+            name: keyword_id
+      dataFieldMappings:
+        - property: id
+          dataField:
+            name: id
+    - type_pair:
+        edge: CAST_INFO_NAME
+        source_vertex: CAST_INFO
+        destination_vertex: NAME
+      dataSourceName: cast_info
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: person_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: CAST_INFO_TITLE
+        source_vertex: CAST_INFO
+        destination_vertex: TITLE
+      dataSourceName: cast_info
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: movie_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: CAST_INFO_CHAR
+        source_vertex: CAST_INFO
+        destination_vertex: CHAR_NAME
+      dataSourceName: cast_info
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: person_role_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: CAST_INFO_ROLE
+        source_vertex: CAST_INFO
+        destination_vertex: ROLE_TYPE
+      dataSourceName: cast_info
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: role_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: COMPLETE_CAST_TITLE
+        source_vertex: COMPLETE_CAST
+        destination_vertex: TITLE
+      dataSourceName: complete_cast
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: movie_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: COMPLETE_CAST_SUBJECT
+        source_vertex: COMPLETE_CAST
+        destination_vertex: COMP_CAST_TYPE
+      dataSourceName: complete_cast
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: subject_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: COMPLETE_CAST_STATUS
+        source_vertex: COMPLETE_CAST
+        destination_vertex: COMP_CAST_TYPE
+      dataSourceName: complete_cast
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: status_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: MOVIE_COMPANIES_TITLE
+        source_vertex: MOVIE_COMPANIES
+        destination_vertex: TITLE
+      dataSourceName: movie_companies
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: movie_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: MOVIE_COMPANIES_COMPANY_NAME
+        source_vertex: MOVIE_COMPANIES
+        destination_vertex: COMPANY_NAME
+      dataSourceName: movie_companies
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: company_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: MOVIE_COMPANIES_TYPE
+        source_vertex: MOVIE_COMPANIES
+        destination_vertex: COMPANY_TYPE
+      dataSourceName: movie_companies
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: company_type_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: MOVIE_LINK_LINKED_TITLE
+        source_vertex: MOVIE_LINK
+        destination_vertex: TITLE
+      dataSourceName: movie_link
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: movie_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: MOVIE_LINK_TITLE
+        source_vertex: TITLE
+        destination_vertex: MOVIE_LINK
+        undirected: true
+      dataSourceName: movie_link
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: linked_movie_id
+      dataFieldMappings:
+        []
+    - type_pair:
+        edge: MOVIE_LINK_LINKED_TYPE
+        source_vertex: MOVIE_LINK
+        destination_vertex: LINK_TYPE
+      dataSourceName: movie_link
+      sourceVertexMappings:
+        - dataField:
+            name: id
+      destinationVertexMappings:
+        - dataField:
+            name: link_type_id
+      dataFieldMappings:
+        []
+...
