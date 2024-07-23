@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
           }
         }
         processed_count++;
-        if (likely(!catch_up_mode)) {
+        if (!catch_up_mode && log_entry.complete()) {
           ostream << log_entry.to_string(processed_count) << flush;
         }
 
@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
       }
 
       processed_count++;
-      if (likely(!catch_up_mode)) {
+      if (!catch_up_mode && log_entry.complete()) {
         ostream << log_entry.to_string(processed_count) << flush;
       }
 
@@ -311,7 +311,7 @@ int main(int argc, char** argv) {
         }
       }
       processed_count++;
-      if (likely(!catch_up_mode)) {
+      if (!catch_up_mode && log_entry.complete()) {
         ostream << log_entry.to_string(processed_count) << flush;
       }
 
@@ -329,7 +329,7 @@ int main(int argc, char** argv) {
     }
 
     processed_count++;
-    if (likely(!catch_up_mode)) {
+    if (!catch_up_mode && log_entry.complete()) {
       ostream << log_entry.to_string(processed_count) << flush;
     }
 

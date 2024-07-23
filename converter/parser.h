@@ -41,6 +41,7 @@ class LogEntry {
       : valid_(false),
         update_has_finish_delete(false),
         all_labels_have_process(false),
+        complete_(true),
         table_idx(0) {}
 
   static LogEntry bulk_load_end();
@@ -50,6 +51,8 @@ class LogEntry {
   int get_tx_id() const { return tx_id; }
 
   bool valid() const { return valid_; }
+
+  bool complete() const { return complete_; }
 
   bool last_snapshot() const { return snapshot == Snapshot::LAST; }
 
@@ -90,6 +93,7 @@ class LogEntry {
   bool valid_;
   bool update_has_finish_delete;
   bool all_labels_have_process;
+  bool complete_;  // incomplete log entry (column maybe null)
   int tx_id;
   size_t table_idx;
   Snapshot snapshot;

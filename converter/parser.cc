@@ -90,6 +90,7 @@ namespace converter {
 LogEntry LogEntry::bulk_load_end() {
   LogEntry entry;
   entry.valid_ = true;
+  entry.complete_ = true;
   entry.epoch = 1;  // epoch 1 means bulk load end
   entry.op_type = OpType::BULKLOAD_END;
   return entry;
@@ -240,6 +241,7 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
   out.properties.clear();
   out.valid_ = false;
   out.epoch = epoch;
+  out.complete_ = true;
   out.external_id = "";
   out.src_external_id = "";
   out.dst_external_id = "";
@@ -359,7 +361,7 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
     fill_edge(out, log);
   }
 
-  if (out.op_type != LogEntry::OpType::DELETE) {
+  if (out.op_type != LogEntry::OpType::DELETE && out.complete_ == true) {
     fill_prop(out, log);
   }
 
@@ -383,14 +385,16 @@ int64_t TxnLogParser::get_gid(const json& oid, int vlabel) const {
   if (oid.is_number_integer()) {
     auto it = int64_oid2gid_maps_[vlabel].find(oid.get<int64_t>());
     if (it == int64_oid2gid_maps_[vlabel].end()) {
-      LOG(ERROR) << "Vertex id not found: " << oid.get<int64_t>();
+      LOG(ERROR) << "Vertex id not found: " << oid.get<int64_t>() << " "
+                 << vlabel;
     } else {
       gid = it->second;
     }
   } else if (oid.is_string()) {
     auto it = string_oid2gid_maps_[vlabel].find(oid.get<string>());
     if (it == string_oid2gid_maps_[vlabel].end()) {
-      LOG(ERROR) << "Vertex id not found: " << oid.get<string>();
+      LOG(ERROR) << "Vertex id not found: " << oid.get<string>() << " "
+                 << vlabel;
     } else {
       gid = it->second;
     }
@@ -490,6 +494,12 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
   int src_label_id = edge_label2src_dst_labels_[edge_label_id].first;
   int dst_label_id = edge_label2src_dst_labels_[edge_label_id].second;
 
+  // check if the data[src_name] and data[dst_name] are null
+  if (data[src_name].is_null() || data[dst_name].is_null()) {
+    out.complete_ = false;
+    return;
+  }
+
   if (data[src_name].is_number_integer()) {
     out.src_external_id = std::to_string(data[src_name].get<int64_t>());
   } else if (data[src_name].is_string()) {
@@ -504,6 +514,11 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
 
   int64_t src_gid = get_gid(data[src_name], src_label_id);
   int64_t dst_gid = get_gid(data[dst_name], dst_label_id);
+  if (src_gid == -1 || dst_gid == -1) {
+    std::cout << "log : " << log << std::endl;
+    out.complete_ = false;
+    return;
+  }
 
   out.edge.src_gid = src_gid;
   out.edge.dst_gid = dst_gid;

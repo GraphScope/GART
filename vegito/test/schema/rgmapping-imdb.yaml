@@ -599,8 +599,8 @@ edgeMappings:
         []
     - type_pair:
         edge: MOVIE_LINK_TITLE
-        source_vertex: TITLE
-        destination_vertex: MOVIE_LINK
+        source_vertex: MOVIE_LINK
+        destination_vertex: TITLE
         undirected: true
       dataSourceName: movie_link
       sourceVertexMappings:

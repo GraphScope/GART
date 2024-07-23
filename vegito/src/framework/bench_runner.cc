@@ -153,7 +153,7 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
 
   // alloc string buffer
   // TODO(wanglei): hard code
-  graph_store->add_string_buffer((1ul << 30) * 10);  // 10GB
+  graph_store->add_string_buffer((1ul << 30) * 30);  // 30GB
   graph_store->add_vprop_buffer((1ul << 30) * 30);   // 30GB
 
   // Parse vertex
