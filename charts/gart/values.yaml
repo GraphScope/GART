@@ -250,3 +250,6 @@ dataconfig:
   # secondsPerEpoch: 60
   # if you run GAE task, set useGAE to 1, otherwise run GIE task. Default run GIE task
   useGAE: 0
+  # defaultMaxVertexNum: 67108864
+  # defaultMaxMemUsage: 10737418240
+  # customMemConfig: TITLE:67108861:1073741824,NAME:67108861:1073741824

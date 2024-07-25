@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <cstdint>
 #include <fstream>
 #include <string>
 #include <utility>
@@ -200,6 +201,35 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
   graph_store->init_edge_bitmap_size(elabel_num);
 
   for (auto idx = 0; idx < vlabel_num; ++idx) {
+    graph_store->set_max_vertex_num(idx, FLAGS_default_max_vertex_number);
+    graph_store->set_max_memory_usage(
+        idx, FLAGS_default_max_memory_usage_for_each_type_vertex);
+  }
+
+  std::cout << "Customized vertex number memory usage config: "
+            << FLAGS_customized_vertex_number_memory_usage_config << std::endl;
+
+  if (!FLAGS_customized_vertex_number_memory_usage_config.empty()) {
+    string customized_config =
+        FLAGS_customized_vertex_number_memory_usage_config;
+    vector<string_view> type_configs = splitString(customized_config, ',');
+    for (auto& type_config : type_configs) {
+      vector<string_view> type_config_parts = splitString(type_config, ':');
+      if (type_config_parts.size() != 3) {
+        LOG(ERROR) << "Invalid customized vertex number memory usage config: "
+                   << type_config;
+        return Status::Invalid();
+      }
+      string type_name(type_config_parts[0]);
+      uint64_t vertex_num = std::stoull(string(type_config_parts[1]));
+      uint64_t memory_usage = std::stoull(string(type_config_parts[2]));
+      int type_id = vertex_name_id_map.find(type_name)->second;
+      graph_store->set_max_vertex_num(type_id, vertex_num);
+      graph_store->set_max_memory_usage(type_id, memory_usage);
+    }
+  }
+
+  for (auto idx = 0; idx < vlabel_num; ++idx) {
     graph_store->add_vgraph(idx, rg_map);
   }
 
@@ -269,9 +299,10 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
 
       for (int col_idx = 0; col_idx < required_table_schema.size(); ++col_idx) {
         if (required_table_schema[col_idx].size() != 2) {
-          LOG(ERROR) << "Table schema format error. " << "Table name"
-                     << table_name << "Column index " << col_idx << " has "
-                     << required_table_schema[col_idx].size() << " columns.";
+          LOG(ERROR) << "Table schema format error. "
+                     << "Table name" << table_name << "Column index " << col_idx
+                     << " has " << required_table_schema[col_idx].size()
+                     << " columns.";
           assert(false);
         }
         if (required_table_schema[col_idx][0].get<string>() ==
@@ -317,9 +348,9 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
       }
 
       if (prop_dtype == "") {
-        LOG(ERROR) << "Table schema format error. " << "Table name "
-                   << table_name << " Column name " << prop_table_col_name
-                   << " not found.";
+        LOG(ERROR) << "Table schema format error. "
+                   << "Table name " << table_name << " Column name "
+                   << prop_table_col_name << " not found.";
         assert(false);
       }
 
@@ -544,7 +575,8 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
   }
 
   sv_vec.erase(sv_vec.begin(), sv_vec.begin() + 1);
-  // remove the last element of sv_vec, since the last element of sv_vec is offset of binlog
+  // remove the last element of sv_vec, since the last element of sv_vec is
+  // offset of binlog
   sv_vec.pop_back();
 
   if (op == "add_vertex") {

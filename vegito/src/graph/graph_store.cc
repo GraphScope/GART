@@ -253,7 +253,10 @@ void GraphStore::add_vgraph(uint64_t vlabel, RGMapping* rg_map) {
   ov_seg_graphs_[vlabel] =
       new seggraph::SegGraph(rg_map, vlabel, block_size, num_vertex);
 #else
-  seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map, vlabel);
+  uint64_t block_size = get_max_memory_usage(vlabel);
+  uint64_t num_vertex = get_max_vertex_num(vlabel);
+  seg_graphs_[vlabel] =
+      new seggraph::SegGraph(rg_map, vlabel, block_size, num_vertex);
 
   // add outer CSR and its schema
   ov_seg_graphs_[vlabel] = new seggraph::SegGraph(rg_map, vlabel);

@@ -53,6 +53,15 @@ spec:
           --enable-bulkload ${ENABLE_BULKLOAD} \
           --rg-from-etcd true \
           --k8s-mode true \
+          {{- if .Values.dataconfig.defaultMaxVertexNum }}
+          --default-max-vertex-num {{ .Values.dataconfig.defaultMaxVertexNum }} \
+          {{- end }}
+          {{- if .Values.dataconfig.defaultMaxMemUsage }}
+          --default-max-mem-usage {{ .Values.dataconfig.defaultMaxMemUsage }} \
+          {{- end }}
+          {{- if .Values.dataconfig.customMemConfig }}
+          --customized-memory-config {{ .Values.dataconfig.customMemConfig }} \
+          {{- end }}
           --role writer &&
           sleep infinity
         envFrom:

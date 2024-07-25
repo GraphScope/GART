@@ -478,6 +478,22 @@ class GraphStore {
 
   void init_external_id_storage(uint64_t vlabel);
 
+  void set_max_vertex_num(uint64_t vlabel, uint64_t num) {
+    max_vertex_num_[vlabel] = num;
+  }
+
+  uint64_t get_max_vertex_num(uint64_t vlabel) {
+    return max_vertex_num_[vlabel];
+  }
+
+  void set_max_memory_usage(uint64_t vlabel, uint64_t usage) {
+    max_memory_usage_[vlabel] = usage;
+  }
+
+  uint64_t get_max_memory_usage(uint64_t vlabel) {
+    return max_memory_usage_[vlabel];
+  }
+
  public:
   IdParser<seggraph::vertex_t> id_parser;
 
@@ -574,6 +590,11 @@ class GraphStore {
   // (vlabel, version) -> vertex property storage snapshot
   std::map<std::pair<uint64_t, uint64_t>, property::Property*>
       property_stores_snapshots_;
+
+  // (vlabel) -> max_vertex_num
+  std::map<uint64_t, uint64_t> max_vertex_num_;
+  // (vlabel) -> max_memory_usage
+  std::map<uint64_t, uint64_t> max_memory_usage_;
 };
 
 }  // namespace graph

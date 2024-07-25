@@ -29,3 +29,11 @@ DEFINE_string(v6d_ipc_socket, "/var/run/vineyard.sock", "Vineyard IPC socket.");
 
 DEFINE_int32(subgraph_num, 1, "total subgraph number.");
 DEFINE_int32(subgraph_id, 0, "subgraph id.");
+
+DEFINE_int64(default_max_vertex_number, 1 * (1ul << 26),
+             "default max vertex number.");
+DEFINE_int64(default_max_memory_usage_for_each_type_vertex, 10 * (1ul << 30),
+             "default max memory usage for each type vertex.");  // in bytes
+DEFINE_string(customized_vertex_number_memory_usage_config,
+              "",  // format: "type1:100:10000,type2:100:10000"
+              "customized vertex number memory usage config.");
