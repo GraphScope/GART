@@ -20,6 +20,17 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "The default build type is Release" FORCE)
 endif()
 
+option (USE_TBB "use TBB for concurrent queue?" OFF)
+option (USE_FLAT_HASH_MAP "use absl::flat_hash_map?" ON)
+
+if(USE_TBB)
+  add_definitions(-DUSE_TBB)
+endif()
+
+if (USE_FLAT_HASH_MAP)
+  add_definitions(-DUSE_FLAT_HASH_MAP)
+endif()
+
 
 # ------------------------------------------------------------------------------
 # find_libraries
@@ -54,9 +65,25 @@ if (GLOG_FOUND)
     set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${GLOG_LIBRARIES}")
 endif ()
 
+if(USE_TBB)
+  # find TBB
+  include("../vegito/cmake/FindTBB.cmake")
+  if (TBB_FOUND)
+      include_directories(${TBB_INCLUDE_DIRS})
+      link_directories(${TBB_LIBRARY_DIRS})
+      link_libraries(${TBB_LIBRARIES})
+  else ()
+      message(SEND_ERROR "TBB not found")
+  endif ()
+endif ()
+
 if(ENABLE_CHECKPOINT)
-  find_package(Boost REQUIRED COMPONENTS serialization)
+  find_package(Boost REQUIRED COMPONENTS)
   include_directories(${Boost_INCLUDE_DIRS})
+endif()
+
+if (USE_FLAT_HASH_MAP)
+  add_subdirectory(../third_party/abseil-cpp abseil-cpp)
 endif()
 
 file(GLOB_RECURSE FILES_NEED_FORMAT "*.cc" "*.h")
@@ -80,6 +107,10 @@ if(ENABLE_CHECKPOINT)
   target_link_libraries(binlog_convert_debezium ${Boost_LIBRARIES})
 endif()
 
+if (USE_FLAT_HASH_MAP)
+  target_link_libraries(binlog_convert_debezium absl::flat_hash_map)
+endif()
+
 add_executable(binlog_convert_maxwell binlog_convert.cc flags.cc parser.cc)
 
 target_include_directories(binlog_convert_maxwell PRIVATE ${RDKAFKA_INCLUDE_DIR})
@@ -91,4 +122,8 @@ target_link_libraries(json2yaml ${YAML_CPP_LIBRARIES})
 if(ENABLE_CHECKPOINT)
   target_compile_definitions(binlog_convert_maxwell PRIVATE ENABLE_CHECKPOINT)
   target_link_libraries(binlog_convert_maxwell ${Boost_LIBRARIES})
+endif()
+
+if (USE_FLAT_HASH_MAP)
+  target_link_libraries(binlog_convert_maxwell absl::flat_hash_map)
 endif()

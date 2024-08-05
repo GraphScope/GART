@@ -47,6 +47,7 @@ seconds_per_epoch=60
 default_max_vertex_num=67108864
 default_max_mem_usage=10737418240
 customized_memory_config=
+num_threads_for_converter=4
 
 
 set_port=false
@@ -74,6 +75,7 @@ print_arguments() {
     printf "    %-20s %s\n" "num-slot:" "$num_slot"
     printf "    %-20s %s\n" "k8s-mode:" "$k8s_mode"
     printf "    %-20s %s\n" "use-logs-per-epoch:" "$use_logs_per_epoch"
+    printf "    %-20s %s\n" "num-threads-for-converter:" "$num_threads_for_converter"
     printf "    %-20s %s\n" "debug:" "${debug[*]}"
 }
 
@@ -135,6 +137,7 @@ Options:
       --default-max-vertex-num:  Default max vertex number (default: 67108864).
       --default-max-mem-usage:   Default max memory usage (default: 10737418240).
       --customized-memory-config: Customized memory config (default: "").
+      --num-threads-for-converter: Number of threads for converter (default: 4).
       --debug:                   Specify components to debug. Pass as a comma-separated list.
                                  Examples: '--debug=writer', '--debug=converter,writer' (default: '').
 EOF
@@ -142,7 +145,7 @@ EOF
 
 ####################### Parse Arguments #######################
 parse_arguments() {
-    local VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,db-user:,db-password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,subgraph-id:,role:,debug:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,use-logs-per-epoch:,logs-per-epoch:,default-max-vertex-num:,default-max-mem-usage:,customized-memory-config:,seconds-per-epoch:,help -- "$@")
+    local VALID_ARGS=$(getopt -o d:b:u:p:r:t:e:k:h? --long db-host:,db-name:,db-port:,db-user:,db-password:,rgmapping-file:,v6d-sock:,v6d-size:,use-debezium:,db-type:,enable-bulkload:,etcd-endpoint:,etcd-prefix:,kafka-server:,subgraph-num:,subgraph-id:,role:,debug:,start-slot:,num-slot:,k8s-mode:,rg-from-etcd:,use-logs-per-epoch:,logs-per-epoch:,default-max-vertex-num:,default-max-mem-usage:,customized-memory-config:,seconds-per-epoch:,num-threads-for-converter:,help -- "$@")
     if [[ $? -ne 0 ]]; then
         exit 1;
     fi
@@ -263,6 +266,10 @@ parse_arguments() {
                 ;;
                 --customized-memory-config)
                 customized_memory_config=$2
+                shift 2
+                ;;
+                --num-threads-for-converter)
+                num_threads_for_converter=$2
                 shift 2
                 ;;
             -h | --help | ?)
@@ -684,7 +691,7 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
             --write_kafka_broker_list $kafka_server \
             --subgraph_num $subgraph_num --logs_per_epoch $logs_per_epoch \
             --seconds_per_epoch $seconds_per_epoch --use_logs_per_epoch=$use_logs_per_epoch \
-            --enable_bulkload=$enable_bulkload"
+            --enable_bulkload=$enable_bulkload --num_threads=$num_threads_for_converter"
     else
         converter_cmd="$CONVENTER_HOME/binlog_convert_maxwell \
             --etcd_endpoint $etcd_endpoint \
@@ -692,7 +699,8 @@ if [ "$role" == "all" ] || [ "$role" == "converter" ]; then
             --read_kafka_broker_list $kafka_server \
             --write_kafka_broker_list $kafka_server \
             --subgraph_num $subgraph_num --logs_per_epoch $logs_per_epoch \
-            --seconds_per_epoch $seconds_per_epoch --use_logs_per_epoch=$use_logs_per_epoch"
+            --seconds_per_epoch $seconds_per_epoch --use_logs_per_epoch=$use_logs_per_epoch \
+            --num_threads=$num_threads_for_converter"
     fi
 
     if $debug_converter; then

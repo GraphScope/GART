@@ -81,6 +81,9 @@ spec:
           --use-logs-per-epoch ${USE_LOGS_PER_EPOCH} \
           --logs-per-epoch ${LOGS_PER_EPOCH} \
           --seconds-per-epoch ${SECONDS_PER_EPOCH} \
+          {{- if .Values.dataconfig.numThreadsForConverter }}
+          --num-threads-for-converter {{ .Values.dataconfig.numThreadsForConverter }} \
+          {{- end }}
           --rg-from-etcd true \
           --k8s-mode true \
           --role converter &&

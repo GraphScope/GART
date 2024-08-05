@@ -37,4 +37,7 @@ DECLARE_bool(enable_bulkload);
 DECLARE_int32(checkpoint_interval);  // in minutes
 DECLARE_string(checkpoint_dir);
 
+DECLARE_int32(num_threads);
+DECLARE_int32(max_queue_size);
+
 #endif  // CONVERTER_FLAGS_H_

@@ -1,3 +1,6 @@
 [submodule "interfaces/grin/include"]
 	path = interfaces/grin/include
 	url = https://github.com/GraphScope/GRIN.git
+[submodule "third_party/abseil-cpp"]
+	path = third_party/abseil-cpp
+	url = https://github.com/abseil/abseil-cpp.git

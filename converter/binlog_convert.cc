@@ -17,11 +17,16 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
-
-#ifdef ENABLE_CHECKPOINT
-#include <mutex>
+#include <memory>
+#include <string>
 #include <thread>
-#endif  // ENABLE_CHECKPOINT
+#include <vector>
+
+#ifdef USE_TBB
+#include <tbb/concurrent_queue.h>
+#else
+#include <readerwriterqueue/readerwriterqueue.h>
+#endif
 
 #include "converter/flags.h"
 #include "converter/kafka_helper.h"
@@ -43,6 +48,234 @@ using std::endl;
 using std::flush;
 using std::make_shared;
 
+#ifdef USE_TBB
+std::vector<tbb::concurrent_queue<std::string>> binlog_queues;
+std::vector<tbb::concurrent_queue<LogEntry>> unified_log_queues;
+std::vector<tbb::concurrent_queue<int>> unified_log_counts;
+#else
+std::vector<std::shared_ptr<moodycamel::ReaderWriterQueue<std::string>>>
+    binlog_queues;
+std::vector<std::shared_ptr<moodycamel::ReaderWriterQueue<LogEntry>>>
+    unified_log_queues;
+std::vector<std::shared_ptr<moodycamel::ReaderWriterQueue<int>>>
+    unified_log_counts;
+#endif
+
+bool bulk_load_finished = false;
+bool enable_bulk_load = false;
+bool catch_up_mode = true;
+int64_t last_processed_offset = 0;
+
+constexpr char NO_MESSAGE[] = "No message";
+
+void process_binlog_step_1(int thread_id, TxnLogParser& parser) {
+  while (true) {
+    std::string line;
+    while (true) {
+#ifndef USE_TBB
+      if (binlog_queues[thread_id]->try_dequeue(line)) {
+#else
+      if (binlog_queues[thread_id].try_pop(line)) {
+#endif
+        break;
+      }
+      std::this_thread::yield();
+    }
+
+    if (line == NO_MESSAGE) {
+#ifndef USE_TBB
+      while (!unified_log_counts[thread_id]->try_enqueue(0)) {
+        std::this_thread::yield();
+      }
+#else
+      unified_log_counts[thread_id].push(0);
+#endif
+      continue;
+    }
+
+    LogEntry log_entry;
+    GART_CHECK_OK(parser.parse(log_entry, line));
+    if (!log_entry.valid()) {
+#ifndef USE_TBB
+      while (!unified_log_counts[thread_id]->try_enqueue(0)) {
+        std::this_thread::yield();
+      }
+#else
+      unified_log_counts[thread_id].push(0);
+#endif
+      continue;
+    }
+    int unified_log_count = 0;
+
+    while (log_entry.more_entires()) {
+      if (log_entry.complete()) {
+        unified_log_count++;
+#ifndef USE_TBB
+        while (!unified_log_queues[thread_id]->try_enqueue(log_entry)) {
+          std::this_thread::yield();
+        }
+#else
+        unified_log_queues[thread_id].push(log_entry);
+#endif
+      }
+      GART_CHECK_OK(parser.parse(log_entry, line));
+    }
+
+    if (log_entry.complete()) {
+      unified_log_count++;
+#ifndef USE_TBB
+      while (!unified_log_queues[thread_id]->try_enqueue(log_entry)) {
+        std::this_thread::yield();
+      }
+#else
+      unified_log_queues[thread_id].push(log_entry);
+#endif
+    }
+#ifndef USE_TBB
+    while (!unified_log_counts[thread_id]->try_enqueue(unified_log_count)) {
+      std::this_thread::yield();
+    }
+#else
+    unified_log_counts[thread_id].push(unified_log_count);
+#endif
+  }
+}
+
+void process_binlog_step_2(KafkaOutputStream& ostream, TxnLogParser& parser) {
+  int epoch = 0;
+  uint64_t log_count = 0;
+  int last_tx_id = -1;
+  int last_log_count = 0;
+
+  int64_t processed_count = 0;
+  auto start = std::chrono::steady_clock::now();
+  auto interval = std::chrono::seconds(FLAGS_seconds_per_epoch);
+  auto start_timer = std::chrono::steady_clock::now();
+
+  while (true) {
+    for (auto idx = 0; idx < unified_log_counts.size(); idx++) {
+      int unified_log_count = 0;
+      while (true) {
+#ifndef USE_TBB
+        if (unified_log_counts[idx]->try_dequeue(unified_log_count)) {
+#else
+        if (unified_log_counts[idx].try_pop(unified_log_count)) {
+#endif
+          break;
+        }
+        std::this_thread::yield();
+      }
+      if (unified_log_count == 0) {
+        continue;
+      }
+      log_count++;
+      converter::LogEntry log_entry;
+      for (auto log_id = 0; log_id < unified_log_count; log_id++) {
+        if (catch_up_mode) {
+          if (processed_count >= last_processed_offset) {
+            catch_up_mode = false;
+          }
+        }
+        processed_count++;
+        while (true) {
+#ifndef USE_TBB
+          if (unified_log_queues[idx]->try_dequeue(log_entry)) {
+#else
+          if (unified_log_queues[idx].try_pop(log_entry)) {
+#endif
+            break;
+          }
+          std::this_thread::yield();
+        }
+        GART_CHECK_OK(parser.parse_again(log_entry, epoch));
+        if (!catch_up_mode) {
+          ostream << log_entry.to_string(processed_count) << flush;
+        }
+      }
+
+      if (unlikely(log_count % 1000000 == 0)) {
+        auto end_timer = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            end_timer - start_timer)
+                            .count();
+        std::cout << "Processed 1000000 "
+                  << " logs from log ids from " << log_count - 1000000 << " to "
+                  << log_count << " in " << duration << " milliseconds"
+                  << std::endl
+                  << std::flush;
+        start_timer = end_timer;
+      }
+
+#ifndef USE_DEBEZIUM
+      if (FLAGS_use_logs_per_epoch) {
+        epoch = log_count / FLAGS_logs_per_epoch;
+      } else {
+        auto now = std::chrono::steady_clock::now();
+        if (now - start >= interval) {
+          start = now;
+          ++epoch;
+        }
+      }
+
+#else
+      if (!enable_bulk_load || (enable_bulk_load && bulk_load_finished)) {
+        int tx_id = log_entry.get_tx_id();
+        if (tx_id == -1) {
+          if (FLAGS_use_logs_per_epoch) {
+            epoch = log_count / FLAGS_logs_per_epoch;
+          } else {
+            auto now = std::chrono::steady_clock::now();
+            if (now - start >= interval) {
+              start = now;
+              ++epoch;
+            }
+          }
+        } else {
+          if (tx_id != last_tx_id) {
+            last_tx_id = tx_id;
+            if (FLAGS_use_logs_per_epoch) {
+              if (log_count - last_log_count >= FLAGS_logs_per_epoch) {
+                last_log_count = log_count;
+                cout << "Epoch " << epoch << " finished" << endl;
+                ++epoch;
+              }
+            } else {
+              auto now = std::chrono::steady_clock::now();
+              if (now - start >= interval) {
+                start = now;
+                cout << "Epoch " << epoch << " finished" << endl;
+                ++epoch;
+              }
+            }
+          }
+        }
+      }
+
+#endif
+
+      if (unlikely(log_entry.last_snapshot())) {
+        bulk_load_finished = true;
+        std::cout << "Bulk load finished after " << log_count
+                  << " logs processed" << std::endl;
+        last_tx_id = log_entry.get_tx_id();
+        last_log_count = log_count;
+        epoch = 1;
+        if (catch_up_mode) {
+          if (processed_count >= last_processed_offset) {
+            catch_up_mode = false;
+          }
+        }
+        processed_count++;
+        if (likely(!catch_up_mode)) {
+          ostream << LogEntry::bulk_load_end().to_string(processed_count)
+                  << flush;
+        }
+        start = std::chrono::steady_clock::now();
+      }
+    }
+  }
+}
+
 #ifdef ENABLE_CHECKPOINT
 std::mutex checkpoint_mutex;
 #endif  // ENABLE_CHECKPOINT
@@ -54,6 +287,27 @@ int main(int argc, char** argv) {
   shared_ptr<KafkaProducer> producer = make_shared<KafkaProducer>(
       FLAGS_write_kafka_broker_list, FLAGS_write_kafka_topic);
   KafkaOutputStream ostream(producer);
+
+  int num_threads = FLAGS_num_threads;
+  enable_bulk_load = FLAGS_enable_bulkload;
+
+#ifdef USE_TBB
+  binlog_queues.resize(num_threads);
+  unified_log_queues.resize(num_threads);
+  unified_log_counts.resize(num_threads);
+#else
+  for (auto idx = 0; idx < num_threads; idx++) {
+    binlog_queues.push_back(
+        std::make_shared<moodycamel::ReaderWriterQueue<std::string>>(
+            FLAGS_max_queue_size));
+    unified_log_queues.push_back(
+        std::make_shared<moodycamel::ReaderWriterQueue<LogEntry>>(
+            FLAGS_max_queue_size));
+    unified_log_counts.push_back(
+        std::make_shared<moodycamel::ReaderWriterQueue<int>>(
+            FLAGS_max_queue_size));
+  }
+#endif
 
   TxnLogParser parser(FLAGS_etcd_endpoint, FLAGS_etcd_prefix,
                       FLAGS_subgraph_num);
@@ -75,15 +329,7 @@ int main(int argc, char** argv) {
   }
 #endif  // ENABLE_CHECKPOINT
 
-  int log_count = 0;
   bool is_timeout = false;
-
-  int epoch = 0;
-
-  // catch up mode is used for failover
-  bool catch_up_mode = true;
-  int64_t last_processed_offset = 0;
-  int64_t processed_count = 0;
 
   shared_ptr<KafkaConsumer> consumer_for_get_last_commit =
       make_shared<KafkaConsumer>(FLAGS_write_kafka_broker_list,
@@ -126,213 +372,38 @@ int main(int argc, char** argv) {
       FLAGS_read_kafka_broker_list, FLAGS_read_kafka_topic, "gart_consumer", 0,
       RdKafka::Topic::OFFSET_BEGINNING);
 
-#ifdef USE_DEBEZIUM
-  // used for consistent epoch calculation
-  int last_tx_id = -1;
-  int last_log_count = 0;
-
-  // bulk load data
-  if (FLAGS_enable_bulkload) {
-    cout << "Bulk load data start" << endl;
-    uint64_t init_logs = 0;
-    auto startTime = std::chrono::high_resolution_clock::now();
-    while (1) {
-      RdKafka::Message* msg = consumer->consume(&is_timeout);
-
-      if (is_timeout) {
-        // skip empty message to avoid JSON parser error
-        cout << "Waiting for snapshot complete, maybe the database is empty"
-             << endl;
-        continue;
-      }
-
-      string line(static_cast<const char*>(msg->payload()), msg->len());
-      LogEntry log_entry;
-      GART_CHECK_OK(parser.parse(log_entry, line, epoch));
-
-      ++init_logs;
-
-      // skip invalid log entry (unused tables)
-      if (!log_entry.valid()) {
-        consumer->delete_message(msg);
-        continue;
-      }
-
-      while (log_entry.more_entires()) {
-        if (catch_up_mode) {
-          if (processed_count >= last_processed_offset) {
-            catch_up_mode = false;
-          }
-        }
-        processed_count++;
-        if (!catch_up_mode && log_entry.complete()) {
-          ostream << log_entry.to_string(processed_count) << flush;
-        }
-
-        GART_CHECK_OK(parser.parse(log_entry, line, epoch));
-
-        if (!log_entry.valid()) {
-          break;
-        }
-      }
-
-      if (catch_up_mode) {
-        if (processed_count >= last_processed_offset) {
-          catch_up_mode = false;
-        }
-      }
-
-      processed_count++;
-      if (!catch_up_mode && log_entry.complete()) {
-        ostream << log_entry.to_string(processed_count) << flush;
-      }
-
-      consumer->delete_message(msg);
-
-      if (log_entry.last_snapshot()) {
-        cout << "Bulk load data finished: " << init_logs << " logs" << endl;
-        log_count = FLAGS_logs_per_epoch;  // for the first epoch
-        last_tx_id = log_entry.get_tx_id();
-        last_log_count = log_count;
-        epoch = 1;
-        if (catch_up_mode) {
-          if (processed_count >= last_processed_offset) {
-            catch_up_mode = false;
-          }
-        }
-        processed_count++;
-        if (likely(!catch_up_mode)) {
-          ostream << LogEntry::bulk_load_end().to_string(processed_count)
-                  << flush;
-        }
-        break;
-      }
-
-      const uint64_t kLogInterval = 1000000ull;
-      const uint64_t kDotInterval = kLogInterval / 10;
-      const char kDot = '.';
-
-      if (init_logs % kDotInterval == 0) {
-        cout << kDot << flush;
-      }
-
-      if (init_logs % kLogInterval == 0 && init_logs) {
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                            endTime - startTime)
-                            .count();
-
-        startTime = endTime;
-
-        cout << "\r";  // move cursor to the beginning of line
-
-        cout << "Bulk load data: " << init_logs << " logs"
-             << " time: " << duration << " ms,"
-             << " speed: " << (kLogInterval * 1000 / duration) << " logs/s"
-             << endl;
-      }
-    }
+  std::vector<std::thread> threads_for_step_1(num_threads);
+  for (auto idx = 0; idx < num_threads; idx++) {
+    threads_for_step_1[idx] =
+        std::thread(process_binlog_step_1, idx, std::ref(parser));
   }
-#endif
 
-  auto interval = std::chrono::seconds(FLAGS_seconds_per_epoch);
-  auto start = std::chrono::steady_clock::now();
+  std::thread thread_for_step_2(process_binlog_step_2, std::ref(ostream),
+                                std::ref(parser));
 
-  while (1) {
-    RdKafka::Message* msg = consumer->consume(&is_timeout);
-
-    // skip empty message to avoid JSON parser error
-    if (is_timeout) {
-      continue;
-    }
-
-    string line(static_cast<const char*>(msg->payload()), msg->len());
-
-    LogEntry log_entry;
-    GART_CHECK_OK(parser.parse(log_entry, line, epoch));
-
-    ++log_count;
-
-    // skip invalid log entry (unused tables)
-    if (!log_entry.valid()) {
-      consumer->delete_message(msg);
-      continue;
-    }
-
-#ifndef USE_DEBEZIUM
-    if (FLAGS_use_logs_per_epoch) {
-      epoch = log_count / FLAGS_logs_per_epoch;
-    } else {
-      auto now = std::chrono::steady_clock::now();
-      if (now - start >= interval) {
-        start = now;
-        ++epoch;
-      }
-    }
-
+  while (true) {
+    for (auto idx = 0; idx < num_threads; idx++) {
+      RdKafka::Message* msg = consumer->consume(&is_timeout);
+      if (is_timeout) {
+        std::string line = NO_MESSAGE;
+#ifndef USE_TBB
+        while (!binlog_queues[idx]->try_enqueue(line)) {
+          std::this_thread::yield();
+        }
 #else
-    // consistent epoch calculation
-    int tx_id = log_entry.get_tx_id();
-    if (tx_id == -1) {
-      if (FLAGS_use_logs_per_epoch) {
-        epoch = log_count / FLAGS_logs_per_epoch;
-      } else {
-        auto now = std::chrono::steady_clock::now();
-        if (now - start >= interval) {
-          start = now;
-          ++epoch;
-        }
-      }
-    } else {
-      if (tx_id != last_tx_id) {
-        last_tx_id = tx_id;
-        if (FLAGS_use_logs_per_epoch) {
-          if (log_count - last_log_count >= FLAGS_logs_per_epoch) {
-            last_log_count = log_count;
-            cout << "Epoch " << epoch << " finished" << endl;
-            ++epoch;
-          }
-        } else {
-          auto now = std::chrono::steady_clock::now();
-          if (now - start >= interval) {
-            start = now;
-            cout << "Epoch " << epoch << " finished" << endl;
-            ++epoch;
-          }
-        }
-      }
-    }
+        binlog_queues[idx].push(line);
 #endif
-
-    while (log_entry.more_entires()) {
-      if (catch_up_mode) {
-        if (processed_count >= last_processed_offset) {
-          catch_up_mode = false;
-        }
+        continue;
       }
-      processed_count++;
-      if (!catch_up_mode && log_entry.complete()) {
-        ostream << log_entry.to_string(processed_count) << flush;
+      std::string line(static_cast<const char*>(msg->payload()), msg->len());
+#ifndef USE_TBB
+      while (!binlog_queues[idx]->try_enqueue(line)) {
+        std::this_thread::yield();
       }
-
-      GART_CHECK_OK(parser.parse(log_entry, line, epoch));
-
-      if (!log_entry.valid()) {
-        break;
-      }
+#else
+      binlog_queues[idx].push(line);
+#endif
+      consumer->delete_message(msg);
     }
-
-    if (catch_up_mode) {
-      if (processed_count >= last_processed_offset) {
-        catch_up_mode = false;
-      }
-    }
-
-    processed_count++;
-    if (!catch_up_mode && log_entry.complete()) {
-      ostream << log_entry.to_string(processed_count) << flush;
-    }
-
-    consumer->delete_message(msg);
   }
 }

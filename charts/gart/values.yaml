@@ -253,3 +253,5 @@ dataconfig:
   # defaultMaxVertexNum: 67108864
   # defaultMaxMemUsage: 10737418240
   # customMemConfig: TITLE:67108861:1073741824,NAME:67108861:1073741824
+  # set the number of threads for converter, if unset, use the default value 4
+  # numThreadsForConverter: 4

@@ -16,6 +16,7 @@
 #include "converter/parser.h"
 
 #include <chrono>
+#include <cstdint>
 #include <fstream>
 #include <string>
 #include <utility>
@@ -236,15 +237,19 @@ gart::Status TxnLogParser::init(const string& etcd_endpoint,
   return gart::Status::OK();
 }
 
-gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
-                                 int epoch) {
+gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str) {
   out.properties.clear();
   out.valid_ = false;
-  out.epoch = epoch;
   out.complete_ = true;
   out.external_id = "";
   out.src_external_id = "";
   out.dst_external_id = "";
+  out.vlabel = -1;
+  out.src_vlabel = -1;
+  out.dst_vlabel = -1;
+  out.is_string_oid = false;
+  out.is_src_string_oid = false;
+  out.is_dst_string_oid = false;
 
   // parse JSON
   json log;
@@ -339,7 +344,7 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
     LOG(INFO) << "Other snapshot status: " << snapshot;
   }
 #endif
-  if (out.op_type == LogEntry::OpType::UNKNOWN) {
+  if (unlikely(out.op_type == LogEntry::OpType::UNKNOWN)) {
     LOG(ERROR) << "Unknown operation type: " << type;
     return gart::Status::OperationError();
   }
@@ -379,39 +384,78 @@ gart::Status TxnLogParser::parse(LogEntry& out, const string& log_str,
   return gart::Status::OK();
 }
 
-int64_t TxnLogParser::get_gid(const json& oid, int vlabel) const {
+gart::Status TxnLogParser::parse_again(LogEntry& out, int epoch) {
+  out.epoch = epoch;
+
+  if (out.get_entity_type() == LogEntry::EntityType::VERTEX) {
+    int vertex_label_id = out.vlabel;
+    if (out.get_op_type() == LogEntry::OpType::INSERT) {
+      // partition by round-robin
+      int64_t fid = vertex_nums_[vertex_label_id] % subgraph_num_;
+      int64_t offset = vertex_nums_per_fragment_[vertex_label_id][fid];
+      vertex_nums_[vertex_label_id]++;
+      vertex_nums_per_fragment_[vertex_label_id][fid]++;
+
+      int64_t gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
+      set_gid(out.external_id, out.is_string_oid, vertex_label_id, gid);
+      out.vertex.gid = gid;
+    } else if (out.op_type == LogEntry::OpType::DELETE ||
+               out.op_type == LogEntry::OpType::UPDATE) {
+      int64_t gid =
+          get_gid(out.external_id, out.is_string_oid, vertex_label_id);
+      if (gid == -1) {
+        LOG(ERROR) << "Vertex id not found: " << out.external_id << " "
+                   << vertex_label_id;
+        out.complete_ = false;
+        return gart::Status::OK();
+      }
+      out.vertex.gid = gid;
+    }
+  } else {
+    int64_t src_gid =
+        get_gid(out.src_external_id, out.is_src_string_oid, out.src_vlabel);
+    int64_t dst_gid =
+        get_gid(out.dst_external_id, out.is_dst_string_oid, out.dst_vlabel);
+    if (src_gid == -1 || dst_gid == -1) {
+      LOG(ERROR) << "Src or dst vertex id not found: " << out.src_external_id
+                 << " " << out.dst_external_id;
+      out.complete_ = false;
+      return gart::Status::OK();
+    }
+    out.edge.src_gid = src_gid;
+    out.edge.dst_gid = dst_gid;
+  }
+  return gart::Status::OK();
+}
+
+int64_t TxnLogParser::get_gid(std::string& oid, bool is_string_oid,
+                              int vlabel) const {
   int64_t gid = -1;
 
-  if (oid.is_number_integer()) {
-    auto it = int64_oid2gid_maps_[vlabel].find(oid.get<int64_t>());
+  if (!is_string_oid) {
+    auto it = int64_oid2gid_maps_[vlabel].find(std::stoll(oid));
     if (it == int64_oid2gid_maps_[vlabel].end()) {
-      LOG(ERROR) << "Vertex id not found: " << oid.get<int64_t>() << " "
-                 << vlabel;
-    } else {
-      gid = it->second;
-    }
-  } else if (oid.is_string()) {
-    auto it = string_oid2gid_maps_[vlabel].find(oid.get<string>());
-    if (it == string_oid2gid_maps_[vlabel].end()) {
-      LOG(ERROR) << "Vertex id not found: " << oid.get<string>() << " "
-                 << vlabel;
+      LOG(ERROR) << "Vertex id not found: " << oid << " " << vlabel;
     } else {
       gid = it->second;
     }
   } else {
-    LOG(ERROR) << "Unknown vertex id type: " << oid.type_name();
+    auto it = string_oid2gid_maps_[vlabel].find(oid);
+    if (it == string_oid2gid_maps_[vlabel].end()) {
+      LOG(ERROR) << "Vertex id not found: " << oid << " " << vlabel;
+    } else {
+      gid = it->second;
+    }
   }
-
   return gid;
 }
 
-void TxnLogParser::set_gid(const vineyard::json& oid, int vlabel, int64_t gid) {
-  if (oid.is_number_integer()) {
-    int64_oid2gid_maps_[vlabel][oid.get<int64_t>()] = gid;
-  } else if (oid.is_string()) {
-    string_oid2gid_maps_[vlabel][oid.get<string>()] = gid;
+void TxnLogParser::set_gid(std::string& oid, bool is_string_oid, int vlabel,
+                           int64_t gid) {
+  if (!is_string_oid) {
+    int64_oid2gid_maps_[vlabel][std::stoll(oid)] = gid;
   } else {
-    LOG(ERROR) << "Unknown vertex id type: " << oid.type_name();
+    string_oid2gid_maps_[vlabel][oid] = gid;
   }
 }
 
@@ -435,36 +479,24 @@ void TxnLogParser::fill_vertex(LogEntry& out, const json& log) {
       table2label_names_.find(table_name)->second[out.table_idx];
   const string& vid_col = vertex_id_columns_.find(vlabel_name)->second;
   int vertex_label_id = vertex_label2ids_.find(vlabel_name)->second;
+  out.vlabel = vertex_label_id;
 
-  int64_t gid = 0;
-  if (out.op_type == LogEntry::OpType::INSERT) {
-    // partition by round-robin
-    int64_t fid = vertex_nums_[vertex_label_id] % subgraph_num_;
-    int64_t offset = vertex_nums_per_fragment_[vertex_label_id][fid];
-    vertex_nums_[vertex_label_id]++;
-    vertex_nums_per_fragment_[vertex_label_id][fid]++;
-
-    gid = id_parser_.GenerateId(fid, vertex_label_id, offset);
-    set_gid(data[vid_col], vertex_label_id, gid);
-    string external_id;
-    // TODO(wanglei): now only vertex has external id
-    if (data[vid_col].is_number_integer()) {
-      external_id = std::to_string(data[vid_col].get<int64_t>());
-    } else if (data[vid_col].is_string()) {
-      external_id = data[vid_col].get<string>();
-    } else {
-      LOG(ERROR) << "Unknown vertex id type: " << data[vid_col].type_name();
-    }
-    if (external_id.empty()) {
-      LOG(ERROR) << "Empty external id for vertex: " << vlabel_name;
-      assert(false);
-    }
-    out.external_id = external_id;
-  } else if (out.op_type == LogEntry::OpType::DELETE ||
-             out.op_type == LogEntry::OpType::UPDATE) {
-    gid = get_gid(data[vid_col], vertex_label_id);
+  string external_id;
+  // TODO(wanglei): now only vertex has external id
+  if (data[vid_col].is_number_integer()) {
+    external_id = std::to_string(data[vid_col].get<int64_t>());
+    out.is_string_oid = false;
+  } else if (data[vid_col].is_string()) {
+    external_id = data[vid_col].get<string>();
+    out.is_string_oid = true;
+  } else {
+    LOG(ERROR) << "Unknown vertex id type: " << data[vid_col].type_name();
   }
-  out.vertex.gid = gid;
+  if (external_id.empty()) {
+    LOG(ERROR) << "Empty external id for vertex: " << vlabel_name;
+    assert(false);
+  }
+  out.external_id = external_id;
 }
 
 void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
@@ -493,6 +525,8 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
   auto edge_label_id = elabel_names2elabel_.find(elable_name)->second;
   int src_label_id = edge_label2src_dst_labels_[edge_label_id].first;
   int dst_label_id = edge_label2src_dst_labels_[edge_label_id].second;
+  out.src_vlabel = src_label_id;
+  out.dst_vlabel = dst_label_id;
 
   // check if the data[src_name] and data[dst_name] are null
   if (data[src_name].is_null() || data[dst_name].is_null()) {
@@ -502,26 +536,19 @@ void TxnLogParser::fill_edge(LogEntry& out, const json& log) const {
 
   if (data[src_name].is_number_integer()) {
     out.src_external_id = std::to_string(data[src_name].get<int64_t>());
+    out.is_src_string_oid = false;
   } else if (data[src_name].is_string()) {
     out.src_external_id = data[src_name].get<string>();
+    out.is_src_string_oid = true;
   }
 
   if (data[dst_name].is_number_integer()) {
     out.dst_external_id = std::to_string(data[dst_name].get<int64_t>());
+    out.is_dst_string_oid = false;
   } else if (data[dst_name].is_string()) {
     out.dst_external_id = data[dst_name].get<string>();
+    out.is_dst_string_oid = true;
   }
-
-  int64_t src_gid = get_gid(data[src_name], src_label_id);
-  int64_t dst_gid = get_gid(data[dst_name], dst_label_id);
-  if (src_gid == -1 || dst_gid == -1) {
-    std::cout << "log : " << log << std::endl;
-    out.complete_ = false;
-    return;
-  }
-
-  out.edge.src_gid = src_gid;
-  out.edge.dst_gid = dst_gid;
 }
 
 void TxnLogParser::fill_prop(LogEntry& out, const json& log) const {

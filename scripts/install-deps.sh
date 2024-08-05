@@ -102,7 +102,7 @@ cmake ..
 make -j && sudo make install
 cd ../..
 
-if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ]; then
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ] || [ "$ROLE" == "Converter" ]; then
   # TBB
   git clone https://github.com/oneapi-src/oneTBB.git
   cd oneTBB
@@ -202,6 +202,15 @@ if [ "$ROLE" == "All" ] || [ "$ROLE" == "Writer" ] || [ "$ROLE" == "Analyzer" ];
   mkdir -p build && cd build
   cmake .. -DBUILD_LIBGRAPELITE_TESTS=OFF
   make -j && sudo make install
+  cd ../..
+fi
+
+if [ "$ROLE" == "All" ] || [ "$ROLE" == "Converter" ]; then
+  git clone https://github.com/cameron314/readerwriterqueue.git
+  cd readerwriterqueue
+  mkdir -p build && cd build
+  cmake ..
+  sudo make install
   cd ../..
 fi
 
@@ -332,5 +341,5 @@ advertised.listeners=PLAINTEXT://localhost:9092
 EOT
 fi
 
-rm -rf /deps/cpprestsdk /deps/etcd-cpp-apiv3 /deps/libgrape-lite /deps/oneTBB /deps/pgql-lang /deps/v6d /deps/yaml-cpp /deps/pybind11
+rm -rf /deps/cpprestsdk /deps/etcd-cpp-apiv3 /deps/libgrape-lite /deps/oneTBB /deps/pgql-lang /deps/v6d /deps/yaml-cpp /deps/pybind11 /deps/readerwriterqueue
 rm -rf /var/lib/apt/lists/*

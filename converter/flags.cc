@@ -36,3 +36,6 @@ DEFINE_int32(checkpoint_interval, 10, "Checkpoint interval in minutes.");
 DEFINE_string(checkpoint_dir, "/tmp/checkpoint", "Checkpoint directory.");
 
 DEFINE_bool(enable_bulkload, false, "Enable bulkload from existing data.");
+
+DEFINE_int32(num_threads, 4, "Number of threads for processing logs.");
+DEFINE_int32(max_queue_size, 20480, "Max queue size for logs.");
