@@ -270,7 +270,8 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k, char* v, uint64_t ver) {
 
 void PropertyColPaged::insert(uint64_t off, uint64_t k,
                               const StringViewList& v_list, uint64_t ver,
-                              gart::graph::GraphStore* graph_store) {
+                              gart::graph::GraphStore* graph_store,
+                              int vlabel) {
   GART_ASSERT(off < max_items_);
 
   auto graph_schema = graph_store->get_schema();
@@ -326,7 +327,15 @@ void PropertyColPaged::insert(uint64_t off, uint64_t k,
     Page* page;
     if (col.updatable) {
       int pg_num = off / col.page_size;
+#ifdef USE_MULTI_THREADS
+      auto inner_vertex_label_mutex =
+          graph_store->get_inner_vertex_label_mutex(vlabel);
+      inner_vertex_label_mutex->lock();
+#endif
       page = findWithInsertPage_(idx, pg_num, ver);
+#ifdef USE_MULTI_THREADS
+      inner_vertex_label_mutex->unlock();
+#endif
       assert(page && page->ver == ver);
       dst = page->content + BYTE_SIZE(col.page_size * col.column_num) +
             (off % col.page_size) * vlen;

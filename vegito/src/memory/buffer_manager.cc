@@ -71,8 +71,15 @@ uint64_t BufferManager::put_cstring(const std::string& str) {
 }
 
 uint64_t BufferManager::put_cstring(const std::string_view& sv) {
+#ifdef USE_MULTI_THREADS
+  string_buffer_mutex_.lock();
+#endif
   uint64_t offset = size_;
   size_t new_size = offset + sv.length() + 1;
+  size_ = new_size;
+#ifdef USE_MULTI_THREADS
+  string_buffer_mutex_.unlock();
+#endif
   if (new_size >= capacity_) {
     LOG(ERROR) << "BufferManager: buffer overflow (capacity: " << capacity_
                << ", size: " << size_ << ", new_size: " << new_size << ")";
@@ -81,8 +88,6 @@ uint64_t BufferManager::put_cstring(const std::string_view& sv) {
   }
   memcpy(buffer_ + offset, sv.data(), sv.length());
   buffer_[new_size - 1] = '\0';
-  size_ = new_size;
-
   return offset;
 }
 

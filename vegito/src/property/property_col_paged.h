@@ -45,7 +45,8 @@ class PropertyColPaged : public Property {
   void insert(uint64_t off, uint64_t k, char* v, uint64_t ver) override;
 
   void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
-              uint64_t ver, gart::graph::GraphStore* graph_store) override;
+              uint64_t ver, gart::graph::GraphStore* graph_store,
+              int vlabel) override;
 
   // get cursor
   std::unique_ptr<ColCursor> getColCursor(int col_id,

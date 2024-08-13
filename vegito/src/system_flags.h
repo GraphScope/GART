@@ -35,4 +35,5 @@ DECLARE_string(
     customized_vertex_number_memory_usage_config);  // format:
                                                     // "type1:100:10000,type2:100:10000"
 
-#endif  // VEGITO_SRC_SYSTEM_FLAGS_H_
+DECLARE_int32(num_threads);  // number of threads
+#endif                       // VEGITO_SRC_SYSTEM_FLAGS_H_

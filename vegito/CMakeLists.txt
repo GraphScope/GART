@@ -11,9 +11,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option (WITH_TEST "build for test" OFF)
 option (WITH_GLOBAL_VERTEX_MAP "use global vertex map?" OFF)
+option (USE_MULTI_THREADS "use multiple threads to process logs ?" OFF)
 
 if(WITH_GLOBAL_VERTEX_MAP)
   add_definitions(-DUSE_GLOBAL_VERTEX_MAP)
+endif()
+
+if (USE_MULTI_THREADS)
+  add_definitions(-DUSE_MULTI_THREADS)
 endif()
 
 ### Forbid in-source builds ###

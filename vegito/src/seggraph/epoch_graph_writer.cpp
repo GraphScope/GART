@@ -36,6 +36,22 @@ vertex_t EpochGraphWriter::new_vertex(bool use_recycled_vertex) {
   return vertex_id;
 }
 
+vertex_t EpochGraphWriter::new_vertex(vertex_t real_vertex_id) {
+  vertex_t vertex_id = graph.vertex_id.fetch_add(1, std::memory_order_relaxed);
+  graph.vertex_futexes[real_vertex_id].clear();
+  graph.vertex_ptrs[real_vertex_id] = graph.block_manager.NULLPOINTER;
+#ifdef USE_MULTI_THREADS
+  if (!graph.seg_init_flag[graph.get_vertex_seg_id(real_vertex_id)]) {
+    graph.seg_init_flag[graph.get_vertex_seg_id(real_vertex_id)] = 1;
+    graph.seg_mutexes[graph.get_vertex_seg_id(real_vertex_id)] =
+        new std::shared_timed_mutex();
+    graph.edge_label_ptrs[graph.get_vertex_seg_id(real_vertex_id)] =
+        graph.block_manager.NULLPOINTER;
+  }
+#endif
+  return real_vertex_id;
+}
+
 void EpochGraphWriter::put_vertex(vertex_t vertex_id, std::string_view data) {
   check_vertex_id(vertex_id);
 

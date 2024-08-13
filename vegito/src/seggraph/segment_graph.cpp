@@ -36,9 +36,11 @@ EpochGraphReader SegGraph::create_graph_reader(timestamp_t read_epoch) {
 }
 
 EpochGraphWriter SegGraph::create_graph_writer(timestamp_t write_epoch) {
+#ifndef USE_MULTI_THREADS
   if (rand() % RECYCLE_FREQ == 0) {  // NOLINT(runtime/threadsafe_fn)
     recycle_segments(write_epoch);
   }
+#endif
   return EpochGraphWriter(*this, write_epoch);
 }
 

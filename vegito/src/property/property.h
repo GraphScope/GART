@@ -101,7 +101,8 @@ class Property {  // NOLINT(build/class)
   }
 
   virtual void insert(uint64_t off, uint64_t k, const StringViewList& v_list,
-                      uint64_t ver, gart::graph::GraphStore* graph_store) {
+                      uint64_t ver, gart::graph::GraphStore* graph_store,
+                      int vlabel) {
     assert(false);
   }
 

@@ -540,18 +540,29 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   }
 #endif
 
-  auto voffset = id_parser.GetOffset(gid);
+  uint64_t voffset = id_parser.GetOffset(gid);
   auto lid = id_parser.GenerateId(0, vlabel, voffset);
 
   // get handle of graph and property
   seggraph::SegGraph* graph = get_graph<seggraph::SegGraph>(vlabel);
+
+#ifdef USE_MULTI_THREADS
+  inner_vertex_label_mutexes_[vlabel]->lock();
+#endif
+
   auto writer = graph->create_graph_writer(epoch);  // write epoch
   Property* property = get_property(vlabel);
 
-  // insert the topology
+// insert the topology
+#ifdef USE_MULTI_THREADS
+  seggraph::vertex_t v = writer.new_vertex(voffset);
+#else
   seggraph::vertex_t v = writer.new_vertex();
   auto off = property->getNewOffset();
   assert(v == off);
+#endif
+
+  add_inner(vlabel, lid);
 
   if (external_id_dtype_[vlabel] == PropertyDataType::STRING) {
     uint64_t value = put_cstring(external_id);
@@ -560,7 +571,9 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
     external_id_stores_[vlabel][v] = std::stoll(external_id);
   }
 
-  add_inner(vlabel, lid);
+#ifdef USE_MULTI_THREADS
+  inner_vertex_label_mutexes_[vlabel]->unlock();
+#endif
 
   // deal with string
   // allocate space for string_view
@@ -575,7 +588,7 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   }
 
   // insert properties
-  property->insert(v, gid, vprop, epoch, this);
+  property->insert(v, gid, vprop, epoch, this, vlabel);
 
   return true;
 }
@@ -597,6 +610,9 @@ bool GraphStore::update_inner_vertex(int epoch, uint64_t gid,
 
 void GraphStore::set_vertex_map(std::shared_ptr<hashmap_t>& hmap,
                                 uint64_t v_label, int64_t oid, int64_t gid) {
+#ifdef USE_MULTI_THREADS
+  vertex_label_mutexes_[v_label]->lock();
+#endif
   VINEYARD_CHECK_OK(vertex_maps_[v_label]->emplace(hmap, oid, gid));
   if (hmap != nullptr) {
     auto old_hmap = vertex_maps_[v_label];
@@ -607,6 +623,9 @@ void GraphStore::set_vertex_map(std::shared_ptr<hashmap_t>& hmap,
     }
     vertex_maps_[v_label] = hmap;
   }
+#ifdef USE_MULTI_THREADS
+  vertex_label_mutexes_[v_label]->unlock();
+#endif
 }
 
 void GraphStore::set_ovg2l(std::shared_ptr<hashmap_t>& hmap, uint64_t v_label,

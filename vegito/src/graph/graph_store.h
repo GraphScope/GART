@@ -22,6 +22,9 @@
 #include <limits>
 #include <map>
 #include <memory>
+#ifdef USE_MULTI_THREADS
+#include <shared_mutex>
+#endif
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -494,6 +497,31 @@ class GraphStore {
     return max_memory_usage_[vlabel];
   }
 
+#ifdef USE_MULTI_THREADS
+  std::shared_timed_mutex* get_vertex_label_mutex(uint64_t vlabel) {
+    return vertex_label_mutexes_[vlabel];
+  }
+
+  std::shared_timed_mutex* get_inner_vertex_label_mutex(uint64_t vlabel) {
+    return inner_vertex_label_mutexes_[vlabel];
+  }
+
+  std::shared_timed_mutex* get_outer_vertex_label_mutex(uint64_t vlabel) {
+    return outer_vertex_label_mutexes_[vlabel];
+  }
+
+  void init_mutexes(uint64_t vlabel_num) {
+    vertex_label_mutexes_.resize(vlabel_num);
+    inner_vertex_label_mutexes_.resize(vlabel_num);
+    outer_vertex_label_mutexes_.resize(vlabel_num);
+    for (auto i = 0; i < vlabel_num; i++) {
+      vertex_label_mutexes_[i] = new std::shared_timed_mutex();
+      inner_vertex_label_mutexes_[i] = new std::shared_timed_mutex();
+      outer_vertex_label_mutexes_[i] = new std::shared_timed_mutex();
+    }
+  }
+#endif
+
  public:
   IdParser<seggraph::vertex_t> id_parser;
 
@@ -595,6 +623,12 @@ class GraphStore {
   std::map<uint64_t, uint64_t> max_vertex_num_;
   // (vlabel) -> max_memory_usage
   std::map<uint64_t, uint64_t> max_memory_usage_;
+
+#ifdef USE_MULTI_THREADS
+  std::vector<std::shared_timed_mutex*> vertex_label_mutexes_;
+  std::vector<std::shared_timed_mutex*> inner_vertex_label_mutexes_;
+  std::vector<std::shared_timed_mutex*> outer_vertex_label_mutexes_;
+#endif
 };
 
 }  // namespace graph

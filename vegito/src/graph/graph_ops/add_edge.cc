@@ -68,35 +68,52 @@ void process_add_edge(const StringViewList& cmd,
       dst_fid != graph_store->get_local_pid()) {
     seggraph::SegGraph* ov_graph = graph_store->get_ov_graph(dst_label);
     auto ov_writer = ov_graph->create_graph_writer(write_epoch);
-    uint64_t ov = graph_store->get_lid(dst_label, dst_vid);
-    if (ov == uint64_t(-1)) {
-      // we need to add dst_vertex to outer vertices
-      ov = ov_writer.new_vertex();
-      graph_store->set_lid(dst_label, dst_vid, ov);
-      auto dst_lid = graph_store->id_parser.GenerateId(
-          0, dst_label, max_outer_id_offset - ov);
-      std::shared_ptr<hashmap_t> hmap;
-      graph_store->set_ovg2l(hmap, dst_label, dst_vid, dst_lid);
-      graph_store->add_outer(dst_label, dst_lid);
-      graph_store->set_ovl2g(dst_label, ov, dst_vid);
-
-      uint64_t* outer_external_id_store_addr =
-          graph_store->get_outer_external_id_store(dst_label);
-      if (graph_store->get_external_id_dtype(dst_label) ==
-          PropertyDataType::STRING) {
-        std::string dst_external_id = string(cmd[5]);
-        uint64_t value = graph_store->put_cstring(dst_external_id);
-        outer_external_id_store_addr[ov] = value;
-      } else {
-        int64_t dst_external_id = stoll(string(cmd[5]));
-        outer_external_id_store_addr[ov] = dst_external_id;
-#ifndef USE_GLOBAL_VERTEX_MAP
-        // local vertex map
-        std::shared_ptr<hashmap_t> hmap;
-        graph_store->set_vertex_map(hmap, dst_label, dst_external_id,
-                                    (int64_t) dst_vid);
+#ifdef USE_MULTI_THREADS
+    auto outer_vertex_label_mutex =
+        graph_store->get_outer_vertex_label_mutex(dst_label);
+    outer_vertex_label_mutex->lock_shared();
 #endif
+    uint64_t ov = graph_store->get_lid(dst_label, dst_vid);
+#ifdef USE_MULTI_THREADS
+    outer_vertex_label_mutex->unlock_shared();
+#endif
+    if (ov == uint64_t(-1)) {
+#ifdef USE_MULTI_THREADS
+      outer_vertex_label_mutex->lock();
+      ov = graph_store->get_lid(dst_label, dst_vid);
+      if (ov == uint64_t(-1)) {
+#endif
+        // we need to add dst_vertex to outer vertices
+        ov = ov_writer.new_vertex();
+        graph_store->set_lid(dst_label, dst_vid, ov);
+        auto dst_lid = graph_store->id_parser.GenerateId(
+            0, dst_label, max_outer_id_offset - ov);
+        std::shared_ptr<hashmap_t> hmap;
+        graph_store->set_ovg2l(hmap, dst_label, dst_vid, dst_lid);
+        graph_store->add_outer(dst_label, dst_lid);
+        graph_store->set_ovl2g(dst_label, ov, dst_vid);
+
+        uint64_t* outer_external_id_store_addr =
+            graph_store->get_outer_external_id_store(dst_label);
+        if (graph_store->get_external_id_dtype(dst_label) ==
+            PropertyDataType::STRING) {
+          std::string dst_external_id = string(cmd[5]);
+          uint64_t value = graph_store->put_cstring(dst_external_id);
+          outer_external_id_store_addr[ov] = value;
+        } else {
+          int64_t dst_external_id = stoll(string(cmd[5]));
+          outer_external_id_store_addr[ov] = dst_external_id;
+#ifndef USE_GLOBAL_VERTEX_MAP
+          // local vertex map
+          std::shared_ptr<hashmap_t> hmap;
+          graph_store->set_vertex_map(hmap, dst_label, dst_external_id,
+                                      (int64_t) dst_vid);
+#endif
+        }
+#ifdef USE_MULTI_THREADS
       }
+      outer_vertex_label_mutex->unlock();
+#endif
     }
     auto src_offset = graph_store->id_parser.GetOffset(src_vid);
     auto src_lid = graph_store->id_parser.GenerateId(0, src_label, src_offset);
@@ -108,34 +125,51 @@ void process_add_edge(const StringViewList& cmd,
              dst_fid == graph_store->get_local_pid()) {
     SegGraph* ov_graph = graph_store->get_ov_graph(src_label);
     auto ov_writer = ov_graph->create_graph_writer(write_epoch);
-    uint64_t ov = graph_store->get_lid(src_label, src_vid);
-    if (ov == uint64_t(-1)) {
-      ov = ov_writer.new_vertex();
-      graph_store->set_lid(src_label, src_vid, ov);
-      auto src_lid = graph_store->id_parser.GenerateId(
-          0, src_label, max_outer_id_offset - ov);
-      std::shared_ptr<hashmap_t> hmap;
-      graph_store->set_ovg2l(hmap, src_label, src_vid, src_lid);
-      graph_store->add_outer(src_label, src_lid);
-      graph_store->set_ovl2g(src_label, ov, src_vid);
-
-      uint64_t* outer_external_id_store_addr =
-          graph_store->get_outer_external_id_store(src_label);
-      if (graph_store->get_external_id_dtype(src_label) ==
-          PropertyDataType::STRING) {
-        std::string src_external_id = string(cmd[4]);
-        uint64_t value = graph_store->put_cstring(src_external_id);
-        outer_external_id_store_addr[ov] = value;
-      } else {
-        int64_t src_external_id = stoll(string(cmd[4]));
-        outer_external_id_store_addr[ov] = src_external_id;
-#ifndef USE_GLOBAL_VERTEX_MAP
-        // local vertex map
-        std::shared_ptr<hashmap_t> hmap;
-        graph_store->set_vertex_map(hmap, src_label, src_external_id,
-                                    (int64_t) src_vid);
+#ifdef USE_MULTI_THREADS
+    auto outer_vertex_label_mutex =
+        graph_store->get_outer_vertex_label_mutex(src_label);
+    outer_vertex_label_mutex->lock_shared();
 #endif
+    uint64_t ov = graph_store->get_lid(src_label, src_vid);
+#ifdef USE_MULTI_THREADS
+    outer_vertex_label_mutex->unlock_shared();
+#endif
+    if (ov == uint64_t(-1)) {
+#ifdef USE_MULTI_THREADS
+      outer_vertex_label_mutex->lock();
+      ov = graph_store->get_lid(src_label, src_vid);
+      if (ov == uint64_t(-1)) {
+#endif
+        ov = ov_writer.new_vertex();
+        graph_store->set_lid(src_label, src_vid, ov);
+        auto src_lid = graph_store->id_parser.GenerateId(
+            0, src_label, max_outer_id_offset - ov);
+        std::shared_ptr<hashmap_t> hmap;
+        graph_store->set_ovg2l(hmap, src_label, src_vid, src_lid);
+        graph_store->add_outer(src_label, src_lid);
+        graph_store->set_ovl2g(src_label, ov, src_vid);
+
+        uint64_t* outer_external_id_store_addr =
+            graph_store->get_outer_external_id_store(src_label);
+        if (graph_store->get_external_id_dtype(src_label) ==
+            PropertyDataType::STRING) {
+          std::string src_external_id = string(cmd[4]);
+          uint64_t value = graph_store->put_cstring(src_external_id);
+          outer_external_id_store_addr[ov] = value;
+        } else {
+          int64_t src_external_id = stoll(string(cmd[4]));
+          outer_external_id_store_addr[ov] = src_external_id;
+#ifndef USE_GLOBAL_VERTEX_MAP
+          // local vertex map
+          std::shared_ptr<hashmap_t> hmap;
+          graph_store->set_vertex_map(hmap, src_label, src_external_id,
+                                      (int64_t) src_vid);
+#endif
+        }
+#ifdef USE_MULTI_THREADS
       }
+      outer_vertex_label_mutex->unlock();
+#endif
     }
     auto dst_offset = graph_store->id_parser.GetOffset(dst_vid);
     auto src_lid = graph_store->id_parser.GenerateId(0, src_label,

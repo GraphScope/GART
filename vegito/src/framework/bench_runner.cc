@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -146,6 +147,9 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
 
   graph_store->set_vertex_label_num(vlabel_num);
   graph_store->init_id_parser(vlabel_num);
+#ifdef USE_MULTI_THREADS
+  graph_store->init_mutexes(vlabel_num);
+#endif
   graph_schema.elabel_offset = vlabel_num;
   int prop_offset = 0;
 
@@ -513,12 +517,100 @@ Status init_graph_schema(string etcd_endpoint, string etcd_prefix,
   return Status::OK();
 }
 
+#ifdef USE_MULTI_THREADS
+void Runner::process_log_thread(int pid, int thread_id) {
+  std::string log_str;
+  while (true) {
+    while (!logs_.try_pop(log_str)) {
+      working_state_mutex_[thread_id]->lock_shared();
+      bool is_working = is_working_[thread_id];
+      working_state_mutex_[thread_id]->unlock_shared();
+      if (is_working) {
+        working_state_mutex_[thread_id]->lock();
+        is_working_[thread_id] = false;
+        working_state_mutex_[thread_id]->unlock();
+      }
+      std::this_thread::yield();
+    }
+    working_state_mutex_[thread_id]->lock_shared();
+    bool is_working = is_working_[thread_id];
+    working_state_mutex_[thread_id]->unlock_shared();
+    if (!is_working) {
+      working_state_mutex_[thread_id]->lock();
+      is_working_[thread_id] = true;
+      working_state_mutex_[thread_id]->unlock();
+    }
+    std::string_view log(log_str);
+    auto sv_vec = splitString(log, '|');
+    string_view op(sv_vec[0]);
+    int cur_epoch = stoi(string(sv_vec[1]));
+    sv_vec.erase(sv_vec.begin(), sv_vec.begin() + 1);
+    sv_vec.pop_back();
+    if (op == "add_vertex") {
+      process_add_vertex(sv_vec, graph_stores_[pid]);
+    } else if (op == "add_edge") {
+      process_add_edge(sv_vec, graph_stores_[pid]);
+    } else if (op == "delete_vertex") {
+      process_del_vertex(sv_vec, graph_stores_[pid]);
+    } else if (op == "delete_edge") {
+      process_del_edge(sv_vec, graph_stores_[pid]);
+    } else if (op == "update_vertex") {
+      process_update_vertex(sv_vec, graph_stores_[pid]);
+    } else {
+      LOG(ERROR) << "Unsupported operator " << op;
+    }
+  }
+}
+#endif
+
 void Runner::apply_log_to_store_(const string_view& log, int p_id) {
+#ifndef USE_MULTI_THREADS
   auto sv_vec = splitString(log, '|');
   string_view op(sv_vec[0]);
   int cur_epoch = stoi(string(sv_vec[1]));
+#else
+  size_t firstDelim = log.find('|');
+  size_t secondDelim = log.find('|', firstDelim + 1);
+  std::string_view op = log.substr(0, firstDelim);
+  int cur_epoch = stoi(
+      std::string(log.substr(firstDelim + 1, secondDelim - firstDelim - 1)));
+#endif
 
-  static auto startTime = std::chrono::high_resolution_clock::now();
+#ifdef USE_MULTI_THREADS
+  if (cur_epoch > latest_epoch_) {
+    while (!logs_.empty()) {
+      std::this_thread::yield();
+    }
+
+    for (auto idx = 0; idx < FLAGS_num_threads; idx++) {
+      while (true) {
+        working_state_mutex_[idx]->lock_shared();
+        bool is_working = is_working_[idx];
+        working_state_mutex_[idx]->unlock_shared();
+        if (is_working) {
+          std::this_thread::yield();
+        } else {
+          break;
+        }
+      }
+    }
+
+    graph_stores_[p_id]->update_blob(latest_epoch_);
+    graph_stores_[p_id]->insert_blob_schema(latest_epoch_);
+    // put schema to etcd
+    graph_stores_[p_id]->put_blob_json_etcd(latest_epoch_);
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        endTime - start_time_)
+                        .count();
+    start_time_ = endTime;
+
+    cout << "update epoch " << latest_epoch_ << " frag = " << p_id
+         << " time = " << duration << " ms using " << fLI::FLAGS_num_threads
+         << " threads" << endl;
+    latest_epoch_ = cur_epoch;
+  }
+#else
 
   if (cur_epoch > latest_epoch_) {
     graph_stores_[p_id]->update_blob(latest_epoch_);
@@ -528,15 +620,16 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
 
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        endTime - startTime)
+                        endTime - start_time_)
                         .count();
 
-    startTime = endTime;
+    start_time_ = endTime;
 
-    cout << "update epoch " << latest_epoch_ << " frag = " << p_id
+    cout << "single thread update epoch " << latest_epoch_ << " frag = " << p_id
          << " time = " << duration << " ms" << endl;
     latest_epoch_ = cur_epoch;
   }
+#endif
 
   if (unlikely(op == "bulkload_end")) {
     cout << "Completion of bulkload and transition to epoch " << cur_epoch
@@ -573,12 +666,66 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
     }
     return;
   }
-
+#ifndef USE_MULTI_THREADS
   sv_vec.erase(sv_vec.begin(), sv_vec.begin() + 1);
   // remove the last element of sv_vec, since the last element of sv_vec is
   // offset of binlog
   sv_vec.pop_back();
+#endif
 
+#ifdef USE_MULTI_THREADS
+  if (op == "add_vertex" || op == "add_edge") {
+    if (parallel_state_) {
+      logs_.push(std::string(log));
+    } else {
+      while (!logs_.empty()) {
+        std::this_thread::yield();
+      }
+
+      for (auto idx = 0; idx < FLAGS_num_threads; idx++) {
+        while (true) {
+          working_state_mutex_[idx]->lock_shared();
+          bool is_working = is_working_[idx];
+          working_state_mutex_[idx]->unlock_shared();
+          if (is_working) {
+            std::this_thread::yield();
+          } else {
+            break;
+          }
+        }
+      }
+
+      logs_.push(std::string(log));
+      parallel_state_ = true;
+    }
+  } else if (op == "delete_vertex" || op == "delete_edge" ||
+             op == "update_vertex") {
+    parallel_state_ = false;
+    while (!logs_.empty()) {
+      std::this_thread::yield();
+    }
+
+    for (auto idx = 0; idx < FLAGS_num_threads; idx++) {
+      while (true) {
+        working_state_mutex_[idx]->lock_shared();
+        bool is_working = is_working_[idx];
+        working_state_mutex_[idx]->unlock_shared();
+        if (is_working) {
+          std::this_thread::yield();
+        } else {
+          break;
+        }
+      }
+    }
+
+    logs_.push(std::string(log));
+  } else {
+    LOG(ERROR) << "Unsupported operator " << op;
+  }
+  return;
+#endif
+
+#ifndef USE_MULTI_THREADS
   if (op == "add_vertex") {
     process_add_vertex(sv_vec, graph_stores_[p_id]);
   } else if (op == "add_edge") {
@@ -592,6 +739,7 @@ void Runner::apply_log_to_store_(const string_view& log, int p_id) {
   } else {
     LOG(ERROR) << "Unsupported operator " << op;
   }
+#endif
 }
 
 Status Runner::start_kafka_to_process_(int p_id) {
@@ -635,6 +783,7 @@ Status Runner::start_kafka_to_process_(int p_id) {
   }
 
   printf("Start main loop for subgraph %d ...\n", p_id);
+  start_time_ = std::chrono::high_resolution_clock::now();
   while (1) {
     RdKafka::Message* msg = consumer->consume(topic, partition, 1000);
     const char* log_base = static_cast<const char*>(msg->payload());
@@ -675,10 +824,22 @@ void Runner::load_graph_partitions_from_logs_(int mac_id,
   int v_label_num = graph_stores_[p_id]->get_total_vertex_label_num();
   graph_stores_[p_id]->init_ovg2ls(v_label_num);
   graph_stores_[p_id]->init_vertex_maps(v_label_num);
+#ifdef USE_MULTI_THREADS
+  std::vector<std::thread> threads;
+  for (auto idx = 0; idx < FLAGS_num_threads; idx++) {
+    threads.emplace_back(&Runner::process_log_thread, this, p_id, idx);
+  }
+#endif
 #ifndef WITH_TEST
   GART_CHECK_OK(start_kafka_to_process_(p_id));
 #else
   start_file_stream_to_process_(p_id);
+#endif
+
+#ifdef USE_MULTI_THREADS
+  for (auto& thread : threads) {
+    thread.join();
+  }
 #endif
 }
 
@@ -686,6 +847,13 @@ void Runner::run() {
   /*************** Load Data ****************/
   int mac_id = gart::framework::config.getServerID();
   int total_partitions = gart::framework::config.getNumServers();
+#ifdef USE_MULTI_THREADS
+  working_state_mutex_.resize(FLAGS_num_threads);
+  for (auto idx = 0; idx < FLAGS_num_threads; idx++) {
+    is_working_.push_back(true);
+    working_state_mutex_[idx] = std::make_shared<std::shared_timed_mutex>();
+  }
+#endif
 
   load_graph_partitions_from_logs_(mac_id, total_partitions);
 

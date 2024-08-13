@@ -69,7 +69,9 @@ class SegGraph {
 
         rg_map(rg_map) {
     vertex_futexes = array_allocator.allocate<Futex>(max_vertex_id + 1);
-
+#ifdef USE_MULTI_THREADS
+    seg_init_flag.resize(max_vertex_id + 1, 0);
+#endif
     seg_mutexes =
         array_allocator.allocate<std::shared_timed_mutex*>(max_seg_id + 1);
 
@@ -224,6 +226,9 @@ class SegGraph {
 
   Futex* vertex_futexes;
   std::shared_timed_mutex** seg_mutexes;
+#ifdef USE_MULTI_THREADS
+  std::vector<int> seg_init_flag;
+#endif
   uintptr_t* vertex_ptrs;
   uintptr_t* edge_label_ptrs;
 

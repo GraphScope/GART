@@ -30,6 +30,10 @@
 #include <cstdint>
 #include <string>
 
+#ifdef USE_MULTI_THREADS
+#include <shared_mutex>
+#endif
+
 #include "util/allocator.hpp"
 #include "vineyard/client/ds/blob.h"
 
@@ -109,6 +113,10 @@ class BufferManager {
   uint64_t size_;  // allocated size
   vineyard::ObjectID buffer_oid_;
   char* buffer_;
+
+#ifdef USE_MULTI_THREADS
+  std::shared_timed_mutex string_buffer_mutex_;
+#endif
 };
 
 }  // namespace memory

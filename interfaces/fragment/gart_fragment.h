@@ -289,8 +289,18 @@ class GartFragment {
 
       inner_offsets_[vlabel] =
           blob_info[i]["vertex_table"]["max_inner_location"].get<int64_t>() - 1;
+      max_inner_offsets_[vlabel] =
+          blob_info[i]["vertex_table"]["max_inner"].get<int64_t>() - 1;
+
       outer_offsets_[vlabel] =
           blob_info[i]["vertex_table"]["min_outer_location"].get<int64_t>();
+      min_outer_offsets_[vlabel] =
+          blob_info[i]["vertex_table"]["min_outer"].get<int64_t>();
+      min_outer_offsets_[vlabel] =
+          max_outer_id_offset_ + 1 -
+          (blob_info[i]["vertex_table"]["max"].get<int64_t>() -
+           min_outer_offsets_[vlabel]);
+
       vertex_table_lens_[vlabel] =
           vertex_table_blob->allocated_size() / sizeof(vid_t);
 
@@ -309,25 +319,6 @@ class GartFragment {
       VINEYARD_CHECK_OK(
           hashmap_t::View(client_, vertex_map_blob, vertex_map_hmapview));
       vertex_maps_[vlabel] = vertex_map_hmapview;
-
-      for (int64_t j = inner_offsets_[vlabel]; j >= 0; j--) {
-        vid_t v = vertex_tables_[vlabel][j];
-        auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
-        if (delete_flag == 0) {
-          max_inner_offsets_[vlabel] = vid_parser.GetOffset(v);
-          break;
-        }
-      }
-
-      for (int64_t j = outer_offsets_[vlabel]; j < vertex_table_lens_[vlabel];
-           j++) {
-        vid_t v = vertex_tables_[vlabel][j];
-        auto delete_flag = v >> (sizeof(vid_t) * 8 - 1);
-        if (delete_flag == 0) {
-          min_outer_offsets_[vlabel] = vid_parser.GetOffset(v);
-          break;
-        }
-      }
 
       // init ovl2g
       uint64_t ovl2g_obj_id =

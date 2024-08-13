@@ -102,7 +102,7 @@ class GartVertexArray {
 
     if (unlikely(offset >= data_.size())) {
       LOG(ERROR) << "offset: " << offset << " data size: " << data_.size()
-                 << "loc: " << loc.GetValue();
+                 << " loc: " << loc.GetValue();
     }
     return data_[offset];
   }

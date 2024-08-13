@@ -37,3 +37,5 @@ DEFINE_int64(default_max_memory_usage_for_each_type_vertex, 10 * (1ul << 30),
 DEFINE_string(customized_vertex_number_memory_usage_config,
               "",  // format: "type1:100:10000,type2:100:10000"
               "customized vertex number memory usage config.");
+
+DEFINE_int32(num_threads, 2, "number of threads");

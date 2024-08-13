@@ -40,6 +40,7 @@ class EpochGraphWriter {
                                       dir_t dir = EOUT);
   uintptr_t locate_segment_ptr(segid_t seg_id, label_t label, dir_t dir = EOUT);
   vertex_t new_vertex(bool use_recycled_vertex = false);
+  vertex_t new_vertex(vertex_t real_vertex_id);
   void put_vertex(vertex_t vertex_id, std::string_view data);
   void put_edge(vertex_t src, label_t label, vertex_t dst,
                 std::string_view edge_data = "") {
