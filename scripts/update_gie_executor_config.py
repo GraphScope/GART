@@ -47,7 +47,7 @@ def start_gie_executor():
     read_epoch = request.form.get("read_epoch", None)
     if read_epoch is None:
         return "read_epoch is required", 400
-    with open ("/tmp/read_epoch", "w") as f:
+    with open("/tmp/read_epoch", "w") as f:
         f.write(read_epoch)
     etcd_endpoint = request.form.get("etcd_endpoint", None)
     if etcd_endpoint is None:

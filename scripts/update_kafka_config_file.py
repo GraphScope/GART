@@ -230,6 +230,7 @@ if __name__ == "__main__":
                 # this method is a effective way to make it unique
                 # we append timestamp string to the slot name
                 import time
+
                 timestamp_str = str(int(time.time()))
                 temp_file.write(f"slot.name=debezium_{args.db_name}_{timestamp_str}\n")
             else:

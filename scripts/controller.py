@@ -29,7 +29,7 @@ def submit_config():
     try:
         content = file.read()
         etcd_server = os.getenv("ETCD_SERVICE", "etcd")
-        if not etcd_server.startswith("http://"):
+        if not etcd_server.startswith(("http://", "https://")):
             etcd_server = f"http://{etcd_server}"
         etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
         etcd_host = etcd_server.split("://")[1].split(":")[0]
@@ -116,7 +116,7 @@ def run_gae_task():
     # for key, value in request.form.items():
     #    command += f"--{key} {value} "
     etcd_server = os.getenv("ETCD_SERVICE", "etcd")
-    if not etcd_server.startswith("http://"):
+    if not etcd_server.startswith(("http://", "https://")):
         etcd_server = f"http://{etcd_server}"
     etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
     command += f"--etcd_endpoint {etcd_server} "
@@ -138,7 +138,7 @@ def change_read_epoch():
     if previous_read_epoch is None or previous_read_epoch != read_epoch:
         previous_read_epoch = read_epoch
         etcd_server = os.getenv("ETCD_SERVICE", "etcd")
-        if not etcd_server.startswith("http://"):
+        if not etcd_server.startswith(("http://", "https://")):
             etcd_server = f"http://{etcd_server}"
         etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
         etcd_host = etcd_server.split("://")[1].split(":")[0]
@@ -288,7 +288,7 @@ def check_host_port(host, port):
 
 def get_all_available_read_epochs_internal():
     etcd_server = os.getenv("ETCD_SERVICE", "etcd")
-    if not etcd_server.startswith("http://"):
+    if not etcd_server.startswith(("http://", "https://")):
         etcd_server = f"http://{etcd_server}"
     etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
     etcd_host = etcd_server.split("://")[1].split(":")[0]
@@ -320,7 +320,7 @@ def get_all_available_read_epochs_internal():
 
 def get_latest_read_epoch():
     etcd_server = os.getenv("ETCD_SERVICE", "etcd")
-    if not etcd_server.startswith("http://"):
+    if not etcd_server.startswith(("http://", "https://")):
         etcd_server = f"http://{etcd_server}"
     etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
     etcd_host = etcd_server.split("://")[1].split(":")[0]
