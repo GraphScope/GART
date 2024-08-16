@@ -6,6 +6,7 @@ import json
 import yaml
 import os
 import time
+import sys
 
 output_file_path = "/tmp/graph_schema_for_portal.yaml"
 json_output_file_path = "/tmp/graph_schema_for_portal.json"
@@ -33,28 +34,42 @@ etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
 etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
 
 rg_mapping_key = etcd_prefix + "gart_rg_mapping_yaml"
-while True:
+
+try_max_times = 3
+try_times = 0
+while try_times < try_max_times:
     try:
         rg_mapping_str, _ = etcd_client.get(rg_mapping_key)
         if rg_mapping_str is not None:
             rg_mapping_str = rg_mapping_str.decode("utf-8")
             break
-        time.sleep(5)
+        try_times += 1
+        time.sleep(2)
     except Exception as e:
-        time.sleep(5)
+        try_times += 1
+        time.sleep(2)
+
+if try_times == try_max_times:
+    sys.exit(1)
 
 rg_mapping = yaml.load(rg_mapping_str, Loader=yaml.SafeLoader)
 
 table_schema_key = etcd_prefix + "gart_table_schema"
-while True:
+try_times = 0
+while try_times < try_max_times:
     try:
         table_schema_str, _ = etcd_client.get(table_schema_key)
         if table_schema_str is not None:
             table_schema_str = table_schema_str.decode("utf-8")
             break
-        time.sleep(5)
+        try_times += 1
+        time.sleep(2)
     except Exception as e:
-        time.sleep(5)
+        try_times += 1
+        time.sleep(2)
+
+if try_times == try_max_times:
+    sys.exit(1)
 
 table_schema = json.loads(table_schema_str)
 

@@ -180,5 +180,18 @@ def change_graph_version_gie(ctx, graph_version):
     click.echo(f"Changed graph version to {graph_version}: {response.text}")
 
 
+@cli.command()
+@click.pass_context
+def get_graph_schema(ctx):
+    """Get graph schema."""
+    endpoint = ctx.obj.get("endpoint")
+    if not endpoint:
+        click.echo('Please connect to an endpoint first using the "connect" command.')
+        return
+
+    response = requests.post(f"{endpoint}/get-graph-schema")
+    click.echo(f"Graph schema: {response.text}")
+
+
 if __name__ == "__main__":
     cli(obj={})

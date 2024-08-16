@@ -70,6 +70,23 @@ def resume():
     return "Resumed", 200
 
 
+@app.route("/get-graph-schema", methods=["POST"])
+def get_graph_schema():
+    subprocess.run(
+        [
+            "/bin/bash",
+            "-c",
+            "/workspace/gart/scripts/generate_schema_for_protal.py",
+        ]
+    )
+    schema_file_path = "/tmp/graph_schema_for_portal.json"
+    if not os.path.exists(schema_file_path):
+        return "No graph schema found yet", 400
+    with open(schema_file_path, "r") as f:
+        schema = json.load(f)
+    return json.dumps(schema), 200
+
+
 @app.route("/get-all-available-read-epochs", methods=["POST"])
 def get_all_available_read_epochs():
     all_epochs = get_all_available_read_epochs_internal()[0]
