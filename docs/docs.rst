@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 .. meta::
-   :description: GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing.
+   :description: GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph computation.
    :keywords: distributed-systems, distributed, graph-analytics, in-memory-storage, big-data-analytics, distributed-comp
 
 GART: Graph Analysis on Relational Transactional Datasets

@@ -14,13 +14,13 @@ There are two common architectures for graph data processing:
 
    Common architectures for graph data processing
 
-To do graph computation, relational database systems will provide some interface extensions, which are equivalent to a kind of syntactic sugar for graph processing, and the underlying still uses the relational model, e.g., `GraphScript`_ provided by SAP HANA, `SQL Graph`_ provided by SQL Server, `Apache AGE`_ as an extension for PostgreSQL.
+To do graph computation, relational database systems will provide some interface extensions, which are equivalent to a kind of syntactic sugar for graph computation, and the underlying still uses the relational model, e.g., `GraphScript`_ provided by SAP HANA, `SQL Graph`_ provided by SQL Server, `Apache AGE`_ as an extension for PostgreSQL.
 
-On the other hand, there is also the option of exporting the data as offline graph data for offline graph data analysis and processing on a graph processing system (`Neo4j`_, `GraphScope`_, ...).
+On the other hand, there is also the option of exporting the data as offline graph data for offline graph data analysis and processing on a graph computation system (`Neo4j`_, `GraphScope`_, ...).
 
 An ideal model for processing online graph data needs to fulfill at least the following three requirements:
 
-1. **Performance**. Storing data as tables in relational storage for graph processing requires a large number of time-consuming join operations. Such operations cause serious performance degradation compared to the graph native storage and execution engine.
+1. **Performance**. Storing data as tables in relational storage for graph computation requires a large number of time-consuming join operations. Such operations cause serious performance degradation compared to the graph native storage and execution engine.
 
 2. **Data freshness**. To keep the data consistent, long offline data moves need to be avoided so that analysis can be performed quickly on the updated data. In some time-sensitive scenarios, such as fraud detection, early analysis results can avoid losses.
 
@@ -29,7 +29,7 @@ An ideal model for processing online graph data needs to fulfill at least the fo
 What is GART?
 -----------------
 
-GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing.
+GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph computation.
 
 There is a need to utilize graph data flexibly without altering the existing relational database system. Additionally, the issue of transparency arises, where users should not need to be concerned with the intricacies of graph data storage or the process of maintaining data consistency between relational and graph data stores.
 

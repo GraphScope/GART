@@ -1,8 +1,8 @@
 # GART: Graph Analysis on Relational Transactional Datasets
 
-GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph processing. It is designed to bridge the gap between relational OLTP and graph-based OLAP.
+GART is a graph extension that includes an interface to an RDBMS and a dynamic graph store for online graph computation. It is designed to bridge the gap between relational OLTP and graph-based OLAP.
 
-Please to refer [GART documentation](https://graphscope.github.io/GART/documentation/getting-started/quick-start.html) for more details.
+Please to refer [GART documentation](https://graphscope.github.io/GART) for more details.
 
 ## Table of Contents
 - [What is GART](#what-is-gart)
@@ -48,7 +48,7 @@ GART captures data changes from data sources by logs (e.g., Binlogs in SQL syste
   This sample records the log that inserts a tuple of `organisation`.
 
 - **2. Model Convert (RGMapping Converter)**:
-This step is an important step for GART. The conversion between different data models for HTGAP workloads requires more semantic information.
+This step is an important step for GART. The conversion between different data models for online graph computation requires more semantic information.
 For example, it needs the mapping between relational tables and vertex/edge types, and the mapping between relational attributes and vertex/edge properties.
 The GART administrator (such as DBA) can define the rules of relation-graph mapping (RGMapping) once by the interfaces provided by GART.
 GART will convert relational data changes into graph data changes in the *unified logs* (UnifiedLog) automatically.
@@ -66,7 +66,7 @@ To adapt to rich workload flexibility, GART proposes transparent data model conv
 We provide a sample definition file called [rgmapping-ldbc.yaml](vegito/test/schema/rgmapping-ldbc.yaml).
 
 ### Efficient Dynamic Graph Storage
-To ensure the performance of graph analytical processing (GAP), GART proposes an efficient dynamic graph storage with good locality that stems from key insights into HTGAP workloads, including:
+To ensure the performance of graph analytical processing (GAP), GART proposes an efficient dynamic graph storage with good locality that stems from key insights into online graph computation, including:
 1. an efficient and mutable compressed sparse row (CSR) representation to guarantee the locality of scanning edges;
 2. a coarse-grained MVCC to reduce the temporal and spatial overhead of versioning;
 3. a flexible property storage to efficiently run various GAP workloads.
