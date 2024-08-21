@@ -58,13 +58,13 @@ We provide a sample definition file called `RGMappings`_.
 Efficient Dynamic Graph Storage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To ensure the performance of graph analytical processing (GAP), GART proposes an efficient dynamic graph storage with good locality that stems from key insights into online graph computation workloads, including:
+To ensure the performance of graph computation, GART proposes an efficient dynamic graph storage with good locality that stems from key insights into online graph computation workloads, including:
 
 1. an efficient and mutable compressed sparse row (CSR) representation to guarantee the locality of scanning edges;
 
 2. a coarse-grained MVCC to reduce the temporal and spatial overhead of versioning;
 
-3. flexible property storage to efficiently run various GAP workloads.
+3. flexible property storage to efficiently run various graph computation workloads.
 
 Service-Oriented Deployment Model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

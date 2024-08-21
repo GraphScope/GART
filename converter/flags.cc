@@ -30,7 +30,7 @@ DEFINE_bool(use_logs_per_epoch, true, "use_logs_per_epoch.");
 DEFINE_string(etcd_endpoint, "127.0.0.1:2379", "etcd endpoint.");
 DEFINE_string(etcd_prefix, "", "etcd prefix.");
 
-DEFINE_int32(subgraph_num, 1, "Number of subgraphs for GAP workloads.");
+DEFINE_int32(subgraph_num, 1, "Number of subgraphs.");
 
 DEFINE_int32(checkpoint_interval, 10, "Checkpoint interval in minutes.");
 DEFINE_string(checkpoint_dir, "/tmp/checkpoint", "Checkpoint directory.");

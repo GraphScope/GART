@@ -66,10 +66,10 @@ To adapt to rich workload flexibility, GART proposes transparent data model conv
 We provide a sample definition file called [rgmapping-ldbc.yaml](vegito/test/schema/rgmapping-ldbc.yaml).
 
 ### Efficient Dynamic Graph Storage
-To ensure the performance of graph analytical processing (GAP), GART proposes an efficient dynamic graph storage with good locality that stems from key insights into online graph computation, including:
+To ensure the performance of graph computation, GART proposes an efficient dynamic graph storage with good locality that stems from key insights into online graph computation, including:
 1. an efficient and mutable compressed sparse row (CSR) representation to guarantee the locality of scanning edges;
 2. a coarse-grained MVCC to reduce the temporal and spatial overhead of versioning;
-3. a flexible property storage to efficiently run various GAP workloads.
+3. a flexible property storage to efficiently run various graph computation workloads.
 
 Please refer to [our paper](https://www.usenix.org/conference/atc23/presentation/shen) for specific technical implementation details.
 
