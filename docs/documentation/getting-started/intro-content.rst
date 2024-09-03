@@ -83,8 +83,6 @@ GART is still in the early stages of development, and there are some limitations
 
 - GART currently only supports GraphScope and NetworkX as the graph computation engine.
 
-Get started now!
-
 .. _GraphScope: https://github.com/alibaba/GraphScope
 .. _RGMappings: https://github.com/GraphScope/GART/blob/main/vegito/test/schema/rgmapping-ldbc.sql
 .. _GraphScript: https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-graph-reference/graphscript-language
