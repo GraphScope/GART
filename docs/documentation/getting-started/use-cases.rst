@@ -24,7 +24,7 @@ Graph Traversal: Business Intelligence
 
 This example is a more complex Business Intelligence (BI) scenario, and BI scenarios involve more complex graph topological relationships and properties of points and edges. The following figure shows the definition of the graph structure under the `LDBC-SNB`_ benchmark:
 
-.. figure:: /images/ldbc-snb.png
+.. figure:: /images/ldbc-snb.jpg
     :alt: LDBC-SNB
 
     Illustration of the LDBC-SNB use case.
