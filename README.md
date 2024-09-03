@@ -18,6 +18,8 @@ Please to refer [GART documentation](https://graphscope.github.io/GART) for more
 
 ## What is GART
 
+https://github.com/user-attachments/assets/5044ea95-05fe-450a-9c70-395efb54fb43
+
 We would like to be able to use graph data flexibly without re-altering the existing relational database system. Moreover, users do not need to be aware of the storage of graph data and the synchronization of data between relational data and graph data for freshness. To fulfill this requirement, we build GART, an in-memory system for real-time online graph computation.
 
 GART uses transactional logs (e.g., binlog) to capture data changes, then recovers data changes into fresh graph data in real time. GART integrates graph computation engines (e.g. GraphScope, NetworkX) to support efficient graph computation processing. The workflow of GART is shown below.
