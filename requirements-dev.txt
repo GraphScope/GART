@@ -20,5 +20,6 @@ pytest-timeout
 sphinx>=7.1.2
 sphinx-copybutton
 sphinx-panels
+sphinxcontrib-video
 sphinxemoji
 sphinxext-opengraph

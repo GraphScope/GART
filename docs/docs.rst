@@ -12,7 +12,7 @@ GART: Graph Analysis on Relational Transactional Datasets
 
 |Discussion| |License| |USENIX|
 
-.. include:: documentation/getting-started/intro-content
+.. include:: documentation/getting-started/intro-content.rst
 
 ----------------
 
@@ -62,6 +62,12 @@ GART: Graph Analysis on Relational Transactional Datasets
       :classes: btn-block stretched-link
    ^^^^^^^^^^^^
    Get involved and become part of the GART community.
+
+Demo
+----
+
+.. video:: https://github.com/user-attachments/assets/5044ea95-05fe-450a-9c70-395efb54fb43
+   :alt: GART Demo
 
 Our Paper
 --------------

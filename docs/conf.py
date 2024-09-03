@@ -49,6 +49,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
     "sphinx_panels",
+    "sphinxcontrib.video",
     "sphinxemoji.sphinxemoji",
     "sphinxext.opengraph",
 ]
