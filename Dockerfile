@@ -69,10 +69,13 @@ RUN if [ "$build_type" = "Controller" ]; then \
   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
   chmod +x ./kubectl && \
   mv ./kubectl /usr/local/bin/kubectl && \
-  apt-get update && apt-get install -y openmpi-bin libopenmpi-dev && \
+  apt-get update && apt-get install -y openmpi-bin libopenmpi-dev maven && \
   rm -rf /var/lib/apt/lists/* && \
   pip3 install tenacity==8.3.0 && \
   pip3 install flask kubernetes etcd3; \
+  git clone https://github.com/oracle/pgql-lang.git; \
+  cd pgql-lang; \
+  sh install.sh; \
   fi
 
 # Find the Kafka directory and write its path to a file

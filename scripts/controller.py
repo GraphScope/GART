@@ -46,6 +46,46 @@ def submit_config():
         return jsonify({"error": str(e)}), 400
 
 
+@app.route("/submit-pgql-config", methods=["POST"])
+def submit_pgql_config():
+    if "file" not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+
+    try:
+        content = file.read()
+        with open("/tmp/pgql_config.sql", "wb") as f:
+            f.write(content)
+        subprocess.run(
+            [
+                "/bin/bash",
+                "-c",
+                "cd /workspace/gart/pgql/ && ./run.sh sql2yaml /tmp/pgql_config.sql /tmp/pgql_config.yaml",
+            ]
+        )
+        with open("/tmp/pgql_config.yaml", "r") as f:
+            yaml_content = f.read()
+        yaml_content = yaml_content.replace("!!gart.pgql.GSchema", "")
+        etcd_server = os.getenv("ETCD_SERVICE", "etcd")
+        if not etcd_server.startswith(("http://", "https://")):
+            etcd_server = f"http://{etcd_server}"
+        etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+        etcd_host = etcd_server.split("://")[1].split(":")[0]
+        etcd_port = etcd_server.split(":")[2]
+        etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+        while True:
+            try:
+                etcd_client.put(etcd_prefix + "gart_rg_mapping_yaml", yaml_content)
+                break
+            except Exception as e:
+                time.sleep(5)
+        return "PGQL config submitted", 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
 @app.route("/control/pause", methods=["POST"])
 def pause():
     subprocess.run(

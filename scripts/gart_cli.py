@@ -139,6 +139,30 @@ def submit_config(ctx, config_path):
 
 @cli.command()
 @click.pass_context
+@click.argument("config_path", type=click.Path(exists=True))
+def submit_pgql_config(ctx, config_path):
+    """Submit a new pgql configuration file."""
+    endpoint = ctx.obj.get("endpoint")
+    if not endpoint:
+        click.echo('Please connect to an endpoint first using the "connect" command.')
+        return
+
+    with open(config_path, "rb") as file:
+        files = {"file": (config_path, file)}
+        try:
+            response = requests.post(f"{endpoint}/submit-pgql-config", files=files)
+            response.raise_for_status()
+            click.echo(f"Success: Server responded with {response.status_code} status")
+        except requests.exceptions.HTTPError as e:
+            click.echo(f"Failed to submit the pgql configuration file: {e}")
+        except requests.exceptions.RequestException as e:
+            click.echo(f"Failed to submit the pgql configuration file: {e}")
+        except Exception as e:
+            click.echo(f"Failed to submit the pgql configuration file: {e}")
+
+
+@cli.command()
+@click.pass_context
 @click.argument("algorithm_name")
 @click.argument("graph_version", type=str, required=True)
 @click.option("--arg", multiple=True, type=(str, str))
