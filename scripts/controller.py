@@ -20,70 +20,77 @@ previous_read_epoch = None
 
 @app.route("/submit-config", methods=["POST"])
 def submit_config():
-    if "file" not in request.files:
-        return jsonify({"error": "No file part in the request"}), 400
-    file = request.files["file"]
-    if file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
+    if "file" in request.files:
+        file = request.files["file"]
+        if file.filename == "":
+            return jsonify({"error": "No selected file"}), 400
+        try:
+            content = file.read()
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+    elif "schema" in request.form:
+        content = request.form["schema"].encode('utf-8')
+    else:
+        return jsonify({"error": "No file part or config string in the request"}), 400
 
-    try:
-        content = file.read()
-        etcd_server = os.getenv("ETCD_SERVICE", "etcd")
-        if not etcd_server.startswith(("http://", "https://")):
-            etcd_server = f"http://{etcd_server}"
-        etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
-        etcd_host = etcd_server.split("://")[1].split(":")[0]
-        etcd_port = etcd_server.split(":")[2]
-        etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
-        while True:
-            try:
-                etcd_client.put(etcd_prefix + "gart_rg_mapping_yaml", content)
-                break
-            except Exception as e:
-                time.sleep(5)
-        return "Config submitted", 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    etcd_server = os.getenv("ETCD_SERVICE", "etcd")
+    if not etcd_server.startswith(("http://", "https://")):
+        etcd_server = f"http://{etcd_server}"
+    etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+    etcd_host = etcd_server.split("://")[1].split(":")[0]
+    etcd_port = etcd_server.split(":")[2]
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+    while True:
+        try:
+            etcd_client.put(etcd_prefix + "gart_rg_mapping_yaml", content)
+            break
+        except Exception as e:
+            time.sleep(5)
+    return "Config submitted", 200
 
 
 @app.route("/submit-pgql-config", methods=["POST"])
 def submit_pgql_config():
-    if "file" not in request.files:
-        return jsonify({"error": "No file part in the request"}), 400
-    file = request.files["file"]
-    if file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
+    if "file" in request.files:
+        file = request.files["file"]
+        if file.filename == "":
+            return jsonify({"error": "No selected file"}), 400
+        try:
+            content = file.read()
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+    elif "schema" in request.form:
+        content = request.form["schema"].encode('utf-8')
+    else:
+        return jsonify({"error": "No file part or config string in the request"}), 400
 
-    try:
-        content = file.read()
-        with open("/tmp/pgql_config.sql", "wb") as f:
-            f.write(content)
-        subprocess.run(
-            [
-                "/bin/bash",
-                "-c",
-                "cd /workspace/gart/pgql/ && ./run.sh sql2yaml /tmp/pgql_config.sql /tmp/pgql_config.yaml",
-            ]
-        )
-        with open("/tmp/pgql_config.yaml", "r") as f:
-            yaml_content = f.read()
-        yaml_content = yaml_content.replace("!!gart.pgql.GSchema", "")
-        etcd_server = os.getenv("ETCD_SERVICE", "etcd")
-        if not etcd_server.startswith(("http://", "https://")):
-            etcd_server = f"http://{etcd_server}"
-        etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
-        etcd_host = etcd_server.split("://")[1].split(":")[0]
-        etcd_port = etcd_server.split(":")[2]
-        etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
-        while True:
-            try:
-                etcd_client.put(etcd_prefix + "gart_rg_mapping_yaml", yaml_content)
-                break
-            except Exception as e:
-                time.sleep(5)
-        return "PGQL config submitted", 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    with open("/tmp/pgql_config.sql", "wb") as f:
+        f.write(content)
+    subprocess.run(
+        [
+            "/bin/bash",
+            "-c",
+            "cd /workspace/gart/pgql/ && ./run.sh sql2yaml /tmp/pgql_config.sql /tmp/pgql_config.yaml",
+        ]
+    )
+    with open("/tmp/pgql_config.yaml", "r") as f:
+        yaml_content = f.read()
+    yaml_content = yaml_content.replace("!!gart.pgql.GSchema", "")
+    etcd_server = os.getenv("ETCD_SERVICE", "etcd")
+    if not etcd_server.startswith(("http://", "https://")):
+        etcd_server = f"http://{etcd_server}"
+    etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+    etcd_host = etcd_server.split("://")[1].split(":")[0]
+    etcd_port = etcd_server.split(":")[2]
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+    while True:
+        try:
+            etcd_client.put(etcd_prefix + "gart_rg_mapping_yaml", yaml_content)
+            break
+        except Exception as e:
+            time.sleep(5)
+    return "PGQL config submitted", 200
+    
 
 
 @app.route("/control/pause", methods=["POST"])
@@ -150,7 +157,12 @@ def get_read_epoch_by_timestamp():
     # iterate through the list of epoch_unix_time pairs from end to start
     for epoch, unix_time_epoch in reversed(epoch_unix_time_pairs):
         if unix_time_epoch <= unix_time:
-            return str(epoch), 200
+            converted_time = datetime.fromtimestamp(unix_time_epoch)
+            # convert time into local time zone
+            converted_time = converted_time.replace(tzinfo=timezone.utc).astimezone(tz=None)
+            formatted_time = converted_time.strftime("%Y-%m-%d %H:%M:%S")
+            result = {"version_id": str(epoch), "creation_time": formatted_time}
+            return json.dumps(result), 200
     return "No read epoch found", 200
 
 
