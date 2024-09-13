@@ -104,6 +104,16 @@ spec:
         envFrom:
         - configMapRef:
             name: {{ include "gart.configmapName" . }}
+      - name: coordinator
+        image: {{ include "gart.coordinator.image" . }}
+        imagePullPolicy: {{ .Values.coordinator.image.pullPolicy | quote }}
+        resources: {{ toYaml .Values.coordinator.resources | nindent 10 }}
+        command: ["sh", "-c", "cd /usr/src/app && python3 -m flex.server"]
+        ports:
+          - containerPort: {{ .Values.coordinator.containerPort }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "gart.configmapName" . }}
       volumes:
       - name: config-volume
         configMap:

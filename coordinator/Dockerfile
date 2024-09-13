@@ -9,8 +9,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . /usr/src/app
 
-EXPOSE 8080
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION="python"
+# EXPOSE 8080
 
-ENTRYPOINT ["python3"]
-
-CMD ["-m", "flex.server"]
+CMD ["python3", "-m", "flex.server"]

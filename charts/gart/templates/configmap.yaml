@@ -6,6 +6,10 @@
 {{- $etcd_service_port := int .Values.etcd.containerPorts.client }}
 {{- $etcd_service := printf "%s:%d" $etcd_service_name $etcd_service_port }}
 
+{{- $controller_service_name := include "gart.controller-service.fullname" . }}
+{{- $controller_service_port := int .Values.controller.port }}
+{{- $controller_service := printf "%s:%d" $controller_service_name $controller_service_port }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -38,6 +42,7 @@ data:
   DEBEZIUM_SERVICE: {{ $debezium_service | quote }}
   DEBEZIUM_CONNECTOR_NAME: {{ include "gart.debezium.fullname" . | quote }}
   CONTROLLER_FLASK_PORT: {{ .Values.controller.containerPort | quote }}
+  GART_CONTROLLER_SERVER: {{ $controller_service | quote }}
   ETCD_SERVICE: {{ $etcd_service | quote }}
   GIE_GREMLIN_PORT: {{ .Values.gie_frontend.gremlinPort | quote }}
   GIE_EXECUTOR_RPC_PORT: {{ .Values.gie_executor.GAIA_RPC_PORT | quote }}

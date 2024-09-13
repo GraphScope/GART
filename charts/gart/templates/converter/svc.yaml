@@ -6,7 +6,7 @@ metadata:
   labels:
     app: converter
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: converter
   ports:
@@ -14,3 +14,19 @@ spec:
       port: {{ .Values.controller.port }}
       targetPort: {{ .Values.controller.containerPort }}
 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gart.coordinator-service.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: converter
+spec:
+  type: ClusterIP
+  selector:
+    app: converter
+  ports:
+    - protocol: TCP
+      port: {{ .Values.coordinator.port }}
+      targetPort: {{ .Values.coordinator.containerPort }}

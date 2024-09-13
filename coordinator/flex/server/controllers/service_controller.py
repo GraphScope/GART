@@ -8,8 +8,8 @@ from flex.server.models.service_status import ServiceStatus  # noqa: E501
 from flex.server.models.start_service_request import StartServiceRequest  # noqa: E501
 from flex.server import util
 
-import subprocess
-
+import requests
+import os
 
 def get_service_status_by_id(graph_id):  # noqa: E501
     """get_service_status_by_id
@@ -43,14 +43,11 @@ def pause_data_loading():  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    subprocess.run(
-        [
-            "/bin/bash",
-            "-c",
-            "/workspace/gart/scripts/pause_resume_data_processing.sh pause",
-        ]
-    )
-    return ("Paused", 200)
+    gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
+    if not gart_controller_server.startswith(("http://", "https://")):
+        gart_controller_server = f"http://{gart_controller_server}"
+    response = requests.post(f"{gart_controller_server}/control/pause")
+    return (response.text, response.status_code)
 
 
 def restart_service():  # noqa: E501
@@ -72,14 +69,11 @@ def resume_data_loading():  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    subprocess.run(
-        [
-            "/bin/bash",
-            "-c",
-            "/workspace/gart/scripts/pause_resume_data_processing.sh resume",
-        ]
-    )
-    return ("Resumed", 200)
+    gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
+    if not gart_controller_server.startswith(("http://", "https://")):
+        gart_controller_server = f"http://{gart_controller_server}"
+    response = requests.post(f"{gart_controller_server}/control/resume")
+    return (response.text, response.status_code)
 
 
 def start_service(start_service_request=None):  # noqa: E501

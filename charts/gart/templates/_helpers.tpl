@@ -42,7 +42,10 @@ If release name contains chart name it will be used as a full name.
 {{- define "gart.controller-service.fullname" -}}
 {{- printf "%s-%s" (include "gart.fullname" .) "controller-service" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
-    
+
+{{- define "gart.coordinator-service.fullname" -}}
+{{- printf "%s-%s" (include "gart.fullname" .) "coordinator-service" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
     
 {{/*
 Create chart name and version as used by the chart label.
@@ -145,6 +148,23 @@ Return the proper gart controller image name
 {{- define "gart.controller.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
 {{- with .Values.controller.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the proper gart coordinator image name
+*/}}
+{{- define "gart.coordinator.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.coordinator.image -}}
 {{- if .tag -}}
 {{- $tag = .tag | toString -}}
 {{- end -}}
