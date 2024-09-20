@@ -3,11 +3,13 @@
 import click
 import os
 import json
+import yaml
 import socket
 import requests
 from urllib.parse import urlparse
 
 CONFIG_FILE_PATH = "/tmp/gart_cli_config.json"
+GRAPH_ID = "graph_id"
 
 
 def save_config(config):
@@ -68,7 +70,7 @@ def resume_data_loading(ctx):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    response = requests.post(f"{endpoint}/control/resume")
+    response = requests.post(f"{endpoint}/api/v1/service/resume")
     click.echo(f"Resumed data loading: {response.text}")
 
 
@@ -81,7 +83,7 @@ def pause_data_loading(ctx):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    response = requests.post(f"{endpoint}/control/pause")
+    response = requests.post(f"{endpoint}/api/v1/service/pause")
     click.echo(f"Paused data loading: {response.text}")
 
 
@@ -94,7 +96,7 @@ def get_all_available_versions(ctx):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    response = requests.post(f"{endpoint}/get-all-available-read-epochs")
+    response = requests.get(f"{endpoint}/api/v1/graph/{GRAPH_ID}/versions")
     click.echo(f"Available versions: {response.text}")
 
 
@@ -107,9 +109,8 @@ def get_version_by_timestamp(ctx, timestamp):
     if not endpoint:
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
-    response = requests.post(
-        f"{endpoint}/get-read-epoch-by-timestamp", data={"timestamp": timestamp}
-    )
+    response = requests.get(
+        f"{endpoint}/api/v1/graph/{GRAPH_ID}/versions/timestamp?timestamp={timestamp}")
     click.echo(f"Version at {timestamp}: {response.text}")
 
 
@@ -123,10 +124,22 @@ def submit_config(ctx, config_path):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    with open(config_path, "rb") as file:
-        files = {"file": (config_path, file)}
+    with open(config_path, "r") as file:
+        yaml_content = file.read()
+        dict_content = yaml.load(yaml_content, Loader=yaml.FullLoader)
+        graph_name = dict_content["loadingConfig"]["database"]
+        payload = {
+            "name": graph_name,
+            "description": graph_name,
+            "schema": yaml_content  # Assuming your schema accepts YAML as a string
+        }
         try:
-            response = requests.post(f"{endpoint}/submit-config", files=files)
+            response = requests.post(
+                f"{endpoint}/api/v1/graph/yaml",
+                headers={"Content-Type": "application/json"},
+                data=json.dumps(payload)
+            )
+            # response = requests.post(f"{endpoint}/api/v1/graph/yaml", files=files)
             response.raise_for_status()
             click.echo(f"Success: Server responded with {response.status_code} status")
         except requests.exceptions.HTTPError as e:
@@ -150,7 +163,7 @@ def submit_pgql_config(ctx, config_path):
     with open(config_path, "rb") as file:
         files = {"file": (config_path, file)}
         try:
-            response = requests.post(f"{endpoint}/submit-pgql-config", files=files)
+            response = requests.post(f"{endpoint}/api/v1/graph/pgql", files=files)
             response.raise_for_status()
             click.echo(f"Success: Server responded with {response.status_code} status")
         except requests.exceptions.HTTPError as e:
@@ -199,7 +212,7 @@ def change_graph_version_gie(ctx, graph_version):
         return
 
     response = requests.post(
-        f"{endpoint}/change-read-epoch", data={"read_epoch": graph_version}
+        f"{endpoint}/api/v1/graph/{GRAPH_ID}/versions", data={"read_epoch": graph_version}
     )
     click.echo(f"Changed graph version to {graph_version}: {response.text}")
 
@@ -213,7 +226,7 @@ def get_graph_schema(ctx):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    response = requests.post(f"{endpoint}/get-graph-schema")
+    response = requests.get(f"{endpoint}/api/v1/graph/{GRAPH_ID}/schema")
     click.echo(f"Graph schema: {response.text}")
 
 

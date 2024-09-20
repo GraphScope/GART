@@ -117,7 +117,7 @@ def resume():
     return "Resumed", 200
 
 
-@app.route("/get-graph-schema", methods=["POST"])
+@app.route("/get-graph-schema", methods=["GET"])
 def get_graph_schema():
     subprocess.run(
         [
@@ -134,7 +134,7 @@ def get_graph_schema():
     return json.dumps(schema), 200
 
 
-@app.route("/get-all-available-read-epochs", methods=["POST"])
+@app.route("/get-all-available-read-epochs", methods=["GET"])
 def get_all_available_read_epochs():
     all_epochs = get_all_available_read_epochs_internal()[0]
     if len(all_epochs) == 0:

@@ -39,6 +39,7 @@ import time
 import sys
 import requests
 
+GRAPH_ID = None
 
 def get_graph_schema():
     property_data_type_mapping = {}
@@ -103,8 +104,8 @@ def get_graph_schema():
 
     table_schema = json.loads(table_schema_str)
 
-    result_dict["name"] = "graph_schema"
-    result_dict["description"] = "graph schema for portal"
+    result_dict["name"] = GRAPH_ID
+    result_dict["id"] = GRAPH_ID
     vertex_types_array = []
     edge_types_array = []
     schema_dict = {}
@@ -221,8 +222,10 @@ def create_graph(create_graph_request):  # noqa: E501
     if isinstance(create_graph_request, dict):
         result_dict["graph_id"] = create_graph_request["name"]
     else:
-        result_dict["graph_id"] = "0"
         create_graph_request = json.loads(create_graph_request)
+        result_dict["graph_id"] = create_graph_request["name"]
+    global GRAPH_ID
+    GRAPH_ID = result_dict["graph_id"]
     create_graph_request = create_graph_request["schema"]
     create_graph_request_yaml = yaml.dump(create_graph_request)
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
@@ -249,8 +252,10 @@ def create_graph_by_pgql(create_graph_by_pgql_request):  # noqa: E501
     if isinstance(create_graph_by_pgql_request, dict):
         result_dict["graph_id"] = create_graph_by_pgql_request["name"]
     else:
-        result_dict["graph_id"] = "0"
         create_graph_by_pgql_request = json.loads(create_graph_by_pgql_request)
+        result_dict["graph_id"] = create_graph_by_pgql_request["name"]
+    global GRAPH_ID
+    GRAPH_ID = result_dict["graph_id"]
     create_graph_by_pgql_request = create_graph_by_pgql_request["schema"]
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
@@ -276,8 +281,10 @@ def create_graph_by_yaml(create_graph_by_yaml_request):  # noqa: E501
     if isinstance(create_graph_by_yaml_request, dict):
         result_dict["graph_id"] = create_graph_by_yaml_request["name"]
     else:
-        result_dict["graph_id"] = "0"
         create_graph_by_yaml_request = json.loads(create_graph_by_yaml_request)
+        result_dict["graph_id"] = create_graph_by_yaml_request["name"]
+    global GRAPH_ID
+    GRAPH_ID = result_dict["graph_id"]
     create_graph_request_yaml = create_graph_by_yaml_request["schema"]
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
@@ -370,7 +377,7 @@ def get_graph_all_available_versions(graph_id):  # noqa: E501
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
         gart_controller_server = f"http://{gart_controller_server}"
-    response = requests.post(f"{gart_controller_server}/get-all-available-read-epochs")
+    response = requests.get(f"{gart_controller_server}/get-all-available-read-epochs")
     result = []
     all_versions = response.json()
     for idx in range(len(all_versions)):
@@ -469,7 +476,6 @@ def list_graphs():  # noqa: E501
     result_dict = get_graph_schema()
     if not result_dict:
         return ([GetGraphResponse.from_dict(result_dict)], 500)
-    result_dict["id"] = "0"
     return ([GetGraphResponse.from_dict(result_dict)], 200)
 
 
