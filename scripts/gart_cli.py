@@ -7,6 +7,7 @@ import yaml
 import socket
 import requests
 from urllib.parse import urlparse
+import re
 
 CONFIG_FILE_PATH = "/tmp/gart_cli_config.json"
 GRAPH_ID = "graph_id"
@@ -131,7 +132,7 @@ def submit_config(ctx, config_path):
         payload = {
             "name": graph_name,
             "description": graph_name,
-            "schema": yaml_content  # Assuming your schema accepts YAML as a string
+            "schema": yaml_content
         }
         try:
             response = requests.post(
@@ -139,7 +140,6 @@ def submit_config(ctx, config_path):
                 headers={"Content-Type": "application/json"},
                 data=json.dumps(payload)
             )
-            # response = requests.post(f"{endpoint}/api/v1/graph/yaml", files=files)
             response.raise_for_status()
             click.echo(f"Success: Server responded with {response.status_code} status")
         except requests.exceptions.HTTPError as e:
@@ -160,10 +160,25 @@ def submit_pgql_config(ctx, config_path):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    with open(config_path, "rb") as file:
-        files = {"file": (config_path, file)}
+    with open(config_path, "r") as file:
+        pgql_content = file.read()
+        match = re.search(r'CREATE PROPERTY GRAPH (\w+)', pgql_content)
+        if match:
+            graph_name = match.group(1)
+        else:
+            click.echo("Failed to extract graph name from the pgql file.")
+            graph_name = "GART_GRAPH"
+        payload = {
+            "name": graph_name,
+            "description": graph_name,
+            "schema": pgql_content
+        }
         try:
-            response = requests.post(f"{endpoint}/api/v1/graph/pgql", files=files)
+            response = requests.post(
+                f"{endpoint}/api/v1/graph/pgql",
+                headers={"Content-Type": "application/json"},
+                data=json.dumps(payload)
+            )
             response.raise_for_status()
             click.echo(f"Success: Server responded with {response.status_code} status")
         except requests.exceptions.HTTPError as e:
