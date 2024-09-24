@@ -12,26 +12,36 @@ class GetGraphVersionResponse(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, creation_time=None, version_id=None):  # noqa: E501
+    def __init__(self, creation_time=None, version_id=None, num_vertices=None, num_edges=None):  # noqa: E501
         """GetGraphVersionResponse - a model defined in OpenAPI
 
         :param creation_time: The creation_time of this GetGraphVersionResponse.  # noqa: E501
         :type creation_time: str
         :param version_id: The version_id of this GetGraphVersionResponse.  # noqa: E501
         :type version_id: str
+        :param num_vertices: The num_vertices of this GetGraphVersionResponse.  # noqa: E501
+        :type num_vertices: str
+        :param num_edges: The num_edges of this GetGraphVersionResponse.  # noqa: E501
+        :type num_edges: str
         """
         self.openapi_types = {
             'creation_time': str,
-            'version_id': str
+            'version_id': str,
+            'num_vertices': str,
+            'num_edges': str
         }
 
         self.attribute_map = {
             'creation_time': 'creation_time',
-            'version_id': 'version_id'
+            'version_id': 'version_id',
+            'num_vertices': 'num_vertices',
+            'num_edges': 'num_edges'
         }
 
         self._creation_time = creation_time
         self._version_id = version_id
+        self._num_vertices = num_vertices
+        self._num_edges = num_edges
 
     @classmethod
     def from_dict(cls, dikt) -> 'GetGraphVersionResponse':
@@ -89,3 +99,49 @@ class GetGraphVersionResponse(Model):
             raise ValueError("Invalid value for `version_id`, must not be `None`")  # noqa: E501
 
         self._version_id = version_id
+
+    @property
+    def num_vertices(self) -> str:
+        """Gets the num_vertices of this GetGraphVersionResponse.
+
+
+        :return: The num_vertices of this GetGraphVersionResponse.
+        :rtype: str
+        """
+        return self._num_vertices
+
+    @num_vertices.setter
+    def num_vertices(self, num_vertices: str):
+        """Sets the num_vertices of this GetGraphVersionResponse.
+
+
+        :param num_vertices: The num_vertices of this GetGraphVersionResponse.
+        :type num_vertices: str
+        """
+        if num_vertices is None:
+            raise ValueError("Invalid value for `num_vertices`, must not be `None`")  # noqa: E501
+
+        self._num_vertices = num_vertices
+
+    @property
+    def num_edges(self) -> str:
+        """Gets the num_edges of this GetGraphVersionResponse.
+
+
+        :return: The num_edges of this GetGraphVersionResponse.
+        :rtype: str
+        """
+        return self._num_edges
+
+    @num_edges.setter
+    def num_edges(self, num_edges: str):
+        """Sets the num_edges of this GetGraphVersionResponse.
+
+
+        :param num_edges: The num_edges of this GetGraphVersionResponse.
+        :type num_edges: str
+        """
+        if num_edges is None:
+            raise ValueError("Invalid value for `num_edges`, must not be `None`")  # noqa: E501
+
+        self._num_edges = num_edges

@@ -79,6 +79,36 @@ class TestJobController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_pause_job(self):
+        """Test case for pause_job
+
+        
+        """
+        headers = { 
+            'Accept': 'application/json',
+        }
+        response = self.client.open(
+            '/api/v1/job/{job_id}/pause'.format(job_id='job_id_example'),
+            method='POST',
+            headers=headers)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_resume_job(self):
+        """Test case for resume_job
+
+        
+        """
+        headers = { 
+            'Accept': 'application/json',
+        }
+        response = self.client.open(
+            '/api/v1/job/{job_id}/resume'.format(job_id='job_id_example'),
+            method='POST',
+            headers=headers)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_submit_dataloading_job(self):
         """Test case for submit_dataloading_job
 

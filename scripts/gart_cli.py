@@ -71,7 +71,7 @@ def resume_data_loading(ctx):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    response = requests.post(f"{endpoint}/api/v1/service/resume")
+    response = requests.post(f"{endpoint}/api/v1/job/0/resume")
     click.echo(f"Resumed data loading: {response.text}")
 
 
@@ -84,7 +84,7 @@ def pause_data_loading(ctx):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    response = requests.post(f"{endpoint}/api/v1/service/pause")
+    response = requests.post(f"{endpoint}/api/v1/job/0/pause")
     click.echo(f"Paused data loading: {response.text}")
 
 
@@ -97,7 +97,7 @@ def get_all_available_versions(ctx):
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
 
-    response = requests.get(f"{endpoint}/api/v1/graph/{GRAPH_ID}/versions")
+    response = requests.get(f"{endpoint}/api/v1/graph/{GRAPH_ID}/version")
     click.echo(f"Available versions: {response.text}")
 
 
@@ -110,8 +110,9 @@ def get_version_by_timestamp(ctx, timestamp):
     if not endpoint:
         click.echo('Please connect to an endpoint first using the "connect" command.')
         return
+    format_timestamp = timestamp.replace(" ", "%20")
     response = requests.get(
-        f"{endpoint}/api/v1/graph/{GRAPH_ID}/versions/timestamp?timestamp={timestamp}")
+        f"{endpoint}/api/v1/graph/{GRAPH_ID}/version/{format_timestamp}")
     click.echo(f"Version at {timestamp}: {response.text}")
 
 
@@ -227,7 +228,7 @@ def change_graph_version_gie(ctx, graph_version):
         return
 
     response = requests.post(
-        f"{endpoint}/api/v1/graph/{GRAPH_ID}/versions", data={"read_epoch": graph_version}
+        f"{endpoint}/api/v1/graph/{GRAPH_ID}/version", data={"read_epoch": graph_version}
     )
     click.echo(f"Changed graph version to {graph_version}: {response.text}")
 

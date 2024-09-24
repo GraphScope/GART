@@ -10,6 +10,12 @@ from flex.server.models.error import Error  # noqa: E501
 from flex.server.models.job_status import JobStatus  # noqa: E501
 from flex.server import util
 
+import requests
+import os
+import etcd3
+from urllib.parse import urlparse
+
+RUNNING = None
 
 def delete_job_by_id(job_id, delete_scheduler=None):  # noqa: E501
     """delete_job_by_id
@@ -53,9 +59,32 @@ def get_job_by_id(job_id):  # noqa: E501
 
     :rtype: Union[JobStatus, Tuple[JobStatus, int], Tuple[JobStatus, int, Dict[str, str]]
     """
-    return 'do some magic!'
-
-
+    global RUNNING
+    result_dict = {}
+    etcd_server = os.getenv("ETCD_SERVICE", "127.0.0.1:23790")
+    if not etcd_server.startswith(("http://", "https://")):
+        etcd_server = f"http://{etcd_server}"
+    parsed_url = urlparse(etcd_server)
+    etcd_host = parsed_url.netloc.split(":")[0]
+    etcd_port = parsed_url.port
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+    etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+    
+    debezium_status_key = f"{etcd_prefix}debezium_request_is_sent"
+    try:
+        debezium_status, _ = etcd_client.get(debezium_status_key)
+        if debezium_status == b"True":
+            if RUNNING is None:
+                RUNNING = "RUNNING"
+            result_dict["status"] = RUNNING
+            result_dict["id"] = "0"
+            result_dict["type"] = "dataloading"
+    except:
+        return (JobStatus.from_dict(result_dict), 200)
+        
+    return (JobStatus.from_dict(result_dict), 200)
+    
+    
 def list_jobs():  # noqa: E501
     """list_jobs
 
@@ -64,7 +93,68 @@ def list_jobs():  # noqa: E501
 
     :rtype: Union[List[JobStatus], Tuple[List[JobStatus], int], Tuple[List[JobStatus], int, Dict[str, str]]
     """
-    return 'do some magic!'
+    global RUNNING
+    result_dict = {}
+    etcd_server = os.getenv("ETCD_SERVICE", "127.0.0.1:23790")
+    if not etcd_server.startswith(("http://", "https://")):
+        etcd_server = f"http://{etcd_server}"
+    parsed_url = urlparse(etcd_server)
+    etcd_host = parsed_url.netloc.split(":")[0]
+    etcd_port = parsed_url.port
+    etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+    etcd_prefix = os.getenv("ETCD_PREFIX", "gart_meta_")
+    
+    debezium_status_key = f"{etcd_prefix}debezium_request_is_sent"
+    try:
+        debezium_status, _ = etcd_client.get(debezium_status_key)
+        if debezium_status == b"True":
+            if RUNNING is None:
+                RUNNING = "RUNNING"
+            result_dict["status"] = RUNNING
+            result_dict["id"] = "0"
+            result_dict["type"] = "dataloading"
+    except:
+        return ([JobStatus.from_dict(result_dict)], 200)
+        
+    return ([JobStatus.from_dict(result_dict)], 200)
+
+
+def pause_job(job_id):  # noqa: E501
+    """pause_job
+
+    Pause an existing job # noqa: E501
+
+    :param job_id: 
+    :type job_id: str
+
+    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
+    """
+    gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
+    if not gart_controller_server.startswith(("http://", "https://")):
+        gart_controller_server = f"http://{gart_controller_server}"
+    response = requests.post(f"{gart_controller_server}/control/pause")
+    global RUNNING
+    RUNNING = "PAUSED"
+    return (response.text, response.status_code)
+
+
+def resume_job(job_id):  # noqa: E501
+    """resume_job
+
+    Resume an existing job # noqa: E501
+
+    :param job_id: 
+    :type job_id: str
+
+    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
+    """
+    gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
+    if not gart_controller_server.startswith(("http://", "https://")):
+        gart_controller_server = f"http://{gart_controller_server}"
+    response = requests.post(f"{gart_controller_server}/control/resume")
+    global RUNNING
+    RUNNING = "RUNNING"
+    return (response.text, response.status_code)
 
 
 def submit_dataloading_job(graph_id, dataloading_job_config):  # noqa: E501

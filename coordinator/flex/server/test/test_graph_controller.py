@@ -172,7 +172,7 @@ class TestGraphController(BaseTestCase):
             'Accept': 'application/json',
         }
         response = self.client.open(
-            '/api/v1/graph/{graph_id}/versions'.format(graph_id='graph_id_example'),
+            '/api/v1/graph/{graph_id}/version'.format(graph_id='graph_id_example'),
             method='GET',
             headers=headers)
         self.assert200(response,
@@ -198,15 +198,13 @@ class TestGraphController(BaseTestCase):
 
         
         """
-        query_string = [('timestamp', 'timestamp_example')]
         headers = { 
             'Accept': 'application/json',
         }
         response = self.client.open(
-            '/api/v1/graph/{graph_id}/versions/timestamp'.format(graph_id='graph_id_example'),
+            '/api/v1/graph/{graph_id}/version/{timestamp}'.format(graph_id='graph_id_example', timestamp='timestamp_example'),
             method='GET',
-            headers=headers,
-            query_string=query_string)
+            headers=headers)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
@@ -270,7 +268,7 @@ class TestGraphController(BaseTestCase):
             'Content-Type': 'application/json',
         }
         response = self.client.open(
-            '/api/v1/graph/{graph_id}/versions'.format(graph_id='graph_id_example'),
+            '/api/v1/graph/{graph_id}/version'.format(graph_id='graph_id_example'),
             method='POST',
             headers=headers,
             data=json.dumps(change_graph_version_request),

@@ -155,13 +155,13 @@ def get_read_epoch_by_timestamp():
     unix_time = int(dt.timestamp())
     epoch_unix_time_pairs = get_all_available_read_epochs_internal()[1]
     # iterate through the list of epoch_unix_time pairs from end to start
-    for epoch, unix_time_epoch in reversed(epoch_unix_time_pairs):
+    for epoch, unix_time_epoch, num_vertices, num_edges in reversed(epoch_unix_time_pairs):
         if unix_time_epoch <= unix_time:
             converted_time = datetime.fromtimestamp(unix_time_epoch)
             # convert time into local time zone
             converted_time = converted_time.replace(tzinfo=timezone.utc).astimezone(tz=None)
             formatted_time = converted_time.strftime("%Y-%m-%d %H:%M:%S")
-            result = {"version_id": str(epoch), "creation_time": formatted_time}
+            result = {"version_id": str(epoch), "creation_time": formatted_time, "num_vertices": num_vertices, "num_edges": num_edges}
             return json.dumps(result), 200
     return "No read epoch found", 200
 
@@ -371,6 +371,8 @@ def get_all_available_read_epochs_internal():
     available_epochs_internal = []
     for epoch in range(latest_read_epoch + 1):
         latest_timestamp = None
+        num_vertices = 0
+        num_edges = 0
         for frag_id in range(int(num_fragment)):
             schema_key = etcd_prefix + "gart_blob_m0" + f"_p{frag_id}" + f"_e{epoch}"
             schema_str, _ = etcd_client.get(schema_key)
@@ -382,8 +384,8 @@ def get_all_available_read_epochs_internal():
         # convert time into local time zone
         converted_time = converted_time.replace(tzinfo=timezone.utc).astimezone(tz=None)
         formatted_time = converted_time.strftime("%Y-%m-%d %H:%M:%S")
-        available_epochs.append([epoch, formatted_time])
-        available_epochs_internal.append([epoch, latest_timestamp])
+        available_epochs.append([epoch, formatted_time, num_vertices, num_edges])
+        available_epochs_internal.append([epoch, latest_timestamp, num_vertices, num_edges])
     return [available_epochs, available_epochs_internal]
 
 

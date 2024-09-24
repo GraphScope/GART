@@ -1834,7 +1834,7 @@ paths:
       tags:
       - Stored Procedure
       x-openapi-router-controller: flex.server.controllers.stored_procedure_controller
-  /api/v1/graph/{graph_id}/versions:
+  /api/v1/graph/{graph_id}/version:
     get:
       description: Get all available versions for a specific graph
       operationId: get_graph_all_available_versions
@@ -1897,7 +1897,7 @@ paths:
       tags:
       - Graph
       x-openapi-router-controller: flex.server.controllers.graph_controller
-  /api/v1/graph/{graph_id}/versions/timestamp:
+  /api/v1/graph/{graph_id}/version/{timestamp}:
     get:
       description: Get the latest version by providing a timestamp
       operationId: get_graph_version_by_timestamp
@@ -1909,14 +1909,14 @@ paths:
         schema:
           type: string
         style: simple
-      - explode: true
-        in: query
+      - explode: false
+        in: path
         name: timestamp
         required: true
         schema:
           description: The timestamp of the graph to read. Provide as a query parameter.
           type: string
-        style: form
+        style: simple
       responses:
         "200":
           content:
@@ -2043,6 +2043,74 @@ paths:
               schema:
                 $ref: '#/components/schemas/JobStatus'
           description: Successfully returned the job status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: flex.server.controllers.job_controller
+  /api/v1/job/{job_id}/pause:
+    post:
+      description: Pause an existing job
+      operationId: pause_job
+      parameters:
+      - explode: false
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully paused the job
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: flex.server.controllers.job_controller
+  /api/v1/job/{job_id}/resume:
+    post:
+      description: Resume an existing job
+      operationId: resume_job
+      parameters:
+      - explode: false
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully resumed a job
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
         "500":
           content:
             application/json:
@@ -3642,7 +3710,9 @@ components:
     GetGraphVersionResponse:
       example:
         creation_time: creation_time
+        num_vertices: num_vertices
         version_id: version_id
+        num_edges: num_edges
       properties:
         creation_time:
           title: creation_time
@@ -3650,8 +3720,16 @@ components:
         version_id:
           title: version_id
           type: string
+        num_vertices:
+          title: num_vertices
+          type: string
+        num_edges:
+          title: num_edges
+          type: string
       required:
       - creation_time
+      - num_edges
+      - num_vertices
       - version_id
       title: GetGraphVersionResponse
     ChangeGraphVersionRequest:
@@ -3982,6 +4060,7 @@ components:
           - FAILED
           - CANCELLED
           - WAITING
+          - PAUSED
           title: status
           type: string
         start_time:
