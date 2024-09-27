@@ -1,0 +1,1092 @@
+{
+    "vertex_mappings": [
+        {
+            "type_name": "organisation",
+            "inputs": [
+                "organisation"
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "org_id"
+                    },
+                    "property": "org_id"
+                },
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "org_type"
+                    },
+                    "property": "org_type"
+                },
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "org_name"
+                    },
+                    "property": "org_name"
+                },
+                {
+                    "column": {
+                        "index": 3,
+                        "name": "org_url"
+                    },
+                    "property": "org_url"
+                }
+            ]
+        },
+        {
+            "type_name": "place",
+            "inputs": [
+                "place"
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "pla_id"
+                    },
+                    "property": "pla_id"
+                },
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "pla_name"
+                    },
+                    "property": "pla_name"
+                },
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "pla_url"
+                    },
+                    "property": "pla_url"
+                },
+                {
+                    "column": {
+                        "index": 3,
+                        "name": "pla_type"
+                    },
+                    "property": "pla_type"
+                }
+            ]
+        },
+        {
+            "type_name": "tag",
+            "inputs": [
+                "tag"
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "tag_id"
+                    },
+                    "property": "tag_id"
+                },
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "tag_name"
+                    },
+                    "property": "tag_name"
+                },
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "tag_url"
+                    },
+                    "property": "tag_url"
+                }
+            ]
+        },
+        {
+            "type_name": "tagclass",
+            "inputs": [
+                "tagclass"
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "tagc_id"
+                    },
+                    "property": "tagc_id"
+                },
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "tagc_name"
+                    },
+                    "property": "tagc_name"
+                },
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "tagc_url"
+                    },
+                    "property": "tagc_url"
+                }
+            ]
+        },
+        {
+            "type_name": "person",
+            "inputs": [
+                "person"
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "p_id"
+                    },
+                    "property": "p_id"
+                },
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "p_first_name"
+                    },
+                    "property": "p_first_name"
+                },
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "p_last_name"
+                    },
+                    "property": "p_last_name"
+                },
+                {
+                    "column": {
+                        "index": 3,
+                        "name": "p_gender"
+                    },
+                    "property": "p_gender"
+                },
+                {
+                    "column": {
+                        "index": 4,
+                        "name": "p_birthday"
+                    },
+                    "property": "p_birthday"
+                },
+                {
+                    "column": {
+                        "index": 5,
+                        "name": "p_creation_date"
+                    },
+                    "property": "p_creation_date"
+                },
+                {
+                    "column": {
+                        "index": 6,
+                        "name": "p_location_ip"
+                    },
+                    "property": "p_location_ip"
+                },
+                {
+                    "column": {
+                        "index": 7,
+                        "name": "p_browser_used"
+                    },
+                    "property": "p_browser_used"
+                }
+            ]
+        },
+        {
+            "type_name": "comment",
+            "inputs": [
+                "comment"
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "co_id"
+                    },
+                    "property": "co_id"
+                },
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "co_creation_date"
+                    },
+                    "property": "co_creation_date"
+                },
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "co_location_ip"
+                    },
+                    "property": "co_location_ip"
+                },
+                {
+                    "column": {
+                        "index": 3,
+                        "name": "co_browser_used"
+                    },
+                    "property": "co_browser_used"
+                },
+                {
+                    "column": {
+                        "index": 4,
+                        "name": "co_content"
+                    },
+                    "property": "co_content"
+                },
+                {
+                    "column": {
+                        "index": 5,
+                        "name": "co_length"
+                    },
+                    "property": "co_length"
+                }
+            ]
+        },
+        {
+            "type_name": "post",
+            "inputs": [
+                "post"
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "po_id"
+                    },
+                    "property": "po_id"
+                },
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "po_image_file"
+                    },
+                    "property": "po_image_file"
+                },
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "po_creation_date"
+                    },
+                    "property": "po_creation_date"
+                },
+                {
+                    "column": {
+                        "index": 3,
+                        "name": "po_location_ip"
+                    },
+                    "property": "po_location_ip"
+                },
+                {
+                    "column": {
+                        "index": 4,
+                        "name": "po_browser_used"
+                    },
+                    "property": "po_browser_used"
+                },
+                {
+                    "column": {
+                        "index": 5,
+                        "name": "po_language"
+                    },
+                    "property": "po_language"
+                },
+                {
+                    "column": {
+                        "index": 6,
+                        "name": "po_content"
+                    },
+                    "property": "po_content"
+                },
+                {
+                    "column": {
+                        "index": 7,
+                        "name": "po_length"
+                    },
+                    "property": "po_length"
+                }
+            ]
+        },
+        {
+            "type_name": "forum",
+            "inputs": [
+                "forum"
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "fo_id"
+                    },
+                    "property": "fo_id"
+                },
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "fo_title"
+                    },
+                    "property": "fo_title"
+                },
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "fo_creation_date"
+                    },
+                    "property": "fo_creation_date"
+                }
+            ]
+        }
+    ],
+    "edge_mappings": [
+        {
+            "type_triplet": {
+                "edge": "org_islocationin",
+                "source_vertex": "organisation",
+                "destination_vertex": "place"
+            },
+            "inputs": [
+                "org_islocationin"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "ispartof",
+                "source_vertex": "place",
+                "destination_vertex": "place"
+            },
+            "inputs": [
+                "ispartof"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "issubclassof",
+                "source_vertex": "tagclass",
+                "destination_vertex": "tagclass"
+            },
+            "inputs": [
+                "issubclassof"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "hastype",
+                "source_vertex": "tag",
+                "destination_vertex": "tagclass"
+            },
+            "inputs": [
+                "hastype"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "comment_hascreator",
+                "source_vertex": "comment",
+                "destination_vertex": "person"
+            },
+            "inputs": [
+                "comment_hascreator"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "comment_hastag",
+                "source_vertex": "comment",
+                "destination_vertex": "tag"
+            },
+            "inputs": [
+                "comment_hastag"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "comment_islocationin",
+                "source_vertex": "comment",
+                "destination_vertex": "place"
+            },
+            "inputs": [
+                "comment_islocationin"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "replyof_comment",
+                "source_vertex": "comment",
+                "destination_vertex": "comment"
+            },
+            "inputs": [
+                "replyof_comment"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "replyof_post",
+                "source_vertex": "comment",
+                "destination_vertex": "post"
+            },
+            "inputs": [
+                "replyof_post"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "post_hascreator",
+                "source_vertex": "post",
+                "destination_vertex": "person"
+            },
+            "inputs": [
+                "post_hascreator"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "post_hastag",
+                "source_vertex": "post",
+                "destination_vertex": "tag"
+            },
+            "inputs": [
+                "post_hastag"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "post_islocationin",
+                "source_vertex": "post",
+                "destination_vertex": "place"
+            },
+            "inputs": [
+                "post_islocationin"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "forum_containerof",
+                "source_vertex": "forum",
+                "destination_vertex": "post"
+            },
+            "inputs": [
+                "forum_containerof"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "forum_hasmoderator",
+                "source_vertex": "forum",
+                "destination_vertex": "person"
+            },
+            "inputs": [
+                "forum_hasmoderator"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "forum_hastag",
+                "source_vertex": "forum",
+                "destination_vertex": "tag"
+            },
+            "inputs": [
+                "forum_hastag"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "person_hasinterest",
+                "source_vertex": "person",
+                "destination_vertex": "tag"
+            },
+            "inputs": [
+                "person_hasinterest"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "person_islocationin",
+                "source_vertex": "person",
+                "destination_vertex": "place"
+            },
+            "inputs": [
+                "person_islocationin"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "forum_hasmember",
+                "source_vertex": "forum",
+                "destination_vertex": "person"
+            },
+            "inputs": [
+                "forum_hasmember"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "fo_hm_join_date"
+                    },
+                    "property": "fo_hm_join_date"
+                }
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "knows",
+                "source_vertex": "person",
+                "destination_vertex": "person"
+            },
+            "inputs": [
+                "knows"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "kn_creation_date"
+                    },
+                    "property": "kn_creation_date"
+                }
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "likes_comment",
+                "source_vertex": "person",
+                "destination_vertex": "comment"
+            },
+            "inputs": [
+                "likes_comment"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "likes_co_creation_date"
+                    },
+                    "property": "likes_co_creation_date"
+                }
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "likes_post",
+                "source_vertex": "person",
+                "destination_vertex": "post"
+            },
+            "inputs": [
+                "likes_post"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "likes_po_creation_date"
+                    },
+                    "property": "likes_po_creation_date"
+                }
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "studyat",
+                "source_vertex": "person",
+                "destination_vertex": "organisation"
+            },
+            "inputs": [
+                "studyat"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "sa_class_year"
+                    },
+                    "property": "sa_class_year"
+                }
+            ]
+        },
+        {
+            "type_triplet": {
+                "edge": "workat",
+                "source_vertex": "person",
+                "destination_vertex": "organisation"
+            },
+            "inputs": [
+                "workat"
+            ],
+            "source_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 0,
+                        "name": "src"
+                    },
+                    "property": "id"
+                }
+            ],
+            "destination_vertex_mappings": [
+                {
+                    "column": {
+                        "index": 1,
+                        "name": "dst"
+                    },
+                    "property": "id"
+                }
+            ],
+            "column_mappings": [
+                {
+                    "column": {
+                        "index": 2,
+                        "name": "wa_work_from"
+                    },
+                    "property": "wa_work_from"
+                }
+            ]
+        }
+    ]
+}

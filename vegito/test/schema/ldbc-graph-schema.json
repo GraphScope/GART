@@ -1,0 +1,722 @@
+{
+    "name": "ldbc_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "organisation",
+                "properties": [
+                    {
+                        "property_name": "org_id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_name": "org_type",
+                        "property_type": {
+                            "string": {
+                                "long_text": ""
+                            }
+                        }
+                    },
+                    {
+                        "property_name": "org_name",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "org_url",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "org_id"
+                ]
+            },
+            {
+                "type_name": "place",
+                "properties": [
+                    {
+                        "property_name": "pla_id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_name": "pla_name",
+                        "property_type": {
+                            "string": {
+                                "long_text": ""
+                            }
+                        }
+                    },
+                    {
+                        "property_name": "pla_url",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "pla_type",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "pla_id"
+                ]
+            },
+            {
+                "type_name": "tag",
+                "properties": [
+                    {
+                        "property_name": "tag_id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_name": "tag_name",
+                        "property_type": {
+                            "string": {
+                                "long_text": ""
+                            }
+                        }
+                    },
+                    {
+                        "property_name": "tag_url",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "tag_id"
+                ]
+            },
+            {
+                "type_name": "tagclass",
+                "properties": [
+                    {
+                        "property_name": "tagc_id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_name": "tagc_name",
+                        "property_type": {
+                            "string": {
+                                "long_text": ""
+                            }
+                        }
+                    },
+                    {
+                        "property_name": "tagc_url",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "tagc_id"
+                ]
+            },
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "p_id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_name": "p_first_name",
+                        "property_type": {
+                            "string": {
+                                "long_text": ""
+                            }
+                        }
+                    },
+                    {
+                        "property_name": "p_last_name",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "p_gender",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "p_birthday",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "p_creation_date",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "p_location_ip",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "p_browser_used",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "p_id"
+                ]
+            },
+            {
+                "type_name": "comment",
+                "properties": [
+                    {
+                        "property_name": "co_id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_name": "co_creation_date",
+                        "property_type": {
+                            "string": {
+                                "long_text": ""
+                            }
+                        }
+                    },
+                    {
+                        "property_name": "co_location_ip",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "co_browser_used",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "co_content",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "co_length",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "co_id"
+                ]
+            },
+            {
+                "type_name": "post",
+                "properties": [
+                    {
+                        "property_name": "po_id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_name": "po_image_file",
+                        "property_type": {
+                            "string": {
+                                "long_text": ""
+                            }
+                        }
+                    },
+                    {
+                        "property_name": "po_creation_date",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "po_location_ip",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "po_browser_used",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "po_language",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "po_content",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    },
+                    {
+                        "property_name": "po_length",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "po_id"
+                ]
+            },
+            {
+                "type_name": "forum",
+                "properties": [
+                    {
+                        "property_name": "fo_id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_name": "fo_title",
+                        "property_type": {
+                            "string": {
+                                "long_text": ""
+                            }
+                        }
+                    },
+                    {
+                        "property_name": "fo_creation_date",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "fo_id"
+                ]
+            }
+        ],
+        "edge_types": [
+            {
+                "type_name": "org_islocationin",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "organisation",
+                        "destination_vertex": "place",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "ispartof",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "place",
+                        "destination_vertex": "place",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "issubclassof",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "tagclass",
+                        "destination_vertex": "tagclass",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "hastype",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "tag",
+                        "destination_vertex": "tagclass",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "comment_hascreator",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "comment",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "comment_hastag",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "comment",
+                        "destination_vertex": "tag",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "comment_islocationin",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "comment",
+                        "destination_vertex": "place",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "replyof_comment",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "comment",
+                        "destination_vertex": "comment",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "replyof_post",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "comment",
+                        "destination_vertex": "post",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "post_hascreator",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "post",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "post_hastag",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "post",
+                        "destination_vertex": "tag",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "post_islocationin",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "post",
+                        "destination_vertex": "place",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "forum_containerof",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "forum",
+                        "destination_vertex": "post",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "forum_hasmoderator",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "forum",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "forum_hastag",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "forum",
+                        "destination_vertex": "tag",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "person_hasinterest",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "tag",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "person_islocationin",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "place",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "forum_hasmember",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "forum",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "fo_hm_join_date",
+                        "property_type": {
+                            "primitive_type": "DT_DOUBLE"
+                        }
+                    }
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "kn_creation_date",
+                        "property_type": {
+                            "primitive_type": "DT_DOUBLE"
+                        }
+                    }
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "likes_comment",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "comment",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "likes_co_creation_date",
+                        "property_type": {
+                            "primitive_type": "DT_DOUBLE"
+                        }
+                    }
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "likes_post",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "post",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "likes_po_creation_date",
+                        "property_type": {
+                            "primitive_type": "DT_DOUBLE"
+                        }
+                    }
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "studyat",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "organisation",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "sa_class_year",
+                        "property_type": {
+                            "primitive_type": "DT_DOUBLE"
+                        }
+                    }
+                ],
+                "primary_keys": [
+
+                ]
+            },
+            {
+                "type_name": "workat",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "organisation",
+                        "relation": "MANY_TO_MANY"
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "wa_work_from",
+                        "property_type": {
+                            "primitive_type": "DT_DOUBLE"
+                        }
+                    }
+                ],
+                "primary_keys": [
+
+                ]
+            }
+        ]
+    }
+}

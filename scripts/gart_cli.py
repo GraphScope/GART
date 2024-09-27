@@ -112,7 +112,8 @@ def get_version_by_timestamp(ctx, timestamp):
         return
     format_timestamp = timestamp.replace(" ", "%20")
     response = requests.get(
-        f"{endpoint}/api/v1/graph/{GRAPH_ID}/version/{format_timestamp}")
+        f"{endpoint}/api/v1/graph/{GRAPH_ID}/version/{format_timestamp}"
+    )
     click.echo(f"Version at {timestamp}: {response.text}")
 
 
@@ -133,13 +134,13 @@ def submit_config(ctx, config_path):
         payload = {
             "name": graph_name,
             "description": graph_name,
-            "schema": yaml_content
+            "schema": yaml_content,
         }
         try:
             response = requests.post(
                 f"{endpoint}/api/v1/graph/yaml",
                 headers={"Content-Type": "application/json"},
-                data=json.dumps(payload)
+                data=json.dumps(payload),
             )
             response.raise_for_status()
             click.echo(f"Success: Server responded with {response.status_code} status")
@@ -163,7 +164,7 @@ def submit_pgql_config(ctx, config_path):
 
     with open(config_path, "r") as file:
         pgql_content = file.read()
-        match = re.search(r'CREATE PROPERTY GRAPH (\w+)', pgql_content)
+        match = re.search(r"CREATE PROPERTY GRAPH (\w+)", pgql_content)
         if match:
             graph_name = match.group(1)
         else:
@@ -172,13 +173,13 @@ def submit_pgql_config(ctx, config_path):
         payload = {
             "name": graph_name,
             "description": graph_name,
-            "schema": pgql_content
+            "schema": pgql_content,
         }
         try:
             response = requests.post(
                 f"{endpoint}/api/v1/graph/pgql",
                 headers={"Content-Type": "application/json"},
-                data=json.dumps(payload)
+                data=json.dumps(payload),
             )
             response.raise_for_status()
             click.echo(f"Success: Server responded with {response.status_code} status")
@@ -228,7 +229,8 @@ def change_graph_version_gie(ctx, graph_version):
         return
 
     response = requests.post(
-        f"{endpoint}/api/v1/graph/{GRAPH_ID}/version", data={"read_epoch": graph_version}
+        f"{endpoint}/api/v1/graph/{GRAPH_ID}/version",
+        data={"read_epoch": graph_version},
     )
     click.echo(f"Changed graph version to {graph_version}: {response.text}")
 

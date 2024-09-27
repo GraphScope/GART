@@ -211,14 +211,14 @@ def create_graph(create_graph_request):  # noqa: E501
         result_dict["graph_id"] = create_graph_request["name"]
     global GRAPH_ID
     GRAPH_ID = result_dict["graph_id"]
-    create_graph_request = create_graph_request["schema"]
-    create_graph_request_yaml = yaml.dump(create_graph_request)
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
         gart_controller_server = f"http://{gart_controller_server}"
+         
     response = requests.post(
-        f"{gart_controller_server}/submit-config",
-        data={"schema": create_graph_request_yaml},
+        f"{gart_controller_server}/submit-graph-schema",
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({"schema": json.dumps(create_graph_request)}),
     )
     return (CreateGraphResponse.from_dict(result_dict), response.status_code)
 

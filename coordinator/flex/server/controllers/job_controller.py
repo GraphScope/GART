@@ -14,6 +14,7 @@ import requests
 import os
 import etcd3
 from urllib.parse import urlparse
+import json
 
 RUNNING = None
 
@@ -169,6 +170,19 @@ def submit_dataloading_job(graph_id, dataloading_job_config):  # noqa: E501
 
     :rtype: Union[CreateDataloadingJobResponse, Tuple[CreateDataloadingJobResponse, int], Tuple[CreateDataloadingJobResponse, int, Dict[str, str]]
     """
-    if connexion.request.is_json:
-        dataloading_job_config = DataloadingJobConfig.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
+    if not gart_controller_server.startswith(("http://", "https://")):
+        gart_controller_server = f"http://{gart_controller_server}"
+        
+    if not isinstance(dataloading_job_config, dict):
+        dataloading_job_config = json.loads(dataloading_job_config)
+        
+    response = requests.post(
+        f"{gart_controller_server}/submit-data-loading",
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({"schema": json.dumps(dataloading_job_config)}),
+    )
+    
+    result_dict = {}
+    result_dict["job_id"] = "0"
+    return (CreateDataloadingJobResponse.from_dict(result_dict), response.status_code)

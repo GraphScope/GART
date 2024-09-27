@@ -7,6 +7,9 @@ from flex.server.models.error import Error  # noqa: E501
 from flex.server.models.schema_mapping import SchemaMapping  # noqa: E501
 from flex.server import util
 
+import os
+import requests
+import json
 
 def bind_datasource_in_batch(graph_id, schema_mapping):  # noqa: E501
     """bind_datasource_in_batch
@@ -20,10 +23,19 @@ def bind_datasource_in_batch(graph_id, schema_mapping):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    if connexion.request.is_json:
-        schema_mapping = SchemaMapping.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
-
+    gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
+    if not gart_controller_server.startswith(("http://", "https://")):
+        gart_controller_server = f"http://{gart_controller_server}"
+        
+    if not isinstance(schema_mapping, dict):
+        schema_mapping = json.loads(schema_mapping)
+        
+    response = requests.post(
+        f"{gart_controller_server}/submit-data-source",
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({"schema": json.dumps(schema_mapping)}),
+    )
+    return (response.text, response.status_code)
 
 def get_datasource_by_id(graph_id):  # noqa: E501
     """get_datasource_by_id
