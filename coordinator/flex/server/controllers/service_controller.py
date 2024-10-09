@@ -33,32 +33,10 @@ def list_service_status():  # noqa: E501
     return 'do some magic!'
 
 
-def pause_data_loading():  # noqa: E501
-    """pause_data_loading
-
-    Pause data loading # noqa: E501
-
-
-    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
-    """
-    return 'do some magic!'
-
-
 def restart_service():  # noqa: E501
     """restart_service
 
     Restart current service # noqa: E501
-
-
-    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
-    """
-    return 'do some magic!'
-
-
-def resume_data_loading():  # noqa: E501
-    """resume_data_loading
-
-    Resume data loading # noqa: E501
 
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]

@@ -317,6 +317,7 @@ def get_graph_schema():
 @app.route("/get-all-available-read-epochs", methods=["GET"])
 def get_all_available_read_epochs():
     all_epochs = get_all_available_read_epochs_internal()[0]
+    all_epochs.reverse()
     if len(all_epochs) == 0:
         return "No available read epochs", 200
     return json.dumps(all_epochs), 200
@@ -335,9 +336,13 @@ def get_read_epoch_by_timestamp():
     unix_time = int(dt.timestamp())
     epoch_unix_time_pairs = get_all_available_read_epochs_internal()[1]
     # iterate through the list of epoch_unix_time pairs from end to start
-    for epoch, unix_time_epoch, num_vertices, num_edges in reversed(
-        epoch_unix_time_pairs
-    ):
+    for (
+        epoch,
+        previous_unix_time_epoch,
+        unix_time_epoch,
+        num_vertices,
+        num_edges,
+    ) in reversed(epoch_unix_time_pairs):
         if unix_time_epoch <= unix_time:
             converted_time = datetime.fromtimestamp(unix_time_epoch)
             # convert time into local time zone
@@ -345,9 +350,18 @@ def get_read_epoch_by_timestamp():
                 tz=None
             )
             formatted_time = converted_time.strftime("%Y-%m-%d %H:%M:%S")
+            previous_formatted_time = "-"
+            if epoch != 0:
+                converted_time = datetime.fromtimestamp(previous_unix_time_epoch)
+                # convert time into local time zone
+                converted_time = converted_time.replace(tzinfo=timezone.utc).astimezone(
+                    tz=None
+                )
+                previous_formatted_time = converted_time.strftime("%Y-%m-%d %H:%M:%S")
             result = {
                 "version_id": str(epoch),
-                "creation_time": formatted_time,
+                "begin_time": previous_formatted_time,
+                "end_time": formatted_time,
                 "num_vertices": num_vertices,
                 "num_edges": num_edges,
             }
@@ -560,6 +574,7 @@ def get_all_available_read_epochs_internal():
     available_epochs_internal = []
     for epoch in range(latest_read_epoch + 1):
         latest_timestamp = None
+        previous_timestamp = "-"
         num_vertices = 0
         num_edges = 0
         for frag_id in range(int(num_fragment)):
@@ -573,10 +588,17 @@ def get_all_available_read_epochs_internal():
         # convert time into local time zone
         converted_time = converted_time.replace(tzinfo=timezone.utc).astimezone(tz=None)
         formatted_time = converted_time.strftime("%Y-%m-%d %H:%M:%S")
-        available_epochs.append([epoch, formatted_time, num_vertices, num_edges])
-        available_epochs_internal.append(
-            [epoch, latest_timestamp, num_vertices, num_edges]
+        available_epochs.append(
+            [epoch, previous_timestamp, formatted_time, num_vertices, num_edges]
         )
+        available_epochs_internal.append(
+            [epoch, previous_timestamp, latest_timestamp, num_vertices, num_edges]
+        )
+
+    for epoch in range(latest_read_epoch, 0, -1):
+        available_epochs[epoch][1] = available_epochs[epoch - 1][2]
+        available_epochs_internal[epoch][1] = available_epochs_internal[epoch - 1][2]
+
     return [available_epochs, available_epochs_internal]
 
 

@@ -41,21 +41,6 @@ class TestServiceController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_pause_data_loading(self):
-        """Test case for pause_data_loading
-
-        
-        """
-        headers = { 
-            'Accept': 'application/json',
-        }
-        response = self.client.open(
-            '/api/v1/service/pause',
-            method='POST',
-            headers=headers)
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
     def test_restart_service(self):
         """Test case for restart_service
 
@@ -66,21 +51,6 @@ class TestServiceController(BaseTestCase):
         }
         response = self.client.open(
             '/api/v1/service/restart',
-            method='POST',
-            headers=headers)
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_resume_data_loading(self):
-        """Test case for resume_data_loading
-
-        
-        """
-        headers = { 
-            'Accept': 'application/json',
-        }
-        response = self.client.open(
-            '/api/v1/service/resume',
             method='POST',
             headers=headers)
         self.assert200(response,

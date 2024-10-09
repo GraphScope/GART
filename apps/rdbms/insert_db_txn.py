@@ -139,7 +139,7 @@ class Timer:
             )
         else:
             duration = self.end_time - self.start_time
-            print("Time interval: ：{:.2f} second".format(duration))
+            print("Time interval: {:.2f} second".format(duration))
 
 
 total_timer = Timer()

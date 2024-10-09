@@ -364,9 +364,10 @@ def get_graph_all_available_versions(graph_id):  # noqa: E501
     for idx in range(len(all_versions)):
         result_dict = {}
         result_dict["version_id"] = str(all_versions[idx][0])
-        result_dict["creation_time"] = str(all_versions[idx][1])
-        result_dict["num_vertices"] = str(all_versions[idx][2])
-        result_dict["num_edges"] = str(all_versions[idx][3])
+        result_dict["begin_time"] = str(all_versions[idx][1])
+        result_dict["end_time"] = str(all_versions[idx][2])
+        result_dict["num_vertices"] = str(all_versions[idx][3])
+        result_dict["num_edges"] = str(all_versions[idx][4])
         result.append(GetGraphVersionResponse.from_dict(result_dict))
     return (result, 200)
 

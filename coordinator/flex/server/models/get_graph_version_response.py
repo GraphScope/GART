@@ -12,11 +12,13 @@ class GetGraphVersionResponse(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, creation_time=None, version_id=None, num_vertices=None, num_edges=None):  # noqa: E501
+    def __init__(self, begin_time=None, end_time=None, version_id=None, num_vertices=None, num_edges=None):  # noqa: E501
         """GetGraphVersionResponse - a model defined in OpenAPI
 
-        :param creation_time: The creation_time of this GetGraphVersionResponse.  # noqa: E501
-        :type creation_time: str
+        :param begin_time: The begin_time of this GetGraphVersionResponse.  # noqa: E501
+        :type begin_time: str
+        :param end_time: The end_time of this GetGraphVersionResponse.  # noqa: E501
+        :type end_time: str
         :param version_id: The version_id of this GetGraphVersionResponse.  # noqa: E501
         :type version_id: str
         :param num_vertices: The num_vertices of this GetGraphVersionResponse.  # noqa: E501
@@ -25,20 +27,23 @@ class GetGraphVersionResponse(Model):
         :type num_edges: str
         """
         self.openapi_types = {
-            'creation_time': str,
+            'begin_time': str,
+            'end_time': str,
             'version_id': str,
             'num_vertices': str,
             'num_edges': str
         }
 
         self.attribute_map = {
-            'creation_time': 'creation_time',
+            'begin_time': 'begin_time',
+            'end_time': 'end_time',
             'version_id': 'version_id',
             'num_vertices': 'num_vertices',
             'num_edges': 'num_edges'
         }
 
-        self._creation_time = creation_time
+        self._begin_time = begin_time
+        self._end_time = end_time
         self._version_id = version_id
         self._num_vertices = num_vertices
         self._num_edges = num_edges
@@ -55,27 +60,50 @@ class GetGraphVersionResponse(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def creation_time(self) -> str:
-        """Gets the creation_time of this GetGraphVersionResponse.
+    def begin_time(self) -> str:
+        """Gets the begin_time of this GetGraphVersionResponse.
 
 
-        :return: The creation_time of this GetGraphVersionResponse.
+        :return: The begin_time of this GetGraphVersionResponse.
         :rtype: str
         """
-        return self._creation_time
+        return self._begin_time
 
-    @creation_time.setter
-    def creation_time(self, creation_time: str):
-        """Sets the creation_time of this GetGraphVersionResponse.
+    @begin_time.setter
+    def begin_time(self, begin_time: str):
+        """Sets the begin_time of this GetGraphVersionResponse.
 
 
-        :param creation_time: The creation_time of this GetGraphVersionResponse.
-        :type creation_time: str
+        :param begin_time: The begin_time of this GetGraphVersionResponse.
+        :type begin_time: str
         """
-        if creation_time is None:
-            raise ValueError("Invalid value for `creation_time`, must not be `None`")  # noqa: E501
+        if begin_time is None:
+            raise ValueError("Invalid value for `begin_time`, must not be `None`")  # noqa: E501
 
-        self._creation_time = creation_time
+        self._begin_time = begin_time
+
+    @property
+    def end_time(self) -> str:
+        """Gets the end_time of this GetGraphVersionResponse.
+
+
+        :return: The end_time of this GetGraphVersionResponse.
+        :rtype: str
+        """
+        return self._end_time
+
+    @end_time.setter
+    def end_time(self, end_time: str):
+        """Sets the end_time of this GetGraphVersionResponse.
+
+
+        :param end_time: The end_time of this GetGraphVersionResponse.
+        :type end_time: str
+        """
+        if end_time is None:
+            raise ValueError("Invalid value for `end_time`, must not be `None`")  # noqa: E501
+
+        self._end_time = end_time
 
     @property
     def version_id(self) -> str:

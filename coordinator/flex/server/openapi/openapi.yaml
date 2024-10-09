@@ -2150,26 +2150,6 @@ paths:
       tags:
       - Service
       x-openapi-router-controller: flex.server.controllers.service_controller
-  /api/v1/service/pause:
-    post:
-      description: Pause data loading
-      operationId: pause_data_loading
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-          description: Successfully paused data loading
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Service
-      x-openapi-router-controller: flex.server.controllers.service_controller
   /api/v1/service/restart:
     post:
       description: Restart current service
@@ -2181,26 +2161,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIResponse'
           description: Successfully restarted the service
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Service
-      x-openapi-router-controller: flex.server.controllers.service_controller
-  /api/v1/service/resume:
-    post:
-      description: Resume data loading
-      operationId: resume_data_loading
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-          description: Successfully resume data loading
         "500":
           content:
             application/json:
@@ -3709,13 +3669,17 @@ components:
       title: GetGraphResponse
     GetGraphVersionResponse:
       example:
-        creation_time: creation_time
         num_vertices: num_vertices
+        end_time: end_time
+        begin_time: begin_time
         version_id: version_id
         num_edges: num_edges
       properties:
-        creation_time:
-          title: creation_time
+        begin_time:
+          title: begin_time
+          type: string
+        end_time:
+          title: end_time
           type: string
         version_id:
           title: version_id
@@ -3727,7 +3691,8 @@ components:
           title: num_edges
           type: string
       required:
-      - creation_time
+      - begin_time
+      - end_time
       - num_edges
       - num_vertices
       - version_id

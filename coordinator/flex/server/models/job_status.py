@@ -133,7 +133,7 @@ class JobStatus(Model):
         :param status: The status of this JobStatus.
         :type status: str
         """
-        allowed_values = ["RUNNING", "SUCCESS", "FAILED", "CANCELLED", "WAITING","PAUSED"]  # noqa: E501
+        allowed_values = ["RUNNING", "SUCCESS", "FAILED", "CANCELLED", "WAITING", "PAUSED"]  # noqa: E501
         if status not in allowed_values:
             raise ValueError(
                 "Invalid value for `status` ({0}), must be one of {1}"
