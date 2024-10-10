@@ -211,6 +211,8 @@ def create_graph(create_graph_request):  # noqa: E501
         result_dict["graph_id"] = create_graph_request["name"]
     global GRAPH_ID
     GRAPH_ID = result_dict["graph_id"]
+    with open("/tmp/graph_id.txt", "w") as f:
+        f.write(GRAPH_ID)
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
         gart_controller_server = f"http://{gart_controller_server}"
@@ -241,6 +243,8 @@ def create_graph_by_pgql(create_graph_by_pgql_request):  # noqa: E501
         result_dict["graph_id"] = create_graph_by_pgql_request["name"]
     global GRAPH_ID
     GRAPH_ID = result_dict["graph_id"]
+    with open("/tmp/graph_id.txt", "w") as f:
+        f.write(GRAPH_ID)
     create_graph_by_pgql_request = create_graph_by_pgql_request["schema"]
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
@@ -270,6 +274,8 @@ def create_graph_by_yaml(create_graph_by_yaml_request):  # noqa: E501
         result_dict["graph_id"] = create_graph_by_yaml_request["name"]
     global GRAPH_ID
     GRAPH_ID = result_dict["graph_id"]
+    with open("/tmp/graph_id.txt", "w") as f:
+        f.write(GRAPH_ID)
     create_graph_request_yaml = create_graph_by_yaml_request["schema"]
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):

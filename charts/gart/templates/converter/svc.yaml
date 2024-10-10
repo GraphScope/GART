@@ -23,7 +23,7 @@ metadata:
   labels:
     app: converter
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: converter
   ports:

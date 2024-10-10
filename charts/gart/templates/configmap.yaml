@@ -47,18 +47,20 @@ data:
   GIE_GREMLIN_PORT: {{ .Values.gie_frontend.gremlinPort | quote }}
   GIE_EXECUTOR_RPC_PORT: {{ .Values.gie_executor.GAIA_RPC_PORT | quote }}
   GIE_EXECUTOR_ENGINE_PORT: {{ .Values.gie_executor.ENGINE_PORT | quote }}
+  NAME_SPACE: {{ .Release.Namespace | quote }}
+  GREMLIN_SERVICE_NAME: {{ include "gart.fullname" . }}-gie-frontend-service
   {{- if .Values.dataconfig.useSecondsPerEpoch }}
   USE_LOGS_PER_EPOCH: "0"
   {{- else }}
   USE_LOGS_PER_EPOCH: "1"
   {{- end }}
   {{- if .Values.dataconfig.logsPerEpoch }}
-  LOGS_PER_EPOCH: {{ .Values.dataconfig.logsPerEpoch | quote}}
+  LOGS_PER_EPOCH: {{ .Values.dataconfig.logsPerEpoch | quote }}
   {{- else }}
   LOGS_PER_EPOCH: "10000"
   {{- end }}
   {{- if .Values.dataconfig.secondsPerEpoch }}
-  SECONDS_PER_EPOCH: {{ .Values.dataconfig.secondsPerEpoch | quote}}
+  SECONDS_PER_EPOCH: {{ .Values.dataconfig.secondsPerEpoch | quote }}
   {{- else }}
   SECONDS_PER_EPOCH: "60"
   {{- end }}
