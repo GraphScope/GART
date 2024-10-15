@@ -12,7 +12,7 @@ def main():
                 arguments={'title': 'GraphScope FLEX HTTP SERVICE API'},
                 pythonic_params=True)
 
-    app.run(port=8080)
+    app.run(port=18080)
 
 
 if __name__ == '__main__':

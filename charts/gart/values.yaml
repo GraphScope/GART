@@ -210,8 +210,8 @@ coordinator:
     tag: latest
     pullPolicy: IfNotPresent
   resources: {}
-  containerPort: 8080
-  port: 8080
+  containerPort: 18080
+  port: 18080
 
 #gie frontend config
 gie_frontend:

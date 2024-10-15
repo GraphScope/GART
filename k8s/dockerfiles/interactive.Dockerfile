@@ -31,17 +31,15 @@ ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE
 
 USER root
 
-RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk tzdata python3-pip && \
-    apt-get clean -y && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    sudo default-jdk tzdata python3-pip \
+    git build-essential cmake curl maven \
+    libssl-dev libclang-dev openmpi-bin libopenmpi-dev libprotobuf-dev protobuf-compiler-grpc \
+    libgrpc-dev libgrpc++-dev libboost-all-dev && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update -y && \
-    apt-get install -y git build-essential cmake curl maven libssl-dev libclang-dev openmpi-bin libopenmpi-dev libprotobuf-dev protobuf-compiler-grpc && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH=/root/.cargo/bin:$PATH
 
 RUN python3 -m pip install --no-cache-dir vineyard vineyard-io etcd3 --user
@@ -52,15 +50,6 @@ RUN mkdir -p /var/log/graphscope \
   && chown -R graphscope:graphscope /var/log/graphscope
 RUN chmod a+wrx /tmp
 
-# Install dependencies for etcd3
-RUN apt-get update && apt-get install -y \
-    libgrpc-dev \
-    libgrpc++-dev \
-    libprotobuf-dev \
-    protobuf-compiler-grpc \
-    libboost-all-dev libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 RUN git clone https://github.com/microsoft/cpprestsdk.git \
     && cd cpprestsdk \
     && mkdir -p build \
@@ -69,9 +58,8 @@ RUN git clone https://github.com/microsoft/cpprestsdk.git \
     && make -j \
     && make install \
     && cd ../.. \
-    && rm -rf cpprestsdk
-
-RUN git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git \
+    && rm -rf cpprestsdk \
+    && git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git \
     && cd etcd-cpp-apiv3 \
     && mkdir -p build \
     && cd build \
@@ -79,9 +67,8 @@ RUN git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git \
     && make -j \
     && make install \
     && cd ../.. \
-    && rm -rf etcd-cpp-apiv3
-
-RUN git clone https://github.com/GraphScope/GART.git \
+    && rm -rf etcd-cpp-apiv3 \
+    && git clone https://github.com/GraphScope/GART.git \
     && cd GART \
     && git submodule update --init \
     && cd interfaces/grin \
@@ -93,9 +80,19 @@ RUN git clone https://github.com/GraphScope/GART.git \
     && rm -rf /home/graphscope/GART
 
 WORKDIR /home/graphscope
-RUN git clone https://github.com/doudoubobo/GraphScope.git -b v0.1.4 /home/graphscope/GraphScope
-RUN cd /home/graphscope/GraphScope/interactive_engine/compiler && \
-    make build
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && git clone https://github.com/doudoubobo/GraphScope.git -b v0.1.4 /home/graphscope/GraphScope \
+    && cd /home/graphscope/GraphScope/interactive_engine/compiler \
+    && make build \
+    && rm -rf /home/graphscope/GraphScope/.git \
+    && rm -rf /home/graphscope/GraphScope/docs \
+    && rustup self uninstall -y \
+    && rm -rf /root/.rustup \
+    && rm -rf /root/.cargo \
+    && rm -rf /root/.m2 \
+    && rm -rf /usr/local/cargo/registry /usr/local/cargo/git \
+    && rm -rf /home/graphscope/GraphScope/interactive_engine/executor/assembly/v6d/ \
+    && rm -rf /home/graphscope/GraphScope/interactive_engine/executor/ir/target/release/deps 
 
 WORKDIR /home/graphscope
 RUN git clone https://github.com/GraphScope/GART.git
@@ -108,16 +105,11 @@ USER root
 ENV RUST_BACKTRACE=1
 
 RUN apt-get update -y && \
-    apt-get install -y python3-pip curl && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y python3-pip curl git \
+    build-essential cmake libssl-dev libclang-dev openmpi-bin libopenmpi-dev \
+    libgrpc-dev libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc libboost-all-dev && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update -y && \
-    apt-get install -y git build-essential cmake libssl-dev libclang-dev openmpi-bin libopenmpi-dev && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH=/root/.cargo/bin:$PATH
 
 RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && \
@@ -131,17 +123,7 @@ RUN chmod a+wrx /tmp /var/tmp
 
 RUN python3 -m pip install --no-cache-dir vineyard vineyard-io flask --user
 
-
-
 WORKDIR /home/graphscope
-# Install dependencies for etcd3
-RUN apt-get update && apt-get install -y \
-    libgrpc-dev \
-    libgrpc++-dev \
-    libprotobuf-dev \
-    protobuf-compiler-grpc \
-    libboost-all-dev libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/microsoft/cpprestsdk.git \
     && cd cpprestsdk \
@@ -151,9 +133,8 @@ RUN git clone https://github.com/microsoft/cpprestsdk.git \
     && make -j \
     && make install \
     && cd ../.. \
-    && rm -rf cpprestsdk
-
-RUN git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git \
+    && rm -rf cpprestsdk \
+    && git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git \
     && cd etcd-cpp-apiv3 \
     && mkdir -p build \
     && cd build \
@@ -161,9 +142,8 @@ RUN git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git \
     && make -j \
     && make install \
     && cd ../.. \
-    && rm -rf etcd-cpp-apiv3
-
-RUN git clone https://github.com/GraphScope/GART.git \
+    && rm -rf etcd-cpp-apiv3 \
+    && git clone https://github.com/GraphScope/GART.git \
     && cd GART \
     && git submodule update --init \
     && cd interfaces/grin \
@@ -174,9 +154,19 @@ RUN git clone https://github.com/GraphScope/GART.git \
     && cp ./libgart_grin.so /usr/local/lib/ \
     && rm -rf /home/graphscope/GART
 
-RUN git clone https://github.com/doudoubobo/GraphScope.git -b v0.1.4 /home/graphscope/GraphScope
-RUN cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart && \
-cargo build --release
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && git clone https://github.com/doudoubobo/GraphScope.git -b v0.1.4 /home/graphscope/GraphScope \
+    && cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart \
+    && cargo build --release \
+    && rm -rf /home/graphscope/GraphScope/.git \
+    && rm -rf /home/graphscope/GraphScope/docs \
+    && rm -rf /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart/target/release/deps \
+    && rm -rf /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart/target/release/build \
+    && rustup self uninstall -y \
+    && rm -rf /root/.rustup \
+    && rm -rf /root/.cargo \
+    && rm -rf /root/.m2 \
+    && rm -rf /usr/local/cargo/registry /usr/local/cargo/git
 
 WORKDIR /home/graphscope
 RUN git clone https://github.com/GraphScope/GART.git
