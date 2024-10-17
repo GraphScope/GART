@@ -321,6 +321,7 @@
         "edge_types": [
             {
                 "type_name": "org_islocationin",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "organisation",
@@ -337,6 +338,7 @@
             },
             {
                 "type_name": "ispartof",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "place",
@@ -353,6 +355,7 @@
             },
             {
                 "type_name": "issubclassof",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "tagclass",
@@ -369,6 +372,7 @@
             },
             {
                 "type_name": "hastype",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "tag",
@@ -385,6 +389,7 @@
             },
             {
                 "type_name": "comment_hascreator",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "comment",
@@ -401,6 +406,7 @@
             },
             {
                 "type_name": "comment_hastag",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "comment",
@@ -417,6 +423,7 @@
             },
             {
                 "type_name": "comment_islocationin",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "comment",
@@ -433,6 +440,7 @@
             },
             {
                 "type_name": "replyof_comment",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "comment",
@@ -449,6 +457,7 @@
             },
             {
                 "type_name": "replyof_post",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "comment",
@@ -465,6 +474,7 @@
             },
             {
                 "type_name": "post_hascreator",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "post",
@@ -481,6 +491,7 @@
             },
             {
                 "type_name": "post_hastag",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "post",
@@ -497,6 +508,7 @@
             },
             {
                 "type_name": "post_islocationin",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "post",
@@ -513,6 +525,7 @@
             },
             {
                 "type_name": "forum_containerof",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "forum",
@@ -529,6 +542,7 @@
             },
             {
                 "type_name": "forum_hasmoderator",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "forum",
@@ -545,6 +559,7 @@
             },
             {
                 "type_name": "forum_hastag",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "forum",
@@ -561,6 +576,7 @@
             },
             {
                 "type_name": "person_hasinterest",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "person",
@@ -577,6 +593,7 @@
             },
             {
                 "type_name": "person_islocationin",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "person",
@@ -593,6 +610,7 @@
             },
             {
                 "type_name": "forum_hasmember",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "forum",
@@ -614,6 +632,7 @@
             },
             {
                 "type_name": "knows",
+                "directed": false,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "person",
@@ -635,6 +654,7 @@
             },
             {
                 "type_name": "likes_comment",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "person",
@@ -656,6 +676,7 @@
             },
             {
                 "type_name": "likes_post",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "person",
@@ -677,6 +698,7 @@
             },
             {
                 "type_name": "studyat",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "person",
@@ -698,6 +720,7 @@
             },
             {
                 "type_name": "workat",
+                "directed": true,
                 "vertex_type_pair_relations": [
                     {
                         "source_vertex": "person",

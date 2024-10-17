@@ -15,8 +15,11 @@ import os
 import etcd3
 from urllib.parse import urlparse
 import json
+from datetime import datetime
 
 RUNNING = None
+DATA_LOADING = None
+DATA_LOADING_JOB_CREATED_TIME = None
 
 def delete_job_by_id(job_id, delete_scheduler=None):  # noqa: E501
     """delete_job_by_id
@@ -177,12 +180,33 @@ def submit_dataloading_job(graph_id, dataloading_job_config):  # noqa: E501
     if not isinstance(dataloading_job_config, dict):
         dataloading_job_config = json.loads(dataloading_job_config)
         
+    with open("/tmp/graph_id.txt", "r") as f:
+        existing_graph_id = f.read()
+    if graph_id != existing_graph_id:
+        return (f"Graph id {graph_id} not founded", 500)
+    
+    global DATA_LOADING
+    
+    if DATA_LOADING is not None:
+        return ("Data loading is already in progress", 500)
+    
+    current_time = datetime.now()
+    formatted_time = current_time.strftime('%Y-%m-%d %H:%M:%S')
+    global DATA_LOADING_JOB_CREATED_TIME
+    DATA_LOADING_JOB_CREATED_TIME = formatted_time
+    with open("/tmp/data_loading_job_created_time.txt", "w") as f:
+        f.write(DATA_LOADING_JOB_CREATED_TIME)
+        
     response = requests.post(
         f"{gart_controller_server}/submit-data-loading",
         headers={"Content-Type": "application/json"},
         data=json.dumps({"schema": json.dumps(dataloading_job_config)}),
     )
     
+    if response.status_code != 200:
+        return (response.text, response.status_code)
+    
     result_dict = {}
     result_dict["job_id"] = "0"
+    DATA_LOADING = "RUNNING"
     return (CreateDataloadingJobResponse.from_dict(result_dict), response.status_code)

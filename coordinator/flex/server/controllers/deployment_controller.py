@@ -20,7 +20,16 @@ def get_deployment_info():  # noqa: E501
 
     :rtype: Union[RunningDeploymentInfo, Tuple[RunningDeploymentInfo, int], Tuple[RunningDeploymentInfo, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    result_dict = {}
+    result_dict["cluster_type"] = "KUBERNETES"
+    with open ("/tmp/graph_schema_create_time.txt", "r") as f:
+        result_dict["creation_time"] = f.read()
+    result_dict["instance_name"] = "gart"
+    result_dict["frontend"] = "Cypher/Gremlin"
+    result_dict["engine"] = "Gaia"
+    result_dict["storage"] = "MutableCSR"
+    result_dict["version"] = "0.1.0"
+    return (RunningDeploymentInfo.from_dict(result_dict), 200)
 
 
 def get_deployment_pod_log(pod_name, component, from_cache):  # noqa: E501

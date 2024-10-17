@@ -25,8 +25,10 @@ import os
 import time
 import sys
 import requests
+from datetime import datetime
 
 GRAPH_ID = None
+SCHEMA_CREATE_TIME = None
 
 def get_graph_schema():
     property_data_type_mapping = {}
@@ -62,10 +64,10 @@ def get_graph_schema():
                 rg_mapping_str = rg_mapping_str.decode("utf-8")
                 break
             try_times += 1
-            time.sleep(2)
+            time.sleep(1)
         except Exception as e:
             try_times += 1
-            time.sleep(2)
+            time.sleep(1)
 
     if try_times == try_max_times:
         return result_dict
@@ -81,10 +83,10 @@ def get_graph_schema():
                 table_schema_str = table_schema_str.decode("utf-8")
                 break
             try_times += 1
-            time.sleep(2)
+            time.sleep(1)
         except Exception as e:
             try_times += 1
-            time.sleep(2)
+            time.sleep(1)
 
     if try_times == try_max_times:
         return result_dict
@@ -103,6 +105,7 @@ def get_graph_schema():
     for idx in range(vertex_type_number):
         vertex_type_dict = {}
         vertex_type_dict["type_name"] = vertex_types[idx]["type_name"]
+        vertex_type_dict["primary_keys"] = vertex_types[idx]["primary_keys"]
         table_name = vertex_types[idx]["dataSourceName"]
         property_mappings = vertex_types[idx]["mappings"]
         properties_array = []
@@ -211,8 +214,19 @@ def create_graph(create_graph_request):  # noqa: E501
         result_dict["graph_id"] = create_graph_request["name"]
     global GRAPH_ID
     GRAPH_ID = result_dict["graph_id"]
+    
+    if os.path.exists("/tmp/graph_id.txt"):
+        return ("Graph schema already exists, do not submit again", 500)
+    
     with open("/tmp/graph_id.txt", "w") as f:
         f.write(GRAPH_ID)
+    current_time = datetime.now()
+    formatted_time = current_time.strftime('%Y-%m-%d %H:%M:%S')
+    global SCHEMA_CREATE_TIME
+    SCHEMA_CREATE_TIME = formatted_time
+    with open("/tmp/graph_schema_create_time.txt", "w") as f:
+        f.write(SCHEMA_CREATE_TIME)
+    
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
         gart_controller_server = f"http://{gart_controller_server}"
@@ -222,6 +236,10 @@ def create_graph(create_graph_request):  # noqa: E501
         headers={"Content-Type": "application/json"},
         data=json.dumps({"schema": json.dumps(create_graph_request)}),
     )
+    
+    if response.status_code != 200:
+        return (response.text, response.status_code)
+    
     return (CreateGraphResponse.from_dict(result_dict), response.status_code)
 
 
@@ -243,6 +261,10 @@ def create_graph_by_pgql(create_graph_by_pgql_request):  # noqa: E501
         result_dict["graph_id"] = create_graph_by_pgql_request["name"]
     global GRAPH_ID
     GRAPH_ID = result_dict["graph_id"]
+    
+    if os.path.exists("/tmp/graph_id.txt"):
+        return ("Graph PGQL config already exists, do not submit again", 500)
+    
     with open("/tmp/graph_id.txt", "w") as f:
         f.write(GRAPH_ID)
     create_graph_by_pgql_request = create_graph_by_pgql_request["schema"]
@@ -253,6 +275,10 @@ def create_graph_by_pgql(create_graph_by_pgql_request):  # noqa: E501
         f"{gart_controller_server}/submit-pgql-config",
         data={"schema": create_graph_by_pgql_request},
     )
+    
+    if response.status_code != 200:
+        return (response.text, response.status_code)
+    
     return (CreateGraphResponse.from_dict(result_dict), response.status_code)
 
 
@@ -274,6 +300,10 @@ def create_graph_by_yaml(create_graph_by_yaml_request):  # noqa: E501
         result_dict["graph_id"] = create_graph_by_yaml_request["name"]
     global GRAPH_ID
     GRAPH_ID = result_dict["graph_id"]
+    
+    if os.path.exists("/tmp/graph_id.txt"):
+        return ("GART config already exists, do not submit again", 500)
+    
     with open("/tmp/graph_id.txt", "w") as f:
         f.write(GRAPH_ID)
     create_graph_request_yaml = create_graph_by_yaml_request["schema"]
@@ -284,6 +314,10 @@ def create_graph_by_yaml(create_graph_by_yaml_request):  # noqa: E501
         f"{gart_controller_server}/submit-config",
         data={"schema": create_graph_request_yaml},
     )
+    
+    if response.status_code != 200:
+        return (response.text, response.status_code)
+    
     return (CreateGraphResponse.from_dict(result_dict), response.status_code)
 
 
@@ -361,12 +395,20 @@ def get_graph_all_available_versions(graph_id):  # noqa: E501
 
     :rtype: Union[List[GetGraphVersionResponse], Tuple[List[GetGraphVersionResponse], int], Tuple[List[GetGraphVersionResponse], int, Dict[str, str]]
     """
+    if graph_id != GRAPH_ID:
+        return (f"Graph {graph_id} does not exist...", 500)
+    
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
         gart_controller_server = f"http://{gart_controller_server}"
     response = requests.get(f"{gart_controller_server}/get-all-available-read-epochs")
+    
+    if response.status_code != 200:
+        return (response.text, response.status_code)
+    
     result = []
     all_versions = response.json()
+    
     for idx in range(len(all_versions)):
         result_dict = {}
         result_dict["version_id"] = str(all_versions[idx][0])
@@ -388,11 +430,23 @@ def get_graph_by_id(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphResponse, Tuple[GetGraphResponse, int], Tuple[GetGraphResponse, int, Dict[str, str]]
     """
+    if graph_id != GRAPH_ID:
+        return (f"Graph {graph_id} does not exist...", 500)
+    
     result_dict = get_graph_schema()
     if not result_dict:
-        return (GetGraphResponse.from_dict(result_dict), 500)
+        return (f"Get graph by id {graph_id} failed...", 500)
+    
     result_dict["id"] = graph_id
     result_dict["name"] = graph_id
+    
+    with open("/tmp/graph_schema_create_time.txt", "r") as f:
+        result_dict["creation_time"] = f.read()
+        result_dict["schema_update_time"] = result_dict["creation_time"]
+        
+    with open("/tmp/data_loading_job_created_time.txt", "r") as f: 
+        result_dict["data_update_time"] = f.read()
+        
     return (GetGraphResponse.from_dict(result_dict), 200)
 
 
@@ -408,6 +462,9 @@ def get_graph_version_by_timestamp(graph_id, timestamp):  # noqa: E501
 
     :rtype: Union[GetGraphVersionResponse, Tuple[GetGraphVersionResponse, int], Tuple[GetGraphVersionResponse, int, Dict[str, str]]
     """
+    if graph_id != GRAPH_ID:
+        return (f"Graph {graph_id} does not exist...", 500)
+    
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
         gart_controller_server = f"http://{gart_controller_server}"
@@ -415,6 +472,10 @@ def get_graph_version_by_timestamp(graph_id, timestamp):  # noqa: E501
         f"{gart_controller_server}/get-read-epoch-by-timestamp",
         data={"timestamp": timestamp},
     )
+    
+    if response.status_code != 200:
+        return (response.text, response.status_code)
+    
     return (GetGraphVersionResponse.from_dict(response.json()), 200)
 
 
@@ -428,12 +489,15 @@ def get_schema_by_id(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphSchemaResponse, Tuple[GetGraphSchemaResponse, int], Tuple[GetGraphSchemaResponse, int, Dict[str, str]]
     """
+    if graph_id != GRAPH_ID:
+        return (f"Graph {graph_id} does not exist...", 500)
+    
     result_dict = get_graph_schema()
 
     if result_dict:
         return (GetGraphSchemaResponse.from_dict(result_dict["schema"]), 200)
     else:
-        return (GetGraphSchemaResponse.from_dict(result_dict["schema"]), 500)
+        return ("Get graph schema failed...", 500)
 
 
 def import_schema_by_id(graph_id, create_graph_schema_request):  # noqa: E501
@@ -462,8 +526,17 @@ def list_graphs():  # noqa: E501
     :rtype: Union[List[GetGraphResponse], Tuple[List[GetGraphResponse], int], Tuple[List[GetGraphResponse], int, Dict[str, str]]
     """
     result_dict = get_graph_schema()
+    
     if not result_dict:
-        return ([GetGraphResponse.from_dict(result_dict)], 500)
+        return ([GetGraphResponse.from_dict({})], 200)
+    
+    with open("/tmp/graph_schema_create_time.txt", "r") as f:
+        result_dict["creation_time"] = f.read()
+        result_dict["schema_update_time"] = result_dict["creation_time"]
+        
+    with open("/tmp/data_loading_job_created_time.txt", "r") as f: 
+        result_dict["data_update_time"] = f.read()
+        
     return ([GetGraphResponse.from_dict(result_dict)], 200)
 
 
@@ -479,6 +552,9 @@ def read_graph_by_a_given_version(graph_id, change_graph_version_request):  # no
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
+    if graph_id != GRAPH_ID:
+        return (f"Graph {graph_id} does not exist...", 500)
+    
     gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
     if not gart_controller_server.startswith(("http://", "https://")):
         gart_controller_server = f"http://{gart_controller_server}"

@@ -41,6 +41,10 @@ def submit_config():
     etcd_host = etcd_server.split("://")[1].split(":")[0]
     etcd_port = etcd_server.split(":")[2]
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+
+    if etcd_client.get(etcd_prefix + "gart_rg_mapping_yaml")[0] is not None:
+        return "Config already exists", 500
+
     while True:
         try:
             etcd_client.put(etcd_prefix + "gart_rg_mapping_yaml", content)
@@ -84,6 +88,10 @@ def submit_pgql_config():
     etcd_host = etcd_server.split("://")[1].split(":")[0]
     etcd_port = etcd_server.split(":")[2]
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+
+    if etcd_client.get(etcd_prefix + "gart_rg_mapping_yaml")[0] is not None:
+        return "PGQL config already exists", 500
+
     while True:
         try:
             etcd_client.put(etcd_prefix + "gart_rg_mapping_yaml", yaml_content)
@@ -104,8 +112,10 @@ def submit_graph_schema():
     etcd_host = etcd_server.split("://")[1].split(":")[0]
     etcd_port = etcd_server.split(":")[2]
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
-    with open("/tmp/graph_schema.json", "wb") as f:
-        f.write(graph_schema)
+
+    if etcd_client.get(etcd_prefix + "gart_graph_schema_json")[0] is not None:
+        return "Graph schema already exists", 500
+
     try:
         etcd_client.put(etcd_prefix + "gart_graph_schema_json", graph_schema)
         return "Graph schema submitted", 200
@@ -125,6 +135,9 @@ def submit_data_source():
     etcd_port = etcd_server.split(":")[2]
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
 
+    if etcd_client.get(etcd_prefix + "gart_data_source_json")[0] is not None:
+        return "Data source already exists", 500
+
     try:
         etcd_client.put(etcd_prefix + "gart_data_source_json", data_source_config)
         return "Data source submitted", 200
@@ -141,6 +154,7 @@ def submit_data_loading():
     etcd_host = etcd_server.split("://")[1].split(":")[0]
     etcd_port = etcd_server.split(":")[2]
     etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+
     try:
         graph_schema, _ = etcd_client.get(etcd_prefix + "gart_graph_schema_json")
     except Exception as e:
@@ -169,6 +183,9 @@ def submit_data_loading():
     for vertex_id in range(len(vertex_types_info)):
         vertex_type_element = {}
         vertex_type_element["type_name"] = vertex_types_info[vertex_id]["type_name"]
+        vertex_type_element["primary_keys"] = vertex_types_info[vertex_id][
+            "primary_keys"
+        ]
         mappings_list = []
         for table_id in range(len(vertex_types_info)):
             if (
@@ -207,6 +224,9 @@ def submit_data_loading():
     edge_types_info = graph_schema["edge_types"]
     for edge_id in range(len(edge_types_info)):
         edge_type_element = {}
+        edge_type_element["undirected"] = not edge_types_info[edge_id].get(
+            "directed", True
+        )
         edge_type_element["type_pair"] = {}
         edge_type_element["type_pair"]["edge"] = edge_types_info[edge_id]["type_name"]
         edge_type_element["type_pair"]["source_vertex"] = edge_types_info[edge_id][
@@ -318,8 +338,6 @@ def get_graph_schema():
 def get_all_available_read_epochs():
     all_epochs = get_all_available_read_epochs_internal()[0]
     all_epochs.reverse()
-    if len(all_epochs) == 0:
-        return "No available read epochs", 200
     return json.dumps(all_epochs), 200
 
 
@@ -366,7 +384,7 @@ def get_read_epoch_by_timestamp():
                 "num_edges": num_edges,
             }
             return json.dumps(result), 200
-    return "No read epoch found", 200
+    return json.dumps({}), 200
 
 
 @app.route("/run-gae-task", methods=["POST"])
@@ -470,7 +488,7 @@ def change_read_epoch():
             ):
                 break
             time.sleep(0.5)
-    return "Read epoch changed", 200
+    return f"Read version changed to version {read_epoch}", 200
 
 
 def get_pod_ips(namespace, label_selector):
