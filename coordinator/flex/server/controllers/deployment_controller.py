@@ -26,7 +26,7 @@ def get_deployment_info():  # noqa: E501
         result_dict["creation_time"] = f.read()
     result_dict["instance_name"] = "gart"
     result_dict["frontend"] = "Cypher/Gremlin"
-    result_dict["engine"] = "Gaia"
+    result_dict["engine"] = "gart"
     result_dict["storage"] = "MutableCSR"
     result_dict["version"] = "0.1.0"
     return (RunningDeploymentInfo.from_dict(result_dict), 200)

@@ -455,79 +455,81 @@ def process_forum(line):
 total_timer = Timer()
 total_timer.start()
 
-insert_vertices("01", "/organisation_0_0.csv", "organisation", process_organisation)
+if True:
+    insert_vertices("01", "/organisation_0_0.csv", "organisation", process_organisation)
 
-insert_vertices("02", "/place_0_0.csv", "place", process_place)
+    insert_vertices("02", "/place_0_0.csv", "place", process_place)
 
-insert_vertices("03", "/tag_0_0.csv", "tag", process_tag)
+    insert_vertices("03", "/tag_0_0.csv", "tag", process_tag)
 
-insert_vertices("04", "/tagclass_0_0.csv", "tagclass", process_tagclass)
+    insert_vertices("04", "/tagclass_0_0.csv", "tagclass", process_tagclass)
 
-insert_vertices("05", "/person_0_0.csv", "person", process_person)
+    insert_vertices("05", "/person_0_0.csv", "person", process_person)
 
-insert_vertices("06", "/comment_0_0.csv", "comment", process_comment)
+    insert_vertices("06", "/comment_0_0.csv", "comment", process_comment)
 
-insert_vertices("07", "/post_0_0.csv", "post", process_post)
+    insert_vertices("07", "/post_0_0.csv", "post", process_post)
 
-insert_vertices("08", "/forum_0_0.csv", "forum", process_forum)
+    insert_vertices("08", "/forum_0_0.csv", "forum", process_forum)
 
-for process in vertex_process:
-    process.join()
+    for process in vertex_process:
+        process.join()
 
-total_timer.end()
-print("Load vertex time: {:.2f} {}".format(total_timer.total(), total_timer.unit()))
+    total_timer.end()
+    print("Load vertex time: {:.2f} {}".format(total_timer.total(), total_timer.unit()))
 
-# insert edge tables without additional properties
-
-
-insert_simple_edges("09", "/organisation_isLocatedIn_place_0_0.csv", "org_islocationin")
-
-insert_simple_edges("10", "/place_isPartOf_place_0_0.csv", "ispartof")
-
-insert_simple_edges("11", "/tagclass_isSubclassOf_tagclass_0_0.csv", "issubclassof")
-
-insert_simple_edges("12", "/tag_hasType_tagclass_0_0.csv", "hastype")
-
-insert_simple_edges("13", "/comment_hasCreator_person_0_0.csv", "comment_hascreator")
-
-insert_simple_edges("14", "/comment_hasTag_tag_0_0.csv", "comment_hastag")
-
-insert_simple_edges("15", "/comment_isLocatedIn_place_0_0.csv", "comment_islocationin")
-
-insert_simple_edges("16", "/comment_replyOf_comment_0_0.csv", "replyof_comment")
-
-insert_simple_edges("17", "/comment_replyOf_post_0_0.csv", "replyof_post")
-
-insert_simple_edges("18", "/post_hasCreator_person_0_0.csv", "post_hascreator")
-
-insert_simple_edges("19", "/post_hasTag_tag_0_0.csv", "post_hastag")
-
-insert_simple_edges("20", "/post_isLocatedIn_place_0_0.csv", "post_islocationin")
-
-insert_simple_edges("21", "/forum_containerOf_post_0_0.csv", "forum_containerof")
-
-insert_simple_edges("22", "/forum_hasModerator_person_0_0.csv", "forum_hasmoderator")
-
-insert_simple_edges("23", "/forum_hasTag_tag_0_0.csv", "forum_hastag")
-
-insert_simple_edges("24", "/person_hasInterest_tag_0_0.csv", "person_hasinterest")
-
-insert_simple_edges("25", "/person_isLocatedIn_place_0_0.csv", "person_islocationin")
-
-# insert edge tables with additional properties
+    # insert edge tables without additional properties
 
 
-insert_prop_edges("26", "/forum_hasMember_person_0_0.csv", "forum_hasmember")
+    insert_simple_edges("09", "/organisation_isLocatedIn_place_0_0.csv", "org_islocationin")
 
-insert_prop_edges("27", "/person_knows_person_0_0.csv", "knows")
+    insert_simple_edges("10", "/place_isPartOf_place_0_0.csv", "ispartof")
 
-insert_prop_edges("28", "/person_likes_comment_0_0.csv", "likes_comment")
+    insert_simple_edges("11", "/tagclass_isSubclassOf_tagclass_0_0.csv", "issubclassof")
 
-insert_prop_edges("29", "/person_likes_post_0_0.csv", "likes_post")
+    insert_simple_edges("12", "/tag_hasType_tagclass_0_0.csv", "hastype")
 
-insert_prop_edges("30", "/person_studyAt_organisation_0_0.csv", "studyat")
+    insert_simple_edges("13", "/comment_hasCreator_person_0_0.csv", "comment_hascreator")
 
-insert_prop_edges("31", "/person_workAt_organisation_0_0.csv", "workat")
+    insert_simple_edges("14", "/comment_hasTag_tag_0_0.csv", "comment_hastag")
+
+    insert_simple_edges("15", "/comment_isLocatedIn_place_0_0.csv", "comment_islocationin")
+
+    insert_simple_edges("16", "/comment_replyOf_comment_0_0.csv", "replyof_comment")
+
+    insert_simple_edges("17", "/comment_replyOf_post_0_0.csv", "replyof_post")
+
+    insert_simple_edges("18", "/post_hasCreator_person_0_0.csv", "post_hascreator")
+
+    insert_simple_edges("19", "/post_hasTag_tag_0_0.csv", "post_hastag")
+
+    insert_simple_edges("20", "/post_isLocatedIn_place_0_0.csv", "post_islocationin")
+
+    insert_simple_edges("21", "/forum_containerOf_post_0_0.csv", "forum_containerof")
+
+    insert_simple_edges("22", "/forum_hasModerator_person_0_0.csv", "forum_hasmoderator")
+
+    insert_simple_edges("23", "/forum_hasTag_tag_0_0.csv", "forum_hastag")
+
+if True:
+    insert_simple_edges("24", "/person_hasInterest_tag_0_0.csv", "person_hasinterest")
+
+    insert_simple_edges("25", "/person_isLocatedIn_place_0_0.csv", "person_islocationin")
+
+    # insert edge tables with additional properties
+
+
+    insert_prop_edges("26", "/forum_hasMember_person_0_0.csv", "forum_hasmember")
+
+    insert_prop_edges("27", "/person_knows_person_0_0.csv", "knows")
+
+    insert_prop_edges("28", "/person_likes_comment_0_0.csv", "likes_comment")
+
+    insert_prop_edges("29", "/person_likes_post_0_0.csv", "likes_post")
+
+    insert_prop_edges("30", "/person_studyAt_organisation_0_0.csv", "studyat")
+
+    insert_prop_edges("31", "/person_workAt_organisation_0_0.csv", "workat")
 
 for process in edge_process:
     process.join()

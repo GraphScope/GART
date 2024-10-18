@@ -145,7 +145,7 @@ def get_graph_schema():
         # FIXME: hard code to MANY_TO_MANY
         vertex_type_pair_relation["relation"] = "MANY_TO_MANY"
         edge_type_dict["vertex_type_pair_relations"] = [vertex_type_pair_relation]
-        edge_type_dict["directed"] = not edge_types[idx]["type_pair"].get(
+        edge_type_dict["directed"] = not edge_types[idx].get(
             "undirected", False
         )
         properties_array = []

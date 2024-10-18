@@ -210,7 +210,7 @@ class RunningDeploymentInfo(Model):
         :param engine: The engine of this RunningDeploymentInfo.
         :type engine: str
         """
-        allowed_values = ["Hiactor", "Gaia"]  # noqa: E501
+        allowed_values = ["Hiactor", "Gaia", "gart"]  # noqa: E501
         if engine not in allowed_values:
             raise ValueError(
                 "Invalid value for `engine` ({0}), must be one of {1}"
