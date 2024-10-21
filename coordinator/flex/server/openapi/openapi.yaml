@@ -1897,6 +1897,34 @@ paths:
       tags:
       - Graph
       x-openapi-router-controller: flex.server.controllers.graph_controller
+  /api/v1/graph/{graph_id}/version/current-version:
+    get:
+      description: Get the current chosen version of the graph
+      operationId: get_current_chosen_version
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGraphVersionResponse'
+          description: Successfully returned the current chosen versions of the graph
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: flex.server.controllers.graph_controller
   /api/v1/graph/{graph_id}/version/{timestamp}:
     get:
       description: Get the latest version by providing a timestamp

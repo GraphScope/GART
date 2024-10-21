@@ -41,6 +41,7 @@ void process_del_vertex(const StringViewList& cmd,
     graph_store->delete_inner(v_label,
                               v_offset);  // delete vertex from vertex table
     src_graph->add_deleted_inner_num(1);
+    graph_store->del_total_vertex_num_by_one();
 
     // delete ralated edges
     auto src_writer =
@@ -151,6 +152,7 @@ void process_del_vertex(const StringViewList& cmd,
 
         src_writer.put_edge(v_offset, elabel, seggraph::EOUT, dst_loc,
                             edge_data);
+        graph_store->del_total_edge_num_by_one();
 
         if (dst_offset < graph_store->get_vtable_max_inner(
                              dst_label)) {  // dst is an inner vertex

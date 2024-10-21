@@ -510,17 +510,16 @@ if True:
     insert_simple_edges("22", "/forum_hasModerator_person_0_0.csv", "forum_hasmoderator")
 
     insert_simple_edges("23", "/forum_hasTag_tag_0_0.csv", "forum_hastag")
-
-if True:
+    
     insert_simple_edges("24", "/person_hasInterest_tag_0_0.csv", "person_hasinterest")
 
     insert_simple_edges("25", "/person_isLocatedIn_place_0_0.csv", "person_islocationin")
 
     # insert edge tables with additional properties
 
-
     insert_prop_edges("26", "/forum_hasMember_person_0_0.csv", "forum_hasmember")
 
+if True:
     insert_prop_edges("27", "/person_knows_person_0_0.csv", "knows")
 
     insert_prop_edges("28", "/person_likes_comment_0_0.csv", "likes_comment")

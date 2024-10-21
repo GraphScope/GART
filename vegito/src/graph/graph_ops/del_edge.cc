@@ -65,7 +65,7 @@ void process_del_edge(const StringViewList& cmd,
     dst_offset = max_outer_id_offset - dst_offset_reverse;
     src_graph = graph_store->get_graph<seggraph::SegGraph>(src_label);
     dst_graph = graph_store->get_ov_graph(dst_label);
-
+    graph_store->del_total_edge_num_by_one();
   } else if (src_fid != graph_store->get_local_pid() &&
              dst_fid == graph_store->get_local_pid()) {
     src_offset_reverse = graph_store->get_lid(src_label, src_vid);
@@ -83,6 +83,7 @@ void process_del_edge(const StringViewList& cmd,
     dst_offset_reverse = dst_offset;
     src_graph = graph_store->get_graph<seggraph::SegGraph>(src_label);
     dst_graph = graph_store->get_graph<seggraph::SegGraph>(dst_label);
+    graph_store->del_total_edge_num_by_one();
   }
 
   {

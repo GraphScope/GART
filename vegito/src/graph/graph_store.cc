@@ -490,6 +490,10 @@ void GraphStore::put_blob_json_etcd(uint64_t write_epoch) {
   std::time_t currentTime = std::time(nullptr);
   // put the currentTime as a int64_t into blob schema
   blob_schema["timestamp"] = currentTime;
+  blob_schema["total_vertex_num"] =
+      total_vertex_num_.load(std::memory_order_relaxed);
+  blob_schema["total_edge_num"] =
+      total_edge_num_.load(std::memory_order_relaxed);
   blob_schema["string_buffer_object_id"] =
       string_buffer_manager_.get_buffer_oid();
   auto blob_schemas = fetch_blob_schema(write_epoch);
@@ -531,6 +535,8 @@ bool GraphStore::insert_inner_vertex(int epoch, uint64_t gid,
   if (fid != local_pid_) {
     return false;  // not in this partition
   }
+
+  add_total_vertex_num_by_one();
 
 #ifndef USE_GLOBAL_VERTEX_MAP
   // local vertex map

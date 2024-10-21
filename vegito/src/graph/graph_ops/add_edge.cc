@@ -68,6 +68,7 @@ void process_add_edge(const StringViewList& cmd,
       dst_fid != graph_store->get_local_pid()) {
     seggraph::SegGraph* ov_graph = graph_store->get_ov_graph(dst_label);
     auto ov_writer = ov_graph->create_graph_writer(write_epoch);
+    graph_store->add_total_edge_num_by_one();
 #ifdef USE_MULTI_THREADS
     auto outer_vertex_label_mutex =
         graph_store->get_outer_vertex_label_mutex(dst_label);
@@ -184,6 +185,8 @@ void process_add_edge(const StringViewList& cmd,
         graph_store->id_parser.GenerateId(0, src_label, src_offset);
     vertex_t dst_lid =
         graph_store->id_parser.GenerateId(0, dst_label, dst_offset);
+
+    graph_store->add_total_edge_num_by_one();
 
     // inner edges
     src_writer.put_edge(src_offset, elabel, seggraph::EOUT, dst_lid, edge_data);

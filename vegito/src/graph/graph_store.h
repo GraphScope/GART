@@ -497,6 +497,14 @@ class GraphStore {
     return max_memory_usage_[vlabel];
   }
 
+  void add_total_vertex_num_by_one() { total_vertex_num_++; }
+
+  void add_total_edge_num_by_one() { total_edge_num_++; }
+
+  void del_total_vertex_num_by_one() { total_vertex_num_--; }
+
+  void del_total_edge_num_by_one() { total_edge_num_--; }
+
 #ifdef USE_MULTI_THREADS
   std::shared_timed_mutex* get_vertex_label_mutex(uint64_t vlabel) {
     return vertex_label_mutexes_[vlabel];
@@ -533,6 +541,8 @@ class GraphStore {
   const int local_pnum_;        // number of partitions in the machine
   const int total_partitions_;  // total number of partitions
   int total_vertex_label_num_;
+  std::atomic<size_t> total_vertex_num_{0};
+  std::atomic<size_t> total_edge_num_{0};
 
   SparseArrayAllocator array_allocator_;
 

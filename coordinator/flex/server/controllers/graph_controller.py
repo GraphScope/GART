@@ -385,6 +385,29 @@ def delete_vertex_type_by_name(graph_id, type_name):  # noqa: E501
     return 'do some magic!'
 
 
+def get_current_chosen_version(graph_id):  # noqa: E501
+    """get_current_chosen_version
+
+    Get the current chosen version of the graph # noqa: E501
+
+    :param graph_id: 
+    :type graph_id: str
+
+    :rtype: Union[GetGraphVersionResponse, Tuple[GetGraphVersionResponse, int], Tuple[GetGraphVersionResponse, int, Dict[str, str]]
+    """
+    if graph_id != GRAPH_ID:
+        return (f"Graph {graph_id} does not exist...", 500)
+    
+    gart_controller_server = os.getenv("GART_CONTROLLER_SERVER", "127.0.0.1:8080")
+    if not gart_controller_server.startswith(("http://", "https://")):
+        gart_controller_server = f"http://{gart_controller_server}"
+    
+    response = requests.get(f"{gart_controller_server}/get-graph-current-version")
+    if response.status_code != 200:
+        return (response.text, response.status_code)
+    
+    return (GetGraphVersionResponse.from_dict(response.json()), 200)
+
 def get_graph_all_available_versions(graph_id):  # noqa: E501
     """get_graph_all_available_versions
 

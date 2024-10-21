@@ -387,6 +387,28 @@ def get_read_epoch_by_timestamp():
     return json.dumps({}), 200
 
 
+@app.route("/get-graph-current-version", methods=["GET"])
+def get_graph_current_version():
+    if previous_read_epoch is None:
+        return json.dumps({}), 200
+    all_epochs = get_all_available_read_epochs_internal()[0]
+    result = {}
+    for idx in range(len(all_epochs)):
+        if all_epochs[idx][0] == int(previous_read_epoch):
+            begin_time = all_epochs[idx][1]
+            end_time = all_epochs[idx][2]
+            num_vertices = all_epochs[idx][3]
+            num_edges = all_epochs[idx][4]
+            result = {
+                "version_id": str(previous_read_epoch),
+                "begin_time": begin_time,
+                "end_time": end_time,
+                "num_vertices": num_vertices,
+                "num_edges": num_edges,
+            }
+    return json.dumps(result), 200
+
+
 @app.route("/run-gae-task", methods=["POST"])
 def run_gae_task():
     command = ""
@@ -426,7 +448,6 @@ def change_read_epoch():
         return "No available read epoch", 400
     global previous_read_epoch
     if previous_read_epoch is None or previous_read_epoch != read_epoch:
-        previous_read_epoch = read_epoch
         etcd_server = os.getenv("ETCD_SERVICE", "etcd")
         if not etcd_server.startswith(("http://", "https://")):
             etcd_server = f"http://{etcd_server}"
@@ -488,6 +509,8 @@ def change_read_epoch():
             ):
                 break
             time.sleep(0.5)
+        # make sure change read epoch successfully
+        previous_read_epoch = read_epoch
     return f"Read version changed to version {read_epoch}", 200
 
 
@@ -600,6 +623,8 @@ def get_all_available_read_epochs_internal():
             schema_str, _ = etcd_client.get(schema_key)
             schema = json.loads(schema_str)
             unix_timestamp = schema["timestamp"]
+            num_vertices += schema["total_vertex_num"]
+            num_edges += schema["total_edge_num"]
             if latest_timestamp is None or unix_timestamp > latest_timestamp:
                 latest_timestamp = unix_timestamp
         converted_time = datetime.fromtimestamp(latest_timestamp)

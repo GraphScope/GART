@@ -163,6 +163,21 @@ class TestGraphController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_get_current_chosen_version(self):
+        """Test case for get_current_chosen_version
+
+        
+        """
+        headers = { 
+            'Accept': 'application/json',
+        }
+        response = self.client.open(
+            '/api/v1/graph/{graph_id}/version/current-version'.format(graph_id='graph_id_example'),
+            method='GET',
+            headers=headers)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_get_graph_all_available_versions(self):
         """Test case for get_graph_all_available_versions
 

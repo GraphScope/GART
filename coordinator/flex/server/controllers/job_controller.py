@@ -87,8 +87,8 @@ def get_job_by_id(job_id):  # noqa: E501
         return (JobStatus.from_dict(result_dict), 200)
         
     return (JobStatus.from_dict(result_dict), 200)
-    
-    
+
+
 def list_jobs():  # noqa: E501
     """list_jobs
 
