@@ -72,6 +72,9 @@ def get_datasource_by_id(graph_id):  # noqa: E501
     except Exception as e:
         return "Failed to get data source: " + str(e), 500
     
+    if data_source_config is None:
+        return (SchemaMapping.from_dict({}), 200)
+    
     data_source_config = json.loads(data_source_config.decode("utf-8"))
     
     return (SchemaMapping.from_dict(data_source_config), 200)

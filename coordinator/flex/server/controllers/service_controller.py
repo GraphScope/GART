@@ -68,8 +68,11 @@ def list_service_status():  # noqa: E501
     gremlin_service_name = os.getenv('GREMLIN_SERVICE_NAME', 'gremlin-service')
     gremlin_service_port = os.getenv('GIE_GREMLIN_PORT', '8182')    
     gremlin_service_ip = get_external_ip_of_a_service(gremlin_service_name, k8s_namespace)
-    with open("/tmp/graph_id.txt", "r") as f:
-        graph_id = f.read()
+    try:
+        with open("/tmp/graph_id.txt", "r") as f:
+            graph_id = f.read()
+    except:
+        graph_id = "gart_graph"
     result_dict["graph_id"] = graph_id
     result_dict["status"] = "Running"
     result_dict["sdk_endpoints"] = {}

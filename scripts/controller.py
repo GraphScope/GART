@@ -610,7 +610,7 @@ def get_all_available_read_epochs_internal():
     num_fragment = os.getenv("SUBGRAPH_NUM", "1")
     latest_read_epoch = get_latest_read_epoch()
     if latest_read_epoch == 2**64 - 1:
-        return []
+        return [[], []]
     available_epochs = []
     available_epochs_internal = []
     for epoch in range(latest_read_epoch + 1):
@@ -659,6 +659,8 @@ def get_latest_read_epoch():
         etcd_key = etcd_prefix + "gart_latest_epoch_p" + str(idx)
         try:
             etcd_value, _ = etcd_client.get(etcd_key)
+            if etcd_value is None:
+                etcd_value = 2**64 - 1
             if latest_epoch > int(etcd_value):
                 latest_epoch = int(etcd_value)
         except Exception as e:

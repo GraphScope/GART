@@ -64,12 +64,30 @@ def get_graph_schema():
                 rg_mapping_str = rg_mapping_str.decode("utf-8")
                 break
             try_times += 1
-            time.sleep(1)
+            time.sleep(0.2)
         except Exception as e:
             try_times += 1
-            time.sleep(1)
+            time.sleep(0.2)
 
     if try_times == try_max_times:
+        try_times = 0
+        original_graph_schema_key = etcd_prefix + "gart_graph_schema_json"
+        while try_times < try_max_times:
+            try:
+                original_graph_schema_str, _ = etcd_client.get(original_graph_schema_key)
+                if original_graph_schema_str is not None:
+                    original_graph_schema_str = original_graph_schema_str.decode("utf-8")
+                    break
+                try_times += 1
+                time.sleep(0.2)
+            except Exception as e:
+                try_times += 1
+                time.sleep(0.2)
+        if try_times == try_max_times:
+            return result_dict
+        result_dict["name"] = GRAPH_ID
+        result_dict["id"] = GRAPH_ID
+        result_dict["schema"] = json.loads(original_graph_schema_str)["schema"]
         return result_dict
 
     rg_mapping = yaml.load(rg_mapping_str, Loader=yaml.SafeLoader)
@@ -83,10 +101,10 @@ def get_graph_schema():
                 table_schema_str = table_schema_str.decode("utf-8")
                 break
             try_times += 1
-            time.sleep(1)
+            time.sleep(0.2)
         except Exception as e:
             try_times += 1
-            time.sleep(1)
+            time.sleep(0.2)
 
     if try_times == try_max_times:
         return result_dict
@@ -463,12 +481,19 @@ def get_graph_by_id(graph_id):  # noqa: E501
     result_dict["id"] = graph_id
     result_dict["name"] = graph_id
     
-    with open("/tmp/graph_schema_create_time.txt", "r") as f:
-        result_dict["creation_time"] = f.read()
-        result_dict["schema_update_time"] = result_dict["creation_time"]
-        
-    with open("/tmp/data_loading_job_created_time.txt", "r") as f: 
-        result_dict["data_update_time"] = f.read()
+    try:
+        with open("/tmp/graph_schema_create_time.txt", "r") as f:
+            result_dict["creation_time"] = f.read()
+            result_dict["schema_update_time"] = result_dict["creation_time"]
+    except:
+        result_dict["creation_time"] = ""
+        result_dict["schema_update_time"] = ""
+    
+    try:
+        with open("/tmp/data_loading_job_created_time.txt", "r") as f: 
+            result_dict["data_update_time"] = f.read()
+    except:
+        result_dict["data_update_time"] = ""
         
     return (GetGraphResponse.from_dict(result_dict), 200)
 
@@ -553,12 +578,19 @@ def list_graphs():  # noqa: E501
     if not result_dict:
         return ([GetGraphResponse.from_dict({})], 200)
     
-    with open("/tmp/graph_schema_create_time.txt", "r") as f:
-        result_dict["creation_time"] = f.read()
-        result_dict["schema_update_time"] = result_dict["creation_time"]
-        
-    with open("/tmp/data_loading_job_created_time.txt", "r") as f: 
-        result_dict["data_update_time"] = f.read()
+    try:
+        with open("/tmp/graph_schema_create_time.txt", "r") as f:
+            result_dict["creation_time"] = f.read()
+            result_dict["schema_update_time"] = result_dict["creation_time"]
+    except:
+        result_dict["creation_time"] = ""
+        result_dict["schema_update_time"] = ""
+    
+    try: 
+        with open("/tmp/data_loading_job_created_time.txt", "r") as f: 
+            result_dict["data_update_time"] = f.read()
+    except:
+        result_dict["data_update_time"] = ""
         
     return ([GetGraphResponse.from_dict(result_dict)], 200)
 

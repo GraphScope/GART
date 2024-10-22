@@ -22,7 +22,7 @@ def get_deployment_info():  # noqa: E501
     """
     result_dict = {}
     result_dict["cluster_type"] = "KUBERNETES"
-    with open ("/tmp/graph_schema_create_time.txt", "r") as f:
+    with open ("/tmp/cluster_create_time.txt", "r") as f:
         result_dict["creation_time"] = f.read()
     result_dict["instance_name"] = "gart"
     result_dict["frontend"] = "Cypher/Gremlin"
