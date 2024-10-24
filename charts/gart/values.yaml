@@ -221,6 +221,7 @@ gie_frontend:
     pullPolicy: IfNotPresent
   replicaCount: 1
   gremlinPort: 8182
+  cypherPort: 7687
   resources: {}
 
 # gie executor config

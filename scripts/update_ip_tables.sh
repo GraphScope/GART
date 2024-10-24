@@ -56,7 +56,11 @@ if ! update_iptables gart-release-coordinator-service 0.0.0.0 18080 gart "$K8S_A
 fi
 
 if ! update_iptables gart-release-gie-frontend-service 0.0.0.0 8182 gart "$K8S_API_IP"; then
-    echo "Failed to update iptables for gart-release-gie-frontend-service"
+    echo "Failed to update iptables for gart-release-gie-frontend-service gremlin"
+fi
+
+if ! update_iptables gart-release-gie-frontend-service 0.0.0.0 7687 gart "$K8S_API_IP"; then
+    echo "Failed to update iptables for gart-release-gie-frontend-service cypher"
 fi
 
 echo "iptables update process completed."

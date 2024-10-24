@@ -13,4 +13,4 @@ APP_NAME="grin_executor"
 # Start the GIE executor
 cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart
 # run backgorund and redirect stdout and stderr to /home/graphscope/gie_executor.log
-./target/release/grin_executor ../../../assembly/src/conf/graphscope/log4rs.yml /home/graphscope/gie-executor-config.properties > /home/graphscope/gie_executor.log 2>&1 &
+./target/release/gart_executor ../../../assembly/src/conf/graphscope/log4rs.yml /home/graphscope/gie-executor-config.properties > /home/graphscope/gie_executor.log 2>&1 &

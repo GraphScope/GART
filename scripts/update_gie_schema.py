@@ -13,6 +13,7 @@ gremlin_port = sys.argv[5]
 server_size = sys.argv[6]
 rpc_service_name = sys.argv[7]
 rpc_service_port = sys.argv[8]
+cypher_port = sys.argv[9]
 
 server_size = int(server_size)
 
@@ -45,6 +46,13 @@ with open("/home/graphscope/gie-frontend-config.properties", "w") as f:
     f.write("pegasus.output.capacity: 16\n")
     f.write("graph.schema: /home/graphscope/gie-graph-schema.json\n")
     f.write("gremlin.server.port = " + gremlin_port + "\n")
+    f.write("graph.planner.is.on: true\n")
+    f.write("graph.planner.opt: RBO\n")
+    f.write("graph.planner.rules: FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule, ExpandGetVFusionRule\n")
+    f.write("gremlin.server.disabled: false\n")
+    f.write("neo4j.bolt.server.disabled: false\n")
+    f.write("neo4j.bolt.server.port: " + cypher_port + "\n")
+    f.write("calcite.default.charset: UTF-8\n")
     pegasus_hosts = ""
     for idx in range(server_size):
         service_name = (

@@ -576,7 +576,7 @@ def list_graphs():  # noqa: E501
     result_dict = get_graph_schema()
     
     if not result_dict:
-        return ([GetGraphResponse.from_dict({})], 200)
+        return ([], 200)
     
     try:
         with open("/tmp/graph_schema_create_time.txt", "r") as f:

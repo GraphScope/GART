@@ -14,4 +14,9 @@ spec:
     - protocol: TCP
       port: {{ .Values.gie_frontend.gremlinPort }}
       targetPort: gremlin
+      name: gremlin-port
+    - protocol: TCP
+      port: {{ .Values.gie_frontend.cypherPort }}
+      targetPort: cypher
+      name: cypher-port
 {{- end }}

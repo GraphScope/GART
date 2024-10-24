@@ -81,7 +81,7 @@ RUN git clone https://github.com/microsoft/cpprestsdk.git \
 
 WORKDIR /home/graphscope
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
-    && git clone https://github.com/doudoubobo/GraphScope.git -b v0.1.4 /home/graphscope/GraphScope \
+    && git clone https://github.com/doudoubobo/GraphScope.git -b gart-gie-grin /home/graphscope/GraphScope \
     && cd /home/graphscope/GraphScope/interactive_engine/compiler \
     && make build \
     && rm -rf /home/graphscope/GraphScope/.git \
@@ -155,7 +155,7 @@ RUN git clone https://github.com/microsoft/cpprestsdk.git \
     && rm -rf /home/graphscope/GART
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
-    && git clone https://github.com/doudoubobo/GraphScope.git -b v0.1.4 /home/graphscope/GraphScope \
+    && git clone https://github.com/doudoubobo/GraphScope.git -b gart-gie-grin /home/graphscope/GraphScope \
     && cd /home/graphscope/GraphScope/interactive_engine/executor/assembly/grin_gart \
     && cargo build --release \
     && rm -rf /home/graphscope/GraphScope/.git \
