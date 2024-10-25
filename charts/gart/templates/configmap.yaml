@@ -45,6 +45,7 @@ data:
   GART_CONTROLLER_SERVER: {{ $controller_service | quote }}
   ETCD_SERVICE: {{ $etcd_service | quote }}
   GIE_GREMLIN_PORT: {{ .Values.gie_frontend.gremlinPort | quote }}
+  GIE_CYPHER_PORT: {{ .Values.gie_frontend.cypherPort | quote }}
   GIE_EXECUTOR_RPC_PORT: {{ .Values.gie_executor.GAIA_RPC_PORT | quote }}
   GIE_EXECUTOR_ENGINE_PORT: {{ .Values.gie_executor.ENGINE_PORT | quote }}
   NAME_SPACE: {{ .Release.Namespace | quote }}

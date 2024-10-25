@@ -30,3 +30,4 @@ spec:
     - protocol: TCP
       port: {{ .Values.coordinator.port }}
       targetPort: {{ .Values.coordinator.containerPort }}
+      name: coordinator-port

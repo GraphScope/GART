@@ -46,12 +46,14 @@ def get_service_status_by_id(graph_id):  # noqa: E501
     result_dict = {}
     k8s_namespace = os.getenv('NAME_SPACE', 'default')
     gremlin_service_name = os.getenv('GREMLIN_SERVICE_NAME', 'gremlin-service')
-    gremlin_service_port = os.getenv('GIE_GREMLIN_PORT', '8182')    
+    gremlin_service_port = os.getenv('GIE_GREMLIN_PORT', '8182')
+    cypher_service_port = os.getenv('GIE_CYPHER_PORT', '7687')
     gremlin_service_ip = get_external_ip_of_a_service(gremlin_service_name, k8s_namespace)
     result_dict["graph_id"] = graph_id
     result_dict["status"] = "Running"
     result_dict["sdk_endpoints"] = {}
     result_dict["sdk_endpoints"]["gremlin"] = f"ws://{gremlin_service_ip}:{gremlin_service_port}/gremlin"
+    result_dict["sdk_endpoints"]["cypher"] = f"neo4j://{gremlin_service_ip}:{cypher_service_port}"
     return (ServiceStatus.from_dict(result_dict), 200)
 
 
@@ -66,7 +68,8 @@ def list_service_status():  # noqa: E501
     result_dict = {}
     k8s_namespace = os.getenv('NAME_SPACE', 'default')
     gremlin_service_name = os.getenv('GREMLIN_SERVICE_NAME', 'gremlin-service')
-    gremlin_service_port = os.getenv('GIE_GREMLIN_PORT', '8182')    
+    gremlin_service_port = os.getenv('GIE_GREMLIN_PORT', '8182')
+    cypher_service_port = os.getenv('GIE_CYPHER_PORT', '7687')
     gremlin_service_ip = get_external_ip_of_a_service(gremlin_service_name, k8s_namespace)
     try:
         with open("/tmp/graph_id.txt", "r") as f:
@@ -77,6 +80,7 @@ def list_service_status():  # noqa: E501
     result_dict["status"] = "Running"
     result_dict["sdk_endpoints"] = {}
     result_dict["sdk_endpoints"]["gremlin"] = f"ws://{gremlin_service_ip}:{gremlin_service_port}/gremlin"
+    result_dict["sdk_endpoints"]["cypher"] = f"neo4j://{gremlin_service_ip}:{cypher_service_port}"
     return ([ServiceStatus.from_dict(result_dict)], 200)
 
 
