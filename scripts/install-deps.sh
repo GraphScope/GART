@@ -64,26 +64,25 @@ echo "Now in directory $(pwd). Executing commands..."
 
 sudo apt update
 
-sudo apt-get install -y build-essential cmake python3 python3-pip lsb-release wget
-sudo apt-get install -y etcd
+sudo apt-get install -y --no-install-recommends build-essential cmake python3 python3-pip lsb-release wget etcd
 
 if [ "$ROLE" == "All" ]; then
     if ! command -v javac &> /dev/null; then
         echo "JDK not installed. Installing JDK..."
-        sudo apt-get install -y default-jdk
+        sudo apt-get install -y --no-install-recommends default-jdk
     fi
 fi
 
 if [ "$ROLE" == "All" ] || [ "$ROLE" == "Analyzer" ]; then
-    sudo apt-get install -y libmsgpack-dev
+    sudo apt-get install -y --no-install-recommends libmsgpack-dev
 fi
 
 # gflags and glog
-sudo apt-get install -y libgflags-dev libgoogle-glog-dev
+sudo apt-get install -y --no-install-recommends libgflags-dev libgoogle-glog-dev
 
 # etcd-client
-sudo apt-get install -y libboost-all-dev libssl-dev
-sudo apt-get install -y libgrpc-dev \
+sudo apt-get install -y --no-install-recommends libboost-all-dev libssl-dev
+sudo apt-get install -y --no-install-recommends libgrpc-dev \
         libgrpc++-dev \
         libprotobuf-dev \
         protobuf-compiler-grpc
@@ -134,35 +133,33 @@ fi
 
 if [ "$ROLE" != "Analyzer" ]; then
   # YAML for Python
-  pip3 install pyyaml
+  pip3 install --no-cache-dir pyyaml
 fi
 
 if [ "$ROLE" != "Analyzer" ]; then
   # librdkafka
-  sudo apt-get install -y librdkafka-dev
+  sudo apt-get install -y --no-install-recommends librdkafka-dev
 fi
 
 # Install sqlalchemy, pymysql, psycopg2
 # for psycopg2, you need to install libpq-dev
 
-sudo apt-get install -y libpq-dev
-pip3 install tenacity==8.3.0
-pip3 install sqlalchemy pymysql psycopg2 etcd3 libclang
+sudo apt-get install -y --no-install-recommends libpq-dev
+pip3 install --no-cache-dir tenacity==8.3.0
+pip3 install --no-cache-dir sqlalchemy pymysql psycopg2 etcd3 libclang
 
 if [ "$ROLE" == "All" ]; then
   # Install requirements-dev.txt for docs
   SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
   REQUIREMENTS_FILE="$SCRIPT_DIR/../requirements-dev.txt"
-  pip3 install -r $REQUIREMENTS_FILE
+  pip3 install --no-cache-dir -r $REQUIREMENTS_FILE
 fi
 
 # vineyard
-sudo apt-get install -y ca-certificates \
-                libboost-all-dev \
+sudo apt-get install -y --no-install-recommends ca-certificates \
                 libcurl4-openssl-dev \
                 openmpi-bin \
                 libopenmpi-dev \
-                libssl-dev \
                 libunwind-dev \
                 libz-dev \
                 automake \
@@ -177,6 +174,8 @@ sudo apt install -y libarrow-dev=14.0.1-1 \
                     libarrow-flight-dev=14.0.1-1 \
                     libgandiva-dev=14.0.1-1 \
                     libparquet-dev=14.0.1-1
+sudo apt clean
+rm -rf /var/lib/apt/lists/*
 
 git clone https://github.com/v6d-io/v6d
 cd v6d
@@ -222,14 +221,14 @@ fi
 
 if [ "$ROLE" == "All" ] || [ "$ROLE" == "Analyzer" ]; then
   # rapidjson
-  sudo apt-get install -y rapidjson-dev
+  sudo apt-get install -y --no-install-recommends rapidjson-dev
 fi
 
-pip3 install grpcio grpcio-tools mypy-protobuf requests paramiko
+pip3 install --no-cache-dir grpcio grpcio-tools mypy-protobuf requests paramiko
 
 if [ "$ROLE" == "All" ] || [ "$ROLE" == "Analyzer" ]; then
   # required python modules
-  pip3 install msgpack networkx
+  pip3 install --no-cache-dir msgpack networkx
 fi
 
 if [ "$ROLE" == "All" ]; then

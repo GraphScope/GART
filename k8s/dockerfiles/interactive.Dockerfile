@@ -9,16 +9,6 @@ ARG CI=false
 
 ARG profile=release
 ENV profile=$profile
-RUN git clone https://github.com/alibaba/GraphScope.git /home/graphscope/GraphScope
-
-RUN cd /home/graphscope/GraphScope/ && \
-    if [ "${CI}" = "true" ]; then \
-        cp -r artifacts/interactive /home/graphscope/install; \
-    else \
-        mkdir /home/graphscope/install; \
-        . /home/graphscope/.graphscope_env; \
-        make interactive-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install; \
-    fi
 
 ############### RUNTIME: frontend #######################
 # FROM ubuntu:22.04 AS frontend
@@ -33,22 +23,15 @@ USER root
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    sudo default-jdk tzdata python3-pip \
-    git build-essential cmake curl maven \
-    libssl-dev libclang-dev openmpi-bin libopenmpi-dev libprotobuf-dev protobuf-compiler-grpc \
-    libgrpc-dev libgrpc++-dev libboost-all-dev && \
+    default-jdk tzdata python3-pip \
+    git build-essential cmake curl libboost-all-dev \
+    libssl-dev libgrpc-dev libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-RUN python3 -m pip install --no-cache-dir vineyard vineyard-io etcd3 --user
-
-COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
-
-RUN mkdir -p /var/log/graphscope \
-  && chown -R graphscope:graphscope /var/log/graphscope
-RUN chmod a+wrx /tmp
+RUN python3 -m pip install --no-cache-dir etcd3 --user
 
 RUN git clone https://github.com/microsoft/cpprestsdk.git \
     && cd cpprestsdk \
@@ -81,9 +64,14 @@ RUN git clone https://github.com/microsoft/cpprestsdk.git \
 
 WORKDIR /home/graphscope
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends maven \
     && git clone https://github.com/doudoubobo/GraphScope.git -b gart-gie-grin /home/graphscope/GraphScope \
     && cd /home/graphscope/GraphScope/interactive_engine/compiler \
     && make build \
+    && apt-get remove -y maven \
+    && apt-get clean  \
+    && rm -rf /var/lib/apt/lists/* \
     && rm -rf /home/graphscope/GraphScope/.git \
     && rm -rf /home/graphscope/GraphScope/docs \
     && rustup self uninstall -y \
@@ -106,20 +94,11 @@ ENV RUST_BACKTRACE=1
 
 RUN apt-get update -y && \
     apt-get install -y python3-pip curl git \
-    build-essential cmake libssl-dev libclang-dev openmpi-bin libopenmpi-dev \
+    build-essential cmake libssl-dev \
     libgrpc-dev libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc libboost-all-dev && \
     apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 ENV PATH=/root/.cargo/bin:$PATH
-
-RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && \
-    env arch=$arch curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/$arch/kubectl
-RUN chmod +x /usr/bin/kubectl
-
-# vineyard.executor.properties, log configuration files
-COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
-
-RUN chmod a+wrx /tmp /var/tmp
 
 RUN python3 -m pip install --no-cache-dir vineyard vineyard-io flask --user
 

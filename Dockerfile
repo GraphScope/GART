@@ -12,26 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Example:
-# docker rm gart0; docker image rm gart
-# docker build -t gart .
-# docker run -it --name gart0 gart
-
 FROM ubuntu:22.04
 
 # Define build type (All, Converter, Writer, Analyzer, Controller)
 ARG build_type=All
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
-    lsb-release \
     sudo \
-    python3 \
-    python3-pip \
-    vim \
-    wget \
     netcat-openbsd \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -40,7 +28,7 @@ WORKDIR /workspace
 RUN touch env_script.sh
 
 RUN if [ "$build_type" = "All" ]; then \
-  apt-get update && apt-get install -y \
+  apt-get update && apt-get install -y --no-install-recommends \
   openssh-server \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /var/run/sshd \
@@ -69,10 +57,13 @@ RUN if [ "$build_type" = "Controller" ]; then \
   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
   chmod +x ./kubectl && \
   mv ./kubectl /usr/local/bin/kubectl && \
-  apt-get update && apt-get install -y openmpi-bin libopenmpi-dev maven && \
+  apt-get update && apt-get install -y --no-install-recommends openmpi-bin libopenmpi-dev maven python3 python3-pip && \
   rm -rf /var/lib/apt/lists/* && \
-  pip3 install tenacity==8.3.0 && \
-  pip3 install flask kubernetes etcd3; \
+  pip3 install --no-cache-dir tenacity==8.3.0 && \
+  pip3 install --no-cache-dir flask kubernetes etcd3; \
+  apt-get remove -y maven; \
+  apt-get autoremove -y; \
+  rm -rf /root/.m2; \
   git clone https://github.com/oracle/pgql-lang.git; \
   cd pgql-lang; \
   sh install.sh; \
