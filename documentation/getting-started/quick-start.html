@@ -1,0 +1,591 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Quick Start" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="documentation/getting-started/quick-start.html" />
+<meta property="og:site_name" content="gart" />
+<meta property="og:description" content="This section gives an experiential process of GART where we provide containers for deployment. Users can also try local deployment, we will give local deployment and usage tips. Step 1: Start the G..." />
+<meta name="description" content="This section gives an experiential process of GART where we provide containers for deployment. Users can also try local deployment, we will give local deployment and usage tips. Step 1: Start the G..." />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Use Cases" href="use-cases.html" /><link rel="prev" title="Introduction" href="introduction.html" />
+
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+        <title>Quick Start - GART</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/brands.min.css?v=af964456" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/v4-shims.min.css?v=e329b598" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=11f00004" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/index.css?v=c31c8fd8" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+<script>
+  document.body.dataset.theme = "light";
+</script>
+
+<script>
+  function ready(callback) {
+    if (document.readyState!='loading') {
+      // in case the document is already rendered
+      callback();
+    } else if (document.addEventListener) {
+      // modern browsers
+      document.addEventListener('DOMContentLoaded', callback);
+    } else document.attachEvent('onreadystatechange', function() {
+      // IE <= 8
+      if (document.readyState=='complete') {
+        callback();
+      }
+    });
+  }
+
+  ready(function() {
+    let coll = document.getElementsByClassName("admonition-details");
+    for (let i = 0; i < coll.length; i++) {
+      let titles = coll[i].getElementsByClassName("admonition-title");
+      if (titles.length == 0) {
+        continue;
+      }
+      titles[0].addEventListener("click", function () {
+        this.parentElement.classList.toggle("active");
+
+        if (this.parentElement.classList.contains("active")) {
+          this.getElementsByClassName("admonition-caret")[0].innerText = " - (click to collapse)";
+        } else {
+          this.getElementsByClassName("admonition-caret")[0].innerText = " + (click to expand)";
+        }
+      });
+      titles[0].appendChild(document.createElement("br"));
+      let caret = document.createElement("span");
+      caret.classList.add("admonition-caret");
+      caret.innerText = " + (click to expand)";
+      titles[0].appendChild(caret);
+    }
+  });
+</script>
+
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../docs.html"><div class="brand">GART</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../docs.html">
+  
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use-cases.html">Use Cases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../design/architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../design/rgmapping.html">RGMapping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../design/graph-storage.html">Dynamic Graph Storage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/env-setup.html">Environment Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy-distributed.html">Distributed Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy-k8s.html">Deployment on Kubernetes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/data-source-config.html">Data Source Configuration</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Data Source Configuration</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/data-source-config/postgresql.html">PostgreSQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/data-source-config/mysql.html">MySQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/data-source-config/storage.html">Usage of GART Storage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/log-capturer-config.html">Log Capturer Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/rgmapping-config.html">RGMapping Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/run-gap.html">Run Graph Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/pgx.html">PostgreSQL Extension</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/GraphScope/GART/blob/main/docs/documentation/getting-started/quick-start.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/GraphScope/GART/edit/main/docs/documentation/getting-started/quick-start.rst" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="quick-start">
+<span id="getting-started"></span><h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading">¶</a></h1>
+<p>This section gives an experiential process of GART where we provide containers for deployment. Users can also try local deployment, we will give local deployment and usage tips.</p>
+<section id="step-1-start-the-gart-environment">
+<h2>Step 1: Start the GART Environment<a class="headerlink" href="#step-1-start-the-gart-environment" title="Permalink to this heading">¶</a></h2>
+<p>GART currently requires installation via source code.
+We provide a Docker image that contains all the dependencies and configurations needed to run GART. The Docker image is based on Ubuntu 20.04.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you would like to install it locally, please refer to the <a class="reference external" href="../deployment/env-setup.html">detailed deployment tutorial</a> we provide.</p>
+</div>
+<p>To build the Docker container called <code class="docutils literal notranslate"><span class="pre">gart-env</span></code> and enter the container:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:GraphScope/GART.git<span class="w"> </span>gart
+<span class="linenos">2</span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>gart
+<span class="linenos">3</span>$<span class="w"> </span>sudo<span class="w"> </span>docker<span class="w"> </span>build<span class="w"> </span>.<span class="w"> </span>-t<span class="w"> </span>gart-env
+<span class="linenos">4</span>$<span class="w"> </span>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>gart-env
+</pre></div>
+</div>
+<p>After entering the Docker container, build GART:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="c1"># In the docker image</span>
+<span class="linenos">2</span>gart-env$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/workspace/gart/
+<span class="linenos">3</span>gart-env$<span class="w"> </span>mkdir<span class="w"> </span>build<span class="p">;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+<span class="linenos">4</span>gart-env$<span class="w"> </span>cmake<span class="w"> </span>..<span class="w"> </span>-DADD_GAE_ENGINE<span class="o">=</span>ON
+<span class="linenos">5</span>gart-env$<span class="w"> </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="step-2-configure-data-source">
+<h2>Step 2: Configure Data Source<a class="headerlink" href="#step-2-configure-data-source" title="Permalink to this heading">¶</a></h2>
+<p>Since GART needs the log access privileges of the data source to access the data logs in real time, it is necessary to configure the privileges at the data source first.</p>
+<p>In the Docker image we provided, the basic configuration of the database has been done and there is a user as <code class="docutils literal notranslate"><span class="pre">dbuser</span></code> with a default password as <code class="docutils literal notranslate"><span class="pre">123456</span></code>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you want to use a different user, you can create a new user in the database and grant the user the necessary privileges. Please refer to the <a class="reference external" href="../tutorials/data-source-config.html">Data Source Configuration</a> for more information.</p>
+</div>
+<p>Initialize the PostgreSQL database by <a class="reference external" href="https://ldbcouncil.org/benchmarks/snb/">LDBC-SNB</a> schema:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gart-env$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/workspace/gart/
+gart-env$<span class="w"> </span>./apps/rdbms/init_schema.py<span class="w"> </span>--user<span class="w"> </span>dbuser<span class="w"> </span>--password<span class="w"> </span><span class="m">123456</span><span class="w"> </span>--db<span class="w"> </span>ldbc
+</pre></div>
+</div>
+</section>
+<section id="step-3-configure-log-capturer">
+<h2>Step 3: Configure Log Capturer<a class="headerlink" href="#step-3-configure-log-capturer" title="Permalink to this heading">¶</a></h2>
+<p>This step is automatic in GART. If you want to configure it manually, please refer to the <a class="reference external" href="../tutorials/log-capturer-config.html">Log Capturer Configuration</a>.</p>
+</section>
+<section id="step-4-launch-gart-server">
+<h2>Step 4: Launch GART Server<a class="headerlink" href="#step-4-launch-gart-server" title="Permalink to this heading">¶</a></h2>
+<p>GART offers two ways to start up, and you can choose one of the following two ways.</p>
+<section id="alternative-1-launch-as-a-standalone-server">
+<h3>Alternative #1: Launch as a standalone server<a class="headerlink" href="#alternative-1-launch-as-a-standalone-server" title="Permalink to this heading">¶</a></h3>
+<p>You can launch GART by the <code class="docutils literal notranslate"><span class="pre">gart</span></code> script under the <code class="docutils literal notranslate"><span class="pre">build</span></code> directory, like:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gart-env$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/workspace/gart/build/
+gart-env$<span class="w"> </span>./gart<span class="w"> </span>--user<span class="w"> </span>dbuser<span class="w"> </span>--password<span class="w"> </span><span class="m">123456</span>
+</pre></div>
+</div>
+<p>The arguments of <code class="docutils literal notranslate"><span class="pre">--user</span></code> and <code class="docutils literal notranslate"><span class="pre">--password</span></code> are the user name and the password in the database.</p>
+<p>The full usage of <code class="docutils literal notranslate"><span class="pre">gart</span></code> can be shown as:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gart-env$<span class="w"> </span>./gart<span class="w"> </span>--help
+</pre></div>
+</div>
+<p>You can stop GART by:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gart-env$<span class="w"> </span>./stop-gart
+</pre></div>
+</div>
+</section>
+<section id="alternative-2-launch-as-postgresql-plugin">
+<h3>Alternative #2: Launch as PostgreSQL plugin<a class="headerlink" href="#alternative-2-launch-as-postgresql-plugin" title="Permalink to this heading">¶</a></h3>
+<p>You can launch GART as a PostgreSQL plugin:</p>
+<p>You need to install the PostgreSQL plugin by copying the shared library to the PostgreSQL library directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>gart-env$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/workspace/gart/apps/pgx/
+<span class="linenos">2</span>gart-env$<span class="w"> </span>make<span class="w"> </span><span class="nv">USE_PGXS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>-j
+<span class="linenos">3</span>gart-env$<span class="w"> </span>sudo<span class="w"> </span>make<span class="w"> </span>install
+</pre></div>
+</div>
+<p>To configure and utilize the GART extension within your PostgreSQL environment, you’ll need to follow these steps.</p>
+<p><strong>1. Open the PostgreSQL Command Line Interface:</strong></p>
+<p>To enter commands into PostgreSQL, you need access to the PostgreSQL CLI. You can do this by opening a terminal on Unix-like systems or a command prompt on Windows, and running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># choose the `ldbc` database</span>
+sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-d<span class="w"> </span>ldbc
+
+<span class="c1"># or</span>
+psql<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>-d<span class="w"> </span>ldbc
+</pre></div>
+</div>
+<p><strong>2. Install the ``gart`` Extension:</strong></p>
+<p>After successfully logging in to your database, run the following command to create the <code class="docutils literal notranslate"><span class="pre">gart</span></code> extension:</p>
+<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">EXTENSION</span><span class="w"> </span><span class="n">gart</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>3. Configure ``gart`` Extension:</strong></p>
+<p>Now set up the <code class="docutils literal notranslate"><span class="pre">gart</span></code> configuration using the following command:</p>
+<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">gart_set_config</span><span class="p">(</span><span class="s1">&#39;/workspace/gart/apps/pgx/gart-pgx-config-template.ini&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>4. Load the LDBC-SNB schema:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">i</span> <span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">gart</span><span class="o">/</span><span class="n">vegito</span><span class="o">/</span><span class="n">test</span><span class="o">/</span><span class="n">schema</span><span class="o">/</span><span class="n">rgmapping</span><span class="o">-</span><span class="n">ldbc</span><span class="o">.</span><span class="n">sql</span>
+</pre></div>
+</div>
+<p><strong>5. Establish a Connection Using ``gart``:</strong></p>
+<p>Finally, establish a connection using a specific identifier like so:</p>
+<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">gart_get_connection</span><span class="p">(</span><span class="s1">&#39;123456&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="step-5-run-dynamic-graph-analysis">
+<h2>Step 5: Run Dynamic Graph Analysis<a class="headerlink" href="#step-5-run-dynamic-graph-analysis" title="Permalink to this heading">¶</a></h2>
+<p>GART can create a fresh snapshot of a graph on real-time updated relational data. Users can perform graph analytic processing on this snapshot.</p>
+<section id="initiate-data-updates">
+<h3>Initiate data updates<a class="headerlink" href="#initiate-data-updates" title="Permalink to this heading">¶</a></h3>
+<p>First, the data changes are modeled in the following way, in this case, the insertion of data:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gart-env$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/workspace/gart/
+gart-env$<span class="w"> </span>./apps/rdbms/insert_db_txn.py<span class="w"> </span>--user<span class="w"> </span>dbuser<span class="w"> </span>--password<span class="w"> </span><span class="m">123456</span><span class="w"> </span>--data_dir<span class="w"> </span>/workspace/gstest/ldbc_sample/
+</pre></div>
+</div>
+<p>Then, the graph snapshot is created.</p>
+</section>
+<section id="launch-the-graph-analysis">
+<h3>Launch the graph analysis<a class="headerlink" href="#launch-the-graph-analysis" title="Permalink to this heading">¶</a></h3>
+<p>The graph analysis can be launched by the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gart-env$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/workspace/gart/
+gart-env$<span class="w"> </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="w"> </span>./apps/run_gart_app<span class="w"> </span>--read_epoch<span class="w"> </span><span class="m">0</span><span class="w"> </span>--app_name<span class="w"> </span>sssp<span class="w"> </span>--sssp_source_label<span class="w"> </span>organisation<span class="w"> </span>--sssp_source_oid<span class="w"> </span><span class="m">0</span><span class="w"> </span>--sssp_weight_name<span class="w"> </span>wa_work_from
+</pre></div>
+</div>
+</section>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Permalink to this heading">¶</a></h2>
+<p>GART also provides:</p>
+<ul class="simple">
+<li><p><strong>Distributed deployment.</strong> GART allows users to provide a simple configuration file, and it will run on a cluster.</p></li>
+<li><p><strong>Deployment based on Kubernetes.</strong>  GART can be deployed on Kubernetes.</p></li>
+<li><p><strong>Support for more data sources.</strong> GART can support more data sources, such as MySQL, and PostgreSQL. Users can also implement their own data source by following the data source interface.</p></li>
+<li><p><strong>Support for more graph analysis algorithms.</strong> GART can support more graph analysis algorithms, such as PageRank, Connected Components, etc. The execution engine of GART is based on <a class="reference external" href="https://github.com/alibaba/GraphScope">GraphScope</a>, which supports a wide range of graph algorithms. We also support <a class="reference external" href="https://networkx.org/">NetworkX</a> as the execution engine.</p></li>
+<li><p><strong>Flexible data model mapping.</strong> GART can support more data model mappings by RGMapping. Users can implement their own mapping rules by following the RGMapping interface.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+<div class="related-pages">
+  <a class="next-page" href="use-cases.html">
+    <div class="page-info">
+      <div class="context">
+        <span>Next</span>
+      </div>
+      <div class="title">Use Cases</div>
+    </div>
+    <svg class="furo-related-icon">
+      <use href="#svg-arrow-right"></use>
+    </svg>
+  </a>
+  <a class="prev-page" href="introduction.html">
+    <svg class="furo-related-icon">
+      <use href="#svg-arrow-right"></use>
+    </svg>
+    <div class="page-info">
+      <div class="context">
+        <span>Previous</span>
+      </div>
+      
+      <div class="title">Introduction</div>
+      
+    </div>
+  </a>
+</div>
+
+<!-- index page doesn't have prev -->
+<hr />
+
+<script src="https://giscus.app/client.js" data-repo="GraphScope/GART" data-repo-id="MDEwOlJlcG9zaXRvcnkzMDY2MzEyMTE="
+  data-category="General" data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyNDA3MTg2" data-mapping="pathname"
+  data-strict="1" data-reactions-enabled="0" data-emit-metadata="0" data-input-position="bottom" data-theme="light"
+  data-lang="en" data-loading="lazy" crossorigin="anonymous" async>
+  </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6CYXWKLJB8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag('js', new Date());
+
+  gtag('config', 'G-6CYXWKLJB8');
+</script>
+
+<div class="bottom-of-page">
+  <div class="left-details">
+    <div class="copyright">
+      Copyright &#169; 2022-2024, The GART Authors
+    </div>
+    Rendered with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a
+      href="https://github.com/pradyunsg/furo">Furo</a>
+    <p>The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux
+      Foundation,
+      please see our <a href="https://www.linuxfoundation.org/trademark-usage/">Trademark Usage page</a>.
+    </p>
+  </div>
+  <div class="right-details">
+    <div class="icons"><a class="muted-link" href="https://github.com//" aria-label="On GitHub">
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+          <path fill-rule="evenodd"
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z">
+          </path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal">Quick Start</a><ul>
+<li><a class="reference internal" href="#step-1-start-the-gart-environment">Step 1: Start the GART Environment</a></li>
+<li><a class="reference internal" href="#step-2-configure-data-source">Step 2: Configure Data Source</a></li>
+<li><a class="reference internal" href="#step-3-configure-log-capturer">Step 3: Configure Log Capturer</a></li>
+<li><a class="reference internal" href="#step-4-launch-gart-server">Step 4: Launch GART Server</a><ul>
+<li><a class="reference internal" href="#alternative-1-launch-as-a-standalone-server">Alternative #1: Launch as a standalone server</a></li>
+<li><a class="reference internal" href="#alternative-2-launch-as-postgresql-plugin">Alternative #2: Launch as PostgreSQL plugin</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#step-5-run-dynamic-graph-analysis">Step 5: Run Dynamic Graph Analysis</a><ul>
+<li><a class="reference internal" href="#initiate-data-updates">Initiate data updates</a></li>
+<li><a class="reference internal" href="#launch-the-graph-analysis">Launch the graph analysis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=c7037924"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    </body>
+</html>
